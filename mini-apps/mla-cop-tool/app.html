@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COP Calculator — MLA</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+  <link rel="manifest" href="manifest.json">
+  <meta name="description" content="MLA Cost of Production Calculator">
+  <link rel="icon" type="image/png" href="assets/mla_logo.png">
+</head>
+<body>
+  <header class="app-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="logo-link">
+          <img src="assets/mla_logo.png" alt="MLA" class="logo" width="120" height="55">
+        </a>
+        <div class="header-title">
+          <h1>Cost of Production Calculator</h1>
+        </div>
+        <div class="header-actions">
+          <button id="btn-save" class="btn btn-sm" title="Save scenario">💾 Save</button>
+          <button id="btn-load" class="btn btn-sm" title="Load scenario">📂 Load</button>
+          <button id="btn-compare" class="btn btn-sm" title="Compare scenarios">⚖️ Compare</button>
+          <button id="btn-import" class="btn btn-sm" title="Import from old tool">📥 Import</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Enterprise Selection -->
+    <div class="enterprise-select card" id="enterprise-select">
+      <h2>Select Enterprises</h2>
+      <p>Which livestock enterprises do you run?</p>
+      <div class="enterprise-toggles">
+        <label class="toggle-label">
+          <input type="checkbox" id="ent-cattle" checked> <span>🐄 Cattle</span>
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" id="ent-sheep" checked> <span>🐑 Sheep</span>
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" id="ent-goat"> <span>🐐 Goat</span>
+        </label>
+      </div>
+      <div id="dse-allocation" class="dse-allocation" style="display:none">
+        <h3>DSE Allocation (%)</h3>
+        <p>Allocate dry sheep equivalents across your enterprises.</p>
+        <div class="dse-inputs">
+          <label>Cattle: <input type="number" id="dse-cattle" min="0" max="100" value="55">%</label>
+          <label>Sheep: <input type="number" id="dse-sheep" min="0" max="100" value="45">%</label>
+          <label>Goat: <input type="number" id="dse-goat" min="0" max="100" value="0">%</label>
+        </div>
+        <div id="dse-warning" class="warning" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Wizard Steps -->
+    <div class="wizard">
+      <div class="step-nav">
+        <button class="step-tab active" data-step="1">1. Trading Details</button>
+        <button class="step-tab" data-step="2">2. Expenses</button>
+        <button class="step-tab" data-step="3">3. Labour & Overheads</button>
+        <button class="step-tab" data-step="4">4. Results</button>
+      </div>
+
+      <!-- Species Tabs -->
+      <div class="species-tabs" id="species-tabs">
+        <button class="species-tab active" data-species="cattle">🐄 Cattle</button>
+        <button class="species-tab" data-species="sheep">🐑 Sheep</button>
+        <button class="species-tab" data-species="goat">🐐 Goat</button>
+      </div>
+
+      <!-- Step 1: Trading Details -->
+      <div class="step-content active" id="step-1">
+        <div class="species-panel" data-species="cattle">
+          <h2>Trading Details — Cattle</h2>
+          <div class="form-group">
+            <label for="scenario-name">Scenario Name</label>
+            <input type="text" id="scenario-name" placeholder="e.g. My 2024 Cattle Enterprise" class="full-width">
+          </div>
+          
+          <h3>Livestock Reconciliation</h3>
+          <p class="hint">Opening + Purchases + Natural Increase − Sales − Deaths = Closing</p>
+          <div class="table-scroll">
+            <table class="data-table" id="cattle-stock-table">
+              <thead>
+                <tr>
+                  <th>Stock Class</th><th>Opening</th><th>Purchases</th><th>Natural Increase</th><th>Sales</th><th>Deaths</th><th>Closing</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr><td><strong>Total</strong></td><td id="cattle-total-opening">0</td><td id="cattle-total-purchases">0</td><td id="cattle-total-natural">0</td><td id="cattle-total-sales">0</td><td id="cattle-total-deaths">0</td><td id="cattle-total-closing">0</td></tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <h3>Inventory Values & Sales/Purchase Details</h3>
+          <div class="table-scroll">
+            <table class="data-table" id="cattle-values-table">
+              <thead>
+                <tr>
+                  <th>Stock Class</th>
+                  <th>Wt Open (kg)</th><th>Val Open ($/hd)</th>
+                  <th>Wt Close (kg)</th><th>Val Close ($/hd)</th>
+                  <th>No. Sold</th><th>Sale Wt (kg/hd)</th><th>Sale Price ($/kg)</th>
+                  <th>No. Purch</th><th>Purch Wt (kg/hd)</th><th>Purch Price ($/kg)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="calculated-summary" id="cattle-trading-summary">
+            <div class="summary-item"><span>Total kg produced (lwt):</span> <strong id="cattle-kg-produced">0</strong></div>
+            <div class="summary-item"><span>Trading income:</span> <strong id="cattle-trading-income">$0</strong></div>
+          </div>
+        </div>
+
+        <div class="species-panel" data-species="sheep" style="display:none">
+          <h2>Trading Details — Sheep</h2>
+          <div class="form-group">
+            <label for="sheep-scenario-name">Scenario Name</label>
+            <input type="text" id="sheep-scenario-name" placeholder="e.g. My 2024 Sheep Enterprise" class="full-width">
+          </div>
+          
+          <h3>Livestock Reconciliation</h3>
+          <div class="table-scroll">
+            <table class="data-table" id="sheep-stock-table">
+              <thead><tr><th>Stock Class</th><th>Opening</th><th>Purchases</th><th>Natural Increase</th><th>Sales</th><th>Deaths</th><th>Closing</th></tr></thead>
+              <tbody></tbody>
+              <tfoot><tr><td><strong>Total</strong></td><td id="sheep-total-opening">0</td><td id="sheep-total-purchases">0</td><td id="sheep-total-natural">0</td><td id="sheep-total-sales">0</td><td id="sheep-total-deaths">0</td><td id="sheep-total-closing">0</td></tr></tfoot>
+            </table>
+          </div>
+
+          <h3>Inventory Values & Sales/Purchase Details</h3>
+          <div class="table-scroll">
+            <table class="data-table" id="sheep-values-table">
+              <thead>
+                <tr><th>Stock Class</th><th>Wt Open</th><th>Val Open</th><th>Wt Close</th><th>Val Close</th><th>No. Sold</th><th>Sale Wt</th><th>Sale Price</th><th>No. Purch</th><th>Purch Wt</th><th>Purch Price</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="form-group">
+            <label for="sheep-wool-income">Wool Income ($)</label>
+            <input type="number" id="sheep-wool-income" value="0" min="0" step="1">
+          </div>
+
+          <div class="calculated-summary" id="sheep-trading-summary">
+            <div class="summary-item"><span>Total kg produced (lwt):</span> <strong id="sheep-kg-produced">0</strong></div>
+            <div class="summary-item"><span>Trading income:</span> <strong id="sheep-trading-income">$0</strong></div>
+          </div>
+        </div>
+
+        <div class="species-panel" data-species="goat" style="display:none">
+          <h2>Trading Details — Goat</h2>
+          <div class="form-group">
+            <label for="goat-scenario-name">Scenario Name</label>
+            <input type="text" id="goat-scenario-name" placeholder="e.g. My 2024 Goat Enterprise" class="full-width">
+          </div>
+
+          <h3>Livestock Reconciliation</h3>
+          <div class="table-scroll">
+            <table class="data-table" id="goat-stock-table">
+              <thead><tr><th>Stock Class</th><th>Opening</th><th>Purchases</th><th>Natural Increase</th><th>Sales</th><th>Deaths</th><th>Closing</th></tr></thead>
+              <tbody></tbody>
+              <tfoot><tr><td><strong>Total</strong></td><td id="goat-total-opening">0</td><td id="goat-total-purchases">0</td><td id="goat-total-natural">0</td><td id="goat-total-sales">0</td><td id="goat-total-deaths">0</td><td id="goat-total-closing">0</td></tr></tfoot>
+            </table>
+          </div>
+
+          <h3>Inventory Values & Sales/Purchase Details</h3>
+          <div class="table-scroll">
+            <table class="data-table" id="goat-values-table">
+              <thead><tr><th>Stock Class</th><th>Wt Open</th><th>Val Open</th><th>Wt Close</th><th>Val Close</th><th>No. Sold</th><th>Sale Wt</th><th>Sale Price</th><th>No. Purch</th><th>Purch Wt</th><th>Purch Price</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="calculated-summary" id="goat-trading-summary">
+            <div class="summary-item"><span>Total kg produced (lwt):</span> <strong id="goat-kg-produced">0</strong></div>
+            <div class="summary-item"><span>Trading income:</span> <strong id="goat-trading-income">$0</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Expenses -->
+      <div class="step-content" id="step-2" style="display:none">
+        <div class="species-panel" data-species="cattle">
+          <h2>Expenses — Cattle</h2>
+          <h3>Direct Expenses (excl. GST)</h3>
+          <div class="expense-fields">
+            <label>Herd Health ($)<input type="number" id="cattle-herd-health" value="0" min="0" step="1"></label>
+            <label>Contractors ($)<input type="number" id="cattle-contractors" value="0" min="0" step="1"></label>
+            <label>Transport & Cartage ($)<input type="number" id="cattle-transport" value="0" min="0" step="1"></label>
+            <label>Selling Costs ($)<input type="number" id="cattle-selling" value="0" min="0" step="1"></label>
+          </div>
+          <h3>Supplement Expenses</h3>
+          <div class="supplement-fields">
+            <label>Home Grown Feed (tonnes)<input type="number" id="cattle-home-feed-tonnes" value="0" min="0" step="0.1"></label>
+            <label>Home Grown Feed ($/tonne)<input type="number" id="cattle-home-feed-price" value="0" min="0" step="1"></label>
+            <label>Purchased Feed (tonnes)<input type="number" id="cattle-purch-feed-tonnes" value="0" min="0" step="0.1"></label>
+            <label>Purchased Feed ($/tonne)<input type="number" id="cattle-purch-feed-price" value="0" min="0" step="1"></label>
+          </div>
+          <div class="supplement-allocation" style="display:none" id="cattle-supp-alloc-row">
+            <label>% Allocation to this enterprise <input type="number" id="cattle-supp-alloc" value="100" min="0" max="100">%</label>
+          </div>
+        </div>
+
+        <div class="species-panel" data-species="sheep" style="display:none">
+          <h2>Expenses — Sheep</h2>
+          <h3>Direct Expenses (excl. GST)</h3>
+          <div class="expense-fields">
+            <label>Flock Health ($)<input type="number" id="sheep-flock-health" value="0" min="0" step="1"></label>
+            <label>Contractors ($)<input type="number" id="sheep-contractors" value="0" min="0" step="1"></label>
+            <label>Transport & Cartage ($)<input type="number" id="sheep-transport" value="0" min="0" step="1"></label>
+            <label>Selling Costs ($)<input type="number" id="sheep-selling" value="0" min="0" step="1"></label>
+            <label>Shearing & Crutching ($)<input type="number" id="sheep-shearing" value="0" min="0" step="1"></label>
+          </div>
+          <h3>Supplement Expenses</h3>
+          <div class="supplement-fields">
+            <label>Home Grown Feed (tonnes)<input type="number" id="sheep-home-feed-tonnes" value="0" min="0" step="0.1"></label>
+            <label>Home Grown Feed ($/tonne)<input type="number" id="sheep-home-feed-price" value="0" min="0" step="1"></label>
+            <label>Purchased Feed (tonnes)<input type="number" id="sheep-purch-feed-tonnes" value="0" min="0" step="0.1"></label>
+            <label>Purchased Feed ($/tonne)<input type="number" id="sheep-purch-feed-price" value="0" min="0" step="1"></label>
+          </div>
+          <div class="supplement-allocation" style="display:none" id="sheep-supp-alloc-row">
+            <label>% Allocation to this enterprise <input type="number" id="sheep-supp-alloc" value="100" min="0" max="100">%</label>
+          </div>
+        </div>
+
+        <div class="species-panel" data-species="goat" style="display:none">
+          <h2>Expenses — Goat</h2>
+          <h3>Direct Expenses (excl. GST)</h3>
+          <div class="expense-fields">
+            <label>Herd Health ($)<input type="number" id="goat-herd-health" value="0" min="0" step="1"></label>
+            <label>Contractors ($)<input type="number" id="goat-contractors" value="0" min="0" step="1"></label>
+            <label>Transport & Cartage ($)<input type="number" id="goat-transport" value="0" min="0" step="1"></label>
+            <label>Selling Costs ($)<input type="number" id="goat-selling" value="0" min="0" step="1"></label>
+            <label>Shearing & Crutching ($)<input type="number" id="goat-shearing" value="0" min="0" step="1"></label>
+            <label>Dairy Costs ($)<input type="number" id="goat-dairy" value="0" min="0" step="1"></label>
+          </div>
+          <h3>Supplement Expenses</h3>
+          <div class="supplement-fields">
+            <label>Home Grown Feed (tonnes)<input type="number" id="goat-home-feed-tonnes" value="0" min="0" step="0.1"></label>
+            <label>Home Grown Feed ($/tonne)<input type="number" id="goat-home-feed-price" value="0" min="0" step="1"></label>
+            <label>Purchased Feed (tonnes)<input type="number" id="goat-purch-feed-tonnes" value="0" min="0" step="0.1"></label>
+            <label>Purchased Feed ($/tonne)<input type="number" id="goat-purch-feed-price" value="0" min="0" step="1"></label>
+          </div>
+          <div class="supplement-allocation" style="display:none" id="goat-supp-alloc-row">
+            <label>% Allocation to this enterprise <input type="number" id="goat-supp-alloc" value="100" min="0" max="100">%</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Labour & Overheads -->
+      <div class="step-content" id="step-3" style="display:none">
+        <h2>Labour Costs</h2>
+        <div class="expense-fields">
+          <label>Owner/Operator Allowance ($)<input type="number" id="labour-owner" value="0" min="0" step="1000"></label>
+          <label>Family Labour ($)<input type="number" id="labour-family" value="0" min="0" step="1000"></label>
+          <label>Salaried Employees ($)<input type="number" id="labour-salaried" value="0" min="0" step="1000"></label>
+          <label>Casual Rate ($/hr)<input type="number" id="labour-casual-rate" value="35" min="0" step="1"></label>
+          <label>Casual Hours/Week<input type="number" id="labour-casual-hrs" value="0" min="0" step="1"></label>
+          <label>Casual Weeks/Year<input type="number" id="labour-casual-wks" value="0" min="0" step="1"></label>
+        </div>
+        <div id="labour-allocation-section" style="display:none">
+          <h3>Allocate Labour to Enterprises (%)</h3>
+          <div class="allocation-inputs">
+            <label>Cattle <input type="number" id="labour-alloc-cattle" value="0" min="0" max="100">%</label>
+            <label>Sheep <input type="number" id="labour-alloc-sheep" value="0" min="0" max="100">%</label>
+            <label>Goat <input type="number" id="labour-alloc-goat" value="0" min="0" max="100">%</label>
+          </div>
+          <div id="labour-alloc-warning" class="warning" style="display:none"></div>
+        </div>
+
+        <h2>Overheads</h2>
+        <div class="expense-fields">
+          <label>Repairs & Maintenance (Sheds, Yards, Fences, Land) ($)<input type="number" id="oh-repairs-land" value="0" min="0" step="1000"></label>
+          <label>Repairs & Maintenance (Plant & Equipment) ($)<input type="number" id="oh-repairs-plant" value="0" min="0" step="1000"></label>
+          <label>Depreciation ($)<input type="number" id="oh-depreciation" value="0" min="0" step="1000"></label>
+          <label>Admin Expenses ($)<input type="number" id="oh-admin" value="0" min="0" step="1000"></label>
+          <label>Electricity & Gas ($)<input type="number" id="oh-electricity" value="0" min="0" step="1000"></label>
+          <label>Insurance ($)<input type="number" id="oh-insurance" value="0" min="0" step="1000"></label>
+          <label>Pasture Costs ($)<input type="number" id="oh-pasture" value="0" min="0" step="1000"></label>
+          <label>Rates & Rents ($)<input type="number" id="oh-rates" value="0" min="0" step="1000"></label>
+          <label>Fuel & Oil ($)<input type="number" id="oh-fuel" value="0" min="0" step="1000"></label>
+        </div>
+        <div id="oh-allocation-section" style="display:none">
+          <h3>Allocate Overheads to Enterprises</h3>
+          <div class="form-group">
+            <label>Allocation Method</label>
+            <select id="oh-alloc-method">
+              <option value="dse">By DSE (%)</option>
+              <option value="labour">By Labour (%)</option>
+              <option value="income">By Income (%)</option>
+              <option value="custom">Custom (%)</option>
+            </select>
+          </div>
+          <div class="allocation-inputs" id="oh-alloc-inputs">
+            <label>Cattle <input type="number" id="oh-alloc-cattle" value="0" min="0" max="100">%</label>
+            <label>Sheep <input type="number" id="oh-alloc-sheep" value="0" min="0" step="1">%</label>
+            <label>Goat <input type="number" id="oh-alloc-goat" value="0" min="0" step="1">%</label>
+          </div>
+          <div id="oh-alloc-warning" class="warning" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Step 4: Results -->
+      <div class="step-content" id="step-4" style="display:none">
+        <div id="results-content"></div>
+        <div class="results-actions">
+          <button id="btn-print" class="btn btn-outline">🖨️ Print Results</button>
+          <button id="btn-pdf" class="btn btn-primary">📄 Export PDF</button>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="wizard-nav">
+        <button id="btn-prev" class="btn btn-outline" disabled>← Previous</button>
+        <button id="btn-next" class="btn btn-primary">Next →</button>
+        <button id="btn-calc" class="btn btn-primary" style="display:none">Calculate Results</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Save/Load Modal -->
+  <div id="modal-overlay" class="modal-overlay" style="display:none">
+    <div class="modal" id="modal-content"></div>
+  </div>
+
+  <footer class="app-footer">
+    <div class="container">
+      <p>&copy; 2024 Meat & Livestock Australia Limited ABN 39 081 678 364</p>
+    </div>
+  </footer>
+
+  <script src="js/storage.js"></script>
+  <script src="js/case-studies.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/results.js"></script>
+  <script src="js/import.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="js/analytics.js"></script>
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/mini-apps/mla-cop-tool/service-worker.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

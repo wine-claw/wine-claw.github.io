@@ -1,0 +1,15 @@
+@media print {
+  .app-header, .app-footer, .wizard-nav, .species-tabs, .step-nav,
+  .enterprise-select, .header-actions, .btn, #btn-save, #btn-load,
+  #btn-compare, #btn-import, #btn-print, #btn-pdf, .modal-overlay { display: none !important; }
+  
+  body { background: white; font-size: 11pt; }
+  .container { max-width: 100%; padding: 0; }
+  .step-content { display: block !important; }
+  .species-panel { display: block !important; page-break-inside: avoid; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+  .data-table th { background: #333 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .result-card { border: 1px solid #ccc; box-shadow: none; }
+  .chart-container { page-break-inside: avoid; }
+  h2 { page-break-after: avoid; }
+}
