@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frost Night — Vineyard Frost Protection Simulator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:rgba(15,20,40,0.85);--blue:#4a90d9;--cold:#1a3a6a;--warm:#e8a030;--danger:#d94040;--text:#d0d8e8;--dim:#6a7a9a;--green:#40c060}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;min-height:100vh;overflow-x:hidden;transition:background 2s}
+#warning{background:#1a1a2a;color:#886620;font-size:11px;text-align:center;padding:4px 8px;border-bottom:1px solid #2a2a3a}
+#hero{position:relative;height:120px;background:url('frost-night-hero.png') center/cover;display:flex;align-items:center;justify-content:center;flex-direction:column;overflow:hidden}
+#hero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,14,26,0.3),rgba(10,14,26,0.85))}
+#hero h1,#hero p{position:relative;z-index:1}
+#hero h1{font-size:28px;color:#fff;text-shadow:0 0 20px rgba(74,144,217,0.6);letter-spacing:2px}
+#hero p{font-size:12px;color:var(--dim);margin-top:2px}
+#app{max-width:480px;margin:0 auto;padding:8px 10px 20px}
+#setup,#sim,#results{display:none}
+#setup.active,#sim.active,#results.active{display:block}
+h2{font-size:16px;color:var(--blue);margin:10px 0 6px}
+.severity-row{display:flex;gap:6px;margin-bottom:10px}
+.sev-btn{flex:1;padding:8px 4px;border:1px solid var(--cold);background:var(--card);color:var(--text);border-radius:6px;cursor:pointer;font-size:12px;text-align:center;transition:all .2s}
+.sev-btn.sel{border-color:var(--warm);background:rgba(232,160,48,0.15);color:var(--warm)}
+.int-card{background:var(--card);border:1px solid #1a2a4a;border-radius:8px;padding:10px;margin-bottom:8px}
+.int-card.on{border-color:var(--warm);box-shadow:0 0 8px rgba(232,160,48,0.2)}
+.int-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.int-name{font-size:14px;font-weight:600}
+.int-cost{font-size:12px;color:var(--warm)}
+.int-tip{font-size:11px;color:var(--dim)}
+.int-toggle{width:44px;height:24px;border-radius:12px;background:#2a3a5a;border:none;cursor:pointer;position:relative;transition:background .3s}
+.int-toggle.on{background:var(--warm)}
+.int-toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .3s}
+.int-toggle.on::after{left:22px}
+.int-detail{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-top:4px}
+#start-btn,#retry-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),#2a5aa0);border:none;border-radius:8px;color:#fff;font-size:16px;cursor:pointer;margin-top:10px;transition:transform .1s}
+#start-btn:active,#retry-btn:active{transform:scale(0.97)}
+#clock{font-size:36px;text-align:center;color:#fff;text-shadow:0 0 10px rgba(74,144,217,0.4);margin:6px 0 2px;font-variant-numeric:tabular-nums}
+#vine-status{text-align:center;font-size:24px;margin:2px 0 6px}
+#chart-wrap{background:var(--card);border-radius:8px;padding:8px;margin-bottom:8px;position:relative}
+canvas#chart{width:100%;height:180px;display:block}
+#damage-wrap{margin-bottom:8px}
+#damage-label{font-size:12px;color:var(--dim);margin-bottom:4px;display:flex;justify-content:space-between}
+#damage-bar{height:16px;border-radius:8px;background:#1a2a3a;overflow:hidden;position:relative}
+#damage-fill{height:100%;border-radius:8px;transition:width .5s,background .5s;width:0%}
+#controls-mini{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+#controls-mini .mc{flex:1;min-width:45%;background:var(--card);border:1px solid #1a2a4a;border-radius:6px;padding:6px 8px;font-size:11px;display:flex;justify-content:space-between;align-items:center}
+#controls-mini .mc.on{border-color:var(--warm)}
+.speed-row{display:flex;gap:6px;justify-content:center;margin-bottom:8px}
+.sp-btn{padding:4px 14px;border:1px solid var(--cold);background:var(--card);color:var(--text);border-radius:4px;cursor:pointer;font-size:12px}
+.sp-btn.sel{border-color:var(--warm);color:var(--warm)}
+#results-card{background:var(--card);border-radius:10px;padding:16px;text-align:center}
+#results-card h3{font-size:18px;margin-bottom:10px}
+.res-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;border-bottom:1px solid #1a2a3a}
+.res-row:last-child{border:none}
+#rating{font-size:24px;margin:8px 0}
+#learn-toggle{background:none;border:1px solid #2a3a5a;color:var(--dim);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin:10px 0}
+#learn-content{display:none;background:var(--card);border-radius:8px;padding:12px;font-size:12px;line-height:1.6;color:var(--dim)}
+#learn-content.open{display:block}
+#learn-content h4{color:var(--blue);margin:8px 0 4px;font-size:13px}
+#learn-content table{width:100%;border-collapse:collapse;margin:6px 0}
+#learn-content td,#learn-content th{padding:3px 6px;border:1px solid #1a2a4a;font-size:11px;text-align:center}
+#learn-content th{background:rgba(74,144,217,0.1);color:var(--text)}
+/* Frost particles */
+.frost-particle{position:fixed;color:#fff;opacity:0;pointer-events:none;font-size:10px;animation:fall linear infinite}
+@keyframes fall{0%{opacity:0;transform:translateY(-10vh)}10%{opacity:.7}90%{opacity:.5}100%{opacity:0;transform:translateY(105vh)}}
+#frost-overlay{position:fixed;inset:0;pointer-events:none;background:rgba(74,144,217,0);transition:background 3s;z-index:999}
+.candle-rows{display:flex;gap:4px;margin-top:4px}
+.cr-btn{width:24px;height:24px;border-radius:4px;border:1px solid #2a3a5a;background:var(--card);color:var(--dim);font-size:11px;cursor:pointer}
+.cr-btn.lit{background:var(--warm);color:#000;border-color:var(--warm)}
+</style>
+</head>
+<body>
+<div id="warning">⚠️ Experimental AI mini-app — not professionally validated. Do not rely on this for frost protection decisions.</div>
+<div id="hero"><h1>❄️ Frost Night</h1><p>Vineyard Frost Protection Simulator</p></div>
+<div id="app">
+
+<!-- SETUP -->
+<div id="setup" class="active">
+<h2>Severity</h2>
+<div class="severity-row">
+<button class="sev-btn" data-sev="mild">Mild<br><small>min -0.5°C</small></button>
+<button class="sev-btn sel" data-sev="typical">Typical<br><small>min -1.5°C</small></button>
+<button class="sev-btn" data-sev="severe">Severe<br><small>min -3.5°C</small></button>
+<button class="sev-btn" data-sev="extreme">Extreme<br><small>min -5.5°C</small></button>
+</div>
+<h2>Interventions</h2>
+<div class="int-card" id="ic-wind">
+<div class="int-head"><span class="int-name">🌀 Wind Machine</span><button class="int-toggle" data-int="wind"></button></div>
+<div class="int-tip">Mixes inversion layer warm air down. Needs ≥2°C inversion.</div>
+<div class="int-detail"><span>Lifts +1.5–2.5°C</span><span class="int-cost">$$ / night</span></div>
+</div>
+<div class="int-card" id="ic-sprinkler">
+<div class="int-head"><span class="int-name">💧 Overhead Sprinklers</span><button class="int-toggle" data-int="sprinkler"></button></div>
+<div class="int-tip">Latent heat keeps buds at 0°C while water flows. Risk if water stops!</div>
+<div class="int-detail"><span>Effective bud temp → 0°C</span><span class="int-cost">$$$ / night</span></div>
+</div>
+<div class="int-card" id="ic-candle">
+<div class="int-head"><span class="int-name">🕯️ Frost Candles</span><button class="int-toggle" data-int="candle"></button></div>
+<div class="int-tip">Radiant warmth in vine rows. Pick 1–5 rows to light.</div>
+<div class="int-detail"><span>+1–2°C per row</span><span class="int-cost">$ / row / night</span></div>
+<div class="candle-rows" id="candle-rows">
+<button class="cr-btn" data-r="1">1</button>
+<button class="cr-btn" data-r="2">2</button>
+<button class="cr-btn" data-r="3">3</button>
+<button class="cr-btn" data-r="4">4</button>
+<button class="cr-btn" data-r="5">5</button>
+</div>
+</div>
+<div class="int-card" id="ic-heli">
+<div class="int-head"><span class="int-name">🚁 Helicopter</span><button class="int-toggle" data-int="heli"></button></div>
+<div class="int-tip">Pushes inversion air down. Available 11pm–5am only.</div>
+<div class="int-detail"><span>Lifts +1–2°C</span><span class="int-cost">$$$$ / night</span></div>
+</div>
+<button id="start-btn">🌙 Start Night</button>
+</div>
+
+<!-- SIMULATION -->
+<div id="sim">
+<div id="clock">6:00 PM</div>
+<div id="vine-status">😊</div>
+<div id="chart-wrap"><canvas id="chart"></canvas></div>
+<div id="damage-wrap">
+<div id="damage-label"><span>Primary bud kill</span><span id="damage-pct">0%</span></div>
+<div id="damage-bar"><div id="damage-fill"></div></div>
+</div>
+<div id="controls-mini">
+<div class="mc" id="mc-wind">🌀 Wind <small id="inv-ind"></small></div>
+<div class="mc" id="mc-sprinkler">💧 Sprinkler</div>
+<div class="mc" id="mc-candle">🕯️ Candles <span id="candle-ct">0</span></div>
+<div class="mc" id="mc-heli">🚁 Heli</div>
+</div>
+<div class="speed-row">
+<button class="sp-btn sel" data-sp="1">1×</button>
+<button class="sp-btn" data-sp="2">2×</button>
+<button class="sp-btn" data-sp="4">4×</button>
+</div>
+</div>
+
+<!-- RESULTS -->
+<div id="results">
+<div id="results-card">
+<h3>🌅 Dawn Report</h3>
+<div class="res-row"><span>Min temperature</span><span id="r-mintemp"></span></div>
+<div class="res-row"><span>Primary bud kill</span><span id="r-damage"></span></div>
+<div class="res-row"><span>Total cost</span><span id="r-cost"></span></div>
+<div id="rating"></div>
+<button id="retry-btn">🔄 Try Again</button>
+</div>
+</div>
+
+<!-- LEARN -->
+<button id="learn-toggle">📖 Learn About Frost</button>
+<div id="learn-content">
+<h4>What is radiation frost?</h4>
+On clear, calm nights, the ground and vine surfaces lose heat by long-wave radiation faster than they gain it. Air near the surface cools dramatically — often 5–10°C below the air at 10m height. This "inversion layer" traps cold air at vine level.
+<h4>Wind machines</h4>
+A wind machine (fan on a pole) pushes warmer air from the inversion layer down to vine level, mixing it with cold surface air. It needs an inversion of at least 2°C to work. Typically lifts vine-level temp by 1.5–2.5°C.
+<h4>Sprinkler protection</h4>
+When water freezes on buds, it releases latent heat (80 cal/g), keeping the bud surface at exactly 0°C — just above lethal. But if water stops, the ice coating can actually make things worse by conducting cold faster.
+<h4>Bud damage thresholds (LTE10/LTE50/LTE90)</h4>
+<table>
+<tr><th>Temp</th><th>Primary bud kill</th></tr>
+<tr><td>0°C</td><td>0%</td></tr>
+<tr><td>-1.1°C</td><td>10%</td></tr>
+<tr><td>-2.2°C</td><td>50%</td></tr>
+<tr><td>-3.3°C</td><td>90%</td></tr>
+<tr><td>-4.4°C</td><td>99%</td></tr>
+</table>
+<h4>Australian spring frost context</h4>
+In Australian wine regions (Barossa, McLaren Vale, Adelaide Hills), spring frosts in September–November can devastate crops. Radiation frosts are the most common type. Vignerons deploy wind machines, sprinklers, and even helicopters on severe nights. A single frost night can cost millions in lost production.
+</div>
+</div>
+
+<div id="frost-overlay"></div>
+
+<script>
+// --- STATE ---
+const HOURS = [18,19,20,21,22,23,0,1,2,3,4,5,6,7,8];
+const HOUR_LABELS = ['6PM','7PM','8PM','9PM','10PM','11PM','12AM','1AM','2AM','3AM','4AM','5AM','6AM','7AM','8AM'];
+const BASE_CURVE = [8, 6.5, 5, 4, 3, 2.2, 1.5, 0.7, 0, -0.5, -1.5, -1.0, 0, 2, 5];
+const SEV_OFFSETS = { mild: 1.0, typical: 0, severe: -2.0, extreme: -4.0 };
+let severity = 'typical';
+let ints = { wind: false, sprinkler: false, candle: false, heli: false };
+let candleRows = 0;
+let speed = 1;
+let simHour = 0;
+let simTimer = null;
+let baseCurve = [];
+let actualTemps = [];
+let damagePct = 0;
+let minTemp = 99;
+let running = false;
+
+// --- SETUP UI ---
+document.querySelectorAll('.sev-btn').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.sev-btn').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel');
+    severity = b.dataset.sev;
+  };
+});
+
+document.querySelectorAll('.int-toggle').forEach(b => {
+  b.onclick = () => {
+    const k = b.dataset.int;
+    ints[k] = !ints[k];
+    b.classList.toggle('on', ints[k]);
+    document.getElementById('ic-' + k.replace('heli','heli')).classList.toggle('on', ints[k]);
+    if (k === 'candle' && ints.candle && candleRows === 0) {
+      candleRows = 3;
+      updateCandleUI();
+    }
+  };
+});
+
+document.querySelectorAll('.cr-btn').forEach(b => {
+  b.onclick = () => {
+    candleRows = parseInt(b.dataset.r);
+    updateCandleUI();
+  };
+});
+
+function updateCandleUI() {
+  document.querySelectorAll('.cr-btn').forEach(b => {
+    b.classList.toggle('lit', parseInt(b.dataset.r) <= candleRows);
+  });
+}
+
+document.querySelectorAll('.sp-btn').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.sp-btn').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel');
+    speed = parseInt(b.dataset.sp);
+  };
+});
+
+// --- SIMULATION ---
+document.getElementById('start-btn').onclick = startSim;
+document.getElementById('retry-btn').onclick = () => { showScreen('setup'); };
+
+function showScreen(id) {
+  document.querySelectorAll('#setup,#sim,#results').forEach(e => e.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function genCurve() {
+  const off = SEV_OFFSETS[severity];
+  return BASE_CURVE.map(t => t + off + (Math.random() - 0.5) * 0.6);
+}
+
+function hourToTime(h) { return HOUR_LABELS[h]; }
+function hourTo24(h) { return HOURS[h]; }
+
+function getInversion(curve, h) {
+  // Simulated inversion: difference between 10m air and surface
+  // Stronger at night, peaks around 3-4am
+  const hr = hourTo24(h);
+  const base = (hr >= 20 || hr <= 6) ? 2.5 + Math.random() * 1.5 : 1.0;
+  if (hr >= 2 && hr <= 5) return base + 1;
+  return base;
+}
+
+function getEffectiveTemp(curve, h) {
+  let t = curve[h];
+  const hr = hourTo24(h);
+  const inv = getInversion(curve, h);
+
+  if (ints.wind && inv >= 2) {
+    t += 1.5 + Math.min(inv - 2, 1) * 0.5; // 1.5-2.5 based on inversion
+  }
+  if (ints.candle && candleRows > 0) {
+    t += 0.3 * candleRows; // 0.3 per row, 1-5 rows → +0.3 to +1.5
+    if (candleRows >= 4) t += 0.5; // bonus for heavy candle use
+  }
+  if (ints.heli && (hr >= 23 || hr <= 5)) {
+    t += 1.0 + Math.random() * 1.0;
+  }
+
+  // Sprinkler: effective bud temp = max(t, 0) when active and t <= 1
+  if (ints.sprinkler && t <= 1) {
+    t = Math.max(t, 0);
+  }
+
+  return t;
+}
+
+function calcDamage(effTemp) {
+  // LTE model interpolation
+  if (effTemp >= 0) return 0;
+  if (effTemp <= -4.4) return 99;
+  // Piecewise linear
+  if (effTemp >= -1.1) return (-effTemp / 1.1) * 10;
+  if (effTemp >= -2.2) return 10 + ((-effTemp - 1.1) / 1.1) * 40;
+  if (effTemp >= -3.3) return 50 + ((-effTemp - 2.2) / 1.1) * 40;
+  return 90 + ((-effTemp - 3.3) / 1.1) * 9;
+}
+
+function vineEmoji(dmg) {
+  if (dmg < 5) return '😊';
+  if (dmg < 20) return '😟';
+  if (dmg < 50) return '😰';
+  if (dmg < 90) return '🥶';
+  return '💀';
+}
+
+function damageColor(pct) {
+  if (pct < 10) return 'var(--green)';
+  if (pct < 30) return '#c0c040';
+  if (pct < 60) return '#e08030';
+  return 'var(--danger)';
+}
+
+function updateMiniControls(h) {
+  const hr = hourTo24(h);
+  const inv = getInversion(baseCurve, h);
+  document.getElementById('mc-wind').classList.toggle('on', ints.wind && inv >= 2);
+  document.getElementById('inv-ind').textContent = ints.wind ? `Inv: ${inv.toFixed(1)}°C` : '';
+  document.getElementById('mc-sprinkler').classList.toggle('on', ints.sprinkler && actualTemps[h] <= 1);
+  document.getElementById('mc-candle').classList.toggle('on', ints.candle && candleRows > 0);
+  document.getElementById('candle-ct').textContent = candleRows;
+  const heliActive = ints.heli && (hr >= 23 || hr <= 5);
+  document.getElementById('mc-heli').classList.toggle('on', heliActive);
+}
+
+// --- CHART ---
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+
+function drawChart() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const pad = { l: 36, r: 8, t: 8, b: 22 };
+  const cw = w - pad.l - pad.r;
+  const ch = h - pad.t - pad.b;
+
+  const yMin = -7, yMax = 10;
+  const yRange = yMax - yMin;
+
+  function tx(i) { return pad.l + (i / (HOURS.length - 1)) * cw; }
+  function ty(v) { return pad.t + ((yMax - v) / yRange) * ch; }
+
+  // Grid
+  ctx.strokeStyle = '#1a2a4a';
+  ctx.lineWidth = 0.5;
+  for (let v = -6; v <= 10; v += 2) {
+    ctx.beginPath(); ctx.moveTo(pad.l, ty(v)); ctx.lineTo(w - pad.r, ty(v)); ctx.stroke();
+  }
+
+  // 0°C line
+  ctx.strokeStyle = '#4a6a9a';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(pad.l, ty(0)); ctx.lineTo(w - pad.r, ty(0)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Y labels
+  ctx.fillStyle = '#5a6a8a';
+  ctx.font = '10px system-ui';
+  ctx.textAlign = 'right';
+  for (let v = -6; v <= 10; v += 2) {
+    ctx.fillText(v + '°', pad.l - 4, ty(v) + 3);
+  }
+
+  // X labels
+  ctx.textAlign = 'center';
+  for (let i = 0; i < HOURS.length; i += 2) {
+    ctx.fillText(HOUR_LABELS[i], tx(i), h - 4);
+  }
+
+  // Projected curve (dotted)
+  ctx.strokeStyle = '#3a5a8a';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  for (let i = 0; i < baseCurve.length; i++) {
+    const x = tx(i), y = ty(baseCurve[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Actual curve (solid)
+  if (actualTemps.length > 0) {
+    ctx.strokeStyle = '#4a90d9';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < actualTemps.length; i++) {
+      const x = tx(i), y = ty(actualTemps[i]);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Current point
+    const ci = actualTemps.length - 1;
+    ctx.beginPath();
+    ctx.arc(tx(ci), ty(actualTemps[ci]), 4, 0, Math.PI * 2);
+    ctx.fillStyle = actualTemps[ci] < 0 ? '#d94040' : '#4a90d9';
+    ctx.fill();
+  }
+}
+
+// --- FROST PARTICLES ---
+function spawnFrost() {
+  const count = 15;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'frost-particle';
+    el.textContent = ['❄','✦','·','✧'][Math.floor(Math.random()*4)];
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.animationDuration = (3 + Math.random() * 5) + 's';
+    el.style.animationDelay = Math.random() * 3 + 's';
+    el.style.fontSize = (8 + Math.random() * 10) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 9000);
+  }
+}
+
+let frostActive = false;
+function updateFrost(temp) {
+  const overlay = document.getElementById('frost-overlay');
+  if (temp < 2) {
+    const intensity = Math.min((2 - temp) / 5, 0.3);
+    overlay.style.background = `rgba(74,144,217,${intensity})`;
+    if (!frostActive) { frostActive = true; spawnFrost(); }
+  } else {
+    overlay.style.background = 'rgba(74,144,217,0)';
+    frostActive = false;
+  }
+}
+
+// --- COST ---
+function calcCost() {
+  let cost = 0;
+  if (ints.wind) cost += 2;
+  if (ints.sprinkler) cost += 3;
+  if (ints.candle) cost += candleRows;
+  if (ints.heli) cost += 4;
+  return cost;
+}
+
+function costLabel(c) {
+  if (c === 0) return 'None';
+  if (c <= 2) return '$ Low';
+  if (c <= 5) return '$$ Moderate';
+  if (c <= 8) return '$$$ High';
+  return '$$$$ Very High';
+}
+
+// --- SIM LOOP ---
+function startSim() {
+  baseCurve = genCurve();
+  actualTemps = [];
+  damagePct = 0;
+  minTemp = 99;
+  simHour = 0;
+  running = true;
+  showScreen('sim');
+  advanceHour();
+  simTimer = setInterval(advanceHour, 1000 / speed);
+}
+
+function advanceHour() {
+  if (simHour >= HOURS.length) {
+    clearInterval(simTimer);
+    endSim();
+    return;
+  }
+
+  const eff = getEffectiveTemp(baseCurve, simHour);
+  actualTemps.push(eff);
+
+  if (eff < minTemp) minTemp = eff;
+
+  const stepDmg = calcDamage(eff);
+  damagePct = Math.max(damagePct, stepDmg); // damage is cumulative (max encountered)
+
+  // Update UI
+  document.getElementById('clock').textContent = hourToTime(simHour);
+  document.getElementById('vine-status').textContent = vineEmoji(damagePct);
+  document.getElementById('damage-pct').textContent = damagePct.toFixed(1) + '%';
+  document.getElementById('damage-fill').style.width = damagePct + '%';
+  document.getElementById('damage-fill').style.background = damageColor(damagePct);
+
+  updateMiniControls(simHour);
+  updateFrost(eff);
+  drawChart();
+
+  simHour++;
+
+  // Adjust interval for speed
+  if (simHour < HOURS.length) {
+    clearInterval(simTimer);
+    simTimer = setInterval(advanceHour, 1000 / speed);
+  }
+}
+
+function endSim() {
+  running = false;
+  const cost = calcCost();
+  document.getElementById('r-mintemp').textContent = minTemp.toFixed(1) + '°C';
+  document.getElementById('r-damage').textContent = damagePct.toFixed(1) + '%';
+  document.getElementById('r-cost').textContent = costLabel(cost);
+
+  let emoji, label;
+  if (damagePct < 5) { emoji = '🌟'; label = 'Excellent — vines unscathed!'; }
+  else if (damagePct < 20) { emoji = '👍'; label = 'Good — minor losses'; }
+  else if (damagePct < 50) { emoji = '😟'; label = 'Moderate — significant damage'; }
+  else if (damagePct < 80) { emoji = '😰'; label = 'Severe — heavy losses'; }
+  else { emoji = '💀'; label = 'Devastating — crop destroyed'; }
+  document.getElementById('rating').textContent = emoji + ' ' + label;
+
+  document.getElementById('frost-overlay').style.background = 'rgba(74,144,217,0)';
+  showScreen('results');
+}
+
+// Learn toggle
+document.getElementById('learn-toggle').onclick = () => {
+  document.getElementById('learn-content').classList.toggle('open');
+};
+
+// Resize chart
+window.addEventListener('resize', () => { if (running) drawChart(); });
+
+// Init chart
+drawChart();
+</script>
+</body>
+</html>
