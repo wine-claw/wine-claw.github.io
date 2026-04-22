@@ -1,0 +1,480 @@
+/* ============================================================
+   Winery Hose & Pump Explorer — styles.css
+   Dependency-free, mobile-first, grape-dark aesthetic
+   ============================================================ */
+
+/* ---------- Google Font (optional, falls back gracefully) ---------- */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+/* ---------- CSS Variables ---------- */
+:root {
+  --bg:         #1a0f0a;
+  --surface:    #2b1a10;
+  --surface2:   #3a2418;
+  --border:     #5a3820;
+  --accent:     #c0622a;
+  --accent2:    #e8953a;
+  --gold:       #d4a84b;
+  --green:      #5a9e6f;
+  --green-bg:   #1e3325;
+  --red:        #c04040;
+  --red-bg:     #331a1a;
+  --blue:       #4a8fc4;
+  --text:       #f2e6d8;
+  --text-muted: #a08060;
+  --text-dim:   #6a4a30;
+  --radius:     10px;
+  --radius-sm:  6px;
+  --shadow:     0 4px 24px rgba(0,0,0,0.5);
+  --font:       'DM Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(192,98,42,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(212,168,75,0.08) 0%, transparent 60%);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 0 16px 40px;
+}
+
+/* ---------- App Shell ---------- */
+.app-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ---------- Header ---------- */
+.app-header {
+  padding: 28px 0 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-mark {
+  font-size: 2.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 8px rgba(212,168,75,0.4));
+}
+
+.app-header h1 {
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.tagline {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+/* ---------- Main Grid ---------- */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 680px) {
+  .main-grid {
+    grid-template-columns: 360px 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .inputs-panel {
+    grid-row: 1 / 3;
+  }
+
+  .results-panel {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .chart-panel {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .caveats-panel {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+}
+
+@media (min-width: 960px) {
+  .main-grid {
+    grid-template-columns: 340px 1fr 340px;
+    grid-template-rows: auto auto;
+  }
+
+  .inputs-panel  { grid-column: 1; grid-row: 1; }
+  .results-panel { grid-column: 2; grid-row: 1; }
+  .chart-panel   { grid-column: 3; grid-row: 1 / 3; }
+  .caveats-panel { grid-column: 1 / -1; grid-row: 2; }
+}
+
+/* ---------- Panel ---------- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.panel-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent2);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: -10px;
+  margin-bottom: 12px;
+}
+
+/* ---------- Input Fields ---------- */
+.field-group {
+  margin-bottom: 14px;
+}
+
+.field-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+
+.unit-tag {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
+input[type="number"] {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+input[type="number"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(192,98,42,0.2);
+}
+
+/* ---------- Preset Buttons ---------- */
+.preset-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  flex: 1;
+  min-width: 70px;
+  padding: 6px 8px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.preset-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.preset-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ---------- Calculate Button ---------- */
+.calc-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s, filter 0.2s;
+  box-shadow: 0 4px 12px rgba(192,98,42,0.4);
+}
+
+.calc-btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 18px rgba(192,98,42,0.5);
+}
+
+.calc-btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+/* ---------- Results Grid ---------- */
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.result-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+
+.result-card .result-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.result-card .result-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-card .result-unit {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.highlight-card {
+  border-color: var(--gold);
+  background: linear-gradient(135deg, rgba(212,168,75,0.08) 0%, transparent 100%);
+}
+
+.highlight-card .result-value {
+  color: var(--gold);
+}
+
+/* Positive TDH */
+.result-card.tdh-positive .result-value { color: var(--accent2); }
+.result-card.tdh-negative .result-value { color: var(--green); }
+
+/* ---------- Regime Badge ---------- */
+.regime-badge {
+  text-align: center;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.regime-badge.regime-laminar {
+  background: var(--green-bg);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.regime-badge.regime-turbulent {
+  background: rgba(74,143,196,0.12);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.regime-badge.regime-critical {
+  background: rgba(212,168,75,0.1);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ---------- Chart ---------- */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 340px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+#chart-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.current-dot { background: #e03030; }
+.curve-dot    { background: var(--accent2); }
+
+/* ---------- Caveats Panel ---------- */
+.caveats-body h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent2);
+  margin: 14px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.caveats-body h3:first-child { margin-top: 0; }
+
+.caveats-body ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.caveats-body li {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.caveats-body li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.caveats-body code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.78em;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--gold);
+}
+
+/* ---------- Footer ---------- */
+.app-footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* ---------- Responsive tweaks ---------- */
+@media (max-width: 679px) {
+  .results-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .chart-wrap {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }

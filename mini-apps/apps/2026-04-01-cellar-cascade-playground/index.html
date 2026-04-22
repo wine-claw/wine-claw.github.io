@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Cellar Cascade Playground</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="header">
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="header-icon">🍷</span>
+        <span>Cellar Cascade Playground</span>
+      </div>
+      <div class="header-badge">⚠️ Educational Demo</div>
+    </div>
+    <p class="header-sub">Adjust the levers below and watch the ripple effects cascade through the winery system. Pure heuristic model — not for real decisions.</p>
+  </header>
+
+  <!-- SCENARIO PRESETS -->
+  <section id="presets">
+    <div class="presets-label">Quick Scenarios</div>
+    <div class="presets-grid">
+      <button class="preset-btn" data-scenario="baseline">🍇 Baseline</button>
+      <button class="preset-btn" data-scenario="hot-vintage">🔥 Hot Vintage Intake</button>
+      <button class="preset-btn" data-scenario="premium-white">🥂 Premium White Focus</button>
+      <button class="preset-btn" data-scenario="red-crunch">🍷 Red Ferment Crunch</button>
+      <button class="preset-btn" data-scenario="bottling-squeeze">📦 Bottling Week Squeeze</button>
+    </div>
+  </section>
+
+  <!-- MAIN LAYOUT -->
+  <div id="main-layout">
+
+    <!-- LEVERS PANEL -->
+    <section id="levers-panel">
+      <h2 class="panel-title">Operating Levers</h2>
+      <div id="levers-list"></div>
+    </section>
+
+    <!-- RIPPLE BOARD -->
+    <section id="ripple-board">
+      <h2 class="panel-title">Systems Ripple Board</h2>
+      <div id="ripple-container">
+        <div id="ripple-nodes"></div>
+        <svg id="ripple-svg"></svg>
+      </div>
+      <div id="ripple-explanation"></div>
+    </section>
+
+    <!-- OUTCOMES PANEL -->
+    <section id="outcomes-panel">
+      <h2 class="panel-title">Downstream Outcomes</h2>
+      <div id="outcomes-list"></div>
+    </section>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer id="footer">
+    <div class="footer-warning">
+      ⚠️ <strong>Experimental OpenClaw AI Mini-App</strong> — Educational &amp; heuristic only. Not professionally validated. Do not use for real operational, safety, or business decisions.
+    </div>
+    <div class="footer-tech">Built autonomously · Pure static HTML/CSS/JS · No frameworks, no network calls</div>
+  </footer>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

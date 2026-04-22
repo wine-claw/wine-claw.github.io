@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tank Chill Calculator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1a1f2e;
+    --card: #232a3b;
+    --card2: #2a3347;
+    --border: #3a4359;
+    --text: #e8eaf0;
+    --text-dim: #8b95a8;
+    --heat: #f59e0b;
+    --heat-dim: #b4730a;
+    --cool: #06b6d4;
+    --cool-dim: #048a9b;
+    --warn: #ef4444;
+    --green: #22c55e;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    padding: 0 12px 40px;
+    line-height: 1.5;
+  }
+
+  .warn-banner {
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 16px 0 20px;
+    font-size: 13px;
+    color: #fca5a5;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .warn-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .input-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  input[type="number"], select {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 9px 12px;
+    font-size: 15px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  input[type="number"]:focus, select:focus {
+    border-color: var(--cool);
+  }
+  input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(58,67,89,0.5);
+    font-size: 14px;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .label { color: var(--text-dim); }
+  .result-row .value { font-weight: 600; font-size: 15px; }
+  .result-row .value.heat { color: var(--heat); }
+  .result-row .value.cool { color: var(--cool); }
+  .result-row .value.green { color: var(--green); }
+
+  .compare-bar {
+    background: var(--card2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .compare-bar .bar-label { font-size: 12px; color: var(--text-dim); }
+  .compare-bar .bar-val { font-size: 14px; font-weight: 700; }
+  .compare-bar .savings { color: var(--green); }
+
+  /* Tank SVG */
+  .tank-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0 4px;
+  }
+  .tank-svg { max-width: 100%; width: 260px; height: 220px; }
+
+  .anim-arrow {
+    animation: pulse-arrow 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse-arrow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+  .anim-arrow-slow {
+    animation: pulse-arrow 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-arrow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.9; }
+  }
+
+  .section-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 0;
+  }
+
+  .payback-box {
+    background: var(--card2);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .payback-box .big-num {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--green);
+    line-height: 1;
+  }
+  .payback-box .big-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  @media (min-width: 520px) {
+    .input-grid { grid-template-columns: repeat(3, 1fr); }
+    .input-grid.two-col { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="warn-banner">
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="#ef4444" d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
+  <span>⚠️ Experimental AI mini-app. Not professionally validated. Do not rely on this for engineering decisions.</span>
+</div>
+
+<h1>Tank Chill Calculator</h1>
+<p class="subtitle">Winery tank cooling load estimator &amp; insulation comparison</p>
+
+<!-- Tank SVG Visual -->
+<div class="card">
+  <div class="tank-wrap">
+    <svg class="tank-svg" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="ssGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#4a5568"/>
+          <stop offset="40%" stop-color="#718096"/>
+          <stop offset="100%" stop-color="#4a5568"/>
+        </linearGradient>
+        <linearGradient id="foamGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#f6ad55"/>
+          <stop offset="50%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#dd8a0a"/>
+        </linearGradient>
+        <linearGradient id="wineGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7b2d8b"/>
+          <stop offset="100%" stop-color="#4a1942"/>
+        </linearGradient>
+        <linearGradient id="coolGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#06b6d4"/>
+          <stop offset="100%" stop-color="#0891b2"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Ambient label -->
+      <text x="240" y="30" font-size="11" fill="#f59e0b" text-anchor="end" id="ambientLabel">35°C</text>
+      <text x="240" y="44" font-size="10" fill="#8b95a8" text-anchor="end">ambient</text>
+
+      <!-- Heat flow arrows (ambient -> wall) -->
+      <g class="anim-arrow">
+        <path d="M 222 55 L 195 55" stroke="#f59e0b" stroke-width="2.5" fill="none" stroke-dasharray="5,3"/>
+        <polygon points="195,51 185,55 195,59" fill="#f59e0b"/>
+      </g>
+
+      <!-- Foam/insulation layer (outer ring) -->
+      <ellipse cx="130" cy="110" rx="88" ry="88" fill="none" stroke="url(#foamGrad)" stroke-width="16" id="foamLayer"/>
+
+      <!-- Stainless steel wall (inner ring) -->
+      <ellipse cx="130" cy="110" rx="72" ry="72" fill="none" stroke="url(#ssGrad)" stroke-width="8"/>
+
+      <!-- Wine fill (shows current temp color) -->
+      <ellipse cx="130" cy="110" rx="68" ry="68" fill="url(#wineGrad)" id="wineFill"/>
+
+      <!-- Cooling jacket indicator (cool ring at bottom) -->
+      <path d="M 62 155 Q 130 175 198 155" stroke="#06b6d4" stroke-width="4" fill="none" stroke-linecap="round" id="coolJacket"/>
+
+      <!-- Heat flow into tank -->
+      <g class="anim-arrow-slow">
+        <path d="M 130 22 L 130 42" stroke="#f59e0b" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+        <polygon points="126,42 130,52 134,42" fill="#f59e0b"/>
+      </g>
+
+      <!-- Cooling arrows (going down/out) -->
+      <g class="anim-arrow">
+        <path d="M 85 170 L 85 195" stroke="#06b6d4" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+        <polygon points="81,195 85,205 89,195" fill="#06b6d4"/>
+      </g>
+      <g class="anim-arrow" style="animation-delay:0.4s">
+        <path d="M 130 178 L 130 200" stroke="#06b6d4" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+        <polygon points="126,200 130,210 134,200" fill="#06b6d4"/>
+      </g>
+      <g class="anim-arrow" style="animation-delay:0.8s">
+        <path d="M 175 170 L 175 195" stroke="#06b6d4" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+        <polygon points="171,195 175,205 179,195" fill="#06b6d4"/>
+      </g>
+
+      <!-- Tank labels -->
+      <text x="130" y="108" font-size="11" fill="rgba(255,255,255,0.7)" text-anchor="middle" id="wineTempLabel">25°C</text>
+      <text x="130" y="122" font-size="10" fill="rgba(255,255,255,0.5)" text-anchor="middle">wine</text>
+
+      <!-- Legend -->
+      <rect x="10" y="185" width="10" height="10" rx="2" fill="#f59e0b" opacity="0.7"/>
+      <text x="26" y="194" font-size="10" fill="#8b95a8">Heat gain</text>
+      <rect x="10" y="200" width="10" height="10" rx="2" fill="#06b6d4" opacity="0.7"/>
+      <text x="26" y="209" font-size="10" fill="#8b95a8">Cooling removal</text>
+    </svg>
+  </div>
+</div>
+
+<!-- Tank Setup -->
+<div class="card">
+  <div class="card-title">Tank Setup</div>
+  <div class="input-grid">
+    <div class="field">
+      <label>Volume (kL)</label>
+      <input type="number" id="volume" value="50" min="1" max="500" step="1">
+    </div>
+    <div class="field">
+      <label>Current Temp (°C)</label>
+      <input type="number" id="currentTemp" value="25" min="-5" max="60" step="0.5">
+    </div>
+    <div class="field">
+      <label>Target Temp (°C)</label>
+      <input type="number" id="targetTemp" value="15" min="-5" max="60" step="0.5">
+    </div>
+    <div class="field">
+      <label>Ambient Temp (°C)</label>
+      <input type="number" id="ambientTemp" value="35" min="-10" max="60" step="0.5">
+    </div>
+    <div class="field">
+      <label>Chiller Capacity (kW)</label>
+      <input type="number" id="chillerKw" value="20" min="1" max="500" step="1">
+    </div>
+  </div>
+</div>
+
+<!-- Fermentation Heat -->
+<div class="card">
+  <div class="card-title">Fermentation Heat</div>
+  <div class="input-grid">
+    <div class="field">
+      <label>Starting Brix</label>
+      <input type="number" id="brix" value="22" min="5" max="35" step="0.5">
+    </div>
+    <div class="field">
+      <label>Ferment Days</label>
+      <input type="number" id="fermentDays" value="10" min="1" max="30" step="1">
+    </div>
+    <div class="field">
+      <label>Peak Day (1=N/A)</label>
+      <input type="number" id="peakDay" value="4" min="1" max="30" step="1">
+    </div>
+  </div>
+
+  <div class="section-divider" style="margin:12px 0 10px"></div>
+  <div class="result-row">
+    <span class="label">Sugar content</span>
+    <span class="value" id="sugarGL">— g/L</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Total sugar (kg)</span>
+    <span class="value" id="totalSugar">— kg</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Total fermentation heat</span>
+    <span class="value heat" id="totalFermHeat">— MJ</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Peak day heat rate</span>
+    <span class="value heat" id="peakFermKw">— kW</span>
+  </div>
+</div>
+
+<!-- Heat Gain Comparison -->
+<div class="card">
+  <div class="card-title">Heat Gain — Bare vs Insulated</div>
+  <div class="input-grid" style="margin-bottom:12px">
+    <div class="field">
+      <label>Insulation thickness</label>
+      <select id="foamThick">
+        <option value="25">25 mm</option>
+        <option value="50" selected>50 mm</option>
+        <option value="75">75 mm</option>
+        <option value="100">100 mm</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="result-row">
+    <span class="label">Tank surface area</span>
+    <span class="value" id="surfaceArea">— m²</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Bare tank U-value</span>
+    <span class="value heat" id="bareU">— W/m²·K</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Insulated U-value</span>
+    <span class="value cool" id="insU">— W/m²·K</span>
+  </div>
+
+  <div class="section-divider" style="margin:10px 0"></div>
+
+  <div class="compare-bar">
+    <div>
+      <div class="bar-label">Bare tank heat gain</div>
+      <div class="bar-val heat" id="bareGainKw">— kW</div>
+    </div>
+  </div>
+  <div class="compare-bar">
+    <div>
+      <div class="bar-label">Insulated tank heat gain</div>
+      <div class="bar-val cool" id="insGainKw">— kW</div>
+    </div>
+  </div>
+  <div class="compare-bar">
+    <div>
+      <div class="bar-label">Heat saved per hour</div>
+      <div class="bar-val savings" id="savedPerHr">— kW</div>
+    </div>
+  </div>
+</div>
+
+<!-- Cooling Demand Summary -->
+<div class="card">
+  <div class="card-title">Cooling Demand Summary</div>
+  <div class="result-row">
+    <span class="label">Peak fermentation load</span>
+    <span class="value heat" id="fermCoolKw">— kW</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Ambient heat gain (bare)</span>
+    <span class="value heat" id="ambGainKw">— kW</span>
+  </div>
+  <div class="section-divider" style="margin:8px 0"></div>
+  <div class="result-row">
+    <span class="label" style="font-size:15px;font-weight:700">Total cooling needed</span>
+    <span class="value heat" style="font-size:17px" id="totalCoolKw">— kW</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Equivalent refrigeration</span>
+    <span class="value heat" id="totalRTons">— RT</span>
+  </div>
+</div>
+
+<!-- Pull-Down Time -->
+<div class="card">
+  <div class="card-title">Pull-Down Time Estimate</div>
+  <div class="result-row">
+    <span class="label">Temperature delta</span>
+    <span class="value cool" id="tempDelta">— °C</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Wine mass</span>
+    <span class="value" id="wineMass">— kg</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Energy to remove</span>
+    <span class="value heat" id="energyToRemove">— MJ</span>
+  </div>
+  <div class="result-row">
+    <span class="label">With chiller capacity</span>
+    <span class="value" id="pullDownTime">— hours</span>
+  </div>
+</div>
+
+<!-- Insulation Payback -->
+<div class="card">
+  <div class="card-title">Insulation Payback</div>
+  <div class="input-grid two-col">
+    <div class="field">
+      <label>Elec. cost ($/kWh)</label>
+      <input type="number" id="elecCost" value="0.30" min="0.01" max="2" step="0.01">
+    </div>
+    <div class="field">
+      <label>Insulation cost ($)</label>
+      <input type="number" id="insCost" value="3000" min="100" max="100000" step="100">
+    </div>
+  </div>
+
+  <div class="section-divider" style="margin:10px 0"></div>
+
+  <div class="result-row">
+    <span class="label">Heat saved per vintage (60 days)</span>
+    <span class="value savings" id="savedPerVintage">— kWh</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Energy cost saved per vintage</span>
+    <span class="value savings" id="costSavedPerVintage">— $</span>
+  </div>
+  <div class="result-row">
+    <span class="label">Vintages to payback</span>
+    <span class="value" id="vintagesToPayback">—</span>
+  </div>
+
+  <div class="payback-box">
+    <div class="big-num" id="paybackYears">—</div>
+    <div class="big-label">years to payback insulation</div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // DOM refs
+  const $ = id => document.getElementById(id);
+
+  // Physics constants
+  const SUGAR_KJ_PER_G = 0.56;
+  const WINE_CP = 4.2;        // kJ/kg·K
+  const WINE_DENSITY = 990;   // kg/m³
+  const PEAK_DAY_FRAC = 0.40; // peak day is ~40% of total heat
+
+  // U-values W/m²·K
+  const BARE_U = 8;
+  const FOAM_U = { 25: 0.35, 50: 0.25, 75: 0.18, 100: 0.14 };
+
+  const VINTAGE_DAYS = 60;
+  const RT_FACTOR = 3.516; // kW -> RT
+
+  // Load saved values
+  function load(key, fallback) {
+    try {
+      const v = localStorage.getItem('tcc_' + key);
+      return v !== null ? JSON.parse(v) : fallback;
+    } catch(e) { return fallback; }
+  }
+
+  function save(key, val) {
+    try { localStorage.setItem('tcc_' + key, JSON.stringify(val)); } catch(e) {}
+  }
+
+  // Inputs
+  const inputs = ['volume','currentTemp','targetTemp','ambientTemp','chillerKw','brix','fermentDays','peakDay','foamThick','elecCost','insCost'];
+  const numInputs = ['volume','currentTemp','targetTemp','ambientTemp','chillerKw','brix','fermentDays','peakDay','elecCost','insCost'];
+
+  // Pre-fill from localStorage
+  numInputs.forEach(id => {
+    const el = $(id);
+    const saved = load(id, null);
+    if (saved !== null) el.value = saved;
+  });
+  const foamEl = $('foamThick');
+  foamEl.value = load('foamThick', '50');
+
+  // Tank geometry: H:D = 2.5:1, V = π(D/2)²H => H = 2.5D
+  // V = π(D/2)²(2.5D) = π * D³ * 2.5 / 4 = 0.7854 * 2.5 * D³ = 1.9635 D³
+  // D = (V / 1.9635)^(1/3), H = 2.5D
+  function tankDimensions(volumeKL) {
+    const V = volumeKL; // m³ = kL
+    const D = Math.cbrt(V / 1.9635);
+    const H = 2.5 * D;
+    const sideArea = Math.PI * D * H;
+    const endArea = 2 * Math.PI * Math.pow(D / 2, 2);
+    const A = sideArea + endArea;
+    return { D, H, A };
+  }
+
+  // Color interpolation for wine temp display
+  function tempColor(t, minT, maxT) {
+    const ratio = Math.max(0, Math.min(1, (t - minT) / (maxT - minT)));
+    // cold: #06b6d4 -> warm: #f59e0b -> hot: #ef4444
+    if (ratio < 0.5) {
+      const r = Math.round(6 + (245 - 6) * (ratio * 2));
+      const g = Math.round(182 + (158 - 182) * (ratio * 2));
+      const b = Math.round(212 - (212 - 11) * (ratio * 2));
+      return `rgb(${r},${g},${b})`;
+    } else {
+      const r = Math.round(245 + (239 - 245) * ((ratio - 0.5) * 2));
+      const g = Math.round(158 + (68 - 158) * ((ratio - 0.5) * 2));
+      const b = Math.round(11 + (68 - 11) * ((ratio - 0.5) * 2));
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+
+  function calc() {
+    const V = parseFloat($('volume').value) || 50;
+    const curT = parseFloat($('currentTemp').value) || 25;
+    const tgtT = parseFloat($('targetTemp').value) || 15;
+    const ambT = parseFloat($('ambientTemp').value) || 35;
+    const chillerKw = parseFloat($('chillerKw').value) || 20;
+    const brix = parseFloat($('brix').value) || 22;
+    const fermDays = parseFloat($('fermentDays').value) || 10;
+    const peakDay = parseInt($('peakDay').value) || 4;
+    const foamThick = parseInt($('foamThick').value) || 50;
+    const elecCost = parseFloat($('elecCost').value) || 0.30;
+    const insCost = parseFloat($('insCost').value) || 3000;
+
+    // Save inputs
+    numInputs.forEach(id => save(id, $(id).value));
+    save('foamThick', foamThick);
+
+    // Tank dimensions
+    const { D, H, A } = tankDimensions(V);
+
+    // --- Fermentation heat ---
+    const sugarGL = brix * 10; // g/L (Brix * 10)
+    const volumeM3 = V;
+    const totalSugarG = sugarGL * 1000 * volumeM3;
+    const totalSugarKg = totalSugarG / 1000;
+    const totalFermMJ = totalSugarKg * 1000 * SUGAR_KJ_PER_G / 1000; // kJ -> MJ
+    const totalFermKWh = totalFermMJ / 3.6;
+    const peakDayKJ = totalFermMJ * PEAK_DAY_FRAC;
+    const peakDayKwh = peakDayKJ / 3.6;
+    // Peak fermentation kW: 40% of total heat released over 24 hours on the peak day
+    const peakFermKw = peakDayKwh / 24;
+
+    // --- Heat gain ---
+    const uBare = BARE_U;
+    const uIns = FOAM_U[foamThick] || 0.25;
+    const bareGainKw = (uBare * A * (ambT - curT)) / 1000;
+    const insGainKw = (uIns * A * (ambT - curT)) / 1000;
+    const savedPerHour = bareGainKw - insGainKw;
+
+    // --- Cooling demand ---
+    const fermCoolKw = peakFermKw;
+    const ambGainKw = bareGainKw; // for demand summary use bare tank gain
+    const totalCoolKw = fermCoolKw + ambGainKw;
+    const totalRT = totalCoolKw / RT_FACTOR;
+
+    // --- Pull-down time ---
+    const tempDelta = Math.max(0, curT - tgtT);
+    const wineMassKg = volumeM3 * WINE_DENSITY; // kg (V m³ × density kg/m³)
+    const energyKJ = wineMassKg * WINE_CP * tempDelta; // kJ
+    const energyMJ = energyKJ / 1000; // MJ
+    const energyKwh = energyMJ / 3.6;
+    const netCoolingKw = Math.max(0.1, chillerKw - bareGainKw);
+    const pullDownH = netCoolingKw > 0 ? energyKwh / netCoolingKw : 999;
+    const pullDownDays = pullDownH / 24;
+
+    // --- Payback ---
+    const savedPerVintageKwh = Math.max(0, savedPerHour) * 24 * VINTAGE_DAYS;
+    const costSavedPerVintage = savedPerVintageKwh * elecCost;
+    const vintagesToPayback = costSavedPerVintage > 0 ? insCost / costSavedPerVintage : 999;
+    const paybackYears = vintagesToPayback * (VINTAGE_DAYS / 365);
+
+    // --- Update DOM ---
+    $('sugarGL').textContent = sugarGL.toFixed(0) + ' g/L';
+    $('totalSugar').textContent = totalSugarKg.toFixed(0) + ' kg';
+    $('totalFermHeat').textContent = totalFermMJ.toFixed(0) + ' MJ';
+    $('peakFermKw').textContent = peakFermKw.toFixed(1) + ' kW';
+
+    $('surfaceArea').textContent = A.toFixed(1) + ' m²';
+    $('bareU').textContent = uBare.toFixed(1) + ' W/m²·K';
+    $('insU').textContent = uIns.toFixed(2) + ' W/m²·K';
+
+    $('bareGainKw').textContent = bareGainKw.toFixed(1) + ' kW';
+    $('insGainKw').textContent = insGainKw.toFixed(2) + ' kW';
+    $('savedPerHr').textContent = savedPerHour.toFixed(2) + ' kW';
+
+    $('fermCoolKw').textContent = fermCoolKw.toFixed(1) + ' kW';
+    $('ambGainKw').textContent = ambGainKw.toFixed(1) + ' kW';
+    $('totalCoolKw').textContent = totalCoolKw.toFixed(1) + ' kW';
+    $('totalRTons').textContent = totalRT.toFixed(1) + ' RT';
+
+    $('tempDelta').textContent = tempDelta.toFixed(1) + ' °C';
+    $('wineMass').textContent = (wineMassKg / 1000).toFixed(1) + ' t';
+    $('energyToRemove').textContent = energyMJ.toFixed(0) + ' MJ';
+    $('pullDownTime').textContent = pullDownH < 99999 ? pullDownH.toFixed(1) + ' hrs (' + pullDownDays.toFixed(1) + ' days)' : '—';
+
+    $('savedPerVintage').textContent = savedPerVintageKwh.toFixed(0) + ' kWh';
+    $('costSavedPerVintage').textContent = '$' + costSavedPerVintage.toFixed(0);
+    $('vintagesToPayback').textContent = vintagesToPayback < 999 ? vintagesToPayback.toFixed(1) + ' seasons' : '>100 seasons';
+    $('paybackYears').textContent = paybackYears < 100 ? paybackYears.toFixed(1) + ' yr' : '>100';
+
+    // --- Update SVG ---
+    // Wine color based on current temp
+    const wineColor = tempColor(curT, 5, 45);
+    $('wineFill').setAttribute('fill', wineColor);
+    $('wineTempLabel').textContent = curT.toFixed(0) + '°C';
+
+    // Foam layer thickness visual based on selection
+    const foamStrokes = { 25: 10, 50: 16, 75: 22, 100: 28 };
+    const fw = foamStrokes[foamThick] || 16;
+    $('foamLayer').setAttribute('stroke-width', fw);
+
+    // Ambient label
+    $('ambientLabel').textContent = ambT.toFixed(0) + '°C';
+
+    // Opacity of heat arrows based on ambient vs wine delta
+    const heatIntensity = Math.max(0.3, Math.min(1, (ambT - curT) / 20));
+    document.querySelectorAll('.anim-arrow').forEach(el => {
+      el.style.opacity = heatIntensity;
+    });
+  }
+
+  // Wire up inputs
+  document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', calc);
+    el.addEventListener('change', calc);
+  });
+
+  // Initial calc
+  calc();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Winery Hose &amp; Pump Explorer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="openclaw-warning">Experimental OpenClaw AI mini-app. Untested and not professionally validated. Do not rely on this for any decisions.</div>
+  <div class="app-container">
+
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="logo-mark">🍇</div>
+        <div>
+          <h1>Winery Hose &amp; Pump Explorer</h1>
+          <p class="tagline">Estimate pressure drop, head &amp; pump power for wine-transfer lines</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-grid">
+
+      <!-- ===================== INPUTS PANEL ===================== -->
+      <section class="panel inputs-panel">
+        <h2 class="panel-title">Inputs</h2>
+
+        <!-- Fluid Presets -->
+        <div class="field-group">
+          <label class="field-label">Fluid Presets</label>
+          <div class="preset-row">
+            <button class="preset-btn active" data-preset="water">Water</button>
+            <button class="preset-btn" data-preset="white-wine">White Wine</button>
+            <button class="preset-btn" data-preset="red-wine">Red Wine</button>
+            <button class="preset-btn" data-preset="grape-juice">Grape Juice</button>
+          </div>
+        </div>
+
+        <!-- Flow Rate -->
+        <div class="field-group">
+          <label class="field-label" for="flowRate">Flow Rate <span class="unit-tag">L/min</span></label>
+          <input type="number" id="flowRate" min="0" step="1" value="20" />
+        </div>
+
+        <!-- Hose Internal Diameter -->
+        <div class="field-group">
+          <label class="field-label" for="hoseID">Hose Internal Diameter <span class="unit-tag">mm</span></label>
+          <input type="number" id="hoseID" min="1" step="0.5" value="25" />
+        </div>
+
+        <!-- Hose Length -->
+        <div class="field-group">
+          <label class="field-label" for="hoseLength">Hose / Line Length <span class="unit-tag">m</span></label>
+          <input type="number" id="hoseLength" min="0.1" step="0.5" value="10" />
+        </div>
+
+        <!-- Elevation Change -->
+        <div class="field-group">
+          <label class="field-label" for="elevationChange">Elevation Change <span class="unit-tag">m</span></label>
+          <input type="number" id="elevationChange" step="0.1" value="2" />
+          <span class="field-hint">+ = lifting up, &minus; = going down</span>
+        </div>
+
+        <!-- Fluid Density -->
+        <div class="field-group">
+          <label class="field-label" for="density">Fluid Density <span class="unit-tag">kg/m&sup3;</span></label>
+          <input type="number" id="density" min="500" max="2000" step="1" value="998" />
+        </div>
+
+        <!-- Dynamic Viscosity -->
+        <div class="field-group">
+          <label class="field-label" for="viscosity">Dynamic Viscosity <span class="unit-tag">mPa&middot;s</span></label>
+          <input type="number" id="viscosity" min="0.1" step="0.1" value="1.0" />
+        </div>
+
+        <!-- Pump Efficiency -->
+        <div class="field-group">
+          <label class="field-label" for="pumpEfficiency">Pump Efficiency <span class="unit-tag">%</span></label>
+          <input type="number" id="pumpEfficiency" min="1" max="100" step="1" value="65" />
+        </div>
+
+        <button class="calc-btn" id="calculateBtn">Calculate</button>
+      </section>
+
+      <!-- ===================== RESULTS PANEL ===================== -->
+      <section class="panel results-panel">
+        <h2 class="panel-title">Results</h2>
+
+        <div class="results-grid">
+
+          <div class="result-card highlight-card" id="card-velocity">
+            <div class="result-label">Fluid Velocity</div>
+            <div class="result-value" id="res-velocity">—</div>
+            <div class="result-unit">m/s</div>
+          </div>
+
+          <div class="result-card" id="card-re">
+            <div class="result-label">Reynolds Number</div>
+            <div class="result-value" id="res-re">—</div>
+            <div class="result-unit" id="res-re-regime">—</div>
+          </div>
+
+          <div class="result-card" id="card-friction">
+            <div class="result-label">Darcy Friction Factor</div>
+            <div class="result-value" id="res-friction">—</div>
+            <div class="result-unit">—</div>
+          </div>
+
+          <div class="result-card" id="card-friction-pd">
+            <div class="result-label">Friction Pressure Drop</div>
+            <div class="result-value" id="res-friction-pd">—</div>
+            <div class="result-unit">kPa</div>
+          </div>
+
+          <div class="result-card" id="card-static-head">
+            <div class="result-label">Static Head</div>
+            <div class="result-value" id="res-static-head">—</div>
+            <div class="result-unit">m H&sub2;O</div>
+          </div>
+
+          <div class="result-card highlight-card" id="card-tdh">
+            <div class="result-label">Total Dynamic Head (TDH)</div>
+            <div class="result-value" id="res-tdh">—</div>
+            <div class="result-unit">m H&sub2;O</div>
+          </div>
+
+          <div class="result-card" id="card-hyd-power">
+            <div class="result-label">Hydraulic Power</div>
+            <div class="result-value" id="res-hyd-power">—</div>
+            <div class="result-unit">W</div>
+          </div>
+
+          <div class="result-card" id="card-shaft-power">
+            <div class="result-label">Estimated Shaft Power</div>
+            <div class="result-value" id="res-shaft-power">—</div>
+            <div class="result-unit">W</div>
+          </div>
+
+        </div>
+
+        <!-- Regime Badge -->
+        <div class="regime-badge" id="regime-badge">
+          <span id="regime-text">—</span>
+        </div>
+      </section>
+
+      <!-- ===================== CHART PANEL ===================== -->
+      <section class="panel chart-panel">
+        <h2 class="panel-title">Pressure Drop vs Flow Rate</h2>
+        <p class="panel-subtitle">Sensitivity curve — current operating point marked in red</p>
+        <div class="chart-wrap">
+          <canvas id="chart-canvas"></canvas>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-dot current-dot"></span> Your operating point</span>
+          <span class="legend-item"><span class="legend-dot curve-dot"></span> Pressure drop curve</span>
+        </div>
+      </section>
+
+      <!-- ===================== ASSUMPTIONS / CAVEATS ===================== -->
+      <section class="panel caveats-panel">
+        <h2 class="panel-title">Formulas &amp; Assumptions</h2>
+        <div class="caveats-body">
+
+          <h3>Core Equations</h3>
+          <ul>
+            <li><strong>Velocity:</strong> <code>V = Q / A</code> where <code>A = &pi;D&sup2;/4</code></li>
+            <li><strong>Reynolds Number:</strong> <code>Re = &rho;VD/&mu;</code></li>
+            <li><strong>Friction Factor (Laminar, Re &lt; 2000):</strong> <code>f = 64/Re</code></li>
+            <li><strong>Friction Factor (Turbulent, smooth pipe):</strong> Haaland approximation<br/>
+              <code>1/&radic;f = -1.8 log[(6.9/Re) + (k/D)/3.7&sup1;.11]</code><br/>
+              assuming hydraulically smooth hose (k &approx; 0.0015 mm)
+            </li>
+            <li><strong>Friction Pressure Drop:</strong> <code>&Delta;P<sub>f</sub> = f &middot; (L/D) &middot; (&rho;V&sup2;/2)</code></li>
+            <li><strong>Static Head:</strong> <code>H<sub>static</sub> = &Delta;z</code> (positive = lifting up)</li>
+            <li><strong>TDH:</strong> <code>H<sub>total</sub> = &Delta;P<sub>f</sub>/(&rho;g) + &Delta;z</code></li>
+            <li><strong>Hydraulic Power:</strong> <code>P<sub>h</sub> = &Delta;P<sub>total</sub> &middot; Q</code></li>
+            <li><strong>Shaft Power:</strong> <code>P<sub>shaft</sub> = P<sub>h</sub> / &eta;</code></li>
+          </ul>
+
+          <h3>Assumptions &amp; Caveats</h3>
+          <ul>
+            <li>Steady, fully-developed flow in a circular hose — entrance effects neglected</li>
+            <li>Hydraulically smooth hose roughness assumed (k &approx; 0.0015 mm, typical food-grade hose)</li>
+            <li>Fluid treated as Newtonian — wine & juice behave as such at typical working conditions</li>
+            <li>No fittings, valves, or bends included — add ~10&ndash;30% friction allowance for typical winery piping</li>
+            <li>Pump efficiency is a user-supplied estimate; real pump curves vary with flow &amp; head</li>
+            <li><strong>Educational / first-pass only.</strong> Do not use for final pump selection or engineering certification</li>
+            <li>Consult a licensed engineer for design or safety-critical applications</li>
+          </ul>
+
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="app-footer">
+      <p>Educational tool &mdash; not certified for engineering design. Use at your own risk.</p>
+    </footer>
+
+  </div><!-- /.app-container -->
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Winery Timewalk Atlas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="warning-banner">
+    ⚠️ Experimental OpenClaw AI Mini-App — Untested &amp; Not Professionally Validated. Do not rely on this for real decisions.
+  </div>
+
+  <header class="app-header">
+    <div class="header-icon">🍷</div>
+    <h1>Winery Timewalk Atlas</h1>
+    <p class="subtitle">Explore four centuries of winemaking through one cellar</p>
+  </header>
+
+  <!-- Era Selector -->
+  <nav class="era-nav" role="tablist" aria-label="Select era">
+    <button class="era-btn" role="tab" data-era="1890" aria-selected="false">
+      <span class="era-year">1890</span>
+      <span class="era-label">Steam Age</span>
+    </button>
+    <button class="era-btn active" role="tab" data-era="1935" aria-selected="true">
+      <span class="era-year">1935</span>
+      <span class="era-label">Depression Era</span>
+    </button>
+    <button class="era-btn" role="tab" data-era="1975" aria-selected="false">
+      <span class="era-year">1975</span>
+      <span class="era-label">Steel Revolution</span>
+    </button>
+    <button class="era-btn" role="tab" data-era="2025" aria-selected="false">
+      <span class="era-year">2025</span>
+      <span class="era-label">Smart Vintage</span>
+    </button>
+  </nav>
+
+  <!-- Compare Toggle -->
+  <div class="compare-controls">
+    <label class="compare-toggle">
+      <input type="checkbox" id="compareMode">
+      <span class="toggle-track"></span>
+      <span class="toggle-label">Compare Mode</span>
+    </label>
+  </div>
+
+  <!-- Main Map Area -->
+  <main class="map-container" id="mapContainer">
+    <div class="map-frame" id="mapFrame">
+      <!-- SVG Floor Plan injected by JS -->
+    </div>
+
+    <!-- Zone Detail Panel -->
+    <aside class="zone-panel" id="zonePanel" aria-live="polite">
+      <button class="panel-close" id="panelClose" aria-label="Close">✕</button>
+      <div id="panelContent">
+        <!-- Dynamic content -->
+      </div>
+    </aside>
+
+    <!-- Guided Walk Hint -->
+    <div class="walk-hint" id="walkHint">
+      <span>👣</span> Tap any room or hotspot to explore its history
+    </div>
+
+    <!-- Compare Overlay (shown in compare mode) -->
+    <div class="compare-overlay" id="compareOverlay" aria-live="polite">
+    </div>
+  </main>
+
+  <!-- Random Artifact Callout -->
+  <div class="artifact-callout hidden" id="artifactCallout">
+    <div class="artifact-inner">
+      <button class="artifact-close" id="artifactClose">✕</button>
+      <div class="artifact-icon" id="artifactIcon">📜</div>
+      <h3 id="artifactTitle">Artifact Found!</h3>
+      <p id="artifactText"></p>
+      <button class="artifact-next" id="artifactNext">Next Artifact →</button>
+    </div>
+  </div>
+
+  <!-- Zone Legend -->
+  <footer class="zone-legend" id="zoneLegend">
+    <p class="legend-title">Tap a zone:</p>
+    <div class="legend-items" id="legendItems">
+      <!-- injected by JS -->
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

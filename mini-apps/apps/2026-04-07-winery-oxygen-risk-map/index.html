@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winery Oxygen Risk Map</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍷</text></svg>">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-icon">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+          <circle cx="24" cy="24" r="20" stroke="#c44b4b" stroke-width="2.5" fill="none"/>
+          <path d="M16 32 C16 22 24 18 24 18 C24 18 32 22 32 32" stroke="#c44b4b" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <line x1="24" y1="18" x2="24" y2="12" stroke="#c44b4b" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="24" cy="10" r="2.5" fill="#c44b4b"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Winery Oxygen Risk Map</h1>
+        <p class="subtitle">Where &amp; why oxygen enters your process</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Summary Bar -->
+    <section class="risk-summary" id="riskSummary">
+      <div class="summary-card" id="totalRiskCard">
+        <span class="summary-label">Overall Risk</span>
+        <span class="risk-badge" id="totalBadge">—</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Hot Zones</span>
+        <span class="hot-zones-count" id="hotZonesCount">—</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Avg Exposure</span>
+        <span class="avg-exposure" id="avgExposure">—</span>
+      </div>
+    </section>
+
+    <!-- Quick Filters -->
+    <section class="filter-bar">
+      <span class="filter-label">Filter:</span>
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="high">🔴 High</button>
+      <button class="filter-chip" data-filter="medium">🟠 Med</button>
+      <button class="filter-chip" data-filter="low">🟢 Low</button>
+    </section>
+
+    <!-- Process Flow -->
+    <section class="process-flow" id="processFlow">
+      <!-- Nodes injected by JS -->
+    </section>
+
+    <!-- Expanded Detail Panel -->
+    <section class="detail-panel hidden" id="detailPanel">
+      <div class="detail-header">
+        <div>
+          <h2 id="detailTitle">—</h2>
+          <span class="risk-badge" id="detailBadge">—</span>
+        </div>
+        <button class="close-btn" id="closeDetail" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-section">
+          <h3>What happens here</h3>
+          <p id="detailWhat"></p>
+        </div>
+        <div class="detail-section">
+          <h3>Typical O₂ exposure</h3>
+          <p id="detailExposure"></p>
+        </div>
+        <div class="detail-section">
+          <h3>Risk drivers</h3>
+          <ul id="detailDrivers" class="driver-list"></ul>
+        </div>
+        <div class="detail-section mitigation-box">
+          <h3>🛡️ Mitigation strategies</h3>
+          <ul id="detailMitigations" class="mitigation-list"></ul>
+        </div>
+        <div class="detail-section">
+          <h3>Risk slider</h3>
+          <p class="slider-hint">Adjust to model your actual practice</p>
+          <div class="risk-slider-wrap">
+            <span class="slider-label">Low</span>
+            <input type="range" min="1" max="5" value="3" id="detailSlider" class="risk-slider">
+            <span class="slider-label">High</span>
+          </div>
+          <p class="slider-value-display">Risk level: <strong id="sliderValueDisplay">Medium</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Process Phase Groups -->
+    <section class="phase-legend">
+      <h2 class="section-title">Process phases at a glance</h2>
+      <div class="phase-chips" id="phaseChips">
+        <!-- Injected by JS -->
+      </div>
+    </section>
+
+    <!-- O2 Education Card -->
+    <section class="edu-card">
+      <h2>Why oxygen matters in wine</h2>
+      <div class="edu-grid">
+        <div class="edu-item">
+          <div class="edu-icon">🥂</div>
+          <h4>Positive O₂</h4>
+          <p>Controlled micro-oxygenation during aging can improve colour, mouthfeel and aroma complexity in red wines.</p>
+        </div>
+        <div class="edu-item">
+          <div class="edu-icon">⚠️</div>
+          <h4>Too much O₂</h4>
+          <p>Rapid oxidation causes browning, loss of fruit character, and unwanted microbial activity (VA, Brettanomyces).</p>
+        </div>
+        <div class="edu-item">
+          <div class="edu-icon">📊</div>
+          <h4>Key metric</h4>
+          <p>Dissolved O₂ (DO) is measured in mg/L. Target &lt;0.3 mg/L post-bottling for shelf-stable wines.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tips section -->
+    <section class="tips-section">
+      <h2>Top 5 Oxygen management tips</h2>
+      <ol class="tips-list">
+        <li><strong>Blanket headspace</strong> — use inert gas (N₂/CO₂) to shield wine surfaces during transfers and adjustments.</li>
+        <li><strong>Closed transfers</strong> — pump wine under its own surface or through a sealed hose; avoid free-fall.</li>
+        <li><strong>Monitor DO</strong> — a small DO meter pays for itself quickly in reduced oxidation losses.</li>
+        <li><strong>Pump-over discipline</strong> — match rate to fermentation vigour; don't over-aerate active ferments unless有意.</li>
+        <li><strong>Sparge carefully</strong> — if sparging, know your gas flow rate and wine volume; overtreatment is hard to reverse.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="experimental-banner">
+      ⚠️ Experimental OpenClaw AI mini-app — not professionally validated. Do not rely on for winemaking decisions.
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
