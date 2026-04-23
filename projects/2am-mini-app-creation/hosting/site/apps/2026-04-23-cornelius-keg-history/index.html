@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cornelius Keg — A History</title>
+<style>
+/* ── Reset & Base ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1a1410;--bg2:#231c15;--bg3:#2e2519;--fg:#e8dcc8;--fg2:#b8a990;
+  --accent:#c4893b;--accent2:#8b5e2a;--border:#3d3228;
+  --serif:Georgia,'Times New Roman',serif;
+  --sans:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--fg);font-family:var(--serif);line-height:1.7;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent2)}
+a:hover{color:#e0a050}
+img{max-width:100%;height:auto;display:block}
+
+/* ── Header ── */
+.site-header{
+  position:sticky;top:0;z-index:100;
+  background:linear-gradient(180deg,var(--bg) 60%,transparent);
+  padding:12px 24px 20px;display:flex;align-items:center;justify-content:space-between;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.site-header .logo{font-family:var(--serif);font-size:1.1rem;color:var(--accent);letter-spacing:.04em}
+.site-header nav{display:flex;gap:16px;align-items:center;font-family:var(--sans);font-size:.85rem}
+.site-header nav a{border:none;color:var(--fg2);transition:color .2s}
+.site-header nav a:hover{color:var(--accent)}
+.gallery-link{font-weight:600;color:var(--accent)!important}
+
+/* ── Hero ── */
+.hero{
+  position:relative;min-height:70vh;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:80px 24px 60px;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 80%,rgba(196,137,59,.12) 0%,transparent 70%);
+}
+.hero-content{position:relative;z-index:1;max-width:720px}
+.hero h1{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:300;letter-spacing:.02em;line-height:1.15;margin-bottom:16px;color:var(--fg)}
+.hero h1 em{font-style:italic;color:var(--accent);font-weight:400}
+.hero .subtitle{font-size:1.1rem;color:var(--fg2);max-width:480px;margin:0 auto 32px;line-height:1.6}
+.hero .scroll-hint{font-size:.8rem;color:var(--fg2);font-family:var(--sans);opacity:.6}
+
+/* ── Era Timeline Nav ── */
+.era-nav{
+  position:sticky;top:52px;z-index:90;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.era-nav::-webkit-scrollbar{display:none}
+.era-nav ul{
+  display:flex;list-style:none;min-width:max-content;padding:0 24px;gap:0;
+}
+.era-nav li{flex:0 0 auto}
+.era-nav a{
+  display:block;padding:12px 18px;font-family:var(--sans);font-size:.78rem;
+  color:var(--fg2);border:none;white-space:nowrap;transition:color .2s,background .2s;
+  text-transform:uppercase;letter-spacing:.08em;
+}
+.era-nav a:hover,.era-nav a.active{color:var(--accent);background:rgba(196,137,59,.08)}
+
+/* ── Sections ── */
+.section{padding:80px 24px;max-width:960px;margin:0 auto}
+.section-title{
+  font-size:clamp(1.6rem,4vw,2.4rem);font-weight:300;
+  margin-bottom:12px;letter-spacing:.01em;
+}
+.section-title .era-date{
+  display:block;font-family:var(--sans);font-size:.75rem;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;
+}
+.section-subtitle{font-size:1rem;color:var(--fg2);margin-bottom:40px;font-style:italic}
+
+.section-divider{
+  width:60px;height:1px;background:var(--accent);margin:0 auto 60px;opacity:.5;
+}
+
+/* ── Era Content ── */
+.era-text{font-size:1.05rem;line-height:1.85;margin-bottom:32px}
+.era-text p{margin-bottom:18px}
+.era-text .footnote{font-size:.72rem;vertical-align:super;color:var(--accent);font-family:var(--sans);cursor:pointer}
+
+.era-images{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin:32px 0}
+.era-images img{
+  border-radius:6px;cursor:zoom-in;transition:transform .3s,box-shadow .3s;
+  border:1px solid var(--border);
+}
+.era-images img:hover{transform:scale(1.02);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.fig-caption{font-size:.75rem;color:var(--fg2);font-family:var(--sans);margin-top:6px;line-height:1.4}
+
+/* ── Technical Section ── */
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:40px 0}
+@media(max-width:640px){.tech-grid{grid-template-columns:1fr}}
+.tech-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:28px;
+}
+.tech-card h3{font-size:1.2rem;color:var(--accent);margin-bottom:16px;font-weight:400}
+.tech-card ul{list-style:none;padding:0}
+.tech-card li{padding:6px 0;border-bottom:1px solid var(--border);font-size:.9rem;color:var(--fg2)}
+.tech-card li:last-child{border-bottom:none}
+.tech-card li strong{color:var(--fg)}
+
+/* ── Dimensions Table ── */
+.dims-table-wrap{overflow-x:auto;margin:32px 0}
+.dims-table{
+  width:100%;border-collapse:collapse;font-family:var(--sans);font-size:.85rem;
+}
+.dims-table th{
+  text-align:left;padding:10px 14px;background:var(--bg3);
+  color:var(--accent);font-weight:600;border-bottom:2px solid var(--accent2);
+}
+.dims-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--fg2)}
+.dims-table tr:hover td{background:rgba(196,137,59,.04)}
+
+/* ── How It Works ── */
+.how-diagram{position:relative;margin:40px auto;max-width:500px}
+.how-diagram img{border-radius:8px;border:1px solid var(--border)}
+.diagram-labels{position:absolute;inset:0;pointer-events:none}
+.diagram-label{
+  position:absolute;font-family:var(--sans);font-size:.7rem;
+  background:rgba(26,20,16,.85);color:var(--accent);
+  padding:3px 8px;border-radius:4px;border:1px solid var(--accent2);
+  white-space:nowrap;
+}
+.diagram-label.d1{top:8%;left:5%}
+.diagram-label.d2{top:30%;left:5%}
+.diagram-label.d3{top:55%;left:5%}
+.diagram-label.d4{bottom:15%;left:5%}
+.diagram-label.d5{top:8%;right:5%}
+.diagram-label.d6{bottom:8%;right:5%}
+
+.how-steps{margin:40px 0}
+.how-step{display:flex;gap:20px;margin-bottom:28px;align-items:flex-start}
+.how-num{
+  flex:0 0 36px;height:36px;border-radius:50%;
+  background:var(--accent2);color:var(--fg);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-weight:700;font-size:.85rem;
+}
+.how-step p{font-size:.95rem;color:var(--fg2);line-height:1.7}
+.how-step p strong{color:var(--fg)}
+
+/* ── Company Timeline ── */
+.company-timeline{position:relative;padding-left:32px;margin:40px 0}
+.company-timeline::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:2px;background:var(--accent2)}
+.company-event{position:relative;margin-bottom:32px}
+.company-event::before{
+  content:'';position:absolute;left:-25px;top:6px;width:10px;height:10px;
+  border-radius:50%;background:var(--accent);border:2px solid var(--bg);
+}
+.company-event .year{font-family:var(--sans);font-size:.8rem;color:var(--accent);font-weight:600;margin-bottom:2px}
+.company-event .desc{font-size:.9rem;color:var(--fg2)}
+
+/* ── Image Gallery ── */
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin:40px 0}
+.gallery-thumb{
+  border-radius:6px;overflow:hidden;cursor:zoom-in;border:1px solid var(--border);
+  transition:transform .3s,box-shadow .3s;
+}
+.gallery-thumb:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.gallery-thumb img{width:100%;height:160px;object-fit:cover}
+.gallery-thumb .caption{font-size:.7rem;padding:6px 8px;color:var(--fg2);font-family:var(--sans);background:var(--bg2)}
+
+/* ── Lightbox ── */
+.lightbox{
+  position:fixed;inset:0;z-index:200;background:rgba(10,8,6,.92);
+  display:none;align-items:center;justify-content:center;
+  cursor:zoom-out;padding:24px;
+}
+.lightbox.open{display:flex}
+.lightbox img{max-width:90vw;max-height:85vh;border-radius:6px;border:1px solid var(--border)}
+.lightbox-close{
+  position:absolute;top:20px;right:24px;font-size:2rem;color:var(--fg2);
+  cursor:pointer;font-family:var(--sans);border:none;background:none;
+}
+.lightbox-caption{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  font-size:.8rem;color:var(--fg2);font-family:var(--sans);
+  background:rgba(26,20,16,.8);padding:6px 16px;border-radius:4px;max-width:80vw;text-align:center;
+}
+
+/* ── References ── */
+.ref-list{list-style:none;counter-reset:ref;padding:0}
+.ref-list li{
+  counter-increment:ref;padding:8px 0 8px 36px;position:relative;
+  font-family:var(--sans);font-size:.82rem;color:var(--fg2);border-bottom:1px solid var(--border);
+}
+.ref-list li::before{
+  content:counter ref;position:absolute;left:0;top:8px;
+  color:var(--accent);font-weight:700;font-size:.75rem;
+}
+
+/* ── Footer ── */
+.site-footer{
+  text-align:center;padding:40px 24px;
+  font-family:var(--sans);font-size:.75rem;color:var(--fg2);
+  border-top:1px solid var(--border);margin-top:40px;
+}
+
+/* ── Mobile tweaks ── */
+@media(max-width:640px){
+  .hero{min-height:55vh;padding:60px 16px 40px}
+  .section{padding:48px 16px}
+  .era-images{grid-template-columns:1fr}
+  .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .tech-grid{gap:20px}
+}
+
+/* ── Scroll animation ── */
+.fade-in{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="logo">🍷 The Cornelius Keg</div>
+  <nav>
+    <a href="#timeline">Timeline</a>
+    <a href="#technical">Technical</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#gallery-section">Gallery</a>
+    <a href="#references">References</a>
+    <a href="https://wine-claw.github.io/mini-apps/" class="gallery-link">← Gallery</a>
+  </nav>
+</header>
+
+<!-- Era Nav -->
+<nav class="era-nav" id="era-nav">
+  <ul>
+    <li><a href="#era-ancient">Ancient</a></li>
+    <li><a href="#era-medieval">Medieval</a></li>
+    <li><a href="#era-industrial">Industrial</a></li>
+    <li><a href="#era-20th">20th Century</a></li>
+    <li><a href="#era-soda">Soft Drink Era</a></li>
+    <li><a href="#era-homebrew">Homebrew Era</a></li>
+    <li><a href="#era-today">Today</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>The <em>Cornelius</em> Keg</h1>
+    <p class="subtitle">From Celtic woodcraft to stainless steel soda tanks — the unlikely journey of the keg that homebrewers made their own.</p>
+    <p class="scroll-hint">↓ Scroll to explore 2,300 years of keg history</p>
+  </div>
+</section>
+
+<!-- ════════════════ TIMELINE ════════════════ -->
+<div class="section-divider"></div>
+<section class="section" id="timeline">
+  <h2 class="section-title">A Chronological History</h2>
+  <p class="section-subtitle">From oak staves to pressurised stainless — every vessel tells a story.</p>
+</section>
+
+<!-- ── Ancient ── -->
+<section class="section fade-in" id="era-ancient">
+  <h2 class="section-title"><span class="era-date">c. 350 BC — 5th century AD</span> The Wooden Barrel Is Born</h2>
+  <div class="era-text">
+    <p>Around 350 BC, Celtic craftsmen in central Europe invented the wooden barrel — a vessel that would define beverage storage for over two millennia. Unlike clay amphorae, barrels were stackable, rollable, and surprisingly durable. The Romans, encountering Celtic coopers during their northward expansion, quickly adopted the technology across their empire.<span class="footnote" onclick="scrollToRef(4)">[4]</span><span class="footnote" onclick="scrollToRef(5)">[5]</span></p>
+    <p>Barrel-making — cooperage — became a specialised craft. Oak was the wood of choice: its tight grain held liquid, its flexibility allowed the staves to be bent, and its tannins contributed flavour and antimicrobial properties. The basic design — vertical staves bound by metal hoops — has barely changed in 2,300 years.</p>
+  </div>
+  <div class="era-images">
+    <figure>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Oak_Barrel.png" alt="Oak barrel illustration" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Traditional oak barrel — the design that started it all. <em>CC-BY-SA, Wikipedia</em></div>
+    </figure>
+    <figure>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/New_wine_barrels_at_Bella_Winery%2C_Dry_Creek_Valley.jpg" alt="Wine barrels at Bella Winery" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">New oak wine barrels at Bella Winery, Dry Creek Valley. <em>CC-BY-SA, Wikipedia</em></div>
+    </figure>
+  </div>
+</section>
+
+<!-- ── Medieval ── -->
+<section class="section fade-in" id="era-medieval">
+  <h2 class="section-title"><span class="era-date">5th — 18th century</span> The Barrel Rules the World</h2>
+  <div class="era-text">
+    <p>Through the Middle Ages and into the early modern period, the barrel was the universal container — for beer, wine, water, fish, gunpowder, nails, and everything else. Guilds of coopers operated in every European city. Barrel sizes were codified into law: the English tierce (42 gallons), the hogshead (63 gallons), the tun (252 gallons).<span class="footnote" onclick="scrollToRef(4)">[4]</span></p>
+    <p>Beer was stored, aged, and shipped in wooden barrels. Monasteries maintained their own cooperages. Port cities like London, Hamburg, and Bruges ran on barrel logistics. The Guinness brewery in Dublin shipped stout worldwide in wooden casks — a practice that continued into the 20th century.</p>
+  </div>
+  <div class="era-images">
+    <figure>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/Guinness_barrels.jpg" alt="Guinness barrels" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Guinness barrels at the St. James's Gate Brewery. <em>CC-BY-SA, Wikipedia</em></div>
+    </figure>
+    <figure>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Detail_of_old_wine_barrel_in_wine_museum_of_cooperation_Ribeauvill%C3%A9.jpg" alt="Detail of old wine barrel" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Detail of an old wine barrel, Ribeauvillé wine museum. <em>CC-BY-SA, Wikipedia</em></div>
+    </figure>
+  </div>
+</section>
+
+<!-- ── Industrial ── -->
+<section class="section fade-in" id="era-industrial">
+  <h2 class="section-title"><span class="era-date">Late 19th century</span> Metal Enters the Barrel</h2>
+  <div class="era-text">
+    <p>In 1897, Joseph C. Roth filed US Patent 611,003 for a "Sheet-Metal Beer Keg" — a double-walled, braze-welded steel container insulated with asbestos. It was the first serious attempt to replace wood with metal for bulk beer transport.<span class="footnote" onclick="scrollToRef(3)">[3]</span><span class="footnote" onclick="scrollToRef(5)">[5]</span></p>
+    <p>Roth's keg was heavy, but it solved real problems: metal didn't harbour bacteria, it didn't absorb flavours, and it could withstand internal pressure. Over the following decades, commercial metal beer kegs appeared across Europe and America. Stainless steel — corrosion-resistant, weldable, and food-safe — became the material of choice. Pasteurisation, paired with the sealed metal keg, extended beer's shelf life dramatically.<span class="footnote" onclick="scrollToRef(4)">[4]</span></p>
+  </div>
+  <div class="era-images">
+    <figure>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Hundreds_of_wooden_barrels_covering_the_docks_at_the_resin_yards%2C_Savannah%2C_Georgia_-_NARA_-_523025.jpg" alt="Wooden barrels at Savannah resin yards" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Wooden barrels at Savannah resin yards — the industrial-scale barrel economy. <em>Public domain, NARA</em></div>
+    </figure>
+    <figure>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Eku_beer_keg_(2).jpg" alt="EKU stainless steel beer keg" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Modern stainless steel beer keg (EKU). <em>CC-BY-SA, Wikipedia</em></div>
+    </figure>
+  </div>
+</section>
+
+<!-- ── 20th Century ── -->
+<section class="section fade-in" id="era-20th">
+  <h2 class="section-title"><span class="era-date">Early — mid 20th century</span> The Stainless Steel Keg Era</h2>
+  <div class="era-text">
+    <p>The 20th century saw the stainless steel keg become the global standard for draught beer. German-style DIN kegs (30L and 50L) dominated Europe. American breweries adopted the "sankey" keg with its single-valve spear system. These were heavy-duty industrial vessels — pressurised, reusable, and designed for decades of service.<span class="footnote" onclick="scrollToRef(1)">[1]</span></p>
+    <p>Meanwhile, the soft drink industry was about to create an entirely different kind of keg — one that would accidentally spark a homebrewing revolution.</p>
+  </div>
+  <div class="era-images">
+    <figure>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Keg_geschnitten.jpg" alt="Cutaway diagram of DIN keg" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Cutaway of a modern DIN keg — the standard European beer keg. <em>CC-BY-SA, Wikipedia</em></div>
+    </figure>
+  </div>
+</section>
+
+<!-- ── Soft Drink Era ── -->
+<section class="section fade-in" id="era-soda">
+  <h2 class="section-title"><span class="era-date">1950s — 1970s</span> The Soft Drink Revolution</h2>
+  <div class="era-text">
+    <p>In the 1950s, Coca-Cola pioneered post-mix dispensing — shipping concentrated syrup to restaurants and mixing it with carbonated water at the point of dispense. This required compact, pressurised stainless steel tanks. Companies like Firestone, the John Wood Company, and Spartanburg Steel Products began manufacturing these beverage transfer tanks.<span class="footnote" onclick="scrollToRef(1)">[1]</span><span class="footnote" onclick="scrollToRef(9)">[9]</span></p>
+    <p>Around 1957, <strong>Cornelius Inc.</strong> of Osseo, Minnesota — already a maker of soda fountain equipment — introduced its own version. The "Cornelius keg" featured a large removable lid for easy cleaning, two quick-disconnect posts (one for gas, one for liquid), and internal dip tubes. It was designed for premix: the entire soda formulation was pre-carbonated and shipped in the tank.<span class="footnote" onclick="scrollToRef(6)">[6]</span></p>
+    <p>Two connection standards emerged: <strong>Coca-Cola used pin-lock</strong> kegs (a bayonet-style fitting with two pins on the gas post and three on the liquid post), while <strong>Pepsi used ball-lock</strong> kegs (a ball-detent mechanism). The two systems are not interchangeable. Cornelius, Firestone, John Wood, and Spartanburg all made compatible tanks — but the name "Corny" stuck to all of them.<span class="footnote" onclick="scrollToRef(10)">[10]</span><span class="footnote" onclick="scrollToRef(11)">[11]</span></p>
+  </div>
+  <div class="era-images">
+    <figure>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e6/Empty_KeyKeg_in_Madrid%2C_Spain.jpg" alt="Modern KeyKeg in Madrid" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">A modern descendant: the KeyKeg flexible keg system. <em>CC-BY-SA, Wikipedia</em></div>
+    </figure>
+  </div>
+</section>
+
+<!-- ── Homebrew Era ── -->
+<section class="section fade-in" id="era-homebrew">
+  <h2 class="section-title"><span class="era-date">1970s — 1990s</span> The Homebrewer's Keg</h2>
+  <div class="era-text">
+    <p>As the soft drink industry shifted from premix to bag-in-box syrup systems in the 1970s and 80s, thousands of Cornelius-style soda kegs became surplus. They flooded the second-hand market at bargain prices. Homebrewers — who had been bottling their beer one by one — discovered these stainless steel tanks were perfect for kegging homemade beer.<span class="footnote" onclick="scrollToRef(2)">[2]</span></p>
+    <p>The 5-gallon corny keg was almost ideally sized for a typical 19-litre homebrew batch. The large lid made cleaning easy. The quick-disconnect fittings were simple to use with a CO₂ cylinder and regulator. Ball-lock kegs (Pepsi) and pin-lock kegs (Coke) both found enthusiastic adopters, though ball-lock became the more popular standard among homebrewers due to its wider availability and slightly taller, slimmer profile.<span class="footnote" onclick="scrollToRef(2)">[2]</span><span class="footnote" onclick="scrollToRef(10)">[10]</span></p>
+    <p>By the 1990s, the Cornelius keg was <em>the</em> dominant homebrewing kegging solution worldwide. Manufacturers began producing new corny kegs specifically for the homebrew market — no longer surplus, but purpose-built.</p>
+  </div>
+</section>
+
+<!-- ── Today ── -->
+<section class="section fade-in" id="era-today">
+  <h2 class="section-title"><span class="era-date">2000s — present</span> The Cornelius Legacy</h2>
+  <div class="era-text">
+    <p>Cornelius Inc. itself continued to evolve. In 2002, the company — along with 3Wire and Display Technologies — was acquired by Berkshire Hathaway's Marmon Group.<span class="footnote" onclick="scrollToRef(7)">[7]</span> It now operates as part of Marmon Foodservice Technologies, still based in Osseo, Minnesota. In 2021, the Cornelius beer dispensing product line was acquired by Italian company Celli Group for its European operations.<span class="footnote" onclick="scrollToRef(8)">[8]</span></p>
+    <p>Meanwhile, Spartanburg Steel Products sold its keg division in the early 2000s,<span class="footnote" onclick="scrollToRef(12)">[12]</span> and Franke subsequently acquired that business.<span class="footnote" onclick="scrollToRef(13)">[13]</span></p>
+    <p>The corny keg itself remains ubiquitous in homebrewing, craft brewing pilot systems, and even small commercial operations. New stainless corny kegs are manufactured by several companies, and the design — essentially unchanged since the 1950s — has proven remarkably enduring. It is one of the great accidental inventions of the beverage world: a soda industry workhorse that found its true calling in the garage of a homebrewer.</p>
+  </div>
+</section>
+
+<!-- ════════════════ TECHNICAL ════════════════ -->
+<div class="section-divider"></div>
+<section class="section fade-in" id="technical">
+  <h2 class="section-title"><span class="era-date">Technical Details</span> Pin Lock vs Ball Lock</h2>
+  <p class="section-subtitle">Two connection standards, one keg design — an accidental schism from the cola wars.</p>
+
+  <div class="tech-grid">
+    <div class="tech-card">
+      <h3>🔵 Ball Lock (Pepsi)</h3>
+      <ul>
+        <li><strong>Connection:</strong> Ball-detent mechanism</li>
+        <li><strong>Gas post:</strong> Identical to liquid post</li>
+        <li><strong>Liquid post:</strong> Identical to gas post</li>
+        <li><strong>Identification:</strong> Posts are marked/notched or different-sized (7/8″ vs 11/16″ hex)</li>
+        <li><strong>Profile:</strong> Taller and slimmer</li>
+        <li><strong>5 gal height:</strong> 24.75″</li>
+        <li><strong>5 gal diameter:</strong> 8.5″</li>
+        <li><strong>Thread (Cornelius):</strong> 19/32″-18 TPI</li>
+        <li><strong>Popularity:</strong> More common in homebrewing</li>
+      </ul>
+    </div>
+    <div class="tech-card">
+      <h3>📌 Pin Lock (Coca-Cola)</h3>
+      <ul>
+        <li><strong>Connection:</strong> Bayonet with pins</li>
+        <li><strong>Gas post:</strong> 2 pins</li>
+        <li><strong>Liquid post:</strong> 3 pins</li>
+        <li><strong>Identification:</strong> Pin count distinguishes gas from liquid</li>
+        <li><strong>Profile:</strong> Wider and shorter</li>
+        <li><strong>5 gal height:</strong> 23″</li>
+        <li><strong>5 gal diameter:</strong> 9″</li>
+        <li><strong>Thread (Firestone/JW):</strong> 9/16″-18 TPI</li>
+        <li><strong>Popularity:</strong> Less common; often cheaper surplus</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="color:var(--accent);font-weight:400;margin:48px 0 20px">Dimensions — All Common Sizes</h3>
+  <div class="dims-table-wrap">
+    <table class="dims-table">
+      <thead>
+        <tr><th>Capacity (US gal)</th><th>Capacity (L)</th><th>Ball Lock D × H</th><th>Pin Lock D × H</th><th>Max PSI</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2.5</td><td>9.5</td><td>8.5″ × 14.75″</td><td>9″ × 14″</td><td>130</td></tr>
+        <tr><td>3</td><td>11.4</td><td>8.5″ × 17.75″</td><td>9″ × 17″</td><td>130</td></tr>
+        <tr><td>5</td><td>19</td><td>8.5″ × 24.75″</td><td>9″ × 23″</td><td>130</td></tr>
+        <tr><td>10</td><td>38</td><td>11″ × 27″</td><td>—</td><td>130</td></tr>
+        <tr><td>15</td><td>57</td><td>11″ × 36″</td><td>—</td><td>130</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:.75rem;color:var(--fg2);font-family:var(--sans)">Dimensions approximate; varies by manufacturer. 10 and 15 gal typically ball-lock only. Max pressure: 130 PSI (9 bar).<span class="footnote" onclick="scrollToRef(14)">[14]</span><span class="footnote" onclick="scrollToRef(1)">[1]</span></p>
+</section>
+
+<!-- ════════════════ HOW IT WORKS ════════════════ -->
+<div class="section-divider"></div>
+<section class="section fade-in" id="how-it-works">
+  <h2 class="section-title"><span class="era-date">Anatomy & Operation</span> How a Cornelius Keg Works</h2>
+  <p class="section-subtitle">Simple, elegant, and remarkably robust — the physics of pressurised dispensing.</p>
+
+  <div class="how-diagram">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Keg_geschnitten.jpg" alt="Cutaway diagram of a keg" loading="lazy">
+    <div class="diagram-labels">
+      <div class="diagram-label d1">Gas inlet (CO₂)</div>
+      <div class="diagram-label d2">Pressure relief valve</div>
+      <div class="diagram-label d3">Lid &amp; O-ring seal</div>
+      <div class="diagram-label d4">Liquid dip tube</div>
+      <div class="diagram-label d5">Gas dip tube (short)</div>
+      <div class="diagram-label d6">Liquid out port</div>
+    </div>
+  </div>
+
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-num">1</div>
+      <p><strong>Fill the keg</strong> through the large central lid opening. The lid seals with a rubber O-ring and is held in place by a locking clamp. A pressure relief valve on the lid provides safety against over-pressurisation.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">2</div>
+      <p><strong>Pressurise with CO₂</strong> via the gas-in port (short dip tube). The gas enters the headspace above the liquid, creating pressure that forces beer down through the long liquid dip tube.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">3</div>
+      <p><strong>Dispense</strong> by opening the liquid-out valve. Pressure pushes the beer up through the long dip tube and out through the disconnect fitting to your tap or faucet. Typical serving pressure: 10–12 PSI.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">4</div>
+      <p><strong>Carbonate</strong> by maintaining CO₂ pressure over time. At ~12 PSI and 38°F (3°C), a 5-gallon keg typically reaches full carbonation in 7–10 days. "Force carbing" at 30 PSI for 24 hours is a common shortcut.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-num">5</div>
+      <p><strong>Clean</strong> by depressurising, removing the lid, and washing the interior. The large lid opening makes this far easier than with sankey-style commercial kegs, which require specialised cleaning equipment.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ COMPANY TIMELINE ════════════════ -->
+<div class="section-divider"></div>
+<section class="section fade-in" id="company">
+  <h2 class="section-title"><span class="era-date">Cornelius Inc.</span> Company History</h2>
+  <p class="section-subtitle">From a small Minnesota workshop to Berkshire Hathaway — and a name that outlived the product.</p>
+
+  <div class="company-timeline">
+    <div class="company-event">
+      <div class="year">1931</div>
+      <div class="desc">Dick Cornelius and N.F. Cornelius Sr. found the company in Osseo, Minnesota. Initial focus: soda fountain and beverage dispensing equipment.</div>
+    </div>
+    <div class="company-event">
+      <div class="year">1950s</div>
+      <div class="desc">Coca-Cola pioneers post-mix systems; Cornelius begins developing beverage transfer tanks for the soft drink industry.</div>
+    </div>
+    <div class="company-event">
+      <div class="year">~1957</div>
+      <div class="desc">Cornelius introduces the first "Cornelius keg" — a stainless steel beverage transfer tank with removable lid and quick-disconnect fittings. The design that would define a name.</div>
+    </div>
+    <div class="company-event">
+      <div class="year">1960s–70s</div>
+      <div class="desc">Cornelius kegs become standard in soda premix distribution. Pin-lock (Coke) and ball-lock (Pepsi) standards established.</div>
+    </div>
+    <div class="company-event">
+      <div class="year">1970s–80s</div>
+      <div class="desc">Soda industry shifts to bag-in-box; surplus corny kegs flood the market. Homebrewers begin repurposing them.</div>
+    </div>
+    <div class="company-event">
+      <div class="year">2002</div>
+      <div class="desc">Acquired by Berkshire Hathaway's Marmon Group (along with 3Wire and Display Technologies).</div>
+    </div>
+    <div class="company-event">
+      <div class="year">Today</div>
+      <div class="desc">Operates as Marmon Foodservice Technologies, still based in Osseo, MN. The "Cornelius keg" name lives on far beyond the company's original product line.</div>
+    </div>
+    <div class="company-event">
+      <div class="year">2021</div>
+      <div class="desc">Cornelius beer dispensing product line acquired by Celli Group (Italy) for European operations.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ GALLERY ════════════════ -->
+<div class="section-divider"></div>
+<section class="section fade-in" id="gallery-section">
+  <h2 class="section-title"><span class="era-date">Image Gallery</span> Click to Enlarge</h2>
+
+  <div class="gallery-grid">
+    <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Oak_Barrel.png" alt="Oak barrel" loading="lazy">
+      <div class="caption">Oak barrel — traditional form</div>
+    </div>
+    <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/New_wine_barrels_at_Bella_Winery%2C_Dry_Creek_Valley.jpg" alt="Bella Winery barrels" loading="lazy">
+      <div class="caption">Bella Winery oak barrels</div>
+    </div>
+    <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/Guinness_barrels.jpg" alt="Guinness barrels" loading="lazy">
+      <div class="caption">Guinness brewery barrels</div>
+    </div>
+    <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Detail_of_old_wine_barrel_in_wine_museum_of_cooperation_Ribeauvill%C3%A9.jpg" alt="Old barrel detail" loading="lazy">
+      <div class="caption">Barrel detail, Ribeauvillé</div>
+    </div>
+    <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Hundreds_of_wooden_barrels_covering_the_docks_at_the_resin_yards%2C_Savannah%2C_Georgia_-_NARA_-_523025.jpg" alt="Barrels at Savannah" loading="lazy">
+      <div class="caption">Savannah resin yards (NARA)</div>
+    </div>
+    <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Keg_geschnitten.jpg" alt="Keg cutaway" loading="lazy">
+      <div class="caption">DIN keg cutaway diagram</div>
+    </div>
+    <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Eku_beer_keg_(2).jpg" alt="EKU beer keg" loading="lazy">
+      <div class="caption">Stainless steel EKU keg</div>
+    </div>
+    <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e6/Empty_KeyKeg_in_Madrid%2C_Spain.jpg" alt="KeyKeg" loading="lazy">
+      <div class="caption">Modern KeyKeg system</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ REFERENCES ════════════════ -->
+<div class="section-divider"></div>
+<section class="section fade-in" id="references">
+  <h2 class="section-title"><span class="era-date">Sources & References</span></h2>
+  <ol class="ref-list">
+    <li>Wikipedia — "Cornelius keg": <a href="https://en.wikipedia.org/wiki/Cornelius_keg" target="_blank">en.wikipedia.org/wiki/Cornelius_keg</a></li>
+    <li>Homebrew Academy — "Corny Keg": <a href="https://homebrewacademy.com/corny-keg/" target="_blank">homebrewacademy.com/corny-keg</a></li>
+    <li>Beerinfo.com — 1897 Roth patent: <a href="https://beerinfo.com/steel-beer-keg-patent/" target="_blank">beerinfo.com/steel-beer-keg-patent</a></li>
+    <li>Pilsner Urquell — "From Oak to Aluminium": <a href="https://www.pilsnerurquell.com/stories/from-oak-to-aluminium-a-short-history-of-the-beer-keg/" target="_blank">pilsnerurquell.com</a></li>
+    <li>Used-Kegs.com — History of kegs: <a href="https://used-kegs.com/history-of-kegs-brewing-industry/" target="_blank">used-kegs.com</a></li>
+    <li>Cornelius company history: <a href="https://cornelius.com/our-history/" target="_blank">cornelius.com/our-history</a></li>
+    <li>FER Magazine — Marmon acquisition: <a href="https://www.fermag.com/articles/3608-cornelius-gets-new-parent-berkshire-hathaways-marmon-group/" target="_blank">fermag.com</a></li>
+    <li>Inside Beer — Celli acquisition: <a href="https://www.inside.beer/news/detail/italy/europe-celli-acquires-cornelius-beer-dispensing-products" target="_blank">inside.beer</a></li>
+    <li>Spain Exchange — Corny keg FAQ: <a href="https://www.spainexchange.com/faq/what-is-the-history-of-the-corny-keg" target="_blank">spainexchange.com</a></li>
+    <li>Homebrew Finds — Ball vs Pin Lock: <a href="https://www.homebrewfinds.com/whats-the-difference-between-ball-lock-kegs-and-pin-lock-kegs/" target="_blank">homebrewfinds.com</a></li>
+    <li>Wiktionary — "Cornelius keg" etymology: <a href="https://en.wiktionary.org/wiki/Cornelius_keg" target="_blank">en.wiktionary.org</a></li>
+    <li>ProBrewer — Spartanburg sells keg division: <a href="https://probrewer.com/beverage-industry-news/spartanburg-sells-keg-division-102" target="_blank">probrewer.com</a></li>
+    <li>Brauwelt — Franke acquires Spartanburg keg business: <a href="https://brauwelt.com/en/topics/packaging/623206-franke-acquires-keg-business-from-spartanburg-stainless-products-inc-usa" target="_blank">brauwelt.com</a></li>
+    <li>INOXCVA catalogue (2022): <a href="https://inoxcva.com/landing-page/Cornelius%20Kegs_INOXCVA_Catalogue.pdf" target="_blank">inoxcva.com</a></li>
+  </ol>
+</section>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" aria-label="Close">&times;</button>
+  <img id="lightbox-img" src="" alt="">
+  <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <p>The Cornelius Keg — A History &nbsp;|&nbsp; An interactive mini-app &nbsp;|&nbsp; <a href="https://wine-claw.github.io/mini-apps/">← Back to Gallery</a></p>
+  <p style="margin-top:8px">Images: Wikimedia Commons (CC-BY-SA) &amp; NARA (public domain). Built with care, not frameworks.</p>
+</footer>
+
+<script>
+// ── Lightbox ──
+function openLightbox(el){
+  const lb=document.getElementById('lightbox');
+  const img=document.getElementById('lightbox-img');
+  const cap=document.getElementById('lightbox-caption');
+  img.src=el.src;
+  img.alt=el.alt;
+  // Try to get caption from sibling or parent
+  const figCap=el.parentElement?.querySelector('.fig-caption,.caption');
+  cap.textContent=figCap?figCap.textContent:el.alt;
+  lb.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox()});
+
+// ── Scroll to reference ──
+function scrollToRef(n){
+  const ref=document.querySelector(`.ref-list li:nth-child(${n})`);
+  if(ref)ref.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// ── Fade-in on scroll ──
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}});
+},{threshold:0.15});
+document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+
+// ── Active era nav ──
+const eraSections=document.querySelectorAll('section[id^="era-"]');
+const navLinks=document.querySelectorAll('.era-nav a');
+const eraObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      navLinks.forEach(l=>l.classList.remove('active'));
+      const link=document.querySelector(`.era-nav a[href="#${e.target.id}"]`);
+      if(link)link.classList.add('active');
+    }
+  });
+},{threshold:0.3,rootMargin:'-80px 0px -60% 0px'});
+eraSections.forEach(s=>eraObserver.observe(s));
+</script>
+</body>
+</html>
