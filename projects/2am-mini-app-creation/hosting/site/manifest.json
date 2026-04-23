@@ -1,0 +1,216 @@
+{
+  "publicBase": "https://wine-claw.github.io/mini-apps",
+  "latestUrl": "https://wine-claw.github.io/mini-apps/latest/",
+  "latest": {
+    "date": "2026-04-23",
+    "title": "The Cornelius Keg \u2014 A History",
+    "slug": "cornelius-keg-history",
+    "publishedSlug": "2026-04-23-cornelius-keg-history",
+    "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-23-cornelius-keg-history/"
+  },
+  "apps": [
+    {
+      "date": "2026-04-23",
+      "title": "The Cornelius Keg \u2014 A History",
+      "slug": "cornelius-keg-history",
+      "publishedSlug": "2026-04-23-cornelius-keg-history",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-23-cornelius-keg-history/"
+    },
+    {
+      "date": "2026-04-23",
+      "title": "Frost Night Simulator",
+      "slug": "frost-night-sim",
+      "publishedSlug": "2026-04-23-frost-night-sim",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-23-frost-night-sim/"
+    },
+    {
+      "date": "2026-04-22",
+      "title": "O\u2082 Risk Map",
+      "slug": "o2-risk-map",
+      "publishedSlug": "2026-04-22-o2-risk-map",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-22-o2-risk-map/"
+    },
+    {
+      "date": "2026-04-21",
+      "title": "Vineyard Pest Detective",
+      "slug": "pest-detective",
+      "publishedSlug": "2026-04-21-pest-detective",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-21-pest-detective/"
+    },
+    {
+      "date": "2026-04-20",
+      "title": "Tank Chill Calculator",
+      "slug": "tank-chill-calc",
+      "publishedSlug": "2026-04-20-tank-chill-calc",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-20-tank-chill-calc/"
+    },
+    {
+      "date": "2026-04-19",
+      "title": "Root Zone Explorer",
+      "slug": "root-zone-explorer",
+      "publishedSlug": "2026-04-19-root-zone-explorer",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-19-root-zone-explorer/"
+    },
+    {
+      "date": "2026-04-18",
+      "title": "Prune Master",
+      "slug": "prune-master",
+      "publishedSlug": "2026-04-18-prune-master",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-18-prune-master/"
+    },
+    {
+      "date": "2026-04-17",
+      "title": "Rootstock Matchmaker",
+      "slug": "rootstock-matchmaker",
+      "publishedSlug": "2026-04-17-rootstock-matchmaker",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-17-rootstock-matchmaker/"
+    },
+    {
+      "date": "2026-04-16",
+      "title": "Phylloxera Journey",
+      "slug": "phylloxera-journey",
+      "publishedSlug": "2026-04-16-phylloxera-journey",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-16-phylloxera-journey/"
+    },
+    {
+      "date": "2026-04-15",
+      "title": "Global Wine Trade Flow Tracker",
+      "slug": "global-wine-trade-flow-tracker",
+      "publishedSlug": "2026-04-15-global-wine-trade-flow-tracker",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-15-global-wine-trade-flow-tracker/"
+    },
+    {
+      "date": "2026-04-14",
+      "title": "Vintage Time Machine",
+      "slug": "vintage-time-machine",
+      "publishedSlug": "2026-04-14-vintage-time-machine",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-14-vintage-time-machine/"
+    },
+    {
+      "date": "2026-04-13",
+      "title": "Fermentation Drama",
+      "slug": "fermentation-drama",
+      "publishedSlug": "2026-04-13-fermentation-drama",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-13-fermentation-drama/"
+    },
+    {
+      "date": "2026-04-12",
+      "title": "Vineyard Scout Sprint",
+      "slug": "vineyard-scout-sprint",
+      "publishedSlug": "2026-04-12-vineyard-scout-sprint",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-12-vineyard-scout-sprint/"
+    },
+    {
+      "date": "2026-04-11",
+      "title": "Winery Waste-to-Value Studio",
+      "slug": "winery-waste-to-value-studio",
+      "publishedSlug": "2026-04-11-winery-waste-to-value-studio",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-11-winery-waste-to-value-studio/"
+    },
+    {
+      "date": "2026-04-10",
+      "title": "Vineyard Sun Compass",
+      "slug": "vineyard-sun-compass",
+      "publishedSlug": "2026-04-10-vineyard-sun-compass",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-10-vineyard-sun-compass/"
+    },
+    {
+      "date": "2026-04-09",
+      "title": "Vineyard Irrigation Bucket Coach",
+      "slug": "vineyard-irrigation-bucket-coach",
+      "publishedSlug": "2026-04-09-vineyard-irrigation-bucket-coach",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-09-vineyard-irrigation-bucket-coach/"
+    },
+    {
+      "date": "2026-04-07",
+      "title": "Winery Oxygen Risk Map",
+      "slug": "winery-oxygen-risk-map",
+      "publishedSlug": "2026-04-07-winery-oxygen-risk-map",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-07-winery-oxygen-risk-map/"
+    },
+    {
+      "date": "2026-04-05",
+      "title": "Vineyard Mildew Pressure Playbook",
+      "slug": "vineyard-mildew-pressure-playbook",
+      "publishedSlug": "2026-04-05-vineyard-mildew-pressure-playbook",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-05-vineyard-mildew-pressure-playbook/"
+    },
+    {
+      "date": "2026-04-04",
+      "title": "Vineyard Frost Pocket Explorer",
+      "slug": "vineyard-frost-pocket-explorer",
+      "publishedSlug": "2026-04-04-vineyard-frost-pocket-explorer",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-04-vineyard-frost-pocket-explorer/"
+    },
+    {
+      "date": "2026-04-03",
+      "title": "Winery Timewalk Atlas",
+      "slug": "winery-timewalk-atlas",
+      "publishedSlug": "2026-04-03-winery-timewalk-atlas",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-03-winery-timewalk-atlas/"
+    },
+    {
+      "date": "2026-04-02",
+      "title": "Cellar Experiment Deck",
+      "slug": "cellar-experiment-deck",
+      "publishedSlug": "2026-04-02-cellar-experiment-deck",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-02-cellar-experiment-deck/"
+    },
+    {
+      "date": "2026-04-01",
+      "title": "Cellar Cascade Playground",
+      "slug": "cellar-cascade-playground",
+      "publishedSlug": "2026-04-01-cellar-cascade-playground",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-01-cellar-cascade-playground/"
+    },
+    {
+      "date": "2026-03-31",
+      "title": "Vintage Ops Whiteboard",
+      "slug": "vintage-ops-whiteboard",
+      "publishedSlug": "2026-03-31-vintage-ops-whiteboard",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-03-31-vintage-ops-whiteboard/"
+    },
+    {
+      "date": "2026-03-30",
+      "title": "Cellar Shift Triage Trainer",
+      "slug": "cellar-shift-triage-trainer",
+      "publishedSlug": "2026-03-30-cellar-shift-triage-trainer",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-03-30-cellar-shift-triage-trainer/"
+    },
+    {
+      "date": "2026-03-29",
+      "title": "Winery Technology Time Machine",
+      "slug": "winery-technology-time-machine",
+      "publishedSlug": "2026-03-29-winery-technology-time-machine",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-03-29-winery-technology-time-machine/"
+    },
+    {
+      "date": "2026-03-27",
+      "title": "Wine Cooling Load Explorer",
+      "slug": "wine-cooling-load-explorer",
+      "publishedSlug": "2026-03-27-wine-cooling-load-explorer",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-03-27-wine-cooling-load-explorer/"
+    },
+    {
+      "date": "2026-03-26",
+      "title": "Winery Hose & Pump Explorer",
+      "slug": "winery-hose-pump-explorer",
+      "publishedSlug": "2026-03-26-winery-hose-pump-explorer",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-03-26-winery-hose-pump-explorer/"
+    },
+    {
+      "date": "2026-03-25",
+      "title": "SO\u2082 Speciation Explorer",
+      "slug": "so2-speciation-explorer",
+      "publishedSlug": "2026-03-25-so2-speciation-explorer",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-03-25-so2-speciation-explorer/"
+    },
+    {
+      "date": "2026-03-24",
+      "title": "Fermentation Heat Explorer",
+      "slug": "fermentation-heat-explorer",
+      "publishedSlug": "2026-03-24-fermentation-heat-explorer",
+      "url": "https://wine-claw.github.io/mini-apps/apps/2026-03-24-fermentation-heat-explorer/"
+    }
+  ]
+}

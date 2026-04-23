@@ -1,0 +1,424 @@
+{
+  "title": "Wine Claw Project Tracking",
+  "updatedAt": "2026-04-24T09:41:59.074469+10:30",
+  "columns": [
+    "active",
+    "blocked",
+    "monitoring",
+    "complete"
+  ],
+  "projects": [
+    {
+      "name": "2am Mini-App Creation",
+      "slug": "2am-mini-app-creation",
+      "status": "active",
+      "summary": "Recurring 2:00 AM mini-app project. Apr 24: The Fermentation Atlas \u2014 interactive explorer of 20 major fermentation processes (kimchi, cheese, wine, soy sauce, yogurt, etc.) with filterable card grid, detail modals, and warm organic design.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/README.md",
+      "specPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/SPEC.md",
+      "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/latest-summary.md",
+      "updatedAt": "2026-04-24T02:30:00+09:30",
+      "nextStep": "Apr 25: Choose new mini-app concept. Consider rotating back to vineyard/engineering topics or mission-advancement ideas.",
+      "primaryLink": {
+        "label": "The Fermentation Atlas",
+        "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-24-fermentation-atlas/"
+      },
+      "secondaryClosedLinks": [
+        {
+          "label": "Gallery",
+          "url": "https://wine-claw.github.io/mini-apps/"
+        }
+      ],
+      "links": [],
+      "latestRun": {
+        "date": "2026-04-24",
+        "title": "The Fermentation Atlas",
+        "notes": "Interactive explorer of 20 fermentation processes. Filterable card grid, detail modals, warm organic design. Domain rotation to food science beyond wine.",
+        "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-24-fermentation-atlas",
+        "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-24-fermentation-atlas/index.html",
+        "verification": "Partial \u2014 local HTML review only, automated screenshot verification blocked.",
+        "delegation": {
+          "used": true,
+          "worker": "worker1 (K2.6)",
+          "workerHandled": "Full implementation \u2014 HTML/CSS/JS, data for 20 entries, card grid, filters, modal, animations, responsive layout.",
+          "mainHandled": "Concept selection, research, review, verification attempt, packaging, state updates.",
+          "estimatedSplit": {
+            "workerPercent": 75,
+            "mainPercent": 25
+          }
+        }
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation"
+    },
+    {
+      "name": "Grant Watch",
+      "slug": "awri-grant-watch",
+      "status": "active",
+      "summary": "Weekly Monday 9am scan for grants relevant to AWRI, with verified summary email output.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/awri-grant-watch/README.md",
+      "updatedAt": "2026-03-30T09:01:00+10:30",
+      "nextStep": "Run the next Monday scan, keep prioritising official-source Australian opportunities, and continue watching for stronger verified international fits.",
+      "blocker": "Stale: no meaningful update for 600.7h while active.",
+      "links": [],
+      "autonomous": {
+        "enabled": true,
+        "mechanism": "cron",
+        "notes": "Explicit OpenClaw cron job runs every Monday 9:00 AM Australia/Adelaide and sends the email directly.",
+        "jobIds": [
+          "7c3bff42-2efc-4401-a494-ffcc79a6ec08"
+        ]
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/awri-grant-watch"
+    },
+    {
+      "name": "OpenClaw Use Case Watch",
+      "slug": "openclaw-use-case-watch",
+      "status": "active",
+      "summary": "Nightly 1:00 AM scan for strong real-world OpenClaw use cases, with a rotating concise pick queue kept fresh for the daily brief.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/openclaw-use-case-watch/README.md",
+      "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/openclaw-use-case-watch/latest-summary.md",
+      "updatedAt": "2026-04-24T01:00:00+09:30",
+      "nextStep": "Keep watching for independently linkable OpenClaw deployments, especially from non-developer operators, enterprise production stories, and novel categories like freelance-skill-as-service. The ZooClaw non-developer setup and Ben Utting Upwork engagement represent two emerging signal categories worth tracking.",
+      "links": [
+        {
+          "label": "2026-04-24 \u2014 armorbreak 3-month autonomous production agent (69+ PRs, 2 live products)",
+          "url": "https://dev.to/armorbreak/how-i-built-an-autonomous-ai-agent-that-pays-for-its-own-server-a-real-world-openclaw-story-2e4p"
+        },
+        {
+          "label": "2026-04-24 \u2014 ZooClaw 6-week Mac Mini M4 production setup by non-developer",
+          "url": "https://zooclaw.ai/help/en/2026-04-07/secure-openclaw-production-setup/"
+        },
+        {
+          "label": "2026-04-24 \u2014 Ben Utting content-creator skill (2hrs \u2192 10min, Upwork engagement)",
+          "url": "https://medium.com/@benutting/how-i-cut-a-content-creators-prep-time-from-2-hours-to-10-minutes-with-a-custom-openclaw-skill-4a6ab23d7667"
+        },
+        {
+          "label": "2026-04-24 \u2014 Clawctl 12 incidents in 30 days self-hosting log",
+          "url": "https://www.clawctl.com/blog/self-hosted-openclaw-broke-me-12-incidents"
+        },
+        {
+          "label": "2026-04-24 \u2014 de la Mothe Ventures production execution discipline gap (GitHub #65490)",
+          "url": "https://github.com/openclaw/openclaw/issues/65490"
+        },
+        {
+          "label": "2026-04-16 \u2014 Red Hat AI + OpenClaw enterprise deployment reference",
+          "url": "https://developers.redhat.com/articles/2026/04/14/deploying-agents-red-hat-ai-openclaw"
+        },
+        {
+          "label": "2026-04-16 \u2014 N26 Head of Product four-agent OpenClaw staff on Lightsail",
+          "url": "https://medium.com/@jp.sleiman/built-myself-an-openclaw-ai-staff-the-onboarding-was-intense-but-im-keeping-them-ab11198a6fc2"
+        },
+        {
+          "label": "2026-04-16 \u2014 10+ personalised OpenClaw agents as Railway swarm",
+          "url": "https://pub.towardsai.net/how-i-deployed-an-ai-agent-swarm-on-railway-and-why-it-actually-works-5d8d142a2c5a"
+        },
+        {
+          "label": "2026-04-15 \u2014 ClawWork (HKU) OpenClaw agent earning $10K in 7 hours from $10 seed",
+          "url": "https://github.com/HKUDS/ClawWork"
+        },
+        {
+          "label": "2026-04-15 \u2014 Deploying OpenClaw: 16 incidents, one day, $1.50",
+          "url": "https://blog.rezvov.com/deploying-openclaw-sixteen-incidents-one-day"
+        },
+        {
+          "label": "2026-04-14 \u2014 Build to Launch Substack four-week production OpenClaw walkthrough",
+          "url": "https://buildtolaunch.substack.com/p/openclaw-autonomous-agent-live-demo"
+        },
+        {
+          "label": "2026-04-14 \u2014 Alfred Home household OS built on OpenClaw",
+          "url": "https://www.reddit.com/r/selfhosted/comments/1rgpkmj/alfred_home_after_30_years_of_failed_attempts_i/"
+        },
+        {
+          "label": "2026-04-14 \u2014 OpenClaw full sales assistant for $20/month",
+          "url": "https://www.reddit.com/r/OpenClawUseCases/comments/1rr58wa/i_turned_openclaw_into_a_full_sales_assistant_for/"
+        },
+        {
+          "label": "2026-04-14 \u2014 BSWEN self-learning skills setup for OpenClaw",
+          "url": "https://docs.bswen.com/blog/2026-04-07-openclaw-self-learning-setup"
+        },
+        {
+          "label": "2026-04-14 \u2014 Clawly production approval gates rollout guide",
+          "url": "https://www.clawly.org/news/production-approval-gates-for-openclaw-agents-a-practical-rollout-guide-april-2026"
+        },
+        {
+          "label": "2026-04-14 \u2014 Self-hosted content automation with OpenClaw in Docker",
+          "url": "https://www.reddit.com/r/selfhosted/comments/1rsnp8z/how_to_selfhost_openclaw_for_content_automation/"
+        },
+        {
+          "label": "2026-04-13 \u2014 Agency Boxx 32-hours/week measured OpenClaw case study",
+          "url": "https://dev.to/agencyboxx/how-i-reclaimed-32-hoursweek-with-diy-ai-agents-openclaw-case-study-1bp0"
+        },
+        {
+          "label": "2026-04-12 \u2014 OpenClaw + LanceDB + Seed 2.0 design-reference pipeline",
+          "url": "https://www.lancedb.com/blog/openclaw-lancedb-seed2"
+        },
+        {
+          "label": "2026-04-11 \u2014 Linear CLI for OpenClaw-style issue and project operations",
+          "url": "https://github.com/Finesssee/linear-cli"
+        },
+        {
+          "label": "2026-04-11 \u2014 Agents UI desktop manager for OpenClaw skills and commands",
+          "url": "https://releaseflow.net/kitze/agents-ui"
+        }
+      ],
+      "autonomous": {
+        "enabled": true,
+        "mechanism": "openclaw-cron",
+        "notes": "Runs nightly at 1:00 AM Australia/Adelaide to search for new OpenClaw use cases and keep a brief-ready pick list current.",
+        "jobIds": [
+          "129f0b06-193a-4609-8f33-5f2ca014b10f"
+        ]
+      },
+      "blocker": null,
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/openclaw-use-case-watch"
+    },
+    {
+      "name": "Tank Insulation Tool",
+      "slug": "tank-insulation-evaluation-tool",
+      "status": "blocked",
+      "summary": "New project created; waiting for detailed requirements.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/tank-insulation-evaluation-tool/README.md",
+      "updatedAt": "2026-03-24T14:21:02.949258+10:30",
+      "nextStep": "Capture requirements once Simon provides them.",
+      "blocker": "Stale: no meaningful update for 48.2h while active.",
+      "links": [],
+      "autonomous": {
+        "enabled": false,
+        "mechanism": null,
+        "notes": "No automation yet.",
+        "jobIds": []
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/tank-insulation-evaluation-tool"
+    },
+    {
+      "name": "Voice AI For When Driving",
+      "slug": "voice-ai",
+      "status": "blocked",
+      "summary": "Canonical voice implementation now lives in minimax-agent: LiveKit browser transport, Deepgram STT, OpenClaw main-agent bridge, and WhatsApp transcript delivery. Direct MiniMax TTS works when MINIMAX_GROUP_ID is available; otherwise the app falls back to LiveKit Inference TTS.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/voice-ai/minimax-agent/README.md",
+      "updatedAt": "2026-03-29T09:39:00.882700+10:30",
+      "nextStep": "When deliberately testing voice, run `uv run python src/agent.py dev`, generate a hosted playground token, and do a phone/browser test. Do not rely on this hosted playground path for unattended automation. Add MINIMAX_GROUP_ID later if you want direct MiniMax TTS instead of the fallback path.",
+      "blocker": "Stale: no meaningful update for 128.7h while active.",
+      "links": [],
+      "autonomous": {
+        "enabled": false,
+        "mechanism": null,
+        "notes": "Core bridge is rebuilt and documented. Remaining work is manual end-to-end verification and optional direct MiniMax TTS credentials.",
+        "jobIds": []
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/voice-ai/minimax-agent"
+    },
+    {
+      "name": "CO2 Capture Trial Data Logging",
+      "slug": "ezeio-google-sheet-sync",
+      "status": "monitoring",
+      "summary": "Live 5-second Ezeio logging to Google Sheets with rotating workbook snapshots and charted monitoring.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/ezeio-google-sheet-sync/README.md",
+      "updatedAt": "2026-04-12T10:30:00+09:30",
+      "nextStep": "Verify collector is writing live data and charts are updating correctly.",
+      "blocker": "Stale: no meaningful update for 286.2h while monitoring.",
+      "links": [
+        {
+          "label": "Live sheet",
+          "url": "https://docs.google.com/spreadsheets/d/1jCi5g_TlQSXDhp0BlfOBaGJ4TMUw2OKzQLNLJHm0jDM/edit"
+        }
+      ],
+      "autonomous": {
+        "enabled": true,
+        "mechanism": "cron",
+        "notes": "Workbook rotation every 6 days; collector/watchdog run as LaunchAgents.",
+        "jobIds": [
+          "a2c75a05-8db6-46b6-93c4-2bfc3f530da8",
+          "62396547-23cf-48f0-8d11-d0a730af2bba"
+        ]
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/ezeio-google-sheet-sync"
+    },
+    {
+      "name": "CO2 Snow Simulator",
+      "slug": "wc-co2-snow-sim",
+      "status": "complete",
+      "summary": "Completed CO2 snow simulation and visualisation project.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/wc-co2-snow-sim/README.md",
+      "updatedAt": "2026-03-22T11:54:00+10:30",
+      "nextStep": "None.",
+      "blocker": null,
+      "links": [],
+      "autonomous": {
+        "enabled": false,
+        "mechanism": null,
+        "notes": "Completed.",
+        "jobIds": []
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/wc-co2-snow-sim"
+    },
+    {
+      "name": "CO\u2082 Fermentation Purification Research",
+      "slug": "co2-fermentation-purification-research",
+      "status": "complete",
+      "summary": "Durable literature research on removing impurities from fermentation-captured CO\u2082 for winery, brewery, and ethanol contexts, refreshed on 2026-04-11 with updated standards/implementation notes and a new quota-limited source pass.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/co2-fermentation-purification-research/README.md",
+      "updatedAt": "2026-04-11T04:00:00+09:30",
+      "nextStep": null,
+      "blocker": "Gemini web-search quota exhaustion (429) prevented a fresh full discovery sweep; refresh completed from durable source base plus direct fetches and Crossref metadata.",
+      "links": [],
+      "autonomous": {
+        "enabled": true,
+        "mechanism": "openclaw-cron",
+        "notes": "One-shot 4:00 AM Australia/Adelaide literature research run completed again on 2026-04-11. Durable project files refreshed: README.md, literature-summary.md, sources.md, and state.json. This pass hit Gemini web-search quota limits immediately, so it was completed using the existing project literature base plus fresh direct fetches from Wine Australia, PMC/Foods, ISBT, V&F, DALUM, and Crossref DOI metadata.",
+        "jobIds": [
+          "co2-fermentation-lit-research-0400"
+        ]
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/co2-fermentation-purification-research"
+    },
+    {
+      "name": "Mission Advancement Ideas",
+      "slug": "mission-advancement-ideas",
+      "status": "complete",
+      "summary": "Curating practical project ideas that could advance Simon's wine-sector mission.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/mission-advancement-ideas/README.md",
+      "updatedAt": "2026-04-03T16:25:09.915389+10:30",
+      "nextStep": "Research and rank the strongest ideas by effort vs impact.",
+      "blocker": "Stale: no meaningful update for 281.6h while active.",
+      "links": [],
+      "autonomous": {
+        "enabled": false,
+        "mechanism": null,
+        "notes": "No automation yet.",
+        "jobIds": []
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/mission-advancement-ideas"
+    },
+    {
+      "name": "Snake Game",
+      "slug": "wc-snake-game",
+      "status": "complete",
+      "summary": "Completed browser snake game project.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/wc-snake-game/README.md",
+      "updatedAt": "2026-03-22T11:54:00+10:30",
+      "nextStep": "None.",
+      "blocker": null,
+      "links": [],
+      "autonomous": {
+        "enabled": false,
+        "mechanism": null,
+        "notes": "Completed.",
+        "jobIds": []
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/wc-snake-game"
+    },
+    {
+      "name": "Wine Claw Project Tracking",
+      "slug": "mission-control",
+      "status": "complete",
+      "summary": "Kanban-style command centre for Wine Claw projects, with durable project state, drag/drop status changes, and remote summary support.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/mission-control/README.md",
+      "updatedAt": "2026-03-23T19:50:06.588897+10:30",
+      "nextStep": "Embed the real Wine Claw logo asset once it is saved into the workspace, then keep refining the board UX.",
+      "blocker": "Stale: no meaningful update for 27.3h while active.",
+      "links": [],
+      "autonomous": {
+        "enabled": true,
+        "mechanism": "launchagent",
+        "notes": "Local dashboard server stays running and auto-opens at login.",
+        "jobIds": []
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/mission-control"
+    },
+    {
+      "name": "Global Wine History Video Archive",
+      "slug": "global-wine-video-archive",
+      "status": "phase_complete__auto_exhausted__watchdog_continuing",
+      "phase": "auto_download__exhausted__watchdog_active",
+      "summary": "Automated download phase complete. 49 normal-mode items downloaded (55 files, ~6.34 GB) across 12 countries. 47 items blocked: 14 restricted hosts (gparchives, filmothek.bundesarchiv, britishpathe), 18 manual hosts (arquivos.rtp.pt, net-film.ru, french regionals), 15 probe-failed (SSL/URL errors). Automated pipeline is exhausted. No pending items. Watchdog remains active.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/global-wine-video-archive/README.md",
+      "updatedAt": "2026-04-12T09:59:25.586243+09:30",
+      "nextStep": "1) Attempt restricted-host downloads: gparchives.com (3), filmothek.bundesarchiv.de (2), britishpathe.com (7) \u2014 need auth/cookie or manual browser. 2) Manual-only hosts: arquivos.rtp.pt (2), net-film.ru (14), french regional archives (4). 3) Integrate off-manifest Hungary/Albania downloads (061-063, ~208 MB) into download-state.json and manifest. 4) Greece archive.ert.gr items remain corrupt HTML error pages \u2014 needs fresh URL extraction or manual browser download. 5) No automated download work remains. 6) Consider packaging and sharing the archive.",
+      "blocker": "restricted_hosts_need_auth",
+      "downloadStats": {
+        "totalVideoFiles": 55,
+        "totalSizeGb": 6.34,
+        "countries": [
+          "algeria",
+          "argentina",
+          "austria",
+          "australia",
+          "chile",
+          "france",
+          "germany",
+          "greece",
+          "italy",
+          "new-zealand",
+          "portugal",
+          "spain"
+        ],
+        "normalModeItems": 49,
+        "normalModeComplete": true,
+        "probeFailed": 47,
+        "restrictedUnseen": 0,
+        "manualUnseen": 0,
+        "manifestSeeded": true
+      },
+      "autonomous": {
+        "enabled": true,
+        "mechanism": "cron_watchdog__passive",
+        "lastWatchdogRun": "2026-04-12T10:49:00.000000+09:30",
+        "watchdogResult": "phase_exhausted__no_stall: 55 files/~6.3GB. 47 probe_failed (all manual/restricted hosts \u2014 0 pending items). 0 active processes. Current time 10:49 ACST, outside pause window. No action \u2014 pipeline fully exhausted.",
+        "notes": "Watchdog 2026-04-12 10:49 ACST: Phase exhausted confirmed. All 49 normal-mode items downloaded. 47 probe-failed final (36 manual + 13 restricted hosts). 55 files/~6.34 GB on disk. Pipeline is complete. Remaining work is manual/restricted hosts and archive packaging.",
+        "jobIds": []
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/global-wine-video-archive"
+    },
+    {
+      "name": "Vineyard Guidance Lines from Drone Imagery",
+      "slug": "vineyard-guidance-lines",
+      "status": "review-ready",
+      "summary": "Research package assembled as styled HTML (~48,000 words, 517KB). Pipeline 9 v3 confirmed working across full MenzNth orthomosaic (49-tile sample: 26 core vineyard tiles, 174 rows). Literature review: 55+ papers. Tools review: 30+ tools assessed. QGIS implementation: detailed patterns with ISOXML output pathway. Commercial precedent (Vindrive NZ) validates workflow. Belcore et al. (2021) validates FOSS architecture. CCRDNet three-class annotation transferable to ilastik. ISOXML output bridge confirmed with isoxml-py. GeoDataFarm plugin confirmed as ISOXML import only (not guidance export).",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/vineyard-guidance-lines/README.md",
+      "updatedAt": "2026-04-14T04:10:00+09:30",
+      "nextStep": "1. Send Simon WhatsApp message with review package link. 2. Run full-orthomosaic tile grid (~2 hours) for final combined GeoJSON. 3. Add ISOXML output example code to research package. 4. PDF conversion when LaTeX/xelatex becomes available.",
+      "lastProcessedAt": "2026-04-14 04:10 ACST",
+      "lastOutput": "Assembled styled HTML research package (48K words). Added Belcore et al. FOSS validation, CCRDNet\u2192ilastik annotation pattern, CROW relevance downgrade, SmartVineyard VRT precedent, isoxml-py confirmed pipeline, GeoDataFarm ISOXML import finding, pyAgriculture11783. All durable notes updated and synced.",
+      "blocker": "No blocker. Research package is review-ready as HTML. PDF conversion requires xelatex/pdflatex installation.",
+      "researchUpdatesThisSession": [
+        "Added Belcore et al. (2021) \u2014 complete FOSS vineyard workflow (ODM+QGIS+GRASS+SAGA+PostGIS), 95% classification accuracy. Directly validates project architecture.",
+        "Added CCRDNet expanded details \u2014 three-class annotation scheme (background/vegetation/central row) transferable to ilastik without ML.",
+        "Added CROW expanded details \u2014 self-supervised LiDAR navigation. Downgraded to methodological reference (not transferable to aerial orthomosaic).",
+        "Added SmartVineyard (De Filippis et al. 2013) \u2014 open-source precision viticulture WebGIS. Validates VRT data-flow requirement.",
+        "Added isoxml-py confirmed practical usage \u2014 shapely geometry conversion, v4 model classes, full QGIS\u2192ISOXML pipeline achievable in ~20 lines Python.",
+        "Added GeoDataFarm (v2.13.2, 2025) \u2014 QGIS ISOXML import plugin. Confirmed cannot create guidance files; isoxml-py remains recommended for export.",
+        "Added pyAgriculture11783 \u2014 Python ISOXML reader (reading only, not writing guidance lines).",
+        "Updated literature-review.md with Belcore, SmartVineyard, CCRDNet expanded, CROW expanded.",
+        "Updated tools-and-workflow-review.md with Belcore FOSS stack, CROW relevance update, CCRDNet annotation scheme, isoxml-py usage, SmartVineyard, GeoDataFarm, pyAgriculture11783.",
+        "Updated qgis-implementation-notes.md with Belcore architecture validation, CCRDNet\u2192ilastik pattern, isoxml-py confirmed pipeline, CROW relevance downgrade, GeoDataFarm ISOXML import finding.",
+        "Updated sources.md with all new sources and annotations.",
+        "Synced research/ directory with current root-level files.",
+        "Assembled styled HTML research package (vineyard-guidance-lines-research-package.html, 517KB, ~48,000 words)."
+      ],
+      "links": [
+        {
+          "label": "Research package (styled HTML)",
+          "url": "file:///Users/wineclaw/.openclaw/workspace/projects/vineyard-guidance-lines/vineyard-guidance-lines-research-package.html"
+        },
+        {
+          "label": "Sample tiles combined GeoJSON (full orthomosaic)",
+          "url": "/projects/vineclaw/projects/vineyard-guidance-lines/runs/2026-04-13/sample-tiles-v3/all_rows_sample.geojson"
+        },
+        {
+          "label": "Sample tiles manifest",
+          "url": "/projects/vineclaw/projects/vineyard-guidance-lines/runs/2026-04-13/sample-tiles-v3/sample-manifest.json"
+        },
+        {
+          "label": "Bright-band v3 spline GeoJSON (curved-row extension, Window 1)",
+          "url": "/projects/vineclaw/projects/vineyard-guidance-lines/runs/2026-04-13/bright-band-v3-spline/candidate_rows_bright_band_v3_spline.geojson"
+        }
+      ],
+      "autonomous": {
+        "enabled": true,
+        "mechanism": "openclaw-cron",
+        "lastCronId": "95f4ea56-8fd1-470d-a0b0-eb0b6aaf0366"
+      },
+      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/vineyard-guidance-lines"
+    }
+  ]
+}

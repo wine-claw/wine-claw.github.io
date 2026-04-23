@@ -1,0 +1,40 @@
+{
+  "name": "2am Mini-App Creation",
+  "slug": "2am-mini-app-creation",
+  "status": "active",
+  "summary": "Recurring 2:00 AM mini-app project. Apr 24: The Fermentation Atlas \u2014 interactive explorer of 20 major fermentation processes (kimchi, cheese, wine, soy sauce, yogurt, etc.) with filterable card grid, detail modals, and warm organic design.",
+  "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/README.md",
+  "specPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/SPEC.md",
+  "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/latest-summary.md",
+  "updatedAt": "2026-04-24T02:30:00+09:30",
+  "nextStep": "Apr 25: Choose new mini-app concept. Consider rotating back to vineyard/engineering topics or mission-advancement ideas.",
+  "primaryLink": {
+    "label": "The Fermentation Atlas",
+    "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-24-fermentation-atlas/"
+  },
+  "secondaryClosedLinks": [
+    {
+      "label": "Gallery",
+      "url": "https://wine-claw.github.io/mini-apps/"
+    }
+  ],
+  "links": [],
+  "latestRun": {
+    "date": "2026-04-24",
+    "title": "The Fermentation Atlas",
+    "notes": "Interactive explorer of 20 fermentation processes. Filterable card grid, detail modals, warm organic design. Domain rotation to food science beyond wine.",
+    "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-24-fermentation-atlas",
+    "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-24-fermentation-atlas/index.html",
+    "verification": "Partial \u2014 local HTML review only, automated screenshot verification blocked.",
+    "delegation": {
+      "used": true,
+      "worker": "worker1 (K2.6)",
+      "workerHandled": "Full implementation \u2014 HTML/CSS/JS, data for 20 entries, card grid, filters, modal, animations, responsive layout.",
+      "mainHandled": "Concept selection, research, review, verification attempt, packaging, state updates.",
+      "estimatedSplit": {
+        "workerPercent": 75,
+        "mainPercent": 25
+      }
+    }
+  }
+}
