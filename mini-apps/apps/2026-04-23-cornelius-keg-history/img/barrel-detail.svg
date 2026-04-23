@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="400" height="480">
+  <defs>
+    <linearGradient id="wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A0822A"/>
+      <stop offset="50%" stop-color="#C4A035"/>
+      <stop offset="100%" stop-color="#8B6914"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="480" fill="#F5EDE0"/>
+  <!-- Close-up of barrel detail -->
+  <!-- Stave -->
+  <rect x="60" y="40" width="280" height="350" rx="8" fill="url(#wood)" stroke="#6B4F10" stroke-width="2"/>
+  <!-- Wood grain -->
+  <line x1="100" y1="40" x2="100" y2="390" stroke="#8B6914" stroke-width="0.8" opacity="0.5"/>
+  <line x1="150" y1="40" x2="150" y2="390" stroke="#8B6914" stroke-width="0.8" opacity="0.5"/>
+  <line x1="200" y1="40" x2="200" y2="390" stroke="#8B6914" stroke-width="0.8" opacity="0.5"/>
+  <line x1="250" y1="40" x2="250" y2="390" stroke="#8B6914" stroke-width="0.8" opacity="0.5"/>
+  <line x1="300" y1="40" x2="300" y2="390" stroke="#8B6914" stroke-width="0.8" opacity="0.5"/>
+  <!-- Metal hoop -->
+  <rect x="55" y="140" width="290" height="10" rx="5" fill="#555" stroke="#333" stroke-width="1"/>
+  <!-- Rivets -->
+  <circle cx="80" cy="145" r="3" fill="#777"/>
+  <circle cx="320" cy="145" r="3" fill="#777"/>
+  <!-- Bung hole -->
+  <circle cx="200" cy="260" r="18" fill="#5A3E0A" stroke="#444" stroke-width="3"/>
+  <circle cx="200" cy="260" r="10" fill="#333"/>
+  <!-- Wine stain -->
+  <ellipse cx="160" cy="310" rx="40" ry="8" fill="#722F37" opacity="0.3"/>
+  <!-- Cooper marks -->
+  <text x="200" y="85" text-anchor="middle" font-family="serif" font-size="12" fill="#6B4F10" opacity="0.6" letter-spacing="3">COOPER</text>
+  <text x="200" y="440" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="#5A3E0A" font-style="italic">Barrel Detail — Ribeauvillé</text>
+</svg>

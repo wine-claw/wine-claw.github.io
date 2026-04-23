@@ -271,12 +271,12 @@ img{max-width:100%;height:auto;display:block}
   </div>
   <div class="era-images">
     <figure>
-      <img src="img/oak-barrel.svg" alt="Oak barrel illustration" onclick="openLightbox(this)" loading="lazy">
-      <div class="fig-caption">Traditional oak barrel — the design that started it all. <em>Illustration</em></div>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Oak_Barrel.png" alt="Oak barrel illustration" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Traditional oak barrel — the design that started it all. <em>CC-BY-SA, Wikipedia</em></div>
     </figure>
     <figure>
-      <img src="img/wine-barrels.svg" alt="Winery barrel storage" onclick="openLightbox(this)" loading="lazy">
-      <div class="fig-caption">Oak wine barrels in winery storage. <em>Illustration</em></div>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/New_wine_barrels_at_Bella_Winery%2C_Dry_Creek_Valley.jpg" alt="Wine barrels at Bella Winery" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">New oak wine barrels at Bella Winery, Dry Creek Valley. <em>CC-BY-SA, Wikipedia</em></div>
     </figure>
   </div>
 </section>
@@ -290,12 +290,12 @@ img{max-width:100%;height:auto;display:block}
   </div>
   <div class="era-images">
     <figure>
-      <img src="img/guinness-barrels.svg" alt="Wooden beer barrels" onclick="openLightbox(this)" loading="lazy">
-      <div class="fig-caption">Wooden beer barrels stacked at a brewery. <em>Illustration</em></div>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/Guinness_barrels.jpg" alt="Guinness barrels" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Guinness barrels at the St. James's Gate Brewery. <em>CC-BY-SA, Wikipedia</em></div>
     </figure>
     <figure>
-      <img src="img/barrel-detail.svg" alt="Barrel detail with bung hole" onclick="openLightbox(this)" loading="lazy">
-      <div class="fig-caption">Detail of an old wine barrel with bung hole and cooper marks. <em>Illustration</em></div>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Detail_of_old_wine_barrel_in_wine_museum_of_cooperation_Ribeauvill%C3%A9.jpg" alt="Detail of old wine barrel" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Detail of an old wine barrel, Ribeauvillé wine museum. <em>CC-BY-SA, Wikipedia</em></div>
     </figure>
   </div>
 </section>
@@ -309,12 +309,12 @@ img{max-width:100%;height:auto;display:block}
   </div>
   <div class="era-images">
     <figure>
-      <img src="img/barrel-yard.svg" alt="Industrial barrel yard" onclick="openLightbox(this)" loading="lazy">
-      <div class="fig-caption">Industrial barrel yard — the barrel economy at scale. <em>Illustration</em></div>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Hundreds_of_wooden_barrels_covering_the_docks_at_the_resin_yards%2C_Savannah%2C_Georgia_-_NARA_-_523025.jpg" alt="Wooden barrels at Savannah resin yards" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Wooden barrels at Savannah resin yards — the industrial-scale barrel economy. <em>Public domain, NARA</em></div>
     </figure>
     <figure>
-      <img src="img/steel-keg.svg" alt="Stainless steel beer keg" onclick="openLightbox(this)" loading="lazy">
-      <div class="fig-caption">Modern stainless steel beer keg. <em>Illustration</em></div>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Eku_beer_keg_(2).jpg" alt="EKU stainless steel beer keg" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">Modern stainless steel beer keg (EKU). <em>CC-BY-SA, Wikipedia</em></div>
     </figure>
   </div>
 </section>
@@ -344,8 +344,8 @@ img{max-width:100%;height:auto;display:block}
   </div>
   <div class="era-images">
     <figure>
-      <img src="img/keykeg.svg" alt="KeyKeg system" onclick="openLightbox(this)" loading="lazy">
-      <div class="fig-caption">A modern descendant: the KeyKeg flexible keg system. <em>Illustration</em></div>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e6/Empty_KeyKeg_in_Madrid%2C_Spain.jpg" alt="Modern KeyKeg in Madrid" onclick="openLightbox(this)" loading="lazy">
+      <div class="fig-caption">A modern descendant: the KeyKeg flexible keg system. <em>CC-BY-SA, Wikipedia</em></div>
     </figure>
   </div>
 </section>
@@ -516,23 +516,23 @@ img{max-width:100%;height:auto;display:block}
 
   <div class="gallery-grid">
     <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
-      <img src="img/oak-barrel.svg" alt="Oak barrel" loading="lazy">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Oak_Barrel.png" alt="Oak barrel" loading="lazy">
       <div class="caption">Oak barrel — traditional form</div>
     </div>
     <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
-      <img src="img/wine-barrels.svg" alt="Winery barrels" loading="lazy">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/New_wine_barrels_at_Bella_Winery%2C_Dry_Creek_Valley.jpg" alt="Bella Winery barrels" loading="lazy">
       <div class="caption">Bella Winery oak barrels</div>
     </div>
     <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
-      <img src="img/guinness-barrels.svg" alt="Beer barrels" loading="lazy">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/Guinness_barrels.jpg" alt="Guinness barrels" loading="lazy">
       <div class="caption">Guinness brewery barrels</div>
     </div>
     <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
-      <img src="img/barrel-detail.svg" alt="Barrel detail" loading="lazy">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Detail_of_old_wine_barrel_in_wine_museum_of_cooperation_Ribeauvill%C3%A9.jpg" alt="Old barrel detail" loading="lazy">
       <div class="caption">Barrel detail, Ribeauvillé</div>
     </div>
     <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
-      <img src="img/barrel-yard.svg" alt="Barrel yard" loading="lazy">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Hundreds_of_wooden_barrels_covering_the_docks_at_the_resin_yards%2C_Savannah%2C_Georgia_-_NARA_-_523025.jpg" alt="Barrels at Savannah" loading="lazy">
       <div class="caption">Savannah resin yards (NARA)</div>
     </div>
     <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
@@ -540,11 +540,11 @@ img{max-width:100%;height:auto;display:block}
       <div class="caption">DIN keg cutaway diagram</div>
     </div>
     <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
-      <img src="img/steel-keg.svg" alt="Stainless steel keg" loading="lazy">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Eku_beer_keg_(2).jpg" alt="EKU beer keg" loading="lazy">
       <div class="caption">Stainless steel EKU keg</div>
     </div>
     <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img'))">
-      <img src="img/keykeg.svg" alt="KeyKeg" loading="lazy">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e6/Empty_KeyKeg_in_Madrid%2C_Spain.jpg" alt="KeyKeg" loading="lazy">
       <div class="caption">Modern KeyKeg system</div>
     </div>
   </div>
@@ -582,7 +582,7 @@ img{max-width:100%;height:auto;display:block}
 <!-- Footer -->
 <footer class="site-footer">
   <p>The Cornelius Keg — A History &nbsp;|&nbsp; An interactive mini-app &nbsp;|&nbsp; <a href="https://wine-claw.github.io/mini-apps/">← Back to Gallery</a></p>
-  <p style="margin-top:8px">Cutaway diagram: Wikimedia Commons (CC-BY-SA). All other images: original SVG illustrations. Built with care, not frameworks.</p>
+  <p style="margin-top:8px">Images: Wikimedia Commons (CC-BY-SA) &amp; NARA (public domain). Built with care, not frameworks.</p>
 </footer>
 
 <script>
