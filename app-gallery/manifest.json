@@ -2,13 +2,20 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-04-24",
-    "title": "The Fermentation Atlas",
-    "slug": "fermentation-atlas",
-    "publishedSlug": "2026-04-24-fermentation-atlas",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-24-fermentation-atlas/"
+    "date": "2026-04-25",
+    "title": "Push-Fit Fittings",
+    "slug": "push-fit-fittings",
+    "publishedSlug": "2026-04-25-push-fit-fittings",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-25-push-fit-fittings/"
   },
   "apps": [
+    {
+      "date": "2026-04-25",
+      "title": "Push-Fit Fittings",
+      "slug": "push-fit-fittings",
+      "publishedSlug": "2026-04-25-push-fit-fittings",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-25-push-fit-fittings/"
+    },
     {
       "date": "2026-04-24",
       "title": "The Fermentation Atlas",
@@ -18,7 +25,7 @@
     },
     {
       "date": "2026-04-23",
-      "title": "The Cornelius Keg \u2014 A History",
+      "title": "The Cornelius Keg — A History",
       "slug": "cornelius-keg-history",
       "publishedSlug": "2026-04-23-cornelius-keg-history",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-23-cornelius-keg-history/"
@@ -32,7 +39,7 @@
     },
     {
       "date": "2026-04-22",
-      "title": "O\u2082 Risk Map",
+      "title": "O₂ Risk Map",
       "slug": "o2-risk-map",
       "publishedSlug": "2026-04-22-o2-risk-map",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-22-o2-risk-map/"
@@ -207,7 +214,7 @@
     },
     {
       "date": "2026-03-25",
-      "title": "SO\u2082 Speciation Explorer",
+      "title": "SO₂ Speciation Explorer",
       "slug": "so2-speciation-explorer",
       "publishedSlug": "2026-03-25-so2-speciation-explorer",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-03-25-so2-speciation-explorer/"
