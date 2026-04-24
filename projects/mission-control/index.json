@@ -1,6 +1,6 @@
 {
   "title": "Wine Claw Project Tracking",
-  "updatedAt": "2026-04-24T09:41:59.074469+10:30",
+  "updatedAt": "2026-04-24T21:22:42.720083+10:30",
   "columns": [
     "active",
     "blocked",
@@ -20,12 +20,12 @@
       "nextStep": "Apr 25: Choose new mini-app concept. Consider rotating back to vineyard/engineering topics or mission-advancement ideas.",
       "primaryLink": {
         "label": "The Fermentation Atlas",
-        "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-24-fermentation-atlas/"
+        "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-24-fermentation-atlas/"
       },
       "secondaryClosedLinks": [
         {
           "label": "Gallery",
-          "url": "https://wine-claw.github.io/mini-apps/"
+          "url": "https://wine-claw.github.io/app-gallery/"
         }
       ],
       "links": [],
@@ -57,7 +57,7 @@
       "path": "/Users/wineclaw/.openclaw/workspace/projects/awri-grant-watch/README.md",
       "updatedAt": "2026-03-30T09:01:00+10:30",
       "nextStep": "Run the next Monday scan, keep prioritising official-source Australian opportunities, and continue watching for stronger verified international fits.",
-      "blocker": "Stale: no meaningful update for 600.7h while active.",
+      "blocker": "Stale: no meaningful update for 611.7h while active.",
       "links": [],
       "autonomous": {
         "enabled": true,
@@ -215,7 +215,7 @@
       "path": "/Users/wineclaw/.openclaw/workspace/projects/ezeio-google-sheet-sync/README.md",
       "updatedAt": "2026-04-12T10:30:00+09:30",
       "nextStep": "Verify collector is writing live data and charts are updating correctly.",
-      "blocker": "Stale: no meaningful update for 286.2h while monitoring.",
+      "blocker": "Stale: no meaningful update for 297.2h while monitoring.",
       "links": [
         {
           "label": "Live sheet",

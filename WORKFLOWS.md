@@ -633,7 +633,7 @@ When generating Simon's daily 7:50 AM WhatsApp brief, treat this workflow as the
 8. Include the **most recently built 2am mini-app** using the durable overnight project state as the primary source of truth (`projects/2am-mini-app-creation/state.json`), with `latest-summary.md` and the latest run note only as supporting detail.
    - app name
    - estimated delivered-work split between the main agent and `mm-worker`
-   - the mini-app gallery link: `https://wine-claw.github.io/mini-apps/`
+   - the mini-app gallery link: `https://wine-claw.github.io/app-gallery/`
    - if `state.json`, `latest-summary.md`, and the newest run folder disagree, treat that as a packaging failure, not a normal ambiguity; do not silently choose the stale file
 8. Summarise the **things worked on in the last 24 hours** using durable local context (daily memory + project notes) rather than chat recall alone.
 10. Include **recommendations for the next 24 hours**.
