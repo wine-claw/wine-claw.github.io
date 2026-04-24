@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Vineyard Pest Detective</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#111;--bg2:#1a1a1a;--green:#2d5016;--green-light:#4a7a28;--burgundy:#8b1a1a;--burgundy-light:#b33;--gold:#d4a017;--text:#e8e4dc;--text-dim:#8a8578;--card:#1e1e1e;--radius:12px}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+#app{max-width:440px;margin:0 auto;min-height:100dvh;position:relative}
+.banner{background:linear-gradient(90deg,#332a00,#4a3d00);color:#f0c040;font-size:11px;text-align:center;padding:6px 10px;line-height:1.4}
+.screen{display:none;flex-direction:column;min-height:calc(100dvh - 32px);padding:20px;animation:fadeIn .3s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes barShrink{from{width:100%}to{width:0%}}
+
+/* Splash */
+.splash{justify-content:center;align-items:center;position:relative;overflow:hidden}
+.splash-bg{position:absolute;inset:0;background:url('hero.png') center/cover no-repeat;filter:brightness(.35);z-index:0}
+.splash-content{position:relative;z-index:1;text-align:center;padding:20px}
+.splash h1{font-size:2.2em;font-weight:800;line-height:1.1;margin-bottom:4px;text-shadow:0 2px 20px rgba(0,0,0,.8)}
+.splash h1 span{display:block;color:var(--burgundy-light);font-size:.55em;font-weight:400;letter-spacing:2px;text-transform:uppercase;margin-top:8px}
+.splash p{color:var(--text-dim);margin:16px 0 32px;font-size:15px}
+.splash .best{color:var(--gold);font-size:14px;margin-bottom:20px}
+
+/* Buttons */
+.btn{display:block;width:100%;padding:16px;border:none;border-radius:var(--radius);font-size:17px;font-weight:700;cursor:pointer;transition:all .15s ease;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,var(--green),var(--green-light));color:#fff;box-shadow:0 4px 20px rgba(45,80,22,.4)}
+.btn-primary:hover{box-shadow:0 6px 28px rgba(45,80,22,.6)}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid #333}
+
+/* Game */
+.progress-bar{height:4px;background:#222;border-radius:2px;margin-bottom:12px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--green-light));transition:width .4s ease;border-radius:2px}
+.game-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:14px}
+.game-header .score{color:var(--gold);font-weight:700}
+.game-header .streak{color:var(--burgundy-light);font-weight:600}
+.timer-bar{height:3px;background:#222;border-radius:2px;margin-bottom:20px;overflow:hidden}
+.timer-fill{height:100%;background:var(--burgundy-light);border-radius:2px;transition:width .1s linear}
+.timer-fill.danger{background:#f44}
+.question-card{background:var(--card);border-radius:16px;padding:24px 20px;margin-bottom:20px;border:1px solid #2a2a2a;animation:slideUp .35s ease}
+.question-card .clue-emoji{font-size:32px;margin-bottom:12px}
+.question-card .symptom{font-size:17px;font-weight:600;line-height:1.5;margin-bottom:12px}
+.question-card .meta{display:flex;gap:10px;flex-wrap:wrap}
+.question-card .tag{font-size:12px;padding:4px 10px;border-radius:20px;background:rgba(45,80,22,.25);color:var(--green-light);border:1px solid rgba(45,80,22,.4)}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice-btn{width:100%;padding:14px 16px;border:2px solid #333;border-radius:var(--radius);background:var(--card);color:var(--text);font-size:15px;font-weight:500;cursor:pointer;transition:all .15s ease;text-align:left}
+.choice-btn:hover{border-color:#555;background:#252525}
+.choice-btn:active{transform:scale(.98)}
+.choice-btn.correct{border-color:var(--green-light);background:rgba(45,80,22,.3);color:#6c6;animation:pulse .3s}
+.choice-btn.wrong{border-color:var(--burgundy);background:rgba(139,26,26,.2);color:#f66;animation:shake .4s}
+.choice-btn:disabled{cursor:default;opacity:.6}
+
+/* Reveal */
+.reveal{background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid #2a2a2a;animation:slideUp .3s ease}
+.reveal .reveal-title{font-size:18px;font-weight:700;margin-bottom:8px}
+.reveal .reveal-title.correct-title{color:#6c6}
+.reveal .reveal-title.wrong-title{color:#f66}
+.reveal .reveal-fact{font-size:14px;line-height:1.6;color:var(--text-dim)}
+.reveal .reveal-points{font-size:13px;margin-top:10px;color:var(--gold);font-weight:600}
+
+/* Summary */
+.summary{justify-content:center;align-items:center;text-align:center}
+.summary .rank{font-size:52px;margin-bottom:8px}
+.summary .rank-title{font-size:24px;font-weight:800;margin-bottom:4px}
+.summary .rank-sub{color:var(--text-dim);font-size:14px;margin-bottom:24px}
+.summary .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;width:100%;max-width:300px}
+.summary .stat{background:var(--card);border-radius:var(--radius);padding:16px;border:1px solid #2a2a2a}
+.summary .stat-val{font-size:28px;font-weight:800}
+.summary .stat-label{font-size:12px;color:var(--text-dim);margin-top:2px}
+.summary .new-best{color:var(--gold);font-weight:700;font-size:15px;margin-bottom:16px;animation:pulse .6s ease 2}
+.summary .btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="banner">⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on this for pest identification decisions.</div>
+
+  <!-- Splash -->
+  <div id="splash" class="screen splash active">
+    <div class="splash-bg"></div>
+    <div class="splash-content">
+      <h1>🍷 Vineyard<br>Pest Detective<span>Identify &amp; Learn</span></h1>
+      <p>Test your vineyard pest &amp; disease knowledge. 15 questions, streak bonuses, and viticulture facts.</p>
+      <div id="best-score" class="best" style="display:none"></div>
+      <button class="btn btn-primary" onclick="startGame()">🔍 Start Investigation</button>
+    </div>
+  </div>
+
+  <!-- Game -->
+  <div id="game" class="screen">
+    <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+    <div class="game-header">
+      <span>Q<span id="q-num">1</span>/15</span>
+      <span class="score" id="score-display">0 pts</span>
+      <span class="streak" id="streak-display" style="display:none"></span>
+    </div>
+    <div class="timer-bar"><div id="timer-fill" class="timer-fill"></div></div>
+    <div id="question-area"></div>
+  </div>
+
+  <!-- Summary -->
+  <div id="summary" class="screen summary">
+    <div id="summary-content"></div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS_PER_ROUND = 15;
+const TIME_PER_QUESTION = 10;
+const BASE_POINTS = 100;
+const TIME_BONUS_MAX = 50;
+const STREAK_BONUS = 25;
+
+const pestData = [
+  {
+    id:"phylloxera",name:"Phylloxera",emoji:"🐛",
+    symptom:"Yellowing leaves with gall formations on roots; vine decline over 1–3 years; characteristic hook-shaped galls on root tips",
+    part:"Roots & Leaves",season:"Spring–Autumn",
+    fact:"Phylloxera (Daktulosphaira vitifoliae) is an aphid-like insect that devastated European vineyards in the 19th century. It feeds on roots, forming galls that rot. Resistant rootstocks are the primary management strategy worldwide."
+  },
+  {
+    id:"powdery",name:"Powdery Mildew",emoji:"🦠",
+    symptom:"White-grey powdery growth on upper leaf surfaces, shoots, and berries; berries may split or have net-like scarring",
+    part:"Leaves, Shoots & Berries",season:"Spring–Summer",
+    fact:"Powdery mildew (Erysiphe necator) thrives in warm, dry conditions with cool nights — common in many Australian wine regions. Sulphur dust and fungicides are key controls. Unlike downy mildew, it grows on upper leaf surfaces."
+  },
+  {
+    id:"downy",name:"Downy Mildew",emoji:"🦠",
+    symptom:"Oily yellow spots on upper leaf surfaces with white fluffy growth underneath; shoots may be infected and die back",
+    part:"Leaves (underside) & Shoots",season:"Spring (wet conditions)",
+    fact:"Downy mildew (Plasmopara viticola) requires free water on leaves to infect — it spreads rapidly during wet Springs. Oil spots on upper leaves with white down underneath distinguish it from powdery mildew. Copper-based sprays are a classic control."
+  },
+  {
+    id:"botrytis",name:"Botrytis (Grey Mould)",emoji:"🦠",
+    symptom:"Grey-brown fuzzy mould on berries; berries shrivel and rot; often enters through wounds or tight bunches",
+    part:"Berries & Bunches",season:"Autumn (wet harvest)",
+    fact:"Botrytis cinerea causes 'bunch rot' in Australian vineyards, especially in tight-bunched varieties. Ironically, the same fungus causes 'noble rot' essential for dessert wines like Sauternes. Canopy management to improve airflow is key prevention."
+  },
+  {
+    id:"lbam",name:"Lightbrown Apple Moth (LBAM)",emoji:"🐛",
+    symptom:"Webbed-together leaves and flower clusters; caterpillar feeding damage on flowers and berries; frass in bunches",
+    part:"Flowers & Berries",season:"Spring–Autumn",
+    fact:"LBAM (Epiphyas postvittana) is Australia's most common vineyard moth pest. Caterpillars web foliage and feed on flowers and berries, also creating entry points for Botrytis. Pheromone mating disruption and targeted sprays are used."
+  },
+  {
+    id:"leafhopper",name:"Grapevine Leafhopper",emoji:"🐛",
+    symptom:"White stippling/spotting on leaves from feeding; small mobile insects jump when disturbed; sticky honeydew on leaves",
+    part:"Leaves",season:"Summer–Autumn",
+    fact:"Leafhoppers feed on leaf sap causing stippling, and excrete honeydew that promotes sooty mould. In Australia, the common species is Empoasca vitis. They can be monitored with yellow sticky traps and managed with targeted insecticides."
+  },
+  {
+    id:"scale",name:"Grapevine Scale",emoji:"🐛",
+    symptom:"Small brown convex shells on canes and cordons; sooty mould on honeydew; weak vine growth",
+    part:"Canes & Cordons",season:"Late Winter–Spring",
+    fact:"Grapevine scale (Parthenolecanium persicae) appears as brown bumps on woody parts. They suck sap and produce honeydew leading to sooty mould. Dormant-season oil sprays and natural predators like ladybirds are effective controls."
+  },
+  {
+    id:"eutypa",name:"Eutypa Dieback",emoji:"🍂",
+    symptom:"Stunted spring shoots; small, cupped, chlorotic leaves on one side of cordon; progressive arm death; cross-section shows wedge-shaped dark stain",
+    part:"Cordons & Trunk",season:"Spring (symptoms visible)",
+    fact:"Eutypa dieback (Eutypa lata) is a trunk disease entering through pruning wounds. The wedge-shaped canker in cross-section is diagnostic. In Australia, it's a major issue in older vineyards. Pruning wound protectants and double pruning are key strategies."
+  },
+  {
+    id:"blackgoo",name:"Black Goo (Petri Disease)",emoji:"🍂",
+    symptom:"Young vines fail to thrive; dark ooze from cross-cut roots; internal black streaking in rootstock wood; poor root development",
+    part:"Roots & Rootstock",season:"Year-round (noticed at planting)",
+    fact:"Petri disease (caused by Phaeomoniella chlamydospora and others) affects young vines, causing poor establishment. Black goo exudes from infected wood. Using certified clean nursery stock and avoiding stressed rootlings are essential prevention."
+  },
+  {
+    id:"rustmite",name:"Rust Mite",emoji:"🐛",
+    symptom:"Bronze-rust discolouration on upper leaf surface in early season; leaves may curl and become brittle; resembles nutrient deficiency",
+    part:"Leaves",season:"Early Spring",
+    fact:"Rust mites (Calepitrimerus vitis) are microscopic and cause early-season leaf bronzing that can be mistaken for nutritional issues. Sulphur applications for powdery mildew often provide incidental control. Severe infestations can reduce photosynthesis significantly."
+  },
+  {
+    id:"bunchmite",name:"Bunch Mite",emoji:"🐛",
+    symptom:"Scarring and russeting on berry skins; berries may be stunted or misshapen; blemish reduces table grape quality",
+    part:"Berries & Bunches",season:"Spring–Early Summer",
+    fact:"Bunch mites (Brevipalpus lewisi) feed directly on berries causing surface scarring. They're more problematic in table grape varieties where appearance matters. Sulphur and miticides at the right timing prevent damage at berry set."
+  },
+  {
+    id:"mealybug",name:"Mealybug",emoji:"🐛",
+    symptom:"White waxy insects in sheltered areas (under bark, in bunches); honeydew and sooty mould; may vector leafroll virus",
+    part:"Under Bark & Bunches",season:"Summer–Autumn",
+    fact:"Mealybugs (Pseudococcus spp.) are significant vineyard pests because they vector Grapevine Leafroll Virus. They hide under bark and are protected by their waxy coating. Ant control helps, as ants farm mealybugs for honeydew."
+  },
+  {
+    id:"nematodes",name:"Nematodes",emoji:"🔍",
+    symptom:"Patchy vine decline in sandy soils; galled or stubby roots; reduced vigour in distinct areas of the vineyard",
+    part:"Roots",season:"Year-round (below ground)",
+    fact:"Root-knot and dagger nematodes damage vine roots, reducing water and nutrient uptake. Sandy soils favour them. Resistant rootstocks are the primary management tool in Australian vineyards, as chemical options are limited."
+  },
+  {
+    id:"crowngall",name:"Crown Gall",emoji:"🦠",
+    symptom:"Large rough tumour-like galls at the base of the trunk or on roots; vines may decline or die; worse after freeze damage",
+    part:"Trunk Base & Roots",season:"Year-round (galls grow in warm months)",
+    fact:"Crown gall (Agrobacterium vitis) produces tumorous galls and is a particular problem in frost-prone Australian regions. The bacterium inserts its DNA into the vine — it's a permanent infection. Prevention means avoiding nursery infections and frost damage."
+  },
+  {
+    id:"fanleaf",name:"Fanleaf Virus",emoji:"🦠",
+    symptom:"Distorted, asymmetrical leaves with bright yellow mosaic patterns; shortened internodes; poor fruit set",
+    part:"Leaves",season:"Spring–Summer",
+    fact:"Grapevine fanleaf virus (GFLV) is spread by dagger nematodes in soil. The distinctive fan-shaped leaf distortion and yellow mosaic are diagnostic. There is no cure — infected vines must be removed and soil fumigated before replanting."
+  },
+  {
+    id:"leafroll",name:"Leafroll Virus",emoji:"🦠",
+    symptom:"Leaves curl downward with reddish-purple discolouration (red varieties) or yellowing (white varieties); green veins remain; delayed ripening",
+    part:"Leaves",season:"Late Summer–Autumn",
+    fact:"Leafroll is the most economically important viral disease in Australian vineyards. Spread by mealybugs, it reduces sugar accumulation and delays ripening — costing up to 30% yield loss. Roguing infected vines and controlling mealybug vectors are essential."
+  },
+  {
+    id:"snails",name:"Snails / Slugs",emoji:"🐛",
+    symptom:"Irregular holes chewed in young leaves and shoots; slimy trails on foliage; damage worse after rain or irrigation",
+    part:"Young Leaves & Shoots",season:"Spring (wet conditions)",
+    fact:"Snails and slugs are primarily a problem in young vineyards and in wet seasons. They chew irregular holes in tender growth. Baiting with iron phosphate or metaldehyde is common. Ducks and encouraging natural predators can also help."
+  }
+];
+
+let state = {};
+
+function getRanks(){
+  return [
+    {min:0,title:"Intern",emoji:"📋"},
+    {min:30,title:"Trainee",emoji:"🌱"},
+    {min:55,title:"Vineyard Hand",emoji:"🌿"},
+    {min:75,title:"Viticulturist",emoji:"🍇"},
+    {min:90,title:"Expert",emoji:"🍷"}
+  ];
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame(){
+  const shuffled = [...pestData].sort(()=>Math.random()-.5);
+  const questions = shuffled.slice(0, QUESTIONS_PER_ROUND);
+  state = {questions, current:0, score:0, streak:0, maxStreak:0, correct:0, answered:false};
+  showScreen('game');
+  showQuestion();
+}
+
+function showQuestion(){
+  const q = state.questions[state.current];
+  state.answered = false;
+  document.getElementById('q-num').textContent = state.current+1;
+  document.getElementById('score-display').textContent = state.score + ' pts';
+  const streakEl = document.getElementById('streak-display');
+  if(state.streak>=2){streakEl.style.display='';streakEl.textContent='🔥'+state.streak;} else streakEl.style.display='none';
+  document.getElementById('progress-fill').style.width = ((state.current)/QUESTIONS_PER_ROUND*100)+'%';
+
+  // Build choices: correct + 3 wrong
+  const wrongs = pestData.filter(p=>p.id!==q.id).sort(()=>Math.random()-.5).slice(0,3);
+  const choices = [q,...wrongs].sort(()=>Math.random()-.5);
+
+  document.getElementById('question-area').innerHTML = `
+    <div class="question-card">
+      <div class="clue-emoji">${q.emoji}</div>
+      <div class="symptom">${q.symptom}</div>
+      <div class="meta">
+        <span class="tag">🌿 ${q.part}</span>
+        <span class="tag">📅 ${q.season}</span>
+      </div>
+    </div>
+    <div class="choices">
+      ${choices.map((c,i)=>`<button class="choice-btn" data-id="${c.id}" onclick="pickAnswer(this,'${q.id}')">${c.name}</button>`).join('')}
+    </div>
+  `;
+
+  startTimer();
+}
+
+let timerInterval, timerStart;
+function startTimer(){
+  clearInterval(timerInterval);
+  const bar = document.getElementById('timer-fill');
+  bar.style.transition='none';bar.style.width='100%';bar.classList.remove('danger');
+  requestAnimationFrame(()=>{requestAnimationFrame(()=>{
+    bar.style.transition=`width ${TIME_PER_QUESTION}s linear`;
+    bar.style.width='0%';
+  })});
+  timerStart = Date.now();
+  timerInterval = setInterval(()=>{
+    const elapsed = (Date.now()-timerStart)/1000;
+    if(elapsed > TIME_PER_QUESTION-3) bar.classList.add('danger');
+    if(elapsed >= TIME_PER_QUESTION){
+      clearInterval(timerInterval);
+      if(!state.answered) timeUp();
+    }
+  },100);
+}
+
+function timeUp(){
+  state.answered=true;
+  const q = state.questions[state.current];
+  state.streak=0;
+  document.querySelectorAll('.choice-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.id===q.id) b.classList.add('correct');
+  });
+  showReveal(q, false, 0);
+}
+
+function pickAnswer(btn, correctId){
+  if(state.answered) return;
+  state.answered = true;
+  clearInterval(timerInterval);
+  const isCorrect = btn.dataset.id === correctId;
+  const elapsed = (Date.now()-timerStart)/1000;
+  const timeLeft = Math.max(0, TIME_PER_QUESTION - elapsed);
+  let points = 0;
+  if(isCorrect){
+    state.correct++;
+    state.streak++;
+    if(state.streak>state.maxStreak) state.maxStreak=state.streak;
+    const tb = Math.round(TIME_BONUS_MAX * (timeLeft/TIME_PER_QUESTION));
+    const sb = state.streak>=2 ? STREAK_BONUS*(state.streak-1) : 0;
+    points = BASE_POINTS + tb + sb;
+    state.score += points;
+  } else {
+    state.streak = 0;
+    btn.classList.add('wrong');
+  }
+  document.querySelectorAll('.choice-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.id===correctId) b.classList.add('correct');
+  });
+  document.getElementById('score-display').textContent = state.score + ' pts';
+  const q = state.questions[state.current];
+  showReveal(q, isCorrect, points);
+}
+
+function showReveal(q, correct, points){
+  const streakEl = document.getElementById('streak-display');
+  if(state.streak>=2){streakEl.style.display='';streakEl.textContent='🔥'+state.streak;} else streakEl.style.display='none';
+
+  const area = document.getElementById('question-area');
+  area.innerHTML += `
+    <div class="reveal">
+      <div class="reveal-title ${correct?'correct-title':'wrong-title'}">${correct?'✅ Correct!':'❌ Incorrect — it was '+q.name}</div>
+      <div class="reveal-fact">${q.fact}</div>
+      ${correct?`<div class="reveal-points">+${points} pts${state.streak>=2?' (streak x'+state.streak+')':''}</div>`:''}
+    </div>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="nextQuestion()">${state.current < QUESTIONS_PER_ROUND-1 ? 'Next Question →' : 'See Results 🏆'}</button>
+  `;
+}
+
+function nextQuestion(){
+  state.current++;
+  if(state.current >= QUESTIONS_PER_ROUND) return showSummary();
+  showQuestion();
+}
+
+function showSummary(){
+  clearInterval(timerInterval);
+  const pct = Math.round(state.correct/QUESTIONS_PER_ROUND*100);
+  const ranks = getRanks();
+  let rank = ranks[0];
+  for(const r of ranks) if(pct>=r.min) rank=r;
+
+  const bestKey = 'pestDetective_best';
+  const prevBest = parseInt(localStorage.getItem(bestKey)||'0');
+  const isNewBest = state.score > prevBest;
+  if(isNewBest) localStorage.setItem(bestKey, state.score);
+
+  document.getElementById('summary-content').innerHTML = `
+    <div class="rank">${rank.emoji}</div>
+    <div class="rank-title">${rank.title}</div>
+    <div class="rank-sub">${pct}% accuracy — ${rank.min>=90?'Outstanding!':rank.min>=75?'Great work!':rank.min>=55?'Solid effort!':rank.min>=30?'Keep learning!':'Every expert starts here!'}</div>
+    ${isNewBest?'<div class="new-best">🏆 New best score!</div>':''}
+    <div class="stats">
+      <div class="stat"><div class="stat-val">${state.score}</div><div class="stat-label">Total Score</div></div>
+      <div class="stat"><div class="stat-val">${state.correct}/${QUESTIONS_PER_ROUND}</div><div class="stat-label">Correct</div></div>
+      <div class="stat"><div class="stat-val">${pct}%</div><div class="stat-label">Accuracy</div></div>
+      <div class="stat"><div class="stat-val">${state.maxStreak}🔥</div><div class="stat-label">Best Streak</div></div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="startGame()">Play Again 🔄</button>
+      <button class="btn btn-secondary" onclick="shareScore()">📋 Share Score</button>
+    </div>
+  `;
+  showScreen('summary');
+}
+
+function shareScore(){
+  const pct = Math.round(state.correct/QUESTIONS_PER_ROUND*100);
+  const ranks = getRanks();
+  let rank = ranks[0];
+  for(const r of ranks) if(pct>=r.min) rank=r;
+  const text = `🍷 Vineyard Pest Detective\n${rank.emoji} Rank: ${rank.title}\nScore: ${state.score} pts | ${state.correct}/${QUESTIONS_PER_ROUND} correct (${pct}%)\nBest streak: ${state.maxStreak}🔥`;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.querySelector('.btn-secondary');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(()=>btn.textContent=orig, 1500);
+  }).catch(()=>{});
+}
+
+// Show best score on splash
+(function(){
+  const best = parseInt(localStorage.getItem('pestDetective_best')||'0');
+  if(best>0){
+    const el = document.getElementById('best-score');
+    el.style.display='';
+    el.textContent = '🏆 Best score: '+best+' pts';
+  }
+})();
+</script>
+</body>
+</html>

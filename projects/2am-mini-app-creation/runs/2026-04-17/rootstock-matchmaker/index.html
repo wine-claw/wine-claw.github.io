@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rootstock Matchmaker 🍇</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;600&display=swap');
+
+:root {
+  --green-dark: #2d4a1c;
+  --green-mid: #4a7c2e;
+  --green-light: #6ba344;
+  --terracotta: #c1623a;
+  --terracotta-light: #d4835e;
+  --cream: #f5ede0;
+  --cream-dark: #e8dcc8;
+  --soil: #3b2a1a;
+  --soil-light: #5c4030;
+  --sand: #d4b896;
+  --sand-light: #e8d4b8;
+  --white: #fff;
+  --shadow: rgba(59, 42, 26, 0.18);
+  --shadow-strong: rgba(59, 42, 26, 0.35);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--cream);
+  color: var(--soil);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── AI Banner ── */
+.ai-banner {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #e8e8f0;
+  text-align: center;
+  padding: 8px 12px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.ai-banner span { opacity: 0.6; font-size: 10px; }
+.ai-banner strong { color: #a8d8ea; }
+
+/* ── Decorative vines ── */
+.vine-decor {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.07;
+}
+.vine-decor.left { top: 0; left: -20px; width: 120px; }
+.vine-decor.right { top: 0; right: -20px; width: 120px; transform: scaleX(-1); }
+
+/* ── Header ── */
+header {
+  background: linear-gradient(160deg, var(--green-dark) 0%, var(--green-mid) 60%, var(--green-light) 100%);
+  color: var(--cream);
+  text-align: center;
+  padding: 28px 20px 22px;
+  position: relative;
+  overflow: hidden;
+}
+header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 Q35 15 30 25 Q25 15 30 5Z' fill='%23ffffff' opacity='0.05'/%3E%3C/svg%3E");
+  background-size: 60px 60px;
+}
+.header-leaf {
+  position: absolute;
+  opacity: 0.12;
+  pointer-events: none;
+}
+.header-leaf.l1 { top: 10px; left: 20px; width: 60px; }
+.header-leaf.l2 { top: 40px; right: 30px; width: 50px; transform: rotate(40deg); }
+.header-leaf.l3 { bottom: 5px; left: 50%; width: 40px; transform: translateX(-50%) rotate(-20deg); }
+
+header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(24px, 6vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+header h1 .emoji { font-size: 0.85em; }
+header p {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-top: 6px;
+  position: relative;
+  z-index: 1;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+/* ── Stat bar ── */
+.stat-bar {
+  background: var(--soil);
+  color: var(--sand);
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.stat-bar strong { color: var(--terracotta-light); font-weight: 600; }
+
+/* ── Main layout ── */
+.app-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px 12px 40px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Section titles ── */
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: var(--green-dark);
+  margin: 24px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--green-mid), transparent);
+  margin-left: 4px;
+}
+.section-icon { font-size: 16px; }
+
+/* ── Input card ── */
+.input-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 20px 18px;
+  box-shadow: 0 4px 20px var(--shadow);
+  border: 1px solid var(--cream-dark);
+  position: relative;
+  overflow: hidden;
+}
+.input-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--green-mid), var(--terracotta), var(--green-light));
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+}
+@media (max-width: 480px) { .input-grid { grid-template-columns: 1fr; gap: 16px; } }
+
+.input-group { display: flex; flex-direction: column; gap: 6px; }
+.input-group.full { grid-column: 1 / -1; }
+
+.input-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--soil-light);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.input-label .label-icon { font-size: 13px; }
+
+/* Select / Range inputs */
+select, input[type="range"] {
+  width: 100%;
+  accent-color: var(--green-mid);
+}
+select {
+  padding: 9px 12px;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 10px;
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  color: var(--soil);
+  background: var(--cream);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235c4030' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+select:focus { outline: none; border-color: var(--green-mid); box-shadow: 0 0 0 3px rgba(74,124,46,0.15); }
+
+input[type="range"] {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--cream-dark);
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
+  box-shadow: 0 2px 6px var(--shadow);
+  cursor: pointer;
+  border: 2px solid white;
+  transition: transform 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--soil-light);
+  margin-top: 2px;
+}
+.range-value {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: var(--cream);
+  padding: 3px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  margin: 4px auto 0;
+  width: fit-content;
+}
+
+/* Toggle buttons */
+.toggle-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.toggle-btn {
+  padding: 7px 13px;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 20px;
+  background: var(--cream);
+  font-family: 'Lato', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--soil-light);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.toggle-btn:hover { border-color: var(--green-mid); color: var(--green-dark); }
+.toggle-btn.active {
+  background: var(--green-mid);
+  border-color: var(--green-mid);
+  color: white;
+  box-shadow: 0 2px 8px rgba(74,124,46,0.35);
+}
+
+/* ── Match button ── */
+.match-btn-wrap { text-align: center; margin-top: 20px; }
+.match-btn {
+  background: linear-gradient(135deg, var(--terracotta), var(--terracotta-light));
+  color: white;
+  border: none;
+  padding: 14px 48px;
+  border-radius: 50px;
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(193,98,58,0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+  letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+}
+.match-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.match-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(193,98,58,0.5); }
+.match-btn:hover::before { opacity: 1; }
+.match-btn:active { transform: translateY(0); }
+.match-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+/* ── Matching animation ── */
+.matching-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(45,74,28,0.85);
+  z-index: 200;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.matching-overlay.active { display: flex; }
+.match-anim-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  color: var(--cream);
+  text-align: center;
+}
+.vine-spinner {
+  width: 80px; height: 80px;
+  position: relative;
+}
+.vine-spinner::before, .vine-spinner::after {
+  content: '🍇';
+  font-size: 36px;
+  position: absolute;
+  animation: spin-vine 1s linear infinite;
+}
+.vine-spinner::after { animation-delay: -0.5s; }
+@keyframes spin-vine {
+  0% { transform: rotate(0deg) translateX(0); }
+  50% { transform: rotate(180deg) translateX(10px) scale(1.1); }
+  100% { transform: rotate(360deg) translateX(0); }
+}
+.match-dots { display: flex; gap: 8px; }
+.match-dots span {
+  width: 10px; height: 10px;
+  background: var(--sand);
+  border-radius: 50%;
+  animation: dot-bounce 0.6s ease-in-out infinite;
+}
+.match-dots span:nth-child(2) { animation-delay: 0.1s; }
+.match-dots span:nth-child(3) { animation-delay: 0.2s; }
+@keyframes dot-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-12px); opacity: 1; }
+}
+
+/* ── Results ── */
+.results-section { display: none; margin-top: 28px; }
+.results-section.visible { display: block; }
+
+.results-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.results-count {
+  font-size: 13px;
+  color: var(--soil-light);
+  background: var(--cream-dark);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+.results-count strong { color: var(--green-dark); }
+
+/* Result card */
+.result-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 18px 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 3px 16px var(--shadow);
+  border: 1px solid var(--cream-dark);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.result-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px var(--shadow-strong); }
+.result-card.perfect::before {
+  content: '✨ Perfect Match';
+  position: absolute;
+  top: 12px; right: -28px;
+  background: linear-gradient(135deg, #f0c040, #e09020);
+  color: var(--soil);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 36px;
+  transform: rotate(35deg);
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.result-card.perfect { border-color: #e8c040; }
+
+.result-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.result-name-block {}
+.result-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: var(--green-dark);
+  font-weight: 700;
+}
+.result-parentage {
+  font-size: 11px;
+  color: var(--soil-light);
+  font-style: italic;
+  margin-top: 2px;
+}
+.result-score-wrap { text-align: right; }
+.result-score {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--green-mid);
+  line-height: 1;
+}
+.result-score-label { font-size: 10px; color: var(--soil-light); text-transform: uppercase; letter-spacing: 0.06em; }
+.result-score.perfect-score { color: #c8960c; }
+
+/* Radar chart in results */
+.radar-wrap {
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+/* Pros/Cons */
+.pros-cons { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.pros, .cons { font-size: 11px; padding: 5px 10px; border-radius: 8px; display: flex; align-items: center; gap: 4px; }
+.pros { background: #e8f5e0; color: #2d6a22; }
+.cons { background: #fde8e8; color: #8b2222; }
+.pros::before { content: '✓'; font-weight: 700; }
+.cons::before { content: '✗'; font-weight: 700; }
+
+.aus-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--terracotta);
+  background: rgba(193,98,58,0.08);
+  padding: 5px 10px;
+  border-radius: 8px;
+  border-left: 3px solid var(--terracotta);
+}
+
+/* Star rating */
+.stars { display: flex; gap: 1px; font-size: 12px; }
+.star { color: var(--cream-dark); }
+.star.filled { color: #e8a020; }
+
+/* Detail panel */
+.detail-panel {
+  display: none;
+  background: var(--white);
+  border-radius: 16px;
+  padding: 22px 18px;
+  margin-top: 14px;
+  box-shadow: 0 4px 20px var(--shadow-strong);
+  border: 1px solid var(--green-mid);
+  position: relative;
+  overflow: hidden;
+}
+.detail-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--green-mid), var(--terracotta));
+}
+.detail-panel.open { display: block; animation: slideDown 0.3s ease; }
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.detail-close {
+  position: absolute;
+  top: 14px; right: 14px;
+  background: var(--cream);
+  border: 1px solid var(--cream-dark);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+  color: var(--soil-light);
+}
+.detail-close:hover { background: var(--cream-dark); }
+
+.detail-parentage {
+  font-size: 14px;
+  color: var(--soil-light);
+  font-style: italic;
+  margin-bottom: 12px;
+  padding-right: 30px;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+@media (max-width: 400px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.detail-stat {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.detail-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--soil-light);
+  font-weight: 600;
+}
+.detail-stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-dark);
+}
+.detail-stat-value.bad { color: #b83030; }
+.detail-stat-value.good { color: #2d6a22; }
+.detail-stat-value.neutral { color: var(--soil-light); }
+
+.detail-aus {
+  background: rgba(74,124,46,0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--green-dark);
+  line-height: 1.6;
+  border-left: 4px solid var(--green-mid);
+}
+.detail-aus strong { display: block; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--soil-light); }
+
+.vigour-bar-wrap { margin-top: 12px; }
+.vigour-bar-label { font-size: 11px; font-weight: 600; color: var(--soil-light); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.vigour-bar-track {
+  height: 10px;
+  background: var(--cream-dark);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.vigour-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--green-mid), var(--green-light));
+  transition: width 0.6s ease;
+}
+
+/* ── Confetti canvas ── */
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 300;
+  display: none;
+}
+#confetti-canvas.active { display: block; }
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding: 20px 16px 32px;
+  font-size: 11px;
+  color: var(--soil-light);
+  line-height: 1.7;
+  opacity: 0.8;
+}
+footer a { color: var(--green-mid); text-decoration: none; }
+footer strong { color: var(--terracotta); }
+
+/* ── Scroll to top ── */
+.scroll-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 44px; height: 44px;
+  background: var(--green-mid);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px var(--shadow);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+  z-index: 100;
+}
+.scroll-top.visible { display: flex; }
+.scroll-top:hover { transform: translateY(-2px); background: var(--green-dark); }
+
+/* ── Reset btn ── */
+.reset-link {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 20px;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--soil-light);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Lato', sans-serif;
+}
+.reset-link:hover { border-color: var(--terracotta); color: var(--terracotta); background: rgba(193,98,58,0.05); }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .result-header { flex-direction: column; gap: 8px; }
+  .result-score-wrap { text-align: left; }
+  .radar-wrap { width: 110px; height: 110px; }
+  header h1 { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+
+<!-- AI Banner -->
+<div class="ai-banner">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <span>Experimental AI mini-app — for educational purposes only. Always verify with a qualified viticulturist before making field decisions.</span>
+  <strong>🍇 Rootstock Matchmaker v1.0</strong>
+</div>
+
+<!-- Decorative vines -->
+<svg class="vine-decor left" viewBox="0 0 120 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M60 0 Q80 60 60 120 Q40 180 60 240 Q80 300 60 400" stroke="#2d4a1c" stroke-width="4" fill="none"/>
+  <ellipse cx="30" cy="80" rx="25" ry="14" fill="#2d4a1c" transform="rotate(-30 30 80)"/>
+  <ellipse cx="85" cy="160" rx="25" ry="14" fill="#2d4a1c" transform="rotate(25 85 160)"/>
+  <ellipse cx="25" cy="240" rx="25" ry="14" fill="#2d4a1c" transform="rotate(-20 25 240)"/>
+  <ellipse cx="90" cy="320" rx="25" ry="14" fill="#2d4a1c" transform="rotate(30 90 320)"/>
+</svg>
+<svg class="vine-decor right" viewBox="0 0 120 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M60 0 Q80 60 60 120 Q40 180 60 240 Q80 300 60 400" stroke="#2d4a1c" stroke-width="4" fill="none"/>
+  <ellipse cx="30" cy="80" rx="25" ry="14" fill="#2d4a1c" transform="rotate(-30 30 80)"/>
+  <ellipse cx="85" cy="160" rx="25" ry="14" fill="#2d4a1c" transform="rotate(25 85 160)"/>
+  <ellipse cx="25" cy="240" rx="25" ry="14" fill="#2d4a1c" transform="rotate(-20 25 240)"/>
+</svg>
+
+<!-- Header -->
+<header>
+  <svg class="header-leaf l1" viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 35 Q30 5 55 35 Q30 20 5 35Z" fill="white"/>
+    <path d="M5 35 Q30 20 55 35" stroke="white" stroke-width="1" opacity="0.5"/>
+  </svg>
+  <svg class="header-leaf l2" viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 35 Q30 5 55 35 Q30 20 5 35Z" fill="white"/>
+  </svg>
+  <svg class="header-leaf l3" viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 35 Q30 5 55 35 Q30 20 5 35Z" fill="white"/>
+  </svg>
+  <h1><span class="emoji">🍇</span> Rootstock Matchmaker</h1>
+  <p>Find the perfect rootstock match for your vineyard site</p>
+</header>
+
+<!-- Stat bar -->
+<div class="stat-bar">
+  <span><strong>74%</strong> of SA vineyards are on own roots</span>
+  <span><strong>14</strong> rootstocks in database</span>
+</div>
+
+<div class="app-wrap">
+
+  <!-- Input Panel -->
+  <div class="section-title">
+    <span class="section-icon">🌱</span>
+    Tell Us About Your Site
+  </div>
+
+  <div class="input-card">
+    <div class="input-grid">
+
+      <!-- Phylloxera Risk -->
+      <div class="input-group">
+        <label class="input-label">
+          <span class="label-icon">🐛</span> Phylloxera Risk
+        </label>
+        <div class="toggle-group" data-field="phylloxera">
+          <button class="toggle-btn" data-val="none">None</button>
+          <button class="toggle-btn" data-val="low">Low</button>
+          <button class="toggle-btn" data-val="medium" data-default="true">Med</button>
+          <button class="toggle-btn" data-val="high">High</button>
+        </div>
+      </div>
+
+      <!-- Nematode Pressure -->
+      <div class="input-group">
+        <label class="input-label">
+          <span class="label-icon">🪱</span> Nematode Pressure
+        </label>
+        <div class="toggle-group" data-field="nematode">
+          <button class="toggle-btn" data-val="none">None</button>
+          <button class="toggle-btn" data-val="low">Low</button>
+          <button class="toggle-btn" data-val="medium">Med</button>
+          <button class="toggle-btn" data-val="high" data-default="true">High</button>
+        </div>
+      </div>
+
+      <!-- Soil pH -->
+      <div class="input-group">
+        <label class="input-label">
+          <span class="label-icon">⚗️</span> Soil pH
+        </label>
+        <input type="range" id="ph-slider" min="40" max="85" value="65" step="1">
+        <div class="range-labels"><span>4.0</span><span>8.5</span></div>
+        <div style="text-align:center"><span class="range-value" id="ph-display">6.5</span></div>
+      </div>
+
+      <!-- Drought/Water Stress -->
+      <div class="input-group">
+        <label class="input-label">
+          <span class="label-icon">☀️</span> Drought / Water Stress
+        </label>
+        <div class="toggle-group" data-field="drought">
+          <button class="toggle-btn" data-val="low">Low</button>
+          <button class="toggle-btn" data-val="medium" data-default="true">Med</button>
+          <button class="toggle-btn" data-val="high">High</button>
+          <button class="toggle-btn" data-val="extreme">Extreme</button>
+        </div>
+      </div>
+
+      <!-- Salinity -->
+      <div class="input-group">
+        <label class="input-label">
+          <span class="label-icon">🧂</span> Salinity
+        </label>
+        <div class="toggle-group" data-field="salinity">
+          <button class="toggle-btn" data-val="none" data-default="true">None</button>
+          <button class="toggle-btn" data-val="mild">Mild</button>
+          <button class="toggle-btn" data-val="moderate">Mod</button>
+          <button class="toggle-btn" data-val="high">High</button>
+        </div>
+      </div>
+
+      <!-- Lime Content -->
+      <div class="input-group">
+        <label class="input-label">
+          <span class="label-icon">🪨</span> Lime / Calcareous
+        </label>
+        <div class="toggle-group" data-field="lime">
+          <button class="toggle-btn" data-val="none">None</button>
+          <button class="toggle-btn" data-val="slight">Slight</button>
+          <button class="toggle-btn" data-val="moderate" data-default="true">Mod</button>
+          <button class="toggle-btn" data-val="high">High</button>
+        </div>
+      </div>
+
+      <!-- Desired Vigour -->
+      <div class="input-group">
+        <label class="input-label">
+          <span class="label-icon">💪</span> Desired Vine Vigour
+        </label>
+        <div class="toggle-group" data-field="vigour">
+          <button class="toggle-btn" data-val="low">Low</button>
+          <button class="toggle-btn" data-val="medium" data-default="true">Med</button>
+          <button class="toggle-btn" data-val="high">High</button>
+        </div>
+      </div>
+
+      <!-- Soil Depth -->
+      <div class="input-group">
+        <label class="input-label">
+          <span class="label-icon">⬇️</span> Soil Depth
+        </label>
+        <div class="toggle-group" data-field="depth">
+          <button class="toggle-btn" data-val="shallow">Shallow</button>
+          <button class="toggle-btn" data-val="medium" data-default="true">Med</button>
+          <button class="toggle-btn" data-val="deep">Deep</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="match-btn-wrap">
+      <button class="match-btn" id="match-btn">🍇 Find My Match</button>
+    </div>
+    <div style="text-align:center">
+      <button class="reset-link" id="reset-btn">↺ Reset to defaults</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section" id="results-section">
+    <div class="section-title">
+      <span class="section-icon">🏆</span>
+      Your Top Rootstock Matches
+    </div>
+    <div class="results-meta">
+      <span class="results-count" id="results-count"></span>
+      <button class="reset-link" id="back-to-top" style="margin-top:0">↑ Back to inputs</button>
+    </div>
+    <div id="results-list"></div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>Educational tool only</strong> — not a substitute for professional viticultural advice.<br>
+  Data based on Vinehealth Australia, Wine Australia, and Chen 2024 (AJGWR).<br>
+  <br>
+  Built with 🍷 by an AI assistant. Results may vary — always verify with local expertise.
+</footer>
+
+<!-- Confetti Canvas -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Scroll to top -->
+<button class="scroll-top" id="scroll-top">↑</button>
+
+<!-- Matching Overlay -->
+<div class="matching-overlay" id="matching-overlay">
+  <div class="vine-spinner"></div>
+  <div class="match-anim-title">Finding Your Perfect Match…</div>
+  <div class="match-dots"><span></span><span></span><span></span></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// ROOTSTOCK DATABASE
+// ════════════════════════════════════════════════════════════
+const ROOTSTOCKS = [
+  {
+    id: 'ramsey',
+    name: 'Ramsey',
+    parentage: 'V. champinii',
+    vigour: 'high',
+    drought: 'very_high',
+    nematode: 'high',
+    phylloxera: 'low',
+    salinity: 'moderate',
+    lime: 'moderate',
+    phRange: [5.0, 7.5],
+    depth: 'deep',
+    austUsage: 'Widely planted across the Riverland, Murray Valley, and inland irrigated regions. One of the most common high-vigour rootstocks in warm Australian viticulture. Tolerant of high pH soils.',
+    scionVigour: 'Increases scion vigour significantly (+30–50%). Use where canopy development is a priority.',
+    notes: 'Highly compatible with own-rooted plantings in non-phylloxera zones.',
+    pros: ['Exceptional drought tolerance', 'Strong nematode resistance', 'High vigour for weak sites', 'Tolerates high pH'],
+    cons: ['Poor phylloxera resistance', 'Sensitive to saline conditions', 'Can cause excessive vigour'],
+  },
+  {
+    id: 'paulsen1103',
+    name: 'Paulsen 1103',
+    parentage: 'V. rupestris × V. berlandieri',
+    vigour: 'moderate',
+    drought: 'high',
+    nematode: 'moderate',
+    phylloxera: 'moderate',
+    salinity: 'mild',
+    lime: 'moderate',
+    phRange: [5.5, 7.8],
+    depth: 'medium',
+    austUsage: 'Popular in Riverland and Sunraysia for warm, dry sites. Frequently used in trials for drought-prone inland regions. Good all-round tolerance to stress.',
+    scionVigour: 'Moderate vigour increase (+15–25%). Good balanced response.',
+    notes: 'A solid all-rounder for inland Australian conditions.',
+    pros: ['Strong drought tolerance', 'Good lime tolerance', 'Moderate phylloxera resistance', 'Balanced vigour'],
+    cons: ['Moderate nematode tolerance only', 'Mild salinity sensitivity', 'Less suited to very shallow soils'],
+  },
+  {
+    id: 'schwarzmann',
+    name: 'Schwarzmann',
+    parentage: 'V. riparia × V. rupestris',
+    vigour: 'moderate',
+    drought: 'low',
+    nematode: 'moderate',
+    phylloxera: 'high',
+    salinity: 'none',
+    lime: 'low',
+    phRange: [5.0, 6.5],
+    depth: 'medium',
+    austUsage: 'Used in cool-climate regions including Adelaide Hills, Yarra Valley, and Mornington Peninsula. Favoured for phylloxera-prone sites in Victoria. Early budburst can be a risk in cold areas.',
+    scionVigour: 'Moderate vigour increase. Consistent and balanced.',
+    notes: 'Excellent for cool-climate phylloxera-zoned vineyards.',
+    pros: ['Strong phylloxera resistance', 'Good for cool climates', 'Moderate nematode tolerance', 'Early budburst (advantage in cool areas)'],
+    cons: ['Poor drought tolerance', 'Low lime tolerance', 'No salinity tolerance', 'Early budburst risk (frost)'],
+  },
+  {
+    id: '101-14mgt',
+    name: '101-14 MGT',
+    parentage: 'V. riparia × V. rupestris',
+    vigour: 'low_moderate',
+    drought: 'low',
+    nematode: 'low',
+    phylloxera: 'moderate',
+    salinity: 'none',
+    lime: 'low',
+    phRange: [5.0, 6.2],
+    depth: 'shallow',
+    austUsage: 'Used in premium cool-climate regions such as Coonawarra and Padthaway for controlled-vigour vineyards. Popular in Margaret River for terroir expression. Ideal for low-vigour, high-quality targets.',
+    scionVigour: 'Low to moderate vigour increase. Encourages modest canopy — good for quality.',
+    notes: 'Excellent for premium quality wine production in cool regions.',
+    pros: ['Low vigour — excellent for premium fruit quality', 'Promotes early ripening', 'Good for shallow soils', 'Cool climate suitability'],
+    cons: ['Poor drought tolerance', 'Low phylloxera resistance', 'Low nematode resistance', 'Very low lime tolerance'],
+  },
+  {
+    id: 'richter110',
+    name: 'Richter 110',
+    parentage: 'V. berlandieri × V. rupestris',
+    vigour: 'moderate',
+    drought: 'very_high',
+    nematode: 'moderate',
+    phylloxera: 'moderate',
+    salinity: 'mild',
+    lime: 'high',
+    phRange: [5.5, 8.0],
+    depth: 'deep',
+    austUsage: 'Used in warm inland regions including Riverland and Murray Valley. Excellent for deep, dry, alkaline soils. Popular in phylloxera-managed zones across SA and NSW.',
+    scionVigour: 'Moderate to high vigour. Good drought recovery.',
+    notes: 'Extremely tough — suited to the most challenging dryland and alkaline sites.',
+    pros: ['Exceptional drought tolerance', 'High lime tolerance', 'Wide pH adaptation', 'Good phylloxera tolerance'],
+    cons: ['Slow to establish', 'Mild salinity sensitivity', 'Needs deep soil', 'Variable vigour in young vines'],
+  },
+  {
+    id: 'ruggeri140',
+    name: 'Ruggeri 140',
+    parentage: 'V. berlandieri × V. rupestris',
+    vigour: 'high',
+    drought: 'very_high',
+    nematode: 'moderate',
+    phylloxera: 'moderate',
+    salinity: 'mild',
+    lime: 'very_high',
+    phRange: [5.5, 8.2],
+    depth: 'medium',
+    austUsage: 'Used in high-lime, alkaline soils across the Riverland and inland NSW. Particularly valued in South Australia\'s limestone-rich regions. One of the best for chalky soils.',
+    scionVigour: 'High vigour increase. Recovers well from stress.',
+    notes: 'Exceptional lime tolerance — a top choice for limestone-derived soils.',
+    pros: ['Outstanding lime tolerance', 'Very high drought tolerance', 'High vigour', 'Excellent for chalky/limestone soils'],
+    cons: ['Mild salinity sensitivity', 'Moderate phylloxera resistance only', 'Can be too vigorous in rich soils'],
+  },
+  {
+    id: 'kober5bb',
+    name: 'Kober 5BB',
+    parentage: 'V. berlandieri × V. riparia',
+    vigour: 'high',
+    drought: 'moderate',
+    nematode: 'moderate',
+    phylloxera: 'moderate',
+    salinity: 'mild',
+    lime: 'high',
+    phRange: [5.5, 7.8],
+    depth: 'medium',
+    austUsage: 'Widely used across warm inland regions (Riverland, Sunraysia, NSW inland). Good phylloxera tolerance. One of the most planted rootstocks globally — reliable and predictable.',
+    scionVigour: 'High vigour. Promotes strong canopy development.',
+    notes: 'A reliable, globally-trusted rootstock for warm, alkaline sites.',
+    pros: ['High vigour', 'Good lime tolerance', 'Moderate phylloxera resistance', 'Widely available'],
+    cons: ['Moderate drought tolerance', 'Mild salinity sensitivity', 'Less suited to very dry sites'],
+  },
+  {
+    id: 'so4',
+    name: 'SO4',
+    parentage: 'V. berlandieri × V. riparia',
+    vigour: 'moderate',
+    drought: 'moderate',
+    nematode: 'moderate',
+    phylloxera: 'moderate',
+    salinity: 'mild',
+    lime: 'moderate',
+    phRange: [5.0, 7.5],
+    depth: 'medium',
+    austUsage: 'A true all-rounder used across warm and cool regions throughout Australia. Particularly popular in Queensland for hot, humid sites and in Riverland for balanced, versatile performance.',
+    scionVigour: 'Moderate, consistent vigour. Good for balanced vineyards.',
+    notes: 'The "reliable friend" — adapts well to a wide range of conditions.',
+    pros: ['Good all-round adaptability', 'Moderate phylloxera resistance', 'Balanced vigour', 'Tolerates wide pH range'],
+    cons: ['Average drought tolerance', 'Mild salinity sensitivity', 'Not exceptional in any single factor'],
+  },
+  {
+    id: '420amgt',
+    name: '420A MGT',
+    parentage: 'V. berlandieri × V. riparia',
+    vigour: 'low',
+    drought: 'low',
+    nematode: 'moderate',
+    phylloxera: 'moderate',
+    salinity: 'none',
+    lime: 'moderate',
+    phRange: [5.5, 7.2],
+    depth: 'medium',
+    austUsage: 'Favoured in premium cool-climate regions including Adelaide Hills, Yarra Valley, and Margaret River for achieving superior fruit quality. Excellent for controlling vigour in fertile soils.',
+    scionVigour: 'Low vigour. Excellent for premium quality and terroir-driven wines.',
+    notes: 'A quality-focused choice — manages crop load and enhances flavour concentration.',
+    pros: ['Low vigour — premium quality fruit', 'Good for fertile soils', 'Moderate nematode tolerance', 'Phylloxera tolerant'],
+    cons: ['Poor drought tolerance', 'No salinity tolerance', 'Needs reliable water', 'Less suited to hot inland regions'],
+  },
+  {
+    id: 'teleki5c',
+    name: 'Teleki 5C',
+    parentage: 'V. berlandieri × V. riparia',
+    vigour: 'low_moderate',
+    drought: 'moderate',
+    nematode: 'low',
+    phylloxera: 'moderate',
+    salinity: 'mild',
+    lime: 'moderate',
+    phRange: [5.5, 7.5],
+    depth: 'medium',
+    austUsage: 'Used in cooler regions across southern Australia. Particularly suited to Yarra Valley, Mornington Peninsula, and Adelaide Hills where moderate vigour control is desired. Good phylloxera tolerance.',
+    scionVigour: 'Low to moderate vigour. Supports quality-focused viticulture.',
+    notes: 'A solid quality rootstock for cool-climate, phylloxera-prone regions.',
+    pros: ['Low-moderate vigour for quality', 'Moderate phylloxera resistance', 'Adapts to cool climates', 'Moderate drought tolerance'],
+    cons: ['Low nematode resistance', 'Mild salinity sensitivity', 'Less available than some alternatives'],
+  },
+  {
+    id: 'dogridge',
+    name: 'Dog Ridge',
+    parentage: 'V. candicans × V. rupestris',
+    vigour: 'high',
+    drought: 'very_high',
+    nematode: 'high',
+    phylloxera: 'low',
+    salinity: 'moderate',
+    lime: 'moderate',
+    phRange: [5.0, 7.5],
+    depth: 'deep',
+    austUsage: 'Used in hot, dry inland regions, particularly in Queensland and warmer parts of NSW. Valued for extreme drought tolerance and nematode resistance in challenging soil conditions.',
+    scionVigour: 'Very high vigour. Use where maximum canopy is needed.',
+    notes: 'Extremely tough — for the harshest, driest conditions.',
+    pros: ['Exceptional nematode resistance', 'Very high drought tolerance', 'High vigour', 'Moderate salinity tolerance'],
+    cons: ['Very poor phylloxera resistance', 'Can be excessively vigorous', 'Not suited to cool climates'],
+  },
+  {
+    id: 'freedom',
+    name: 'Freedom',
+    parentage: 'V. solonis × V. champinii',
+    vigour: 'high',
+    drought: 'high',
+    nematode: 'high',
+    phylloxera: 'moderate',
+    salinity: 'moderate',
+    lime: 'moderate',
+    phRange: [5.0, 7.5],
+    depth: 'medium',
+    austUsage: 'Increasingly planted across warm inland regions, particularly in Murray Valley and Riverland. Combines nematode resistance with phylloxera tolerance — a rare dual protection.',
+    scionVigour: 'High vigour. Consistent across a range of conditions.',
+    notes: 'The "dual-protection" rootstock — nematode + phylloxera resistance in one.',
+    pros: ['High nematode resistance', 'Moderate phylloxera resistance', 'High vigour', 'Moderate salinity tolerance'],
+    cons: ['Limited Australian data', 'Moderate drought tolerance only', 'Less widely available'],
+  },
+  {
+    id: 'harmony',
+    name: 'Harmony',
+    parentage: 'V. solonis × V. champinii',
+    vigour: 'moderate',
+    drought: 'high',
+    nematode: 'high',
+    phylloxera: 'moderate',
+    salinity: 'mild',
+    lime: 'moderate',
+    phRange: [5.0, 7.5],
+    depth: 'medium',
+    austUsage: 'Used across warm inland regions with nematode pressure. Good balance of nematode resistance and moderate vigour. An emerging favourite in South Australian vineyards as an alternative to Ramsey.',
+    scionVigour: 'Moderate, consistent vigour. Easier to manage than high-vigour options.',
+    notes: 'Harmony delivers nematode resistance without excessive vigour.',
+    pros: ['Strong nematode resistance', 'Moderate vigour (manageable)', 'Good drought tolerance', 'Moderate phylloxera tolerance'],
+    cons: ['Mild salinity sensitivity', 'Less tolerant of high lime than some alternatives', 'Less widely planted in Australia'],
+  },
+];
+
+// ════════════════════════════════════════════════════════════
+// SCORING ENGINE
+// ════════════════════════════════════════════════════════════
+const LEVELS = { none: 0, low: 1, slight: 1, mild: 1, low_moderate: 1.5, medium: 2, moderate: 2, high: 3, very_high: 4, extreme: 5 };
+
+function scoreFactor(rsValue, userValue) {
+  if (rsValue === userValue) return 100;
+  const diff = Math.abs(LEVELS[rsValue] - LEVELS[userValue]);
+  return Math.max(0, 100 - diff * 28);
+}
+
+function scorePhRange(ph, range) {
+  const [min, max] = range;
+  if (ph >= min && ph <= max) return 100;
+  const midpoint = (min + max) / 2;
+  const dist = Math.abs(ph - midpoint);
+  const spread = max - min;
+  return Math.max(0, 100 - (dist / spread) * 60);
+}
+
+function scoreDepth(rsDepth, userDepth) {
+  if (rsDepth === userDepth) return 100;
+  if (rsDepth === 'deep' && userDepth === 'medium') return 75;
+  if (rsDepth === 'deep' && userDepth === 'shallow') return 50;
+  if (rsDepth === 'medium' && userDepth === 'deep') return 80;
+  if (rsDepth === 'medium' && userDepth === 'shallow') return 70;
+  if (rsDepth === 'shallow' && userDepth === 'medium') return 65;
+  if (rsDepth === 'shallow' && userDepth === 'deep') return 35;
+  return 50;
+}
+
+function vigourDist(rs, user) {
+  const map = { low: 1, low_moderate: 2, moderate: 3, high: 4 };
+  const rsv = map[rs] || 3;
+  const userv = map[user] || 3;
+  return Math.abs(rsv - userv);
+}
+
+function scoreRootstock(rs, inputs) {
+  const factors = [
+    { label: 'Phylloxera', val: scoreFactor(rs.phylloxera, inputs.phylloxera) },
+    { label: 'Nematodes', val: scoreFactor(rs.nematode, inputs.nematode) },
+    { label: 'Drought', val: scoreFactor(rs.drought, inputs.drought) },
+    { label: 'Salinity', val: scoreFactor(rs.salinity, inputs.salinity) },
+    { label: 'Lime', val: scoreFactor(rs.lime, inputs.lime) },
+    { label: 'pH Match', val: scorePhRange(inputs.ph, rs.phRange) },
+    { label: 'Soil Depth', val: scoreDepth(rs.depth, inputs.depth) },
+    { label: 'Vigour', val: Math.max(0, 100 - vigourDist(rs.vigour, inputs.vigour) * 28) },
+  ];
+  const overall = factors.reduce((s, f) => s + f.val, 0) / factors.length;
+  return { overall: Math.round(overall), factors };
+}
+
+function generateStars(score) {
+  const stars = Math.round(score / 20);
+  let html = '<div class="stars">';
+  for (let i = 1; i <= 5; i++) {
+    html += `<span class="star ${i <= stars ? 'filled' : ''}">★</span>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function extractProsCons(rs, inputs) {
+  const pros = [], cons = [];
+  if (LEVELS[rs.drought] >= LEVELS[inputs.drought]) pros.push('Drought tolerant ✓');
+  if (LEVELS[rs.nematode] >= LEVELS[inputs.nematode]) pros.push('Nematode resistant ✓');
+  if (LEVELS[rs.phylloxera] >= LEVELS[inputs.phylloxera]) pros.push('Phylloxera tolerant ✓');
+  if (LEVELS[rs.lime] >= LEVELS[inputs.lime]) pros.push('Lime tolerant ✓');
+  if (LEVELS[rs.salinity] >= LEVELS[inputs.salinity]) pros.push('Salt tolerant ✓');
+  if (inputs.ph < rs.phRange[0] - 0.3 || inputs.ph > rs.phRange[1] + 0.3) cons.push('pH outside ideal range ✗');
+  if (inputs.depth === 'shallow' && rs.depth === 'deep') cons.push('Needs deeper soil ✗');
+  if (inputs.phylloxera === 'high' && LEVELS[rs.phylloxera] < 2) cons.push('Poor phylloxera resistance ✗');
+  if (inputs.nematode === 'high' && LEVELS[rs.nematode] < 2) cons.push('Poor nematode resistance ✗');
+  return {
+    pros: pros.slice(0, 3),
+    cons: cons.slice(0, 3),
+  };
+}
+
+// ════════════════════════════════════════════════════════════
+// RADAR CHART
+// ════════════════════════════════════════════════════════════
+const RADAR_LABELS = ['Phylloxera', 'Nematodes', 'Drought', 'Salinity', 'Lime', 'pH Match', 'Depth', 'Vigour'];
+let chartInstances = {};
+
+function createRadar(canvasId, factors) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return null;
+  if (chartInstances[canvasId]) {
+    chartInstances[canvasId].destroy();
+  }
+  const values = factors.map(f => f.val);
+  const chart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: RADAR_LABELS,
+      datasets: [{
+        data: values,
+        backgroundColor: 'rgba(74,124,46,0.18)',
+        borderColor: 'rgba(74,124,46,0.85)',
+        borderWidth: 2,
+        pointBackgroundColor: 'rgba(74,124,46,0.9)',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => `${ctx.label}: ${Math.round(ctx.raw)}%` }
+      }},
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { stepSize: 50, display: false },
+          grid: { color: 'rgba(59,42,26,0.1)' },
+          pointLabels: { font: { size: 9, family: 'Lato' }, color: '#5c4030' }
+        }
+      },
+      animation: { duration: 800, easing: 'easeOutQuart' }
+    }
+  });
+  chartInstances[canvasId] = chart;
+  return chart;
+}
+
+// ════════════════════════════════════════════════════════════
+// CONFETTI
+// ════════════════════════════════════════════════════════════
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.classList.add('active');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const pieces = [];
+  const colors = ['#4a7c2e','#c1623a','#d4b896','#f0c040','#6ba344','#e8d4b8','#2d4a1c'];
+  for (let i = 0; i < 120; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height * 0.6 - canvas.height * 0.6,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 3 + 2,
+      angle: Math.random() * 360,
+      spin: (Math.random() - 0.5) * 8,
+      gravity: 0.12,
+    });
+  }
+  let frames = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of pieces) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.angle += p.spin;
+    }
+    frames++;
+    if (frames < 180) {
+      requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.classList.remove('active');
+    }
+  }
+  draw();
+}
+
+// ════════════════════════════════════════════════════════════
+// INPUT STATE
+// ════════════════════════════════════════════════════════════
+let currentInputs = {
+  phylloxera: 'medium',
+  nematode: 'high',
+  ph: 6.5,
+  drought: 'medium',
+  salinity: 'none',
+  lime: 'moderate',
+  vigour: 'medium',
+  depth: 'medium',
+};
+
+function getInputs() { return { ...currentInputs }; }
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem('rootstock-matchmaker-inputs');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      Object.assign(currentInputs, parsed);
+      restoreUI();
+    }
+  } catch(e) {}
+}
+
+function saveToStorage() {
+  try { localStorage.setItem('rootstock-matchmaker-inputs', JSON.stringify(currentInputs)); } catch(e) {}
+}
+
+function restoreUI() {
+  // pH slider
+  const phSlider = document.getElementById('ph-slider');
+  const phDisp = document.getElementById('ph-display');
+  phSlider.value = Math.round(currentInputs.ph * 10);
+  phDisp.textContent = currentInputs.ph.toFixed(1);
+
+  // Toggle groups
+  document.querySelectorAll('.toggle-group').forEach(grp => {
+    const field = grp.dataset.field;
+    grp.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.val === currentInputs[field]);
+    });
+  });
+}
+
+function setupToggleGroups() {
+  document.querySelectorAll('.toggle-group').forEach(grp => {
+    grp.querySelectorAll('.toggle-btn').forEach(btn => {
+      if (btn.dataset.default === 'true' && !currentInputs[grp.dataset.field]) {
+        btn.classList.add('active');
+        currentInputs[grp.dataset.field] = btn.dataset.val;
+      }
+    });
+    grp.addEventListener('click', e => {
+      const btn = e.target.closest('.toggle-btn');
+      if (!btn) return;
+      grp.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentInputs[grp.dataset.field] = btn.dataset.val;
+      saveToStorage();
+    });
+  });
+}
+
+function setupPhSlider() {
+  const slider = document.getElementById('ph-slider');
+  const display = document.getElementById('ph-display');
+  slider.addEventListener('input', () => {
+    currentInputs.ph = parseInt(slider.value) / 10;
+    display.textContent = currentInputs.ph.toFixed(1);
+    saveToStorage();
+  });
+}
+
+function resetInputs() {
+  currentInputs = {
+    phylloxera: 'medium',
+    nematode: 'high',
+    ph: 6.5,
+    drought: 'medium',
+    salinity: 'none',
+    lime: 'moderate',
+    vigour: 'medium',
+    depth: 'medium',
+  };
+  localStorage.removeItem('rootstock-matchmaker-inputs');
+  restoreUI();
+  document.getElementById('results-section').classList.remove('visible');
+  document.getElementById('match-btn').disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER RESULTS
+// ════════════════════════════════════════════════════════════
+let openDetailId = null;
+
+function renderResults(scored) {
+  const list = document.getElementById('results-list');
+  const count = document.getElementById('results-count');
+  const hasPerfect = scored[0] && scored[0].overall >= 90;
+
+  count.innerHTML = `Showing <strong>${scored.length}</strong> rootstocks — <strong>${scored.filter(s => s.overall >= 80).length}</strong> score 80%+`;
+
+  list.innerHTML = scored.map((item, idx) => {
+    const rs = item.rs;
+    const isPerfect = item.overall >= 90;
+    const isOpen = openDetailId === rs.id;
+    const starsHtml = generateStars(item.overall);
+
+    const prosCons = extractProsCons(rs, currentInputs);
+    const prosHtml = prosCons.pros.map(p => `<span class="pros">${p}</span>`).join('');
+    const consHtml = prosCons.cons.map(c => `<span class="cons">${c}</span>`).join('');
+
+    const vigourPct = { low: 25, low_moderate: 40, moderate: 60, high: 80, very_high: 95 }[rs.vigour] || 50;
+
+    return `
+    <div class="result-card ${isPerfect ? 'perfect' : ''}" data-id="${rs.id}">
+      <div class="result-header">
+        <div class="result-name-block">
+          <div class="result-name">${idx === 0 ? '🥇 ' : idx === 1 ? '🥈 ' : idx === 2 ? '🥉 ' : ''}${rs.name}</div>
+          <div class="result-parentage">${rs.parentage}</div>
+          <div style="margin-top:4px">${starsHtml}</div>
+        </div>
+        <div class="result-score-wrap">
+          <div class="result-score ${isPerfect ? 'perfect-score' : ''}">${item.overall}%</div>
+          <div class="result-score-label">Match Score</div>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <canvas id="radar-${rs.id}" class="radar-wrap"></canvas>
+        <div style="flex:1; min-width:150px;">
+          <div class="pros-cons">${prosHtml}${consHtml}</div>
+          <div class="aus-note">🇦🇺 ${rs.austUsage.split('.')[0]}.</div>
+        </div>
+      </div>
+
+      <div class="vigour-bar-wrap">
+        <div class="vigour-bar-label">Scion Vigour Influence: ${rs.vigour.charAt(0).toUpperCase() + rs.vigour.slice(1).replace('_', '-')}</div>
+        <div class="vigour-bar-track">
+          <div class="vigour-bar-fill" style="width:${vigourPct}%"></div>
+        </div>
+      </div>
+
+      <div class="detail-panel ${isOpen ? 'open' : ''}" id="detail-${rs.id}">
+        <button class="detail-close" onclick="event.stopPropagation(); toggleDetail('${rs.id}')">✕</button>
+        <div class="detail-parentage">${rs.parentage}</div>
+        <div class="detail-grid">
+          <div class="detail-stat">
+            <div class="detail-stat-label">Drought Tolerance</div>
+            <div class="detail-stat-value ${rs.drought === 'very_high' || rs.drought === 'high' ? 'good' : rs.drought === 'low' ? 'bad' : 'neutral'}">${rs.drought.replace('_',' ')}</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">Nematode Resistance</div>
+            <div class="detail-stat-value ${rs.nematode === 'high' ? 'good' : rs.nematode === 'low' ? 'bad' : 'neutral'}">${rs.nematode}</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">Phylloxera Tolerance</div>
+            <div class="detail-stat-value ${rs.phylloxera === 'high' ? 'good' : rs.phylloxera === 'low' ? 'bad' : 'neutral'}">${rs.phylloxera}</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">Salinity Tolerance</div>
+            <div class="detail-stat-value ${rs.salinity === 'high' || rs.salinity === 'moderate' ? 'good' : rs.salinity === 'none' ? 'bad' : 'neutral'}">${rs.salinity}</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">Lime Tolerance</div>
+            <div class="detail-stat-value ${rs.lime === 'high' || rs.lime === 'very_high' ? 'good' : rs.lime === 'low' ? 'bad' : 'neutral'}">${rs.lime.replace('_',' ')}</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">Ideal pH Range</div>
+            <div class="detail-stat-value neutral">${rs.phRange[0]} – ${rs.phRange[1]}</div>
+          </div>
+        </div>
+        <div class="vigour-bar-wrap">
+          <div class="vigour-bar-label">Rootstock Vigour</div>
+          <div class="vigour-bar-track">
+            <div class="vigour-bar-fill" style="width:${vigourPct}%"></div>
+          </div>
+        </div>
+        <div class="detail-aus" style="margin-top:14px;">
+          <strong>🇦🇺 Australian Context</strong>
+          ${rs.austUsage}
+        </div>
+        <div class="detail-aus" style="margin-top:8px; background:rgba(193,98,58,0.06); border-color: var(--terracotta);">
+          <strong>🌱 Scion Influence</strong>
+          ${rs.scionVigour}
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:10px;">
+        <button class="reset-link" style="margin-top:0; font-size:11px; padding:5px 14px;" onclick="event.stopPropagation(); toggleDetail('${rs.id}')">
+          ${isOpen ? '▲ Hide Details' : '🔍 Show Full Details'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Draw radar charts after DOM is ready
+  setTimeout(() => {
+    scored.forEach(item => {
+      createRadar(`radar-${item.rs.id}`, item.factors);
+    });
+  }, 50);
+}
+
+function toggleDetail(id) {
+  openDetailId = openDetailId === id ? null : id;
+  document.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('open'));
+  if (openDetailId) {
+    const panel = document.getElementById(`detail-${openDetailId}`);
+    if (panel) {
+      panel.classList.add('open');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// MATCH BUTTON
+// ════════════════════════════════════════════════════════════
+function runMatch() {
+  const btn = document.getElementById('match-btn');
+  const overlay = document.getElementById('matching-overlay');
+  btn.disabled = true;
+  overlay.classList.add('active');
+
+  setTimeout(() => {
+    const inputs = getInputs();
+    const scored = ROOTSTOCKS
+      .map(rs => ({ rs, ...scoreRootstock(rs, inputs) }))
+      .sort((a, b) => b.overall - a.overall);
+
+    overlay.classList.remove('active');
+    btn.disabled = false;
+
+    openDetailId = null;
+    renderResults(scored);
+
+    const section = document.getElementById('results-section');
+    section.classList.add('visible');
+    section.scrollIntoView({ behavior: 'smooth' });
+
+    if (scored[0] && scored[0].overall >= 90) {
+      setTimeout(launchConfetti, 300);
+    }
+  }, 1600);
+}
+
+// ════════════════════════════════════════════════════════════
+// SCROLL TO TOP
+// ════════════════════════════════════════════════════════════
+function setupScrollTop() {
+  const btn = document.getElementById('scroll-top');
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 400);
+  });
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  document.getElementById('back-to-top').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+function init() {
+  loadFromStorage();
+  setupToggleGroups();
+  setupPhSlider();
+  setupScrollTop();
+  document.getElementById('match-btn').addEventListener('click', runMatch);
+  document.getElementById('reset-btn').addEventListener('click', resetInputs);
+
+  // Set default active toggles from currentInputs
+  document.querySelectorAll('.toggle-group').forEach(grp => {
+    const field = grp.dataset.field;
+    const val = currentInputs[field];
+    grp.querySelectorAll('.toggle-btn').forEach(btn => {
+      if (btn.dataset.val === val) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

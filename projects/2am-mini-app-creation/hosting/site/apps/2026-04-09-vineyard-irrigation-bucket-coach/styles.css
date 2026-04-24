@@ -1,0 +1,274 @@
+:root {
+  color-scheme: light;
+  --bg: #f4eddf;
+  --panel: rgba(255,255,255,0.74);
+  --panel-strong: rgba(255,255,255,0.88);
+  --text: #2d2230;
+  --muted: #6e5b63;
+  --line: rgba(84,62,72,0.12);
+  --vine: #557247;
+  --vine-deep: #35513c;
+  --berry: #6b3d58;
+  --berry-soft: #a16b88;
+  --sky: #dce7ea;
+  --water: #5eb8ad;
+  --watch: #d6a04b;
+  --warn: #cb6d4c;
+  --danger: #a23636;
+  --shadow: 0 12px 32px rgba(64, 36, 44, 0.09);
+  --radius: 22px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(220,231,234,0.95), transparent 28%),
+    linear-gradient(180deg, #f6efe3 0%, #f1e8d7 100%);
+  color: var(--text);
+}
+.app-shell {
+  width: min(1180px, calc(100% - 24px));
+  margin: 14px auto 32px;
+}
+.hero, .panel, .card, .footer {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+}
+.hero {
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+.warning {
+  background: #fff2d7;
+  color: #7b4b00;
+  border: 1px solid rgba(123, 75, 0, 0.18);
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--vine-deep);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+h1, h2, h3, p { margin-top: 0; }
+h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 0.98;
+  margin-bottom: 10px;
+}
+.lede, .footer p, .field span, .mini-note, #summaryText, li {
+  color: var(--muted);
+  line-height: 1.5;
+}
+.hero-visual svg { width: 100%; height: auto; display: block; border-radius: 18px; }
+.layout {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+.panel { padding: 16px; }
+.panel-head, .card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.preset-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.preset-btn, select, input[type="range"] {
+  accent-color: var(--berry);
+}
+.preset-btn {
+  border: 1px solid rgba(107,61,88,0.16);
+  background: rgba(255,255,255,0.8);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.preset-btn.active {
+  background: linear-gradient(135deg, var(--berry), var(--berry-soft));
+  color: white;
+  border-color: transparent;
+}
+.control-grid {
+  display: grid;
+  gap: 14px;
+}
+.field {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.68);
+  border: 1px solid rgba(84,62,72,0.08);
+}
+.field span { font-weight: 700; color: var(--text); }
+.with-output {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+output, select {
+  font-weight: 800;
+  color: var(--berry);
+}
+select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(84,62,72,0.12);
+  background: rgba(255,255,255,0.95);
+}
+.metrics {
+  display: grid;
+  gap: 12px;
+}
+.metric {
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--panel-strong);
+  border: 1px solid rgba(84,62,72,0.08);
+}
+.metric strong {
+  display: block;
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-top: 6px;
+}
+.metric span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.visual-grid, .insight-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+.card {
+  padding: 16px;
+  background: var(--panel-strong);
+}
+.status-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  background: rgba(214,160,75,0.16);
+  color: #91641e;
+}
+.status-pill.comfortable { background: rgba(85,114,71,0.16); color: #35513c; }
+.status-pill.refill { background: rgba(203,109,76,0.16); color: #9a3f23; }
+.status-pill.past { background: rgba(162,54,54,0.14); color: #8f1f1f; }
+.reservoir-wrap {
+  display: grid;
+  gap: 16px;
+  align-items: end;
+}
+.bucket {
+  position: relative;
+  min-height: 260px;
+  border-radius: 24px 24px 32px 32px;
+  border: 3px solid rgba(84,62,72,0.16);
+  background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(252,245,232,0.86));
+  overflow: hidden;
+}
+.bucket-fill {
+  position: absolute;
+  inset: auto 0 0;
+  background: linear-gradient(180deg, rgba(126,211,200,0.86), rgba(53,133,120,0.95));
+  transition: height 240ms ease;
+}
+.bucket-trigger {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 4px dashed rgba(107,61,88,0.82);
+}
+.bucket-lines {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(to top, rgba(84,62,72,0.1) 1px, transparent 1px);
+  background-size: 100% 20%;
+  pointer-events: none;
+}
+.bucket-scale {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.bucket-scale div {
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(244,237,223,0.9);
+}
+.bucket-scale strong {
+  display: block;
+  font-size: 1.15rem;
+  margin-bottom: 4px;
+}
+.forecast-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.day-chip {
+  padding: 10px 8px;
+  border-radius: 16px;
+  background: rgba(244,237,223,0.86);
+  text-align: center;
+  border: 1px solid rgba(84,62,72,0.08);
+}
+.day-chip strong {
+  display: block;
+  font-size: 0.95rem;
+}
+.day-chip em {
+  display: block;
+  font-style: normal;
+  font-size: 0.78rem;
+  margin-top: 4px;
+  color: var(--muted);
+}
+svg#forecastSvg {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(220,231,234,0.66), rgba(255,255,255,0.72));
+}
+.formula-card ul {
+  padding-left: 18px;
+  margin-bottom: 0;
+}
+.footer {
+  margin-top: 16px;
+  padding: 16px;
+}
+@media (min-width: 760px) {
+  .hero { grid-template-columns: 1.1fr 0.9fr; align-items: center; }
+  .layout { grid-template-columns: 0.95fr 1.25fr; align-items: start; }
+  .metrics { grid-template-columns: repeat(4, 1fr); }
+  .visual-grid { grid-template-columns: 0.85fr 1.15fr; }
+  .insight-grid { grid-template-columns: 1.1fr 0.9fr; }
+  .control-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Winery Technology Time Machine</title>
+  <style>
+    :root {
+      --bg: #120d0d;
+      --panel: #1d1414;
+      --panel-2: #261a1a;
+      --card: #f3eadc;
+      --card-2: #efe2cf;
+      --text: #f8f1e6;
+      --muted: #c7b9aa;
+      --ink: #2e2118;
+      --wine: #7a2638;
+      --wine-2: #a03a53;
+      --gold: #d3a24a;
+      --line: rgba(255,255,255,0.08);
+      --shadow: 0 20px 50px rgba(0,0,0,0.28);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(160,58,83,0.22), transparent 35%),
+        linear-gradient(180deg, #100b0b 0%, #171111 100%);
+    }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+    .hero {
+      padding: 56px 0 36px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      display: inline-block;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.3rem, 5vw, 4.5rem);
+      line-height: 1.02;
+      margin: 0;
+      max-width: 860px;
+    }
+    .hero p {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.65;
+      margin-top: 18px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 24px;
+      margin-top: 26px;
+    }
+    .hero-card, .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .hero-card { padding: 22px; }
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .stat {
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+    }
+    .stat strong {
+      display: block;
+      font-size: 1.55rem;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+    .stat span { color: var(--muted); font-size: 0.92rem; }
+
+    .museum {
+      padding: 28px 0 10px;
+    }
+    .museum-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      align-items: start;
+    }
+    .panel { padding: 20px; }
+    .panel h2, .panel h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      margin: 0 0 10px;
+    }
+    .panel p { color: var(--muted); line-height: 1.6; }
+    .artifact-card {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      margin-top: 14px;
+      padding: 16px;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+    .artifact-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-size: 2rem;
+      background: linear-gradient(145deg, rgba(211,162,74,0.18), rgba(122,38,56,0.25));
+      border: 1px solid rgba(211,162,74,0.25);
+    }
+    .artifact-meta small {
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--gold);
+      margin-bottom: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .artifact-meta h3 {
+      margin: 0 0 6px;
+      font-size: 1.25rem;
+    }
+    .artifact-meta p { margin: 0; }
+    button, select, input[type="range"] { font: inherit; }
+    .ghost-btn, .wine-btn {
+      border-radius: 12px;
+      padding: 11px 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .wine-btn {
+      background: linear-gradient(135deg, var(--wine), var(--wine-2));
+      border-color: rgba(255,255,255,0.08);
+      font-weight: 700;
+    }
+
+    .controls {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(15,10,10,0.78);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      margin-top: 26px;
+    }
+    .controls-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: grid;
+      gap: 16px;
+    }
+    .control-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-right: 2px;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+    .pill.active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--wine), var(--wine-2));
+    }
+    .count {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .play-tools {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 24px;
+      padding: 30px 0 18px;
+    }
+    .slider-box .slider-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .slider-box strong { color: var(--gold); }
+    .slider-note { font-size: 0.95rem; color: var(--muted); }
+    input[type="range"] { width: 100%; accent-color: var(--gold); }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    select {
+      width: 100%;
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+    }
+    .compare-output {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid var(--line);
+      min-height: 72px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .timeline {
+      padding: 8px 0 60px;
+    }
+    .era-block { margin-top: 28px; }
+    .era-title {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 0 0 16px;
+    }
+    .era-title strong {
+      color: var(--gold);
+      font-size: 0.92rem;
+      font-style: italic;
+      white-space: nowrap;
+    }
+    .era-title span {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .era-line { height: 1px; flex: 1; background: var(--line); }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: linear-gradient(180deg, var(--card), var(--card-2));
+      color: var(--ink);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+      min-height: 100%;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: start;
+    }
+    .emoji {
+      font-size: 1.9rem;
+      line-height: 1;
+    }
+    .badge {
+      background: var(--wine);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .year {
+      color: #6a5442;
+      font-size: 0.9rem;
+      font-style: italic;
+      margin-bottom: 4px;
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.28rem;
+      line-height: 1.2;
+    }
+    .card p {
+      margin: 0;
+      color: #4b3a2d;
+      line-height: 1.58;
+      font-size: 0.98rem;
+    }
+    .why-box {
+      margin-top: 12px;
+      padding: 12px 12px 12px 14px;
+      border-left: 4px solid var(--wine);
+      border-radius: 0 12px 12px 0;
+      background: rgba(122,38,56,0.08);
+    }
+    .why-box strong {
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 11px;
+      color: var(--wine);
+      margin-bottom: 4px;
+    }
+    .foot {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(46,33,24,0.18);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      color: #6d5a4b;
+      font-size: 0.88rem;
+    }
+    .dots { display: inline-flex; gap: 5px; }
+    .dot {
+      width: 9px; height: 9px; border-radius: 50%; background: rgba(46,33,24,0.18);
+    }
+    .dot.on { background: var(--gold); }
+    .follow { font-size: 0.84rem; }
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255,255,255,0.02);
+    }
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 28px 0 50px;
+      color: var(--muted);
+    }
+    .footer-note {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      line-height: 1.65;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid, .museum-grid, .play-tools { grid-template-columns: 1fr; }
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 680px) {
+      .hero-stats { grid-template-columns: 1fr; }
+      .artifact-card { grid-template-columns: 1fr; }
+      .artifact-icon { width: 60px; height: 60px; }
+      .count { width: 100%; margin-left: 0; }
+    }
+      .openclaw-warning {
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #3a2319;
+      border: 1px solid #8b4d33;
+      color: #ffd9c8;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="openclaw-warning">Experimental OpenClaw AI mini-app. Untested and not professionally validated. Do not rely on this for any decisions.</div>
+    <div class="wrap">
+      <div class="eyebrow">Educational timeline / mini museum</div>
+      <h1>Winery Technology Time Machine</h1>
+      <p>
+        A compact historical browser for the tools and ideas that changed winemaking: from feet, clay, oak, and screw presses through to stainless tanks, lab instruments, inert gas handling, and digital sensing.
+      </p>
+      <div class="hero-grid">
+        <div class="hero-card">
+          <h2 style="margin:0;font-family:Georgia,serif;">Why this is different</h2>
+          <p style="margin:10px 0 0;color:var(--muted);">
+            The last few overnight mini-apps leaned technical and calculator-heavy. This one deliberately shifts into history, interpretation, and playful exploration so Simon gets a different kind of shareable idea to react to.
+          </p>
+          <div class="hero-stats">
+            <div class="stat"><strong id="statMilestones">16</strong><span>curated milestones</span></div>
+            <div class="stat"><strong>6</strong><span>eras to compare</span></div>
+            <div class="stat"><strong>5</strong><span>technology categories</span></div>
+          </div>
+        </div>
+        <div class="hero-card">
+          <h2 style="margin:0;font-family:Georgia,serif;">How to use it</h2>
+          <p style="margin:10px 0 0;color:var(--muted);">
+            Filter by category, scrub by innovation intensity, compare eras, and hit the random artifact picker when you want something unexpected. It is an educational interpretive timeline, not an exhaustive scholarly history.
+          </p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="museum">
+    <div class="wrap museum-grid">
+      <div class="panel">
+        <h2>Artifact of the moment</h2>
+        <p>Use this like a quick museum card: one technology, one bit of context, one reason it mattered.</p>
+        <div class="artifact-card">
+          <div class="artifact-icon" id="artifactEmoji">🏺</div>
+          <div class="artifact-meta">
+            <small id="artifactEra">Ancient</small>
+            <h3 id="artifactTitle">Clay Amphorae</h3>
+            <p id="artifactText"></p>
+          </div>
+          <button class="wine-btn" id="artifactBtn">Another artifact</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Theme map</h3>
+        <p>
+          The arc is not just “old to new”. It is really a shift from labour and craft toward control, repeatability, hygiene, measurement, and finally sensors plus data.
+        </p>
+        <ul style="margin:14px 0 0 18px;color:var(--muted);line-height:1.7;">
+          <li>Manual handling to mechanised throughput</li>
+          <li>Container choice to flavour / oxygen management</li>
+          <li>Wild process variability to monitored fermentation</li>
+          <li>Cellar intuition to analytical instrumentation</li>
+          <li>Standalone machinery to connected data systems</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <div class="controls-inner">
+      <div class="control-row" id="categoryRow">
+        <span class="label">Category</span>
+      </div>
+      <div class="control-row" id="eraRow">
+        <span class="label">Era</span>
+        <span class="count" id="resultCount"></span>
+      </div>
+    </div>
+  </div>
+
+  <section class="wrap play-tools">
+    <div class="panel slider-box">
+      <h2>Innovation intensity scrubber</h2>
+      <div class="slider-head">
+        <span class="slider-note">Show technologies at or above this “felt like a major shift” score.</span>
+        <strong id="sliderLabel">All milestones</strong>
+      </div>
+      <input id="innovationRange" type="range" min="1" max="5" step="1" value="1" />
+      <p class="slider-note" style="margin-top:10px;">
+        Low scores include steady craft refinements. High scores narrow the view to the bigger step-changes in control, scale, or precision.
+      </p>
+    </div>
+    <div class="panel">
+      <h2>Era vs era</h2>
+      <p>Pick two periods and get a quick comparison of what changed in the cellar mindset.</p>
+      <div class="compare-grid">
+        <select id="eraA"></select>
+        <select id="eraB"></select>
+        <button class="wine-btn" id="compareBtn">Compare</button>
+      </div>
+      <div class="compare-output" id="compareOutput">Choose two eras to compare labour, control, sanitation, and measurement.</div>
+    </div>
+  </section>
+
+  <main class="wrap timeline" id="timeline"></main>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-note">
+        <strong style="color:var(--gold);">Caveat:</strong>
+        This is an educational, interpretive timeline rather than a scholarly exhaustive history. Dates are broad, regions overlap, and many parallel innovations are compressed for readability. Think “museum exhibit first pass”, not “final textbook”.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const milestones = [
+      {
+        year: "c. 6000 BCE",
+        era: "ancient",
+        eraLabel: "Ancient",
+        category: "storage",
+        categoryLabel: "Storage & ageing",
+        title: "Clay amphorae",
+        emoji: "🏺",
+        explainer: "Large clay vessels let early wine societies ferment, store, and move wine at useful scale.",
+        why: "They were among the first purpose-built wine containers and shaped early trade and oxidation behaviour.",
+        followOn: "Oak barrels",
+        innovation: 2
+      },
+      {
+        year: "c. 3000-1000 BCE",
+        era: "ancient",
+        eraLabel: "Ancient",
+        category: "pressing",
+        categoryLabel: "Pressing & extraction",
+        title: "Foot treading in stone troughs",
+        emoji: "🦶",
+        explainer: "Human feet gave gentle crushing pressure and surprisingly good selectivity before mechanical presses existed.",
+        why: "It extracted juice without shredding seeds and became part of the ritual image of wine production.",
+        followOn: "Basket screw presses",
+        innovation: 1
+      },
+      {
+        year: "c. 100 CE",
+        era: "ancient",
+        eraLabel: "Ancient",
+        category: "storage",
+        categoryLabel: "Storage & ageing",
+        title: "Sulfur vessel fumigation",
+        emoji: "🕯️",
+        explainer: "Burning sulfur in empty containers was an early sanitation and preservation tactic.",
+        why: "It showed that wine stability could be improved deliberately through chemistry rather than luck alone.",
+        followOn: "Modern SO2 management",
+        innovation: 3
+      },
+      {
+        year: "1000-1400",
+        era: "medieval",
+        eraLabel: "Medieval",
+        category: "fermentation",
+        categoryLabel: "Fermentation & cellar control",
+        title: "Monastic cellar routines",
+        emoji: "⛪",
+        explainer: "Monasteries helped standardise seasonal cellar routines, record-keeping, barrel care, and practical observation.",
+        why: "Not flashy technology, but a major process step toward repeatability and institutional memory.",
+        followOn: "More formal cellar procedure",
+        innovation: 2
+      },
+      {
+        year: "1600s",
+        era: "early-modern",
+        eraLabel: "Early modern",
+        category: "storage",
+        categoryLabel: "Storage & ageing",
+        title: "Glass bottles and cork",
+        emoji: "🍾",
+        explainer: "Stronger glass and improved cork closures made long-term bottle ageing and pressure retention far more practical.",
+        why: "This changed wine from a mostly short-horizon beverage into something that could be deliberately aged and traded differently.",
+        followOn: "Automated bottling lines",
+        innovation: 4
+      },
+      {
+        year: "1600s-1700s",
+        era: "early-modern",
+        eraLabel: "Early modern",
+        category: "storage",
+        categoryLabel: "Storage & ageing",
+        title: "Deliberate oak selection",
+        emoji: "🪵",
+        explainer: "Coopers and producers started treating barrel origin and toast as flavour and texture tools, not just storage choices.",
+        why: "It made vessel material part of wine style design.",
+        followOn: "Modern coopering programs",
+        innovation: 3
+      },
+      {
+        year: "1700s",
+        era: "early-modern",
+        eraLabel: "Early modern",
+        category: "pressing",
+        categoryLabel: "Pressing & extraction",
+        title: "Basket screw press",
+        emoji: "🧺",
+        explainer: "A mechanical screw press multiplied human force and made pressing more repeatable.",
+        why: "This was a clear move from pure manual labour toward controllable extraction.",
+        followOn: "Pneumatic presses",
+        innovation: 3
+      },
+      {
+        year: "late 1700s-1800s",
+        era: "industrial",
+        eraLabel: "Industrial",
+        category: "lab",
+        categoryLabel: "Lab & analysis",
+        title: "Hydrometers and must measurement",
+        emoji: "⚖️",
+        explainer: "Specific gravity tools let winemakers estimate sugar loading and follow fermentation numerically.",
+        why: "Measurement entered the cellar in a serious way: less guessing, more data.",
+        followOn: "Spectrophotometers and digital analyzers",
+        innovation: 4
+      },
+      {
+        year: "late 1800s",
+        era: "industrial",
+        eraLabel: "Industrial",
+        category: "harvest",
+        categoryLabel: "Harvest & processing",
+        title: "Crusher-destemmers",
+        emoji: "⚙️",
+        explainer: "Mechanical berry separation and crushing accelerated intake and reduced the need for intense manual sorting by hand.",
+        why: "It changed harvest throughput and made larger-scale winery operations much more practical.",
+        followOn: "Optical sorting",
+        innovation: 4
+      },
+      {
+        year: "late 1800s",
+        era: "industrial",
+        eraLabel: "Industrial",
+        category: "fermentation",
+        categoryLabel: "Fermentation & cellar control",
+        title: "Pasteur and microbial insight",
+        emoji: "🔬",
+        explainer: "Understanding fermentation as a microbial process reframed spoilage, sanitation, and inoculation decisions.",
+        why: "It pushed winemaking toward biological control instead of superstition and retrospective blame.",
+        followOn: "Pure yeast cultures",
+        innovation: 5
+      },
+      {
+        year: "early 1900s",
+        era: "industrial",
+        eraLabel: "Industrial",
+        category: "fermentation",
+        categoryLabel: "Fermentation & cellar control",
+        title: "Cultured yeast inoculation",
+        emoji: "🦠",
+        explainer: "Selected yeast strains gave producers a more predictable fermentation profile than fully wild starts.",
+        why: "Reliability improved and stylistic intent became more achievable at commercial scale.",
+        followOn: "Tailored yeast and nutrient programs",
+        innovation: 4
+      },
+      {
+        year: "1950s-1970s",
+        era: "modern",
+        eraLabel: "Modern",
+        category: "storage",
+        categoryLabel: "Storage & ageing",
+        title: "Stainless steel tanks",
+        emoji: "🛢️",
+        explainer: "Inert, cleanable, durable stainless tanks shifted winery design toward hygiene, temperature control, and scalable repeatability.",
+        why: "This is one of the defining physical changes of modern winemaking.",
+        followOn: "Jacketed and sensor-rich tanks",
+        innovation: 5
+      },
+      {
+        year: "1950s-1980s",
+        era: "modern",
+        eraLabel: "Modern",
+        category: "pressing",
+        categoryLabel: "Pressing & extraction",
+        title: "Pneumatic presses",
+        emoji: "💨",
+        explainer: "Air pressure and membrane pressing offered gentler, more controllable extraction than many older press styles.",
+        why: "This improved juice quality management and press fraction handling.",
+        followOn: "Programmable pressing cycles",
+        innovation: 4
+      },
+      {
+        year: "1960s-1990s",
+        era: "modern",
+        eraLabel: "Modern",
+        category: "lab",
+        categoryLabel: "Lab & analysis",
+        title: "Routine winery lab instrumentation",
+        emoji: "📈",
+        explainer: "Bench-top tools for pH, titration, absorbance, and other checks made day-to-day analytical control normal rather than exceptional.",
+        why: "The winery started to act more like a small process plant with regular feedback loops.",
+        followOn: "Integrated digital lab workflows",
+        innovation: 4
+      },
+      {
+        year: "1980s-2000s",
+        era: "contemporary",
+        eraLabel: "Contemporary",
+        category: "fermentation",
+        categoryLabel: "Fermentation & cellar control",
+        title: "Inert gas management",
+        emoji: "☁️",
+        explainer: "Nitrogen, CO2, and argon handling became more routine tools for protecting wine during transfers, storage, and packaging.",
+        why: "Oxygen exposure stopped being just a risk to react to and became something to manage more intentionally.",
+        followOn: "Automated dissolved oxygen control",
+        innovation: 4
+      },
+      {
+        year: "1990s-2010s",
+        era: "contemporary",
+        eraLabel: "Contemporary",
+        category: "harvest",
+        categoryLabel: "Harvest & processing",
+        title: "Optical sorting",
+        emoji: "👁️",
+        explainer: "Cameras and fast rejection systems let wineries remove MOG, underripe fruit, and damaged berries with machine vision.",
+        why: "Sorting quality became more consistent and less tied to exhausting manual labour.",
+        followOn: "AI-assisted sorting decisions",
+        innovation: 5
+      },
+      {
+        year: "2000s-present",
+        era: "contemporary",
+        eraLabel: "Contemporary",
+        category: "lab",
+        categoryLabel: "Lab & analysis",
+        title: "Sensors, logging, and connected winery data",
+        emoji: "📡",
+        explainer: "Ferments, tanks, and utilities can now be watched through sensors, dashboards, and historical logs rather than only clipboard rounds.",
+        why: "It extends the winery from equipment into data systems and opens the door to proactive alerts and remote visibility.",
+        followOn: "Decision support and automation",
+        innovation: 5
+      }
+    ];
+
+    const eraMeta = [
+      { id: "all", label: "All time" },
+      { id: "ancient", label: "Ancient" },
+      { id: "medieval", label: "Medieval" },
+      { id: "early-modern", label: "Early modern" },
+      { id: "industrial", label: "Industrial" },
+      { id: "modern", label: "Modern" },
+      { id: "contemporary", label: "Contemporary" }
+    ];
+
+    const categoryMeta = [
+      { id: "all", label: "All" },
+      { id: "harvest", label: "Harvest & processing" },
+      { id: "pressing", label: "Pressing & extraction" },
+      { id: "fermentation", label: "Fermentation & cellar control" },
+      { id: "storage", label: "Storage & ageing" },
+      { id: "lab", label: "Lab & analysis" }
+    ];
+
+    const eraComparisons = {
+      ancient: "Wine technology was mostly vessel choice, observation, labour, and preservation tricks rather than instrumentation.",
+      medieval: "Organisation improved. Knowledge became more procedural even if the tools remained mostly low-mechanisation.",
+      "early-modern": "Storage and closure advances changed how long wines could live and how deliberately style could be shaped.",
+      industrial: "Mechanisation and science entered the cellar together: throughput rose while fermentation and spoilage became more explainable.",
+      modern: "Control became the keyword: stainless, pneumatic systems, routine analytics, and cleaner workflows.",
+      contemporary: "Connected sensing and precision handling extend control beyond machinery into live data and operational visibility."
+    };
+
+    const state = {
+      category: "all",
+      era: "all",
+      innovationMin: 1
+    };
+
+    const categoryRow = document.getElementById("categoryRow");
+    const eraRow = document.getElementById("eraRow");
+    const timeline = document.getElementById("timeline");
+    const resultCount = document.getElementById("resultCount");
+    const innovationRange = document.getElementById("innovationRange");
+    const sliderLabel = document.getElementById("sliderLabel");
+    const statMilestones = document.getElementById("statMilestones");
+
+    const artifactEmoji = document.getElementById("artifactEmoji");
+    const artifactEra = document.getElementById("artifactEra");
+    const artifactTitle = document.getElementById("artifactTitle");
+    const artifactText = document.getElementById("artifactText");
+    const artifactBtn = document.getElementById("artifactBtn");
+
+    const eraA = document.getElementById("eraA");
+    const eraB = document.getElementById("eraB");
+    const compareBtn = document.getElementById("compareBtn");
+    const compareOutput = document.getElementById("compareOutput");
+
+    statMilestones.textContent = String(milestones.length);
+
+    function makePills() {
+      categoryMeta.forEach(item => {
+        const btn = document.createElement("button");
+        btn.className = "pill" + (item.id === state.category ? " active" : "");
+        btn.textContent = item.label;
+        btn.dataset.value = item.id;
+        btn.addEventListener("click", () => {
+          state.category = item.id;
+          renderPills();
+          renderTimeline();
+        });
+        categoryRow.appendChild(btn);
+      });
+
+      eraMeta.forEach(item => {
+        const btn = document.createElement("button");
+        btn.className = "pill" + (item.id === state.era ? " active" : "");
+        btn.textContent = item.label;
+        btn.dataset.value = item.id;
+        btn.addEventListener("click", () => {
+          state.era = item.id;
+          renderPills();
+          renderTimeline();
+        });
+        eraRow.insertBefore(btn, resultCount);
+      });
+
+      eraMeta.filter(e => e.id !== "all").forEach(item => {
+        const optionA = document.createElement("option");
+        optionA.value = item.id;
+        optionA.textContent = item.label;
+        const optionB = optionA.cloneNode(true);
+        eraA.appendChild(optionA);
+        eraB.appendChild(optionB);
+      });
+      eraA.selectedIndex = 0;
+      eraB.selectedIndex = 1;
+    }
+
+    function renderPills() {
+      categoryRow.querySelectorAll(".pill").forEach(btn => btn.classList.toggle("active", btn.dataset.value === state.category));
+      eraRow.querySelectorAll(".pill").forEach(btn => btn.classList.toggle("active", btn.dataset.value === state.era));
+    }
+
+    function filteredMilestones() {
+      return milestones.filter(item => {
+        const categoryOk = state.category === "all" || item.category === state.category;
+        const eraOk = state.era === "all" || item.era === state.era;
+        const innovationOk = item.innovation >= state.innovationMin;
+        return categoryOk && eraOk && innovationOk;
+      });
+    }
+
+    function dots(n) {
+      return `<span class="dots">${Array.from({ length: 5 }, (_, i) => `<span class="dot ${i < n ? 'on' : ''}"></span>`).join("")}</span>`;
+    }
+
+    function renderTimeline() {
+      const items = filteredMilestones();
+      resultCount.textContent = `${items.length} visible milestone${items.length === 1 ? '' : 's'}`;
+
+      if (!items.length) {
+        timeline.innerHTML = `<div class="empty"><h3 style="margin-top:0;font-family:Georgia,serif;color:var(--text);">No milestones match that view</h3><p>Try widening the era, category, or innovation threshold.</p></div>`;
+        return;
+      }
+
+      const byEra = eraMeta.filter(e => e.id !== "all").map(era => ({
+        ...era,
+        items: items.filter(item => item.era === era.id)
+      })).filter(group => group.items.length);
+
+      timeline.innerHTML = byEra.map(group => `
+        <section class="era-block">
+          <div class="era-title">
+            <strong>${group.label}</strong>
+            <div class="era-line"></div>
+            <span>${group.items.length} item${group.items.length === 1 ? '' : 's'}</span>
+          </div>
+          <div class="cards">
+            ${group.items.map(item => `
+              <article class="card">
+                <div class="card-top">
+                  <div class="emoji">${item.emoji}</div>
+                  <div class="badge">${item.categoryLabel}</div>
+                </div>
+                <div class="year">${item.year}</div>
+                <h3>${item.title}</h3>
+                <p>${item.explainer}</p>
+                <div class="why-box">
+                  <strong>Why it mattered</strong>
+                  <div>${item.why}</div>
+                </div>
+                <div class="foot">
+                  <span>${dots(item.innovation)}</span>
+                  <span class="follow">Led toward: <strong>${item.followOn}</strong></span>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+      `).join("");
+    }
+
+    function updateSliderLabel(value) {
+      const labels = {
+        1: "All milestones",
+        2: "Meaningful shifts and up",
+        3: "Notable step-changes and up",
+        4: "Major shifts only",
+        5: "Groundbreaking moments only"
+      };
+      sliderLabel.textContent = labels[value];
+    }
+
+    function randomArtifact() {
+      const pool = filteredMilestones().length ? filteredMilestones() : milestones;
+      const item = pool[Math.floor(Math.random() * pool.length)];
+      artifactEmoji.textContent = item.emoji;
+      artifactEra.textContent = `${item.eraLabel} • ${item.year}`;
+      artifactTitle.textContent = item.title;
+      artifactText.textContent = `${item.explainer} Why it mattered: ${item.why}`;
+    }
+
+    function compareEras() {
+      const a = eraA.value;
+      const b = eraB.value;
+      if (!a || !b) {
+        compareOutput.textContent = "Choose two eras first.";
+        return;
+      }
+      if (a === b) {
+        compareOutput.textContent = "Pick two different eras if you want a useful contrast.";
+        return;
+      }
+      const labelA = eraMeta.find(x => x.id === a).label;
+      const labelB = eraMeta.find(x => x.id === b).label;
+      const itemsA = milestones.filter(m => m.era === a);
+      const itemsB = milestones.filter(m => m.era === b);
+      const avgA = (itemsA.reduce((sum, m) => sum + m.innovation, 0) / itemsA.length).toFixed(1);
+      const avgB = (itemsB.reduce((sum, m) => sum + m.innovation, 0) / itemsB.length).toFixed(1);
+      compareOutput.innerHTML = `<strong style="color:var(--gold);">${labelA}</strong>: ${eraComparisons[a]}<br/><br/><strong style="color:var(--gold);">${labelB}</strong>: ${eraComparisons[b]}<br/><br/>Quick contrast: ${labelA} has ${itemsA.length} highlighted milestones here (avg innovation ${avgA}/5), while ${labelB} has ${itemsB.length} (avg innovation ${avgB}/5). The broad story is a shift from labour and materials toward control, sanitation, measurement, and data.`;
+    }
+
+    innovationRange.addEventListener("input", (e) => {
+      state.innovationMin = Number(e.target.value);
+      updateSliderLabel(state.innovationMin);
+      renderTimeline();
+      randomArtifact();
+    });
+
+    artifactBtn.addEventListener("click", randomArtifact);
+    compareBtn.addEventListener("click", compareEras);
+
+    makePills();
+    renderPills();
+    updateSliderLabel(state.innovationMin);
+    renderTimeline();
+    randomArtifact();
+    compareEras();
+  </script>
+</body>
+</html>

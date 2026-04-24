@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex,notranslate">
+  <title>Vineyard Irrigation Bucket Coach</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="warning">Experimental OpenClaw AI mini-app, educational only, untested, and not professionally validated. Do not rely on it for irrigation decisions.</div>
+      <div class="hero-copy">
+        <p class="eyebrow">2am mini-app, vineyard edition</p>
+        <h1>Vineyard Irrigation Bucket Coach</h1>
+        <p class="lede">A phone-first root-zone water bucket planner for quick irrigation thinking. It combines ET<sub>c</sub>, soil water holding capacity, root depth, MAD, and irrigation efficiency into one calm visual.</p>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <svg viewBox="0 0 360 220" role="img">
+          <defs>
+            <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#dbe8ef"/>
+              <stop offset="100%" stop-color="#f6eedb"/>
+            </linearGradient>
+            <linearGradient id="soil" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#a27859"/>
+              <stop offset="100%" stop-color="#6d4d3b"/>
+            </linearGradient>
+            <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#7fd3c7"/>
+              <stop offset="100%" stop-color="#2e8b7c"/>
+            </linearGradient>
+          </defs>
+          <rect width="360" height="220" fill="url(#sky)" rx="24"/>
+          <circle cx="310" cy="46" r="20" fill="#f7d88a" opacity="0.9"/>
+          <path d="M0 128 C48 116 95 144 144 130 C202 112 248 148 360 126 L360 220 L0 220 Z" fill="#b2c68f"/>
+          <path d="M0 146 C70 132 120 166 184 150 C242 134 300 162 360 148 L360 220 L0 220 Z" fill="#88a16b"/>
+          <rect x="98" y="86" width="164" height="106" rx="18" fill="url(#soil)" opacity="0.92"/>
+          <rect x="128" y="102" width="104" height="74" rx="14" fill="#f8f1e5" opacity="0.88"/>
+          <path d="M128 126 H232 V162 Q232 176 218 176 H142 Q128 176 128 162 Z" fill="url(#water)" opacity="0.9"/>
+          <line x1="128" x2="232" y1="138" y2="138" stroke="#6b3d58" stroke-width="4" stroke-dasharray="7 6"/>
+          <text x="239" y="142" font-size="11" fill="#5c4350">trigger</text>
+          <g fill="#50703e">
+            <rect x="84" y="84" width="7" height="42" rx="3"/>
+            <circle cx="87.5" cy="76" r="16"/>
+            <rect x="270" y="94" width="7" height="34" rx="3"/>
+            <circle cx="273.5" cy="87" r="14"/>
+          </g>
+        </svg>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel controls-panel">
+        <div class="panel-head">
+          <h2>Scenario builder</h2>
+          <div class="preset-row" id="presetRow"></div>
+        </div>
+
+        <div class="control-grid">
+          <label class="field">
+            <span>Daily ETo</span>
+            <div class="with-output"><input id="eto" type="range" min="1" max="12" step="0.1"><output id="etoOut"></output></div>
+          </label>
+
+          <label class="field">
+            <span>Vine stage</span>
+            <select id="stage"></select>
+          </label>
+
+          <label class="field">
+            <span>Crop coefficient (Kc)</span>
+            <div class="with-output"><input id="kc" type="range" min="0.2" max="1.1" step="0.01"><output id="kcOut"></output></div>
+          </label>
+
+          <label class="field">
+            <span>Soil texture</span>
+            <select id="soil"></select>
+          </label>
+
+          <label class="field">
+            <span>Available water capacity</span>
+            <div class="with-output"><input id="awc" type="range" min="40" max="240" step="1"><output id="awcOut"></output></div>
+          </label>
+
+          <label class="field">
+            <span>Effective root depth</span>
+            <div class="with-output"><input id="rootDepth" type="range" min="0.2" max="2" step="0.05"><output id="rootDepthOut"></output></div>
+          </label>
+
+          <label class="field">
+            <span>MAD trigger</span>
+            <div class="with-output"><input id="mad" type="range" min="20" max="70" step="1"><output id="madOut"></output></div>
+          </label>
+
+          <label class="field">
+            <span>Current bucket fill</span>
+            <div class="with-output"><input id="startFill" type="range" min="5" max="100" step="1"><output id="startFillOut"></output></div>
+          </label>
+
+          <label class="field">
+            <span>Irrigation efficiency</span>
+            <div class="with-output"><input id="efficiency" type="range" min="55" max="98" step="1"><output id="efficiencyOut"></output></div>
+          </label>
+
+          <label class="field">
+            <span>Planned irrigation event</span>
+            <div class="with-output"><input id="irrigationMm" type="range" min="0" max="30" step="0.5"><output id="irrigationMmOut"></output></div>
+          </label>
+
+          <label class="field">
+            <span>Event day in 7-day view</span>
+            <div class="with-output"><input id="irrigationDay" type="range" min="1" max="7" step="1"><output id="irrigationDayOut"></output></div>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel dashboard-panel">
+        <div class="metrics" id="metrics"></div>
+
+        <div class="visual-grid">
+          <section class="card reservoir-card">
+            <div class="card-head">
+              <h3>Root-zone bucket</h3>
+              <span id="statusPill" class="status-pill">Watch</span>
+            </div>
+            <div class="reservoir-wrap">
+              <div class="bucket">
+                <div class="bucket-fill" id="bucketFill"></div>
+                <div class="bucket-trigger" id="bucketTrigger"></div>
+                <div class="bucket-lines"></div>
+              </div>
+              <div class="bucket-scale">
+                <div><strong id="bucketNowMm"></strong><span>current water</span></div>
+                <div><strong id="bucketTriggerMm"></strong><span>trigger line</span></div>
+                <div><strong id="bucketDeficitMm"></strong><span>deficit to full</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card curve-card">
+            <div class="card-head">
+              <h3>7-day depletion view</h3>
+              <span class="mini-note">Assumes constant ET<sub>c</sub></span>
+            </div>
+            <div id="forecastStrip" class="forecast-strip"></div>
+            <svg id="forecastSvg" viewBox="0 0 360 150" role="img" aria-label="7-day depletion curve"></svg>
+          </section>
+        </div>
+
+        <section class="insight-grid">
+          <article class="card">
+            <h3>Plain-English readout</h3>
+            <p id="summaryText"></p>
+          </article>
+          <article class="card formula-card">
+            <h3>What the app is doing</h3>
+            <ul>
+              <li>ET<sub>c</sub> = Kc × ETo</li>
+              <li>Total available water = AWC × root depth</li>
+              <li>Trigger line = total available water × (1 - MAD)</li>
+              <li>Gross refill = deficit ÷ irrigation efficiency</li>
+            </ul>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>This is a simplified educational planner for comparing irrigation scenarios in vineyards. It does not include rainfall, salinity, vine variety, row orientation, block heterogeneity, soil probes, water quality, or validated local crop coefficients.</p>
+    </footer>
+  </div>
+  <script src="app.js?v=4"></script>
+  <script>
+    window.setTimeout(() => {
+      if (window.applyPreset && window.scenarioPresets) {
+        window.applyPreset(window.scenarioPresets[1].values, window.scenarioPresets[1].id);
+      }
+    }, 0);
+  </script>
+</body>
+</html>

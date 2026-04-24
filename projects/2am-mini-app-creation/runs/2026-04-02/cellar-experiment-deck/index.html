@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cellar Experiment Deck</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="warning-banner" id="warningBanner">
+  <span class="warning-icon">⚠️</span>
+  <span class="warning-text"><strong>EXPERIMENTAL</strong> — This is an OpenClaw AI mini-app, untested and not professionally validated. Do not rely on it for production decisions.</span>
+  <button class="warning-dismiss" id="warningDismiss" aria-label="Dismiss">×</button>
+</div>
+
+<header class="app-header">
+  <div class="header-top">
+    <div class="logo">
+      <span class="logo-icon">🍷</span>
+      <h1>Cellar Experiment Deck</h1>
+    </div>
+    <button class="fav-toggle-btn" id="favToggleBtn" aria-label="View saved ideas">
+      <span class="fav-count" id="favCount">0</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+    </button>
+  </div>
+  <p class="tagline">Generate plausible trial ideas by combining cards</p>
+</header>
+
+<section class="filters-section">
+  <div class="filters-scroll">
+    <div class="filter-group">
+      <span class="filter-label">Presets</span>
+      <div class="filter-chips" id="presetChips"></div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Filters</span>
+      <div class="filter-chips" id="filterChips"></div>
+    </div>
+  </div>
+</section>
+
+<main class="main-content" id="mainContent">
+
+  <section class="card-stack-section" id="cardStackSection">
+    <div class="card-stack" id="cardStack"></div>
+    <div class="stack-actions">
+      <button class="btn btn-secondary" id="rerollAllBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        Re-roll All
+      </button>
+      <button class="btn btn-primary" id="generateBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        New Experiment
+      </button>
+    </div>
+  </section>
+
+  <section class="brief-section" id="briefSection">
+    <h2 class="section-title">
+      <span class="section-icon">📋</span>
+      Experiment Brief
+    </h2>
+    <div class="brief-card" id="briefCard"></div>
+    <div class="brief-actions">
+      <button class="btn btn-outline" id="copyBriefBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        Copy Brief
+      </button>
+      <button class="btn btn-save" id="saveBriefBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        Save Idea
+      </button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Saved Ideas Panel (overlay) -->
+<div class="saved-panel" id="savedPanel">
+  <div class="saved-panel-header">
+    <h2>Saved Ideas</h2>
+    <button class="btn-close" id="closeSavedPanel" aria-label="Close">×</button>
+  </div>
+  <div class="saved-list" id="savedList"></div>
+  <div class="saved-empty" id="savedEmpty">
+    <span class="empty-icon">💾</span>
+    <p>No saved ideas yet. Tap "Save Idea" on any experiment brief.</p>
+  </div>
+</div>
+<div class="panel-backdrop" id="panelBackdrop"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

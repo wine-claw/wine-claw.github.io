@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Phylloxera Journey — The Great Vine Migration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep: #0d0d1a;
+      --bg-dark: #1a1a2e;
+      --bg-mid: #16213e;
+      --ocean: #0f1629;
+      --land: #2a3a4a;
+      --land-stroke: #3d4f5f;
+      --text-light: #e8dcc4;
+      --text-muted: #9a8b7a;
+      --accent-red: #e74c3c;
+      --accent-green: #2ecc71;
+      --accent-amber: #f39c12;
+      --accent-blue: #3498db;
+      --accent-origin: #9b59b6;
+      --accent-arrival: #e67e22;
+      --parchment: #f5e6c8;
+      --parchment-dark: #e8d4a8;
+      --ink: #2c1810;
+      --ink-light: #4a3020;
+    }
+
+    html, body {
+      height: 100%;
+      overflow-x: hidden;
+      background: var(--bg-deep);
+      color: var(--text-light);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* Warning Banner */
+    .warning-banner {
+      background: linear-gradient(135deg, #2c1a0e 0%, #1a0f08 100%);
+      border-bottom: 1px solid #8b5a2b;
+      padding: 6px 12px;
+      text-align: center;
+      font-size: 11px;
+      color: #d4a574;
+      letter-spacing: 0.3px;
+    }
+
+    /* Intro Screen */
+    .intro-screen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center bottom, #1a1a2e 0%, #0d0d1a 70%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 100;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .intro-screen.hidden {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+    }
+
+    .intro-screen h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(28px, 8vw, 52px);
+      font-weight: 700;
+      color: var(--parchment);
+      text-align: center;
+      margin-bottom: 16px;
+      text-shadow: 0 2px 20px rgba(245, 230, 200, 0.2);
+    }
+
+    .intro-screen p {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: clamp(15px, 4vw, 18px);
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 380px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+      font-style: italic;
+    }
+
+    .intro-btn {
+      background: linear-gradient(135deg, #3d2817 0%, #2a1a10 100%);
+      border: 1px solid #6b4423;
+      color: var(--parchment);
+      padding: 14px 36px;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      letter-spacing: 1px;
+    }
+
+    .intro-btn:hover {
+      background: linear-gradient(135deg, #4d3827 0%, #3a2a1a 100%);
+      border-color: #8b5a2b;
+      transform: translateY(-2px);
+    }
+
+    /* Main App */
+    .app {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-bottom: 200px;
+    }
+
+    .app.visible { display: flex; }
+
+    /* Header */
+    .app-header {
+      padding: 12px 16px 8px;
+      background: linear-gradient(180deg, rgba(22, 33, 62, 0.9) 0%, transparent 100%);
+    }
+
+    .app-header h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 18px;
+      color: var(--parchment);
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      gap: 12px;
+      padding: 8px 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .stats-bar::-webkit-scrollbar { display: none; }
+
+    .stat-item {
+      background: rgba(42, 58, 74, 0.5);
+      border: 1px solid rgba(61, 79, 95, 0.6);
+      border-radius: 6px;
+      padding: 6px 12px;
+      flex-shrink: 0;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px;
+      color: var(--parchment);
+    }
+
+    /* Map Container */
+    .map-container {
+      flex: 1;
+      position: relative;
+      min-height: 300px;
+      max-height: 50vh;
+      overflow: hidden;
+    }
+
+    #mapCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Timeline */
+    .timeline-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(13, 13, 26, 0.95) 30%, #0d0d1a 100%);
+      padding: 16px 16px 24px;
+      z-index: 50;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .timeline-year {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 28px;
+      color: var(--parchment);
+      font-weight: 600;
+    }
+
+    .timeline-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .timeline-btn {
+      background: rgba(42, 58, 74, 0.6);
+      border: 1px solid rgba(61, 79, 95, 0.8);
+      color: var(--text-light);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .timeline-btn:hover {
+      background: rgba(61, 79, 95, 0.8);
+      border-color: var(--accent-amber);
+    }
+
+    .timeline-btn.active {
+      background: var(--accent-amber);
+      color: var(--bg-deep);
+      border-color: var(--accent-amber);
+    }
+
+    .timeline-track {
+      position: relative;
+      height: 24px;
+      margin-bottom: 4px;
+    }
+
+    .timeline-slider {
+      position: absolute;
+      width: 100%;
+      height: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(61, 79, 95, 0.5);
+      border-radius: 2px;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .timeline-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: var(--parchment);
+      border-radius: 50%;
+      cursor: grab;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      border: 2px solid var(--bg-deep);
+    }
+
+    .timeline-slider::-webkit-slider-thumb:active { cursor: grabbing; }
+
+    .timeline-marks {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 8px;
+    }
+
+    .timeline-mark {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'EB Garamond', Georgia, serif;
+    }
+
+    /* Event Log */
+    .event-log {
+      margin: 16px;
+      margin-bottom: 220px;
+    }
+
+    .event-log h3 {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 14px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--land) transparent;
+    }
+
+    .event-list::-webkit-scrollbar { width: 4px; }
+    .event-list::-webkit-scrollbar-track { background: transparent; }
+    .event-list::-webkit-scrollbar-thumb { background: var(--land); border-radius: 2px; }
+
+    .event-entry {
+      display: flex;
+      gap: 10px;
+      padding: 8px 10px;
+      background: rgba(22, 33, 62, 0.4);
+      border-left: 3px solid var(--land);
+      border-radius: 0 4px 4px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .event-entry.type-infection { border-left-color: var(--accent-red); }
+    .event-entry.type-recovery { border-left-color: var(--accent-green); }
+    .event-entry.type-quarantine { border-left-color: var(--accent-amber); }
+    .event-entry.type-mild { border-left-color: var(--accent-blue); }
+    .event-entry.type-origin { border-left-color: var(--accent-origin); }
+    .event-entry.type-arrival { border-left-color: var(--accent-arrival); }
+
+    .event-year {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .event-title {
+      color: var(--text-light);
+    }
+
+    /* Rootstock Section */
+    .rootstock-section {
+      margin: 24px 16px 40px;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(42, 58, 74, 0.3) 0%, rgba(22, 33, 62, 0.3) 100%);
+      border: 1px solid rgba(61, 79, 95, 0.5);
+      border-radius: 8px;
+    }
+
+    .rootstock-section h3 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 20px;
+      color: var(--parchment);
+      margin-bottom: 12px;
+    }
+
+    .rootstock-section p {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-light);
+      margin-bottom: 16px;
+    }
+
+    .graft-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .graft-scion {
+      background: linear-gradient(180deg, #5a3a1a 0%, #3a2510 100%);
+      color: var(--parchment);
+      padding: 10px 20px;
+      border-radius: 6px 6px 0 0;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    .graft-union {
+      background: var(--accent-green);
+      color: var(--bg-deep);
+      padding: 6px 16px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .graft-rootstock {
+      background: linear-gradient(180deg, #2a3a4a 0%, #1a2a3a 100%);
+      color: var(--text-muted);
+      padding: 10px 20px;
+      border-radius: 0 0 6px 6px;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    .graft-labels {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'EB Garamond', Georgia, serif;
+    }
+
+    /* Narrative Card Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 13, 26, 0.85);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.visible { display: flex; }
+
+    .narrative-card {
+      background: linear-gradient(145deg, var(--parchment) 0%, var(--parchment-dark) 100%);
+      max-width: 420px;
+      width: 100%;
+      border-radius: 8px;
+      padding: 28px 24px;
+      color: var(--ink);
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.5);
+      animation: cardIn 0.4s ease;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .narrative-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .narrative-card .type-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: bold;
+    }
+
+    .narrative-card .type-badge.infection { background: var(--accent-red); color: white; }
+    .narrative-card .type-badge.recovery { background: var(--accent-green); color: var(--bg-deep); }
+    .narrative-card .type-badge.quarantine { background: var(--accent-amber); color: var(--bg-deep); }
+    .narrative-card .type-badge.mild { background: var(--accent-blue); color: white; }
+    .narrative-card .type-badge.origin { background: var(--accent-origin); color: white; }
+    .narrative-card .type-badge.arrival { background: var(--accent-arrival); color: white; }
+
+    .narrative-card .region {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--ink-light);
+      margin-bottom: 4px;
+    }
+
+    .narrative-card h4 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px;
+      color: var(--ink);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .narrative-card .date-line {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: var(--ink-light);
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(44, 24, 16, 0.2);
+    }
+
+    .narrative-card .desc {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+
+    .narrative-card .close-btn {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(44, 24, 16, 0.1);
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--ink-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .narrative-card .close-btn:hover { background: rgba(44, 24, 16, 0.2); }
+  </style>
+</head>
+<body>
+
+<div class="warning-banner">⚠️ Experimental AI mini-app — not professionally validated. Do not rely for decisions.</div>
+
+<!-- Intro Screen -->
+<div class="intro-screen" id="introScreen">
+  <h1>Phylloxera Journey</h1>
+  <p>How a tiny insect from North America nearly destroyed the world's vineyards — and how grafting saved them</p>
+  <button class="intro-btn" id="startBtn">Begin the Journey</button>
+</div>
+
+<!-- Main App -->
+<div class="app" id="mainApp">
+  <div class="app-header">
+    <h2>The Great Vine Migration, 1850–1920</h2>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-label">Infected Regions</div>
+      <div class="stat-value" id="statInfected">0</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Acres Lost</div>
+      <div class="stat-value" id="statAcres">0</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Recovery Regions</div>
+      <div class="stat-value" id="statRecovered">0</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Wine Output</div>
+      <div class="stat-value" id="statOutput">—</div>
+    </div>
+  </div>
+
+  <div class="map-container">
+    <canvas id="mapCanvas"></canvas>
+  </div>
+
+  <div class="event-log">
+    <h3>Event Log</h3>
+    <div class="event-list" id="eventList"></div>
+  </div>
+
+  <div class="rootstock-section">
+    <h3>The Rootstock Revolution</h3>
+    <p>When phylloxera swept through Europe, conventional wisdom said the wine world was doomed. Then scientists and growers discovered a countermeasure hidden in nature itself: grafting European vines (Vitis vinifera) onto the roots of American species (Vitis labrusca, Vitis riparia, Vitis rupestris) that had evolved resistance to phylloxera. The graft union became viticulture's salvation — European fruit on American resilience.</p>
+    <div class="graft-diagram">
+      <div class="graft-scion">European Vine (V. vinifera)<br><small>Produces the wine grapes we know</small></div>
+      <div class="graft-union">⟨ GRAFT UNION ⟩</div>
+      <div class="graft-rootstock">American Rootstock<br><small>Resistant to phylloxera &amp; soil diseases</small></div>
+      <div class="graft-labels">
+        <span>Scion</span>
+        <span>Rootstock</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="timeline-container" id="timelineContainer">
+  <div class="timeline-header">
+    <div class="timeline-year" id="currentYear">1850</div>
+    <div class="timeline-controls">
+      <button class="timeline-btn" id="playBtn" title="Play/Pause">▶</button>
+      <button class="timeline-btn" id="resetBtn" title="Reset">⟲</button>
+    </div>
+  </div>
+  <div class="timeline-track">
+    <input type="range" class="timeline-slider" id="timelineSlider" min="1850" max="1920" value="1850" step="1">
+  </div>
+  <div class="timeline-marks">
+    <span class="timeline-mark">1850</span>
+    <span class="timeline-mark">1860</span>
+    <span class="timeline-mark">1870</span>
+    <span class="timeline-mark">1880</span>
+    <span class="timeline-mark">1890</span>
+    <span class="timeline-mark">1900</span>
+    <span class="timeline-mark">1910</span>
+    <span class="timeline-mark">1920</span>
+  </div>
+</div>
+
+<!-- Narrative Card Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="narrative-card" id="narrativeCard">
+    <button class="close-btn" id="closeCard">✕</button>
+    <div class="type-badge" id="cardType">infection</div>
+    <div class="region" id="cardRegion">Region</div>
+    <h4 id="cardTitle">Title</h4>
+    <div class="date-line" id="cardDate">Year</div>
+    <div class="desc" id="cardDesc">Description</div>
+  </div>
+</div>
+
+<script>
+const EVENTS = [
+  { year: 1854, lat: 38, lon: -77, region: "Eastern North America", title: "Native Habitat", desc: "Phylloxera (Daktulosphaira vitifoliae) is native to eastern North America, where Vitis labrusca and other species evolved resistance. The tiny aphid-like insect feeds on vine roots, causing galls and ultimately killing European vines.", type: "origin" },
+  { year: 1858, lat: 51.5, lon: -0.1, region: "England", title: "American Vines Arrive", desc: "Victorian botanists import American vine specimens to England for ornamental planting. Phylloxera hitches a ride on the root systems, unknowingly introducing the pest to Europe for the first time.", type: "arrival" },
+  { year: 1863, lat: 43.9, lon: 4.8, region: "Southern Rhône, France", title: "First European Outbreak", desc: "Vines begin dying mysteriously in the village of Pujaut, Gard (Languedoc). Growers watch helplessly as vineyards collapse within three years. French scientists later confirm this as the first phylloxera outbreak in Europe.", type: "infection" },
+  { year: 1866, lat: -33.9, lon: 18.4, region: "Cape Town, South Africa", title: "Phylloxera Reaches Africa", desc: "Phylloxera arrives at the Cape Colony. Western Cape vineyards — South Africa's nascent wine industry — are devastated over the next two decades. Cape Dutch farmers abandon their vineyards.", type: "infection" },
+  { year: 1868, lat: 48.3, lon: 16.3, region: "Klosterneuburg, Austria", title: "Spreads Along the Danube", desc: "The pest reaches Austria, discovered at the Klosterneuburg viticultural institute near Vienna. From here it spreads down the Danube Valley into Hungary, Czechia, and Slovakia.", type: "infection" },
+  { year: 1869, lat: 44.8, lon: -0.6, region: "Bordeaux, France", title: "Bordeaux Falls", desc: "Phylloxera is officially reported in Bordeaux — France's most prestigious wine region. Panic spreads through the châteaux. The Médoc loses half its vineyards within a decade.", type: "infection" },
+  { year: 1871, lat: 43.6, lon: 3.9, region: "France", title: "Grafting Begins", desc: "French farmer Jules-Emile Planchon and agronomist Pierre-Marie-Alexis Millardet independently discover that grafting V. vinifera onto American rootstock confers phylloxera resistance. French farmers begin experimental grafting.", type: "recovery" },
+  { year: 1873, lat: 38.3, lon: -122.7, region: "Sonoma, California", title: "California Infected", desc: "Phylloxera found in Agoston Haraszthy's Buena Vista vineyard in Sonoma. The outbreak traced to rooted cuttings imported from Europe. By 1900, Napa Valley drops from 20,000 to just 3,000 vineyard acres.", type: "infection" },
+  { year: 1874, lat: -34.9, lon: 138.6, region: "South Australia", title: "SA Bans Vine Imports", desc: "South Australia acts decisively, banning the movement of all vine material across its borders. The quarantine saves South Australian vineyards. Some of the world's oldest ungrafted vines survive in Barossa Valley today.", type: "quarantine" },
+  { year: 1877, lat: -38.1, lon: 144.4, region: "Geelong, Victoria", title: "Phylloxera Reaches Australia", desc: "First Australian outbreak confirmed at Geelong, Victoria. The disease arrives via imported nursery stock. Spreads northward through Victoria's goldfields wine region, devastating vineyards.", type: "infection" },
+  { year: 1878, lat: 36.7, lon: -4.4, region: "Málaga, Spain", title: "Spain Infected", desc: "Phylloxera enters Spain through the port of Málaga, likely on imported rootstock. Spreads to Catalonia by 1879 and the Barcelona province by 1882. Spain's wine production collapses.", type: "infection" },
+  { year: 1878, lat: -33.0, lon: -68.5, region: "Mendoza, Argentina", title: "Argentina: Mild Impact", desc: "Phylloxera is identified in Mendoza but does not thrive in the region's sandy volcanic soils and high altitude. Argentine vineyards emerge relatively unscathed, becoming a global wine powerhouse.", type: "mild" },
+  { year: 1880, lat: 42.0, lon: 12.5, region: "Italy", title: "Italy Falls", desc: "Phylloxera sweeps through Italian wine regions from Piedmont to Sicily. Sicily and Puglia are hit especially hard. Italy loses over 60% of its vineyards within a decade.", type: "infection" },
+  { year: 1884, lat: -33.9, lon: 151.2, region: "NSW, Australia", title: "Phylloxera in NSW", desc: "Detected in New South Wales atbushfire-damaged vineyards near Sydney. Quarantine zones established but prove insufficient. The Hunter Valley loses much of its original vineyard footprint.", type: "infection" },
+  { year: 1889, lat: 46.2, lon: 2.2, region: "France", title: "French Wine Production Collapses", desc: "French wine output falls from 84.5 million hectoliters (1875) to just 23.4 million — a 72% collapse. Over 6 million acres of French vines are destroyed. The infamous \"water wine\" scandal erupts as desperate winemakers adulterate their product.", type: "infection" },
+  { year: 1890, lat: 38.8, lon: -77, region: "Washington DC", title: "Charles Valentine Riley", desc: "American entomologist Charles Valentine Riley's years of advocacy for American rootstock as the solution to phylloxera are vindicated. His work with French botanists helps accelerate global adoption of grafting.", type: "recovery" },
+  { year: 1900, lat: 41.9, lon: 12.5, region: "Europe", title: "Replanting Accelerates", desc: "Most surviving European vineyards are now being replanted on grafted rootstock. Wine production begins its slow recovery. Champagne is fully replanted by 1912.", type: "recovery" },
+  { year: 1910, lat: -27.5, lon: 153.0, region: "Queensland, Australia", title: "Queensland Infected", desc: "Last Australian state to report phylloxera. South Australia, Western Australia, and Tasmania remain phylloxera-free — making them custodians of some of the world's oldest ungrafted vines.", type: "infection" },
+];
+
+const ACRE_DATA = {
+  1860: 50000, 1870: 800000, 1880: 3500000, 1890: 8500000, 1900: 6000000, 1910: 2000000
+};
+
+const COLORS = {
+  origin: '#9b59b6',
+  arrival: '#e67e22',
+  infection: '#e74c3c',
+  recovery: '#2ecc71',
+  quarantine: '#f39c12',
+  mild: '#3498db'
+};
+
+// Map projection
+const CANVAS_LAT = 30; // center latitude
+const CANVAS_LON = 10; // center longitude
+const CANVAS_W = 900;
+const CANVAS_H = 500;
+
+// Simplified continent paths (lon, lat bounding boxes)
+const CONTINENTS = [
+  // North America
+  { name: 'na', path: [[-170,70],[-50,70],[-60,25],[-130,15],[-170,60]] },
+  // South America
+  { name: 'sa', path: [[-82,12],[-34,2],[-50,-55],[-82,5]] },
+  // Europe
+  { name: 'eu', path: [[-10,70],[40,70],[40,35],[0,35],[-10,45]] },
+  // Africa
+  { name: 'af', path: [[-18,35],[55,35],[55,-35],[-18,-35]] },
+  // Asia
+  { name: 'as', path: [[40,70],[180,70],[180,5],[40,5]] },
+  // Australia
+  { name: 'au', path: [[110,-10],[155,-10],[155,-45],[110,-45]] },
+];
+
+function project(lat, lon) {
+  const x = ((lon - CANVAS_LON) / 360) * CANVAS_W + CANVAS_W / 2;
+  const y = ((CANVAS_LAT - lat) / 180) * CANVAS_H;
+  return { x, y };
+}
+
+function reverseProject(x, y) {
+  const lon = ((x - CANVAS_W / 2) / CANVAS_W) * 360 + CANVAS_LON;
+  const lat = CANVAS_LAT - (y / CANVAS_H) * 180;
+  return { lat, lon };
+}
+
+function drawMap(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+
+  // Ocean
+  ctx.fillStyle = '#0f1629';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(61, 79, 95, 0.15)';
+  ctx.lineWidth = 0.5;
+  for (let lat = -60; lat <= 80; lat += 30) {
+    const p = project(lat, -180);
+    const p2 = project(lat, 180);
+    ctx.beginPath();
+    ctx.moveTo(0, p.y);
+    ctx.lineTo(w, p2.y);
+    ctx.stroke();
+  }
+  for (let lon = -180; lon <= 180; lon += 60) {
+    const p = project(0, lon);
+    const p2 = project(60, lon);
+    ctx.beginPath();
+    ctx.moveTo(p.x, 0);
+    ctx.lineTo(p2.x, h);
+    ctx.stroke();
+  }
+
+  // Draw continents
+  ctx.fillStyle = '#2a3a4a';
+  ctx.strokeStyle = '#3d4f5f';
+  ctx.lineWidth = 1;
+  CONTINENTS.forEach(c => {
+    if (c.path.length < 3) return;
+    ctx.beginPath();
+    const start = project(c.path[0][1], c.path[0][0]);
+    ctx.moveTo(start.x, start.y);
+    for (let i = 1; i < c.path.length; i++) {
+      const p = project(c.path[i][1], c.path[i][0]);
+      ctx.lineTo(p.x, p.y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  });
+}
+
+// Arc animations
+let activeArcs = [];
+function drawArc(ctx, from, to, color, progress) {
+  const p1 = project(from.lat, from.lon);
+  const p2 = project(to.lat, to.lon);
+  const mx = (p1.x + p2.x) / 2;
+  const my = Math.min(p1.y, p2.y) - 60;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.globalAlpha = 0.6 * progress;
+
+  ctx.beginPath();
+  const steps = 30;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    if (t > progress) break;
+    const bx = (1-t)*(1-t)*p1.x + 2*(1-t)*t*mx + t*t*p2.x;
+    const by = (1-t)*(1-t)*p1.y + 2*(1-t)*t*my + t*t*p2.y;
+    if (i === 0) ctx.moveTo(bx, by);
+    else ctx.lineTo(bx, by);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+}
+
+function setupArcs(currentYear) {
+  activeArcs = [];
+  const spreadOrder = [
+    [1854, 38, -77, 1858, 51.5, -0.1],   // NA -> England
+    [1858, 51.5, -0.1, 1863, 43.9, 4.8], // England -> Rhône
+    [1863, 43.9, 4.8, 1869, 44.8, -0.6],  // Rhône -> Bordeaux
+    [1863, 43.9, 4.8, 1866, -33.9, 18.4],// Rhône -> SA
+    [1863, 43.9, 4.8, 1868, 48.3, 16.3],  // Rhône -> Austria
+    [1869, 44.8, -0.6, 1878, 36.7, -4.4],// Bordeaux -> Spain
+    [1869, 44.8, -0.6, 1880, 42.0, 12.5],// Bordeaux -> Italy
+    [1858, 51.5, -0.1, 1873, 38.3, -122.7], // England -> California
+    [1868, 48.3, 16.3, 1877, -38.1, 144.4],// Austria -> Geelong
+    [1877, -38.1, 144.4, 1884, -33.9, 151.2], // Geelong -> NSW
+    [1877, -38.1, 144.4, 1910, -27.5, 153.0], // Geelong -> QLD
+  ];
+
+  spreadOrder.forEach(([y1, lat1, lon1, y2, lat2, lon2]) => {
+    if (y1 <= currentYear && y2 <= currentYear) {
+      activeArcs.push({
+        from: { lat: lat1, lon: lon1 },
+        to: { lat: lat2, lon: lon2 },
+        color: COLORS.infection,
+        startYear: y1,
+        endYear: y2
+      });
+    }
+  });
+}
+
+// Dot rendering
+let visibleEvents = [];
+let pulsePhase = 0;
+
+function getDotRadius(type) {
+  return type === 'origin' ? 8 : 6;
+}
+
+function drawDots(ctx, w, h) {
+  visibleEvents.forEach(ev => {
+    const p = project(ev.lat, ev.lon);
+    const r = getDotRadius(ev.type);
+    const color = COLORS[ev.type];
+
+    // Pulse animation for infection dots
+    if (ev.type === 'infection' || ev.type === 'origin') {
+      const pulse = 1 + 0.3 * Math.sin(pulsePhase + ev.year * 0.5);
+      // Radiating rings
+      const ringProgress = (pulsePhase / 2 + ev.year * 0.1) % 1;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.3 * (1 - ringProgress);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r + 8 * ringProgress, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // Glow
+    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 2.5);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(0.4, color + 'aa');
+    gradient.addColorStop(1, color + '00');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r * 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Core
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath();
+    ctx.arc(p.x - r * 0.3, p.y - r * 0.3, r * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawArcAnimations(ctx) {
+  activeArcs.forEach(arc => {
+    const arcProgress = Math.min(1, (currentYear - arc.startYear) / (arc.endYear - arc.startYear + 0.1));
+    drawArc(ctx, arc.from, arc.to, arc.color, arcProgress);
+  });
+}
+
+// State
+let currentYear = 1850;
+let isPlaying = false;
+let playInterval = null;
+let stats = { infected: 0, recovered: 0, acres: 0 };
+let animationId = null;
+
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const container = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = container.clientWidth * dpr;
+  canvas.height = container.clientHeight * dpr;
+  canvas.style.width = container.clientWidth + 'px';
+  canvas.style.height = container.clientHeight + 'px';
+  ctx.scale(dpr, dpr);
+}
+
+function updateVisibleEvents() {
+  visibleEvents = EVENTS.filter(e => e.year <= currentYear);
+  setupArcs(currentYear);
+}
+
+function updateStats() {
+  const infectedSet = new Set(EVENTS.filter(e => e.type === 'infection' && e.year <= currentYear).map(e => e.region));
+  const recoverySet = new Set(EVENTS.filter(e => e.type === 'recovery' && e.year <= currentYear).map(e => e.region));
+
+  stats.infected = infectedSet.size;
+  stats.recovered = recoverySet.size;
+
+  // Get nearest acre data point
+  const years = Object.keys(ACRE_DATA).map(Number).filter(y => y <= currentYear);
+  stats.acres = years.length > 0 ? ACRE_DATA[years[years.length - 1]] : 0;
+
+  // French wine output (simplified)
+  let output = '—';
+  if (currentYear >= 1889) output = '23M hL';
+  if (currentYear >= 1900) output = '45M hL';
+  if (currentYear >= 1910) output = '58M hL';
+  if (currentYear >= 1920) output = '65M hL';
+
+  document.getElementById('statInfected').textContent = stats.infected;
+  document.getElementById('statRecovered').textContent = stats.recovered;
+  document.getElementById('statAcres').textContent = stats.acres > 0 ? (stats.acres / 1000000).toFixed(1) + 'M' : '0';
+  document.getElementById('statOutput').textContent = output;
+}
+
+function updateEventLog() {
+  const list = document.getElementById('eventList');
+  const events = EVENTS.filter(e => e.year === currentYear);
+  events.forEach(ev => {
+    const existing = list.querySelector(`[data-year="${ev.year}"][data-region="${ev.region}"]`);
+    if (!existing) {
+      const div = document.createElement('div');
+      div.className = `event-entry type-${ev.type}`;
+      div.dataset.year = ev.year;
+      div.dataset.region = ev.region;
+      div.innerHTML = `<span class="event-year">${ev.year}</span><span class="event-title">${ev.title} — ${ev.region}</span>`;
+      list.insertBefore(div, list.firstChild);
+    }
+  });
+}
+
+function render() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  drawMap(ctx, w, h);
+  drawArcAnimations(ctx);
+  drawDots(ctx, w, h);
+}
+
+function animate() {
+  pulsePhase += 0.05;
+  render();
+  animationId = requestAnimationFrame(animate);
+}
+
+function setYear(year) {
+  currentYear = Math.max(1850, Math.min(1920, year));
+  document.getElementById('currentYear').textContent = currentYear;
+  document.getElementById('timelineSlider').value = currentYear;
+  updateVisibleEvents();
+  updateStats();
+  updateEventLog();
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  const btn = document.getElementById('playBtn');
+  if (isPlaying) {
+    btn.textContent = '⏸';
+    btn.classList.add('active');
+    playInterval = setInterval(() => {
+      if (currentYear >= 1920) {
+        togglePlay();
+        return;
+      }
+      setYear(currentYear + 1);
+    }, 400);
+  } else {
+    btn.textContent = '▶';
+    btn.classList.remove('active');
+    clearInterval(playInterval);
+  }
+}
+
+function resetTimeline() {
+  if (isPlaying) togglePlay();
+  setYear(1850);
+  document.getElementById('eventList').innerHTML = '';
+}
+
+// Event listeners
+document.getElementById('startBtn').addEventListener('click', () => {
+  document.getElementById('introScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.add('visible');
+  setTimeout(() => {
+    resizeCanvas();
+    updateVisibleEvents();
+    updateStats();
+    animate();
+  }, 800);
+});
+
+document.getElementById('playBtn').addEventListener('click', togglePlay);
+document.getElementById('resetBtn').addEventListener('click', resetTimeline);
+
+document.getElementById('timelineSlider').addEventListener('input', (e) => {
+  setYear(parseInt(e.target.value));
+});
+
+document.getElementById('closeCard').addEventListener('click', () => {
+  document.getElementById('modalOverlay').classList.remove('visible');
+});
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    document.getElementById('modalOverlay').classList.remove('visible');
+  }
+});
+
+// Canvas click detection
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  for (const ev of visibleEvents) {
+    const p = project(ev.lat, ev.lon);
+    const dx = x - p.x;
+    const dy = y - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 15) {
+      showCard(ev);
+      return;
+    }
+  }
+});
+
+canvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+
+  for (const ev of visibleEvents) {
+    const p = project(ev.lat, ev.lon);
+    const dx = x - p.x;
+    const dy = y - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 20) {
+      showCard(ev);
+      return;
+    }
+  }
+});
+
+function showCard(ev) {
+  document.getElementById('cardType').textContent = ev.type.toUpperCase();
+  document.getElementById('cardType').className = `type-badge ${ev.type}`;
+  document.getElementById('cardRegion').textContent = ev.region;
+  document.getElementById('cardTitle').textContent = ev.title;
+  document.getElementById('cardDate').textContent = `${ev.year} — ${ev.lat.toFixed(1)}°, ${ev.lon.toFixed(1)}°`;
+  document.getElementById('cardDesc').textContent = ev.desc;
+  document.getElementById('modalOverlay').classList.add('visible');
+}
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('mainApp').classList.contains('visible')) {
+    resizeCanvas();
+  }
+});
+</script>
+</body>
+</html>

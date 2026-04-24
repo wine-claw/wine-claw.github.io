@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Root Zone Explorer — Grapevine Root System Visualiser</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-deep: #1a1208;
+    --bg-panel: #231a0e;
+    --bg-card: #2e2214;
+    --soil-dark: #3d2b1a;
+    --soil-mid: #5c3d20;
+    --soil-light: #7a5230;
+    --ochre: #c4813a;
+    --olive: #6b7c3f;
+    --olive-light: #8fa34e;
+    --cream: #f0e6d0;
+    --cream-dim: #b8a888;
+    --brown-dark: #1e140a;
+    --root-structural: #8b5e3c;
+    --root-feeder: #c49a6c;
+    --root-ghost: rgba(180,140,90,0.3);
+    --accent: #d4954a;
+    --accent-glow: rgba(212,149,74,0.3);
+    --info-bg: rgba(30,20,10,0.92);
+    --shadow: rgba(0,0,0,0.5);
+  }
+
+  html, body {
+    height: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    background: var(--bg-deep);
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(107,124,63,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(196,129,58,0.06) 0%, transparent 50%);
+    color: var(--cream);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  .ai-banner {
+    background: linear-gradient(135deg, #2a1f10 0%, #3d2b18 50%, #2a1f10 100%);
+    border-bottom: 1px solid rgba(212,149,74,0.3);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--cream-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .ai-banner-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+  header {
+    padding: 16px 16px 10px;
+    text-align: center;
+  }
+  header h1 {
+    font-size: clamp(18px, 5vw, 26px);
+    font-weight: normal;
+    letter-spacing: 0.04em;
+    color: var(--cream);
+    line-height: 1.2;
+  }
+  header h1 span { color: var(--ochre); }
+  header p {
+    font-size: 12px;
+    color: var(--cream-dim);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .hero-wrap {
+    position: relative;
+    width: 100%;
+    max-height: 140px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .hero-wrap img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+    opacity: 0.55;
+  }
+  .hero-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, var(--bg-deep) 0%, transparent 30%, transparent 70%, var(--bg-deep) 100%);
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--bg-panel);
+    border-top: 1px solid rgba(196,129,58,0.15);
+    border-bottom: 1px solid rgba(196,129,58,0.15);
+  }
+
+  .ctrl-group {
+    flex: 1 1 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .ctrl-group label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cream-dim);
+    padding-left: 2px;
+  }
+  .ctrl-group select {
+    background: var(--bg-card);
+    color: var(--cream);
+    border: 1px solid rgba(196,129,58,0.3);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c4813a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    touch-action: manipulation;
+  }
+  .ctrl-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+  .ctrl-group select option { background: var(--bg-card); }
+
+  .compare-toggle {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding-bottom: 2px;
+  }
+  .compare-toggle label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cream-dim);
+    white-space: nowrap;
+  }
+  .toggle-switch {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-card);
+    border: 1px solid rgba(196,129,58,0.3);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 2px; top: 2px;
+    border-radius: 50%;
+    background: var(--cream-dim);
+    transition: transform 0.25s, background 0.25s;
+  }
+  .toggle-switch input:checked + .toggle-track {
+    background: rgba(212,149,74,0.2);
+    border-color: var(--accent);
+  }
+  .toggle-switch input:checked + .toggle-track::after {
+    transform: translateX(18px);
+    background: var(--accent);
+  }
+
+  #canvas-wrap {
+    position: relative;
+    width: 100%;
+    touch-action: none;
+  }
+  #crossSection {
+    display: block;
+    width: 100%;
+  }
+
+  .tooltip-card {
+    position: absolute;
+    background: var(--info-bg);
+    border: 1px solid rgba(196,129,58,0.4);
+    border-radius: 8px;
+    padding: 10px 14px;
+    max-width: 220px;
+    font-size: 12px;
+    line-height: 1.5;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 10;
+    box-shadow: 0 4px 20px var(--shadow);
+  }
+  .tooltip-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .tooltip-card h4 {
+    font-size: 13px;
+    font-weight: normal;
+    color: var(--ochre);
+    margin-bottom: 4px;
+  }
+  .tooltip-card p { color: var(--cream-dim); }
+
+  #infoPanel {
+    padding: 14px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .info-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(196,129,58,0.2);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .info-card.full { grid-column: 1 / -1; }
+  .info-card h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cream-dim);
+    margin-bottom: 6px;
+    font-weight: normal;
+  }
+  .info-card .value {
+    font-size: 14px;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .info-card .value .icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .rating-dots {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .rating-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(196,129,58,0.2);
+    border: 1px solid rgba(196,129,58,0.4);
+  }
+  .rating-dot.filled {
+    background: var(--ochre);
+    border-color: var(--ochre);
+    box-shadow: 0 0 4px rgba(212,149,74,0.5);
+  }
+  .rating-dot.half {
+    background: linear-gradient(90deg, var(--ochre) 50%, rgba(196,129,58,0.2) 50%);
+    border-color: var(--ochre);
+  }
+  .risk-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-family: monospace;
+  }
+  .risk-tag.low { background: rgba(107,124,63,0.3); color: var(--olive-light); border: 1px solid var(--olive); }
+  .risk-tag.moderate { background: rgba(196,129,58,0.2); color: var(--ochre); border: 1px solid rgba(196,129,58,0.4); }
+  .risk-tag.high { background: rgba(180,60,60,0.2); color: #e07070; border: 1px solid rgba(180,60,60,0.4); }
+
+  .tip-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(196,129,58,0.2);
+    border-left: 3px solid var(--olive);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin: 0 14px 20px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--cream-dim);
+  }
+  .tip-card strong { color: var(--olive-light); }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    padding: 8px 14px;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(196,129,58,0.1);
+    margin-top: 4px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .legend-line {
+    width: 20px;
+    height: 2px;
+    border-radius: 1px;
+  }
+  .legend-line.structural { background: var(--root-structural); height: 4px; }
+  .legend-line.feeder { background: var(--root-feeder); opacity: 0.7; }
+  .legend-line.ghost { background: var(--root-ghost); border: 1px dashed rgba(180,140,90,0.5); }
+
+  footer {
+    text-align: center;
+    padding: 10px;
+    font-size: 10px;
+    color: rgba(184,168,136,0.4);
+    letter-spacing: 0.06em;
+  }
+
+  @media (min-width: 600px) {
+    #infoPanel { grid-template-columns: repeat(3, 1fr); }
+    .info-card.full { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ai-banner">
+  <div class="ai-banner-dot"></div>
+  Experimental AI Mini-App — Interactive Educational Tool
+</div>
+
+<header>
+  <h1>Root Zone <span>Explorer</span></h1>
+  <p>Interactive Grapevine Root System Visualiser</p>
+</header>
+
+<div class="hero-wrap">
+  <img src="root-zone-hero.png" alt="Grapevine roots" onerror="this.style.display='none'">
+</div>
+
+<div class="controls">
+  <div class="ctrl-group">
+    <label for="rootstockSel">Rootstock</label>
+    <select id="rootstockSel">
+      <option value="1103P">1103P</option>
+      <option value="140Ru">140Ru</option>
+      <option value="Schwarzmann">Schwarzmann</option>
+      <option value="101-14 Mgt">101-14 Mgt</option>
+      <option value="Riparia Gloire">Riparia Gloire</option>
+      <option value="5BB">5BB</option>
+      <option value="SO4">SO4</option>
+      <option value="Rupestris du Lot">Rupestris du Lot</option>
+      <option value="Own-rooted V. vinifera">Own-rooted V. vinifera</option>
+    </select>
+  </div>
+  <div class="ctrl-group">
+    <label for="soilSel">Soil Type</label>
+    <select id="soilSel">
+      <option value="sandy_loam">Sandy Loam</option>
+      <option value="clay_loam">Clay Loam</option>
+      <option value="limestone">Limestone</option>
+      <option value="gravelly">Gravelly Alluvium</option>
+      <option value="duplex">Shallow Duplex</option>
+    </select>
+  </div>
+  <div class="ctrl-group">
+    <label for="irrigSel">Irrigation</label>
+    <select id="irrigSel">
+      <option value="drip">Drip</option>
+      <option value="sprinkler">Sprinkler</option>
+      <option value="dryland">Dryland</option>
+    </select>
+  </div>
+  <div class="compare-toggle">
+    <label>Compare</label>
+    <div class="toggle-switch">
+      <input type="checkbox" id="compareToggle">
+      <div class="toggle-track"></div>
+    </div>
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="crossSection"></canvas>
+  <div class="tooltip-card" id="tooltip">
+    <h4 id="tooltipTitle"></h4>
+    <p id="tooltipText"></p>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-line structural"></div>Structural</div>
+  <div class="legend-item"><div class="legend-line feeder"></div>Feeder roots</div>
+  <div class="legend-item"><div class="legend-line ghost"></div>Previous (ghost)</div>
+</div>
+
+<div id="infoPanel"></div>
+<div id="tipCard" class="tip-card" style="display:none"></div>
+
+<footer>Select rootstock, soil type &amp; irrigation to explore root architecture</footer>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const ROOTSTOCKS = {
+  "1103P":        { parentage:"V. berlandieri × V. rupestris", depthLabel:"Very deep (>2m)", depthFrac:0.92, pattern:"deepVertical", drought:"Very high", vigor:"High",       bestSoil:"Deep, well-drained, gravelly", phylloxeraRisk:"low" },
+  "140Ru":        { parentage:"V. berlandieri × V. rupestris", depthLabel:"Deep (1.5–2m)",   depthFrac:0.78, pattern:"deepVertical", drought:"High",        vigor:"Very high",  bestSoil:"Deep, infertile, dry",         phylloxeraRisk:"low" },
+  "Schwarzmann":  { parentage:"V. riparia × V. rupestris",     depthLabel:"Medium (0.8–1.2m)",depthFrac:0.55, pattern:"spreading",    drought:"Moderate",   vigor:"Moderate",   bestSoil:"Loam, moderate fertility",     phylloxeraRisk:"low" },
+  "101-14 Mgt":   { parentage:"V. riparia × V. rupestris",     depthLabel:"Shallow-medium (0.5–1m)",depthFrac:0.42,pattern:"horizontalSpread",drought:"Low-moderate",vigor:"Low-moderate",bestSoil:"Fertile, moist, deep loam",  phylloxeraRisk:"low" },
+  "Riparia Gloire":{parentage:"V. riparia",                    depthLabel:"Shallow (0.3–0.8m)",depthFrac:0.28, pattern:"wideHorizontal",drought:"Low",       vigor:"Low",        bestSoil:"Deep, fertile, moist",        phylloxeraRisk:"low" },
+  "5BB":          { parentage:"V. berlandieri × V. riparia",   depthLabel:"Medium-deep (1–1.5m)",depthFrac:0.62,pattern:"moderateSpread",drought:"Moderate-high",vigor:"Moderate-high",bestSoil:"Calcareous, clay-loam",  phylloxeraRisk:"low" },
+  "SO4":          { parentage:"V. berlandieri × V. riparia",   depthLabel:"Medium (0.8–1.2m)",depthFrac:0.50, pattern:"moderate",     drought:"Moderate",   vigor:"Moderate",   bestSoil:"Loam, moderate fertility",     phylloxeraRisk:"moderate" },
+  "Rupestris du Lot":{parentage:"V. rupestris",                depthLabel:"Very deep (>2m)",  depthFrac:0.92, pattern:"deepVertical", drought:"Very high", vigor:"High",       bestSoil:"Dry, infertile, gravelly",     phylloxeraRisk:"low" },
+  "Own-rooted V. vinifera":{parentage:"V. vinifera",            depthLabel:"Medium (0.8–1.2m)",depthFrac:0.50, pattern:"moderateSpread",drought:"Moderate", vigor:"Moderate",   bestSoil:"Deep, fertile (phylloxera risk)",phylloxeraRisk:"high" }
+};
+
+const SOILS = {
+  sandy_loam: {
+    name:"Sandy Loam",
+    layers:[
+      { yFrac:0.10, depth:0.30, name:"Topsoil",        desc:"Sandy loam, 30cm. Coarse particles, low water-holding, rapid drainage. Roots penetrate easily.",        color:"#8B6943", texture:"dots" },
+      { yFrac:0.35, depth:0.70, name:"Subsoil",        desc:"Loamy sand, 70cm. Still coarse but slightly more nutrients. Good root exploration zone.",           color:"#7A5C38", texture:"fineDots" },
+      { yFrac:0.70, depth:2.00, name:"Deep Sand",       desc:"Pure sand to 2m+. Excellent drainage. Roots go deep but few nutrients. Requires fertigation.",      color:"#6B5030", texture:"none" }
+    ]
+  },
+  clay_loam: {
+    name:"Clay Loam",
+    layers:[
+      { yFrac:0.10, depth:0.30, name:"Topsoil",        desc:"Clay loam, 30cm. Moderate structure, good nutrient exchange. Foundation for early root growth.",      color:"#7A4A2A", texture:"crosshatch" },
+      { yFrac:0.35, depth:1.00, name:"Heavy Clay",      desc:"Dense clay subsoil, 70cm+. High water-holding but poor aeration. Roots struggle to penetrate.",      color:"#5C3520", texture:"crosshatchHeavy" },
+      { yFrac:0.70, depth:2.00, name:"Parent Rock",     desc:"Weathered bedrock. Very limited rooting. Water sits on top — drainage critical here.",               color:"#3D2010", texture:"rocky" }
+    ]
+  },
+  limestone: {
+    name:"Limestone",
+    layers:[
+      { yFrac:0.07, depth:0.20, name:"Loam Topsoil",    desc:"20cm loam over limestone. Good initial root establishment.",                                     color:"#8B7355", texture:"dots" },
+      { yFrac:0.27, depth:0.80, name:"Calcareous Subsoil",desc:"Alkaline, chalky subsoil. Roots follow fractures and pores. pH challenges for iron uptake.",     color:"#9B8565", texture:"stipple" },
+      { yFrac:0.70, depth:2.00, name:"Limestone Bedrock",desc:"Solid to fractured limestone. Root penetration stops unless fissures present.",                    color:"#7A6545", texture:"rocky" }
+    ]
+  },
+  gravelly: {
+    name:"Gravelly Alluvium",
+    layers:[
+      { yFrac:0.08, depth:0.25, name:"Loam Topsoil",    desc:"25cm loam. Organic-rich, good structure. Roots establish quickly here.",                           color:"#8B7355", texture:"dots" },
+      { yFrac:0.25, depth:0.75, name:"Gravel Layer",   desc:"50cm of rounded gravel and stones. Excellent drainage. Roots navigate between stones.",              color:"#6B5540", texture:"gravel" },
+      { yFrac:0.70, depth:2.00, name:"Deep Alluvium",   desc:"Ancient river deposit. Deep, fertile, well-drained. Ideal for deep rootstocks.",                   color:"#5A4530", texture:"none" }
+    ]
+  },
+  duplex: {
+    name:"Shallow Duplex",
+    layers:[
+      { yFrac:0.07, depth:0.20, name:"Sandy Topsoil",  desc:"20cm sand. Low nutrients, rapid drainage. Roots start well here.",                               color:"#9B8565", texture:"fineDots" },
+      { yFrac:0.17, depth:0.50, name:"Hardpan Clay",   desc:"Impermeable clay pan at 20–50cm. Roots hit a wall and spread horizontally. Major limitation.",    color:"#5C3520", texture:"crosshatchHeavy" },
+      { yFrac:0.50, depth:2.00, name:"Weathered Rock", desc:"Decomposing rock below hardpan. Very limited water storage. Roots mainly in top 50cm.",           color:"#4A3020", texture:"rocky" }
+    ]
+  }
+};
+
+const IRRIGATION = {
+  drip:      { label:"Drip",      desc:"Concentrated moisture at 30–40cm depth. Roots cluster near emitter.",               depthBias:-0.08, spreadBias:0.55 },
+  sprinkler: { label:"Sprinkler", desc:"Broad surface distribution. Roots spread across top 60cm.",                         depthBias:0.02,  spreadBias:0.75 },
+  dryland:   { label:"Dryland",  desc:"Deep moisture seeking. Roots drive deeper, less surface branching.",                depthBias:0.12,  spreadBias:0.40 }
+};
+
+const TIPS = {
+  "1103P":        "Thrives in deep gravelly soils. Avoid waterlogging — excellent drainage needed.",
+  "140Ru":        "High vigor needs firm nutrition management. Deep roots access distant water.",
+  "Schwarzmann":  "Reliable all-rounder. Moderate irrigation suits it well.",
+  "101-14 Mgt":   "Keep soil moist and fertile. Excellent for high-rainfall or irrigated vineyards.",
+  "Riparia Gloire":"Shallow roots need consistent surface moisture. Avoid dry conditions.",
+  "5BB":          "Tolerates calcareous clay. Watch for lime-induced chlorosis in high-pH soils.",
+  "SO4":          "Moderate grower, good general adaptability. Monitor for phylloxera in sandy soils.",
+  "Rupestris du Lot":"Extremely drought-adapted. Plant in low-fertility, rocky soils — avoids phylloxera.",
+  "Own-rooted V. vinifera":"Plant only where phylloxera is absent. Root vulnerability is significant."
+};
+
+const TIPS_SOIL = {
+  sandy_loam:"Fertigation is essential — nutrients leach quickly in sandy soils.",
+  clay_loam:"Controlled irrigation prevents waterlogging. Gypsum can improve clay structure.",
+  limestone:"Monitor iron chlorosis. Foliar iron sprays may be needed in spring.",
+  gravelly:"Low water-holding capacity — frequent light irrigations preferred.",
+  duplex:"Irrigation efficiency is critical. Consider rootstocks that tolerate hardpan."
+};
+
+const TIPS_IRRIG = {
+  drip:"Place emitters 30–40cm from the trunk. Roots concentrate in the wetting bulb.",
+  sprinkler:"Morning irrigation reduces disease pressure. Evening watering risks fungal issues.",
+  dryland:"Allow natural moisture cycles. Roots will self-regulate if allowed."
+};
+
+// ─────────────────────────────────────────────
+// CANVAS & LAYOUT
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('crossSection');
+const ctx    = canvas.getContext('2d');
+const tooltip = document.getElementById('tooltip');
+
+let W, H;
+let groundYFrac = 0.26;  // fraction of H where soil surface is
+let currentRootstock = "1103P";
+let currentSoil      = "sandy_loam";
+let currentIrrig     = "drip";
+let compareOn        = false;
+let prevSelections   = { rootstock:null, soil:null, irrig:null };
+let animProgress     = 0;   // 0→1 root grow animation
+let prevAnimProgress = 0;
+let animating        = false;
+let currentRoots     = [];
+let prevRoots        = [];
+let animStartTime    = null;
+const ANIM_DURATION  = 900; // ms
+
+// Interaction state
+let hoveredLayerIdx  = -1;
+let canvasRect       = null;
+
+function resize() {
+  const wrap = document.getElementById('canvas-wrap');
+  W = wrap.clientWidth;
+  H = Math.round(W * 1.6);
+  canvas.width  = W;
+  canvas.height = H;
+  canvasRect = canvas.getBoundingClientRect();
+  scheduleDraw();
+}
+
+// ─────────────────────────────────────────────
+// DRAWING HELPERS
+// ─────────────────────────────────────────────
+function groundY() { return H * groundYFrac; }
+function maxRootDepth() { return H - groundY() - 10; }
+function depthToY(depthFrac) { return groundY() + depthFrac * maxRootDepth(); }
+function yToDepth(y) { return (y - groundY()) / maxRootDepth(); }
+
+function lerpColor(c1, c2, t) {
+  const parse = c => [parseInt(c.slice(1,3),16), parseInt(c.slice(3,5),16), parseInt(c.slice(5,7),16)];
+  const [r1,g1,b1] = parse(c1), [r2,g2,b2] = parse(c2);
+  return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`;
+}
+
+function drawSoilTexture(x, y, w, h, color, texture, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = lerpColor(color, "#000000", 0.15);
+  ctx.lineWidth = 0.5;
+
+  const sz = 5;
+  if (texture === "crosshatch") {
+    for (let i = 0; i < w + h; i += sz * 2) {
+      ctx.beginPath(); ctx.moveTo(x + i, y); ctx.lineTo(x, y + i); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + i - h, y + h); ctx.lineTo(x + w, y + i - w + h); ctx.stroke();
+    }
+  } else if (texture === "crosshatchHeavy") {
+    ctx.strokeStyle = lerpColor(color, "#000000", 0.25);
+    for (let i = 0; i < w + h; i += sz * 1.5) {
+      ctx.beginPath(); ctx.moveTo(x + i, y); ctx.lineTo(x, y + i); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + i - h, y + h); ctx.lineTo(x + w, y + i - w + h); ctx.stroke();
+    }
+  } else if (texture === "dots") {
+    ctx.fillStyle = lerpColor(color, "#000000", 0.2);
+    for (let gy = y + 4; gy < y + h - 2; gy += sz * 1.8) {
+      for (let gx = x + 4; gx < x + w - 2; gx += sz * 2.2) {
+        ctx.beginPath(); ctx.arc(gx + (Math.sin(gy * 0.7 + gx * 0.3) * 1.5), gy, 1, 0, Math.PI*2); ctx.fill();
+      }
+    }
+  } else if (texture === "fineDots") {
+    ctx.fillStyle = lerpColor(color, "#000000", 0.12);
+    for (let gy = y + 3; gy < y + h - 2; gy += sz * 1.4) {
+      for (let gx = x + 3; gx < x + w - 2; gx += sz * 1.8) {
+        ctx.beginPath(); ctx.arc(gx, gy, 0.8, 0, Math.PI*2); ctx.fill();
+      }
+    }
+  } else if (texture === "stipple") {
+    for (let gy = y + 5; gy < y + h - 3; gy += sz * 2.2) {
+      for (let gx = x + 5; gx < x + w - 3; gx += sz * 2.8) {
+        const ox = Math.sin(gx * 0.5 + gy * 0.8) * 2;
+        const oy = Math.cos(gx * 0.3 + gy * 0.6) * 2;
+        ctx.beginPath(); ctx.arc(gx + ox, gy + oy, 1.5, 0, Math.PI*2);
+        ctx.strokeStyle = lerpColor(color, "#ffffff", 0.08); ctx.stroke();
+      }
+    }
+  } else if (texture === "gravel") {
+    for (let gy = y + 6; gy < y + h - 4; gy += sz * 3) {
+      for (let gx = x + 6; gx < x + w - 4; gx += sz * 4) {
+        const ox = Math.sin(gx * 0.4 + gy * 0.7) * 3;
+        const oy = Math.cos(gx * 0.6 + gy * 0.5) * 2;
+        const rx = 4 + Math.abs(Math.sin(gx * 0.3)) * 3;
+        const ry = 3 + Math.abs(Math.cos(gy * 0.4)) * 2;
+        ctx.beginPath(); ctx.ellipse(gx + ox, gy + oy, rx, ry, Math.sin(gx + gy) * 1.5, 0, Math.PI*2);
+        ctx.fillStyle = lerpColor(color, "#000000", 0.2); ctx.fill();
+        ctx.strokeStyle = lerpColor(color, "#ffffff", 0.06); ctx.lineWidth = 0.5; ctx.stroke();
+      }
+    }
+  } else if (texture === "rocky") {
+    ctx.strokeStyle = lerpColor(color, "#000000", 0.3);
+    ctx.lineWidth = 1;
+    for (let gy = y + 8; gy < y + h - 5; gy += sz * 4) {
+      for (let gx = x + 8; gx < x + w - 5; gx += sz * 5) {
+        const ox = Math.sin(gx * 0.5) * 4;
+        const oy = Math.cos(gy * 0.6) * 3;
+        ctx.beginPath();
+        ctx.moveTo(gx + ox, gy + oy - 4);
+        ctx.lineTo(gx + ox + 5, gy + oy + 2);
+        ctx.lineTo(gx + ox - 3, gy + oy + 5);
+        ctx.closePath(); ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+
+function drawSoilLayers() {
+  const soil = SOILS[currentSoil];
+  const leftX = 52, rightX = W - 10;
+  const labelW = 50;
+
+  let prevYFrac = 0;
+  soil.layers.forEach((layer, i) => {
+    const topY    = groundY() + prevYFrac * maxRootDepth();
+    const botY    = groundY() + layer.yFrac * maxRootDepth();
+    const layerH  = botY - topY;
+    const isHover = (hoveredLayerIdx === i);
+
+    drawSoilTexture(leftX + labelW, topY, rightX - leftX - labelW - 10, layerH, layer.color, layer.texture, 1);
+
+    // Hover highlight
+    if (isHover) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(212,149,74,0.6)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4,3]);
+      ctx.strokeRect(leftX + labelW, topY, rightX - leftX - labelW - 10, layerH);
+      ctx.restore();
+    }
+
+    // Layer label on left
+    ctx.fillStyle = "rgba(20,12,4,0.7)";
+    ctx.fillRect(leftX, topY, labelW, layerH);
+    ctx.strokeStyle = "rgba(196,129,58,0.2)";
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(leftX, topY, labelW, layerH);
+
+    ctx.save();
+    ctx.translate(leftX + labelW/2, (topY + botY) / 2);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign = "center";
+    ctx.font = `bold ${Math.min(10, layerH*0.18)}px monospace`;
+    ctx.fillStyle = isHover ? "#d4954a" : "#c4a070";
+    ctx.letterSpacing = "0.05em";
+    ctx.fillText(layer.name.toUpperCase(), 0, 4);
+    ctx.restore();
+
+    prevYFrac = layer.yFrac;
+  });
+
+  // Ground line
+  const gy = groundY();
+  ctx.strokeStyle = "#c4813a";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(leftX, gy); ctx.lineTo(rightX, gy); ctx.stroke();
+
+  // Grass tufts
+  ctx.strokeStyle = "#6b7c3f";
+  ctx.lineWidth = 1.2;
+  for (let gx = leftX + 5; gx < rightX - 5; gx += 8) {
+    const h = 4 + Math.abs(Math.sin(gx * 0.3)) * 3;
+    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.quadraticCurveTo(gx + 1, gy - h/2, gx - 1, gy - h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gx + 2, gy); ctx.quadraticCurveTo(gx + 3, gy - h/2, gx + 4, gy - h*0.7); ctx.stroke();
+  }
+
+  // Depth scale on right
+  const scaleX = rightX + 2;
+  ctx.fillStyle = "rgba(20,12,4,0.6)";
+  ctx.fillRect(scaleX, groundY(), 10, maxRootDepth());
+  for (let m = 0; m <= 3; m++) {
+    const sy = groundY() + (m / 3) * maxRootDepth();
+    ctx.strokeStyle = "rgba(196,129,58,0.4)";
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(scaleX, sy); ctx.lineTo(scaleX + 10, sy); ctx.stroke();
+    ctx.fillStyle = "#b8a888";
+    ctx.font = "9px monospace";
+    ctx.textAlign = "left";
+    ctx.fillText(`${m}m`, scaleX + 12, sy + 3);
+  }
+
+  return { leftX, rightX, labelW };
+}
+
+function drawVine() {
+  const cx = W / 2;
+  const gy = groundY();
+  const trunkH = gy * 0.45;
+  const trunkW = 8;
+
+  // Root crown (below ground)
+  ctx.save();
+  ctx.fillStyle = "#5a3a1a";
+  ctx.beginPath();
+  ctx.ellipse(cx, gy + 6, 14, 8, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+
+  // Trunk
+  const grad = ctx.createLinearGradient(cx - trunkW/2, 0, cx + trunkW/2, 0);
+  grad.addColorStop(0, "#6b4423");
+  grad.addColorStop(0.4, "#8B5E3C");
+  grad.addColorStop(1, "#4a2a10");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(cx - trunkW/2, gy);
+  ctx.quadraticCurveTo(cx - trunkW/2 - 1, gy - trunkH * 0.5, cx - 3, gy - trunkH);
+  ctx.lineTo(cx + 3, gy - trunkH);
+  ctx.quadraticCurveTo(cx + trunkW/2 + 1, gy - trunkH * 0.5, cx + trunkW/2, gy);
+  ctx.closePath();
+  ctx.fill();
+
+  // Trunk texture
+  ctx.strokeStyle = "rgba(0,0,0,0.15)";
+  ctx.lineWidth = 0.5;
+  for (let ty = gy - 5; ty > gy - trunkH; ty -= 8) {
+    ctx.beginPath(); ctx.moveTo(cx - trunkW/2 + 1, ty); ctx.quadraticCurveTo(cx, ty - 2, cx + trunkW/2 - 1, ty); ctx.stroke();
+  }
+
+  // Cordons (horizontal arms)
+  const cordonY = gy - trunkH + 4;
+  ctx.strokeStyle = "#7a5030";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(cx - 3, cordonY); ctx.quadraticCurveTo(cx - 40, cordonY - 2, cx - 70, cordonY + 5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + 3, cordonY); ctx.quadraticCurveTo(cx + 40, cordonY - 2, cx + 70, cordonY + 5); ctx.stroke();
+
+  // Canopy
+  drawCanopy(cx, gy - trunkH);
+
+  // Label
+  ctx.fillStyle = "rgba(184,168,136,0.5)";
+  ctx.font = "italic 9px Georgia";
+  ctx.textAlign = "center";
+  ctx.fillText("Vitis vinifera scion", cx, 12);
+}
+
+function drawCanopy(cx, topY) {
+  ctx.save();
+  // Main foliage mass
+  const grad = ctx.createRadialGradient(cx, topY + 20, 5, cx, topY + 20, 60);
+  grad.addColorStop(0, "#4a6a2a");
+  grad.addColorStop(0.5, "#3a5520");
+  grad.addColorStop(1, "rgba(30,40,15,0)");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(cx, topY + 25, 72, 45, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // Leaf clusters
+  const leafClusters = [
+    { x:cx-55, y:topY+18, r:22 }, { x:cx-30, y:topY+5, r:26 },
+    { x:cx,    y:topY+2, r:28 },  { x:cx+30, y:topY+5, r:26 },
+    { x:cx+55, y:topY+18, r:22 }, { x:cx-40, y:topY+32, r:18 },
+    { x:cx+40, y:topY+32, r:18 }, { x:cx-20, y:topY+30, r:20 },
+    { x:cx+20, y:topY+30, r:20 }
+  ];
+  leafClusters.forEach(c => {
+    const lg = ctx.createRadialGradient(c.x - c.r*0.2, c.y - c.r*0.2, 2, c.x, c.y, c.r);
+    lg.addColorStop(0, "#6b8c3a");
+    lg.addColorStop(0.6, "#4a6a28");
+    lg.addColorStop(1, "rgba(35,50,18,0.3)");
+    ctx.fillStyle = lg;
+    ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Grape clusters (subtle)
+  const grapeColor = "rgba(120,60,100,0.6)";
+  const grapeClusters = [
+    {x:cx-22, y:topY+22}, {x:cx+22, y:topY+22}, {x:cx-38, y:topY+35}
+  ];
+  grapeClusters.forEach(gc => {
+    for (let i = 0; i < 6; i++) {
+      const angle = (i/6) * Math.PI * 2;
+      const gx = gc.x + Math.cos(angle) * 5;
+      const gy2 = gc.y + Math.sin(angle) * 7 + 2;
+      ctx.fillStyle = grapeColor;
+      ctx.beginPath(); ctx.ellipse(gx, gy2, 3, 4, angle*0.3, 0, Math.PI*2); ctx.fill();
+    }
+  });
+  ctx.restore();
+}
+
+// ─────────────────────────────────────────────
+// ROOT GENERATION
+// ─────────────────────────────────────────────
+function generateRoots(rsKey, soilKey, irrigKey) {
+  const rs    = ROOTSTOCKS[rsKey];
+  const soil  = SOILS[soilKey];
+  const irr   = IRRIGATION[irrigKey];
+  const cx    = W / 2;
+  const gy    = groundY();
+  const maxD  = maxRootDepth();
+
+  // Effective depth accounting for irrigation bias
+  let effDepthFrac = rs.depthFrac + irr.depthBias;
+  effDepthFrac = Math.max(0.15, Math.min(0.97, effDepthFrac));
+
+  // Effective spread
+  let effSpread = 1.0;
+  if (rs.pattern === "deepVertical")     effSpread = 0.35 + irr.spreadBias * 0.2;
+  else if (rs.pattern === "wideHorizontal") effSpread = 0.85 + irr.spreadBias * 0.1;
+  else if (rs.pattern === "horizontalSpread") effSpread = 0.70 + irr.spreadBias * 0.15;
+  else if (rs.pattern === "spreading")   effSpread = 0.55 + irr.spreadBias * 0.2;
+  else                                    effSpread = 0.50 + irr.spreadBias * 0.2;
+
+  // Soil hardpan check
+  const hardpanLimit = soilKey === "duplex" ? 0.20 : 1.0;
+  const effectiveMaxFrac = Math.min(effDepthFrac, hardpanLimit);
+
+  // Determine max depth in pixels
+  const maxDepthPx = effectiveMaxFrac * maxD;
+
+  // Limit from irrigation drip concentration
+  const dripConcentrate = irrigKey === "drip" ? 0.25 : (irrigKey === "sprinkler" ? 0.15 : 0.0);
+
+  const roots = [];
+  const numMain = Math.round(4 + effSpread * 4);
+  const pattern = rs.pattern;
+
+  // ── Main structural roots ──
+  for (let i = 0; i < numMain; i++) {
+    const t       = (i + 0.5) / numMain;
+    const side    = (i < numMain / 2) ? -1 : 1;
+    const absT    = Math.abs(t - 0.5) * 2;
+
+    // Direction and spread
+    let dx, dy;
+    if (pattern === "deepVertical") {
+      dx = side * (8 + absT * 20 * effSpread);
+      dy = maxDepthPx * (0.7 + Math.random() * 0.3);
+    } else if (pattern === "wideHorizontal") {
+      dx = side * (30 + absT * 80 * effSpread);
+      dy = maxDepthPx * (0.15 + Math.random() * 0.15);
+    } else if (pattern === "horizontalSpread") {
+      dx = side * (20 + absT * 55 * effSpread);
+      dy = maxDepthPx * (0.25 + Math.random() * 0.25);
+    } else {
+      dx = side * (15 + absT * 45 * effSpread);
+      dy = maxDepthPx * (0.4 + Math.random() * 0.4);
+    }
+
+    // Irrigation bias: drip concentrates near top
+    if (irrigKey === "drip" && dy > maxDepthPx * 0.5) {
+      dy = dy * 0.6 + maxDepthPx * 0.1;
+    }
+
+    // Drip concentration: some roots stay shallow
+    if (dripConcentrate > 0 && Math.random() < dripConcentrate) {
+      dy = dy * 0.4 + 15;
+    }
+
+    // CP (control point) for bezier
+    const cp1x = cx + dx * 0.3 + (Math.random() - 0.5) * 15;
+    const cp1y = gy + dy * 0.25 + (Math.random() - 0.5) * 10;
+    const cp2x = cx + dx * 0.7 + (Math.random() - 0.5) * 15;
+    const cp2y = gy + dy * 0.6 + (Math.random() - 0.5) * 10;
+    const ex   = cx + dx;
+    const ey   = gy + dy;
+
+    const depth_frac = (dy) / maxD;
+    roots.push({
+      type:"structural",
+      depthFrac: depth_frac,
+      thickness: 2.5 + Math.random() * 1.5,
+      pts: [{x:cx,y:gy},{x:cp1x,y:cp1y},{x:cp2x,y:cp2y},{x:ex,y:ey}]
+    });
+
+    // ── Secondary branches ──
+    const numSec = Math.floor(2 + effSpread * 3 + Math.random() * 2);
+    for (let j = 0; j < numSec; j++) {
+      const t2  = 0.3 + Math.random() * 0.6;
+      const bx  = cubicBez(cx, cp1x, cp2x, ex, t2);
+      const by  = cubicBez(cx, cp1y, cp2y, ey, t2);
+      const sdx = (Math.random() - 0.5) * 40 * effSpread;
+      const sdy = 15 + Math.random() * 35;
+      const scp1x = bx + sdx * 0.4;
+      const scp1y = by + sdy * 0.3;
+      const scp2x = bx + sdx * 0.7;
+      const scp2y = by + sdy * 0.7;
+      const sex   = bx + sdx;
+      const sey   = Math.min(by + sdy, gy + maxD * 0.95);
+
+      roots.push({
+        type:"feeder",
+        depthFrac: (sey - gy) / maxD,
+        thickness: 1.0 + Math.random() * 0.8,
+        pts:[{x:bx,y:by},{x:scp1x,y:scp1y},{x:scp2x,y:scp2y},{x:sex,y:sey}]
+      });
+
+      // ── Tertiary (fine roots) ──
+      const numTert = Math.floor(1 + Math.random() * 3);
+      for (let k = 0; k < numTert; k++) {
+        const t3  = 0.4 + Math.random() * 0.5;
+        const tx  = cubicBez(bx, scp1x, scp2x, sex, t3);
+        const ty2 = cubicBez(by, scp1y, scp2y, sey, t3);
+        const tdx = (Math.random() - 0.5) * 20;
+        const tdy = 8 + Math.random() * 20;
+        const tcp1x = tx + tdx * 0.5;
+        const tcp1y = ty2 + tdy * 0.4;
+        const tcp2x = tx + tdx;
+        const tcp2y = ty2 + tdy * 0.8;
+        const tex   = tx + tdx + (Math.random() - 0.5) * 8;
+        const tey   = Math.min(ty2 + tdy, gy + maxD * 0.97);
+
+        roots.push({
+          type:"feeder",
+          depthFrac:(tey - gy) / maxD,
+          thickness: 0.5 + Math.random() * 0.5,
+          pts:[{x:tx,y:ty2},{x:tcp1x,y:tcp1y},{x:tcp2x,y:tcp2y},{x:tex,y:tey}]
+        });
+      }
+    }
+  }
+
+  // Add concentrated feeder roots for drip
+  if (irrigKey === "drip") {
+    for (let i = 0; i < 8; i++) {
+      const bx  = cx + (Math.random() - 0.5) * 40;
+      const by  = gy + 5 + Math.random() * 20;
+      const tdx = (Math.random() - 0.5) * 30;
+      const tdy = 15 + Math.random() * 25;
+      roots.push({
+        type:"feeder",
+        depthFrac:tdy / maxD,
+        thickness: 0.5 + Math.random() * 0.5,
+        pts:[{x:bx,y:by},{x:bx+tdx*0.5,y:by+tdy*0.4},{x:bx+tdx,y:by+tdy}]
+      });
+    }
+  }
+
+  return roots;
+}
+
+function cubicBez(p0, p1, p2, p3, t) {
+  const mt = 1 - t;
+  return mt*mt*mt*p0 + 3*mt*mt*t*p1 + 3*mt*t*t*p2 + t*t*t*p3;
+}
+
+function drawRoots(roots, progress, ghost) {
+  roots.forEach(root => {
+    if (root.pts.length < 2) return;
+    const [p0, p1, p2, p3] = root.pts;
+
+    // Use progress to drive partial root drawing
+    const pts = getSubCurve(p0, p1, p2, p3, Math.min(progress, 1));
+    if (pts.length < 2) return;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = (pts[i].x + pts[i+1].x) / 2;
+      const my = (pts[i].y + pts[i+1].y) / 2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+    }
+    ctx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y);
+
+    if (ghost) {
+      ctx.setLineDash([4,4]);
+      ctx.strokeStyle = "rgba(180,140,90,0.3)";
+      ctx.lineWidth = root.thickness * 0.8;
+    } else if (root.type === "structural") {
+      ctx.setLineDash([]);
+      const alpha = Math.min(1, progress * 2);
+      ctx.strokeStyle = `rgba(139,94,60,${alpha})`;
+      ctx.lineWidth = root.thickness * (0.8 + progress * 0.4);
+    } else {
+      ctx.setLineDash([]);
+      const alpha = Math.min(0.75, progress * 1.8);
+      ctx.strokeStyle = `rgba(196,154,108,${alpha})`;
+      ctx.lineWidth = root.thickness * (0.5 + progress * 0.5);
+    }
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function getSubCurve(p0, p1, p2, p3, t) {
+  // Sample bezier at t using de Casteljau subdivision
+  const steps = 60;
+  const pts = [];
+  for (let i = 0; i <= steps * t; i++) {
+    const s = i / steps;
+    pts.push({
+      x: cubicBez(p0.x, p1.x, p2.x, p3.x, s),
+      y: cubicBez(p0.y, p1.y, p2.y, p3.y, s)
+    });
+  }
+  return pts;
+}
+
+// ─────────────────────────────────────────────
+// MAIN DRAW LOOP
+// ─────────────────────────────────────────────
+function scheduleDraw() {
+  requestAnimationFrame(drawFrame);
+}
+
+function drawFrame(ts) {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, "#1a1208");
+  bgGrad.addColorStop(groundYFrac, "#231810");
+  bgGrad.addColorStop(groundYFrac + 0.01, "#1e1208");
+  bgGrad.addColorStop(1, "#0f0a04");
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Sky/atmosphere above ground
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, groundY());
+  skyGrad.addColorStop(0, "#1a1408");
+  skyGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, groundY());
+
+  drawSoilLayers();
+  drawVine();
+
+  // Animate root progress
+  if (animating) {
+    if (!animStartTime) animStartTime = ts;
+    const elapsed = ts - animStartTime;
+    animProgress = Math.min(1, elapsed / ANIM_DURATION);
+    if (animProgress >= 1) {
+      animProgress = 1;
+      animating = false;
+      animStartTime = null;
+    }
+  }
+
+  // Draw ghost (previous) roots
+  if (compareOn && prevRoots.length > 0 && prevAnimProgress > 0) {
+    drawRoots(prevRoots, prevAnimProgress, true);
+  }
+
+  // Draw current roots
+  if (currentRoots.length > 0) {
+    drawRoots(currentRoots, animProgress, false);
+  }
+
+  // Continue loop while animating
+  if (animating) requestAnimationFrame(drawFrame);
+}
+
+// ─────────────────────────────────────────────
+// INFO PANEL
+// ─────────────────────────────────────────────
+function renderInfoPanel() {
+  const rs   = ROOTSTOCKS[currentRootstock];
+  const soil = SOILS[currentSoil];
+  const irr  = IRRIGATION[currentIrrig];
+  const panel = document.getElementById('infoPanel');
+
+  const droughtMap = { "Very high":5, "High":4, "Moderate-high":3.5, "Moderate":3, "Low-moderate":2, "Low":1 };
+  const vigorMap    = { "Very high":5, "High":4, "Moderate-high":3.5, "Moderate":3, "Low-moderate":2, "Low":1 };
+  const dVal = droughtMap[rs.drought] || 3;
+  const vVal = vigorMap[rs.vigor] || 3;
+
+  function ratingDots(val) {
+    let html = '<div class="rating-dots">';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= Math.floor(val)) html += '<div class="rating-dot filled"></div>';
+      else if (i - 0.5 <= val)  html += '<div class="rating-dot half"></div>';
+      else                       html += '<div class="rating-dot"></div>';
+    }
+    html += `</div>`;
+    return html;
+  }
+
+  // Calculate water access depth
+  let effDepth = rs.depthFrac;
+  if (currentIrrig === "dryland") effDepth = Math.min(0.97, effDepth + 0.12);
+  if (currentIrrig === "drip")    effDepth = Math.max(0.15, effDepth - 0.08);
+  const waterDepthM = (effDepth * 3).toFixed(1);
+
+  // Nutrient uptake zone
+  const nutrientTop = 0.15;
+  const nutrientBot = Math.min(0.6, effDepth * 0.55);
+  const nutrientStr = `${(nutrientTop*3).toFixed(1)}–${(nutrientBot*3).toFixed(1)}m`;
+
+  const phyllClass = rs.phylloxeraRisk === "high" ? "high" : rs.phylloxeraRisk === "moderate" ? "moderate" : "low";
+
+  panel.innerHTML = `
+    <div class="info-card">
+      <h3>Drought Tolerance</h3>
+      <div class="value"><span class="icon">☀</span> ${rs.drought}</div>
+      ${ratingDots(dVal)}
+    </div>
+    <div class="info-card">
+      <h3>Vigor</h3>
+      <div class="value"><span class="icon">🌿</span> ${rs.vigor}</div>
+      ${ratingDots(vVal)}
+    </div>
+    <div class="info-card">
+      <h3>Water Access Depth</h3>
+      <div class="value"><span class="icon">💧</span> ~${waterDepthM}m</div>
+    </div>
+    <div class="info-card">
+      <h3>Nutrient Uptake Zone</h3>
+      <div class="value"><span class="icon">🌱</span> ${nutrientStr}</div>
+    </div>
+    <div class="info-card">
+      <h3>Parentage</h3>
+      <div class="value" style="font-size:12px">${rs.parentage}</div>
+    </div>
+    <div class="info-card">
+      <h3>Phylloxera Risk</h3>
+      <div class="value"><span class="risk-tag ${phyllClass}">${rs.phylloxeraRisk.toUpperCase()}</span></div>
+    </div>
+    <div class="info-card full">
+      <h3>Best Soil for This Rootstock</h3>
+      <div class="value" style="font-size:12px"><span class="icon">⛰</span> ${rs.bestSoil}</div>
+    </div>
+  `;
+
+  // Tip card
+  const tipKey = `${currentRootstock}`;
+  const soilTip = TIPS_SOIL[currentSoil] || "";
+  const irrigTip = TIPS_IRRIG[currentIrrig] || "";
+  const mainTip  = TIPS[currentRootstock] || "";
+  const combined = [mainTip, soilTip, irrigTip].filter(Boolean).join(" ");
+  const tipCard = document.getElementById('tipCard');
+  if (combined) {
+    tipCard.style.display = 'block';
+    tipCard.innerHTML = `<strong>Management tip:</strong> ${combined}`;
+  } else {
+    tipCard.style.display = 'none';
+  }
+}
+
+// ─────────────────────────────────────────────
+// INTERACTION
+// ─────────────────────────────────────────────
+function handleCanvasInteraction(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const mx = clientX - rect.left;
+  const my = clientY - rect.top;
+
+  // Check if below ground
+  if (my < groundY() - 2) {
+    hideTooltip();
+    hoveredLayerIdx = -1;
+    return;
+  }
+
+  // Which soil layer?
+  const soil = SOILS[currentSoil];
+  let prevYFrac = 0;
+  hoveredLayerIdx = -1;
+  let foundLayer = null;
+  soil.layers.forEach((layer, i) => {
+    const topY = groundY() + prevYFrac * maxRootDepth();
+    const botY = groundY() + layer.yFrac * maxRootDepth();
+    if (my >= topY && my <= botY) {
+      hoveredLayerIdx = i;
+      foundLayer = layer;
+    }
+    prevYFrac = layer.yFrac;
+  });
+
+  if (foundLayer) {
+    showTooltip(mx, my, foundLayer.name, foundLayer.desc, rect);
+  } else {
+    hideTooltip();
+  }
+}
+
+function showTooltip(mx, my, title, text, rect) {
+  const tip = document.getElementById('tooltip');
+  document.getElementById('tooltipTitle').textContent = title;
+  document.getElementById('tooltipText').textContent = text;
+  let left = mx + 12;
+  let top  = my - 20;
+  if (left + 220 > W) left = mx - 230;
+  if (top < 5) top = my + 15;
+  tip.style.left = left + 'px';
+  tip.style.top  = top  + 'px';
+  tip.classList.add('visible');
+}
+
+function hideTooltip() {
+  tooltip.classList.remove('visible');
+}
+
+// ─────────────────────────────────────────────
+// SELECTION CHANGE
+// ─────────────────────────────────────────────
+function onSelectionChange(newRS, newSoil, newIrrig, isCompareToggle) {
+  const changed = (newRS !== currentRootstock) || (newSoil !== currentSoil) || (newIrrig !== currentIrrig);
+
+  if (compareOn && changed && !isCompareToggle) {
+    // Save previous for ghost display
+    prevSelections = { rootstock: currentRootstock, soil: currentSoil, irrig: currentIrrig };
+    prevRoots = [...currentRoots];
+    prevAnimProgress = 1; // Keep prev fully drawn
+  } else if (!compareOn) {
+    prevRoots = [];
+    prevSelections = { rootstock:null, soil:null, irrig:null };
+    prevAnimProgress = 0;
+  }
+
+  currentRootstock = newRS;
+  currentSoil      = newSoil;
+  currentIrrig     = newIrrig;
+
+  // Start root animation
+  if (changed || isCompareToggle) {
+    currentRoots    = generateRoots(currentRootstock, currentSoil, currentIrrig);
+    animProgress    = 0;
+    prevAnimProgress= compareOn ? 1 : 0;
+    animating       = true;
+    animStartTime   = null;
+    scheduleDraw();
+  }
+
+  renderInfoPanel();
+}
+
+// ─────────────────────────────────────────────
+// EVENT LISTENERS
+// ─────────────────────────────────────────────
+document.getElementById('rootstockSel').addEventListener('change', function() {
+  onSelectionChange(this.value, currentSoil, currentIrrig, false);
+});
+document.getElementById('soilSel').addEventListener('change', function() {
+  onSelectionChange(currentRootstock, this.value, currentIrrig, false);
+});
+document.getElementById('irrigSel').addEventListener('change', function() {
+  onSelectionChange(currentRootstock, currentSoil, this.value, false);
+});
+document.getElementById('compareToggle').addEventListener('change', function() {
+  compareOn = this.checked;
+  if (!compareOn) {
+    prevRoots = [];
+    prevAnimProgress = 0;
+  }
+  scheduleDraw();
+});
+
+canvas.addEventListener('mousemove', handleCanvasInteraction);
+canvas.addEventListener('touchmove', e => { e.preventDefault(); handleCanvasInteraction(e); }, { passive:false });
+canvas.addEventListener('mouseleave', hideTooltip);
+canvas.addEventListener('touchend', hideTooltip);
+
+window.addEventListener('resize', resize);
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+resize();
+currentRoots = generateRoots(currentRootstock, currentSoil, currentIrrig);
+renderInfoPanel();
+// Draw first frame immediately (no animation)
+requestAnimationFrame(drawFrame);
+</script>
+</body>
+</html>

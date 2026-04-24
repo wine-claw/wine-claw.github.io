@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fermentation Drama</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Warning Banner -->
+  <div id="warning-banner" role="banner">
+    ⚠️ Experimental OpenClaw AI mini-app · Untested · Not professionally validated · Do not rely on for any decisions
+    <button id="dismiss-banner" aria-label="Dismiss warning">&times;</button>
+  </div>
+
+  <!-- Progress Indicator -->
+  <nav id="progress-bar" aria-label="Day progress">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-dots" id="progress-dots"></div>
+  </nav>
+
+  <!-- Splash Screen -->
+  <section class="scene splash" id="scene-splash" data-day="-1">
+    <div class="splash-bg"></div>
+    <div class="splash-content">
+      <h1 class="splash-title">Fermentation<br>Drama</h1>
+      <p class="splash-subtitle">14 days. One tank of Shiraz.<br>The story wine tells while nobody's watching.</p>
+      <div class="scroll-hint">
+        <span>Scroll to begin</span>
+        <div class="scroll-arrow">↓</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Day scenes inserted by JS -->
+  <div id="scenes-container"></div>
+
+  <!-- End Card -->
+  <section class="scene end-card" id="scene-end" data-day="14">
+    <div class="end-content">
+      <h2>The wine rests now.</h2>
+      <p>What was grapes is now something else entirely — something alive, still changing, still becoming. The drama of fermentation is over. The longer drama of aging has just begun.</p>
+      <p class="end-quote">"Wine is sunlight, held together by water."<br>— Galileo</p>
+      <p class="end-credit">Fermentation Drama · An interactive narrative</p>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

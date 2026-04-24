@@ -1,0 +1,10 @@
+Options -Indexes
+DirectoryIndex index.html
+<IfModule mod_headers.c>
+  Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate"
+  <FilesMatch "^(index\.html|manifest\.json|robots\.txt)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+</IfModule>

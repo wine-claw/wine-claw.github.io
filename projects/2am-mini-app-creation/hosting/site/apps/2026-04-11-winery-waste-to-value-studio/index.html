@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winery Waste-to-Value Studio</title>
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Experimental Warning Banner -->
+<div class="experimental-banner">
+  <span class="banner-icon">⚠️</span>
+  <span>These are <strong>experimental OpenClaw AI mini-apps</strong> — untested, not professionally validated. Do not rely on them for operational or business decisions.</span>
+</div>
+
+<div class="app-container">
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-illustration" id="heroIllustration" aria-hidden="true"></div>
+    <div class="hero-text">
+      <p class="hero-eyebrow">OpenClaw Mini-App · Experimental</p>
+      <h1>Winery Waste-to-Value Studio</h1>
+      <p class="hero-sub">Explore what your winery's by-products could become. Select your streams, set your context — get ranked pathways with honest trade-offs.</p>
+    </div>
+  </header>
+
+  <!-- Presets Bar -->
+  <section class="presets-section">
+    <p class="section-label">Quick start</p>
+    <div class="presets-row" id="presetsRow">
+      <button class="preset-btn" data-preset="small-estate">Small Estate</button>
+      <button class="preset-btn" data-preset="mid-range">Mid-Range Producer</button>
+      <button class="preset-btn" data-preset="large-winery">Large Winery</button>
+      <button class="preset-btn" data-preset="sustainability-lead">Sustainability Lead</button>
+    </div>
+  </section>
+
+  <!-- Waste Streams -->
+  <section class="streams-section">
+    <p class="section-label">1 · Choose your by-product streams</p>
+    <div class="streams-grid" id="streamsGrid">
+      <button class="stream-card" data-stream="marc">
+        <span class="stream-icon">🍇</span>
+        <span class="stream-name">Grape Marc / Pomace</span>
+        <span class="stream-desc">Skins, seeds, stems after pressing</span>
+      </button>
+      <button class="stream-card" data-stream="lees">
+        <span class="stream-icon">🍷</span>
+        <span class="stream-name">Lees</span>
+        <span class="stream-desc">Sediment from barrel & tank</span>
+      </button>
+      <button class="stream-card" data-stream="wastewater">
+        <span class="stream-icon">💧</span>
+        <span class="stream-name">Wastewater</span>
+        <span class="stream-desc">Washing, process & rinse water</span>
+      </button>
+      <button class="stream-card" data-stream="prunings">
+        <span class="stream-icon">🌿</span>
+        <span class="stream-name">Vine Prunings / Stems</span>
+        <span class="stream-desc">Cane & cordon cuttings</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Preferences -->
+  <section class="prefs-section">
+    <p class="section-label">2 · Set your context</p>
+    <div class="prefs-grid">
+
+      <div class="pref-block">
+        <label class="pref-label">Scale of operation</label>
+        <div class="pref-options" data-pref="scale">
+          <button class="pref-btn" data-val="small">&lt;500 t/yr</button>
+          <button class="pref-btn active" data-val="medium">500–3000 t/yr</button>
+          <button class="pref-btn" data-val="large">&gt;3000 t/yr</button>
+        </div>
+      </div>
+
+      <div class="pref-block">
+        <label class="pref-label">CAPEX appetite</label>
+        <div class="pref-options" data-pref="capex">
+          <button class="pref-btn" data-val="low">Minimal</button>
+          <button class="pref-btn active" data-val="medium">Moderate</button>
+          <button class="pref-btn" data-val="high">Invest for scale</button>
+        </div>
+      </div>
+
+      <div class="pref-block">
+        <label class="pref-label">Complexity tolerance</label>
+        <div class="pref-options" data-pref="complexity">
+          <button class="pref-btn" data-val="low">Keep it simple</button>
+          <button class="pref-btn active" data-val="medium">Balanced</button>
+          <button class="pref-btn" data-val="high">Open to complexity</button>
+        </div>
+      </div>
+
+      <div class="pref-block">
+        <label class="pref-label">Primary value goal</label>
+        <div class="pref-options" data-pref="goal">
+          <button class="pref-btn" data-val="revenue">Revenue</button>
+          <button class="pref-btn active" data-val="sustainability">Sustainability</button>
+          <button class="pref-btn" data-val="compliance">Compliance</button>
+          <button class="pref-btn" data-val="brand">Brand / Story</button>
+        </div>
+      </div>
+
+      <div class="pref-block">
+        <label class="pref-label">Infrastructure readiness</label>
+        <div class="pref-options" data-pref="infrastructure">
+          <button class="pref-btn" data-val="basic">Basic</button>
+          <button class="pref-btn active" data-val="moderate">Moderate</button>
+          <button class="pref-btn" data-val="advanced">Advanced</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Circular Flow Visualization -->
+  <section class="flow-section">
+    <p class="section-label">3 · Your value flow</p>
+    <div class="flow-canvas-wrap">
+      <svg id="flowSvg" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- Will be populated by JS -->
+        <text x="180" y="110" text-anchor="middle" fill="#9b8a7a" font-family="Inter" font-size="11">Select streams to visualise your flow</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="results-section" id="resultsSection">
+    <p class="section-label">4 · Ranked pathways</p>
+    <div id="resultsGrid">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+</div><!-- /app-container -->
+
+<footer class="app-footer">
+  <p>Winery Waste-to-Value Studio · OpenClaw AI · Experimental · Not for professional advice</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

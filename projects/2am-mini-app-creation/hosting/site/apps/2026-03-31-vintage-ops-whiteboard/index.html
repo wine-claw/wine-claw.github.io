@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Vintage Ops Whiteboard</title>
+<style>
+:root {
+  --immediate-bg: #fff0f0;
+  --immediate-border: #e53935;
+  --shift-bg: #fff8e1;
+  --shift-border: #fb8c00;
+  --watch-bg: #e3f2fd;
+  --watch-border: #1e88e5;
+  --parked-bg: #f5f5f5;
+  --parked-border: #9e9e9e;
+  --immediate-h: #b71c1c;
+  --shift-h: #e65100;
+  --watch-h: #0d47a1;
+  --parked-h: #424242;
+  --accent: #6d4c41;
+  --bg: #faf8f5;
+  --surface: #ffffff;
+  --text: #212121;
+  --text2: #616161;
+  --border: #d7ccc8;
+  --danger: #c62828;
+  --success: #2e7d32;
+  --radius: 10px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 80px;
+  overflow-x: hidden;
+}
+
+/* ─── Banner ─── */
+.banner {
+  background: #fff3e0;
+  border-bottom: 2px solid #ffcc80;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #bf360c;
+  text-align: center;
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.banner strong { display: block; font-size: 13px; }
+
+/* ─── Header ─── */
+header {
+  background: var(--accent);
+  color: white;
+  padding: 14px 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+header h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.02em; }
+.header-actions { display: flex; gap: 8px; }
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  line-height: 1.2;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary { background: white; color: var(--accent); }
+.btn-secondary { background: rgba(255,255,255,0.2); color: white; }
+.btn-danger { background: var(--danger); color: white; padding: 8px 12px; font-size: 12px; }
+.btn-ghost { background: rgba(255,255,255,0.15); color: white; }
+
+/* ─── Lanes ─── */
+.lanes {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 12px 10px;
+  gap: 10px;
+}
+
+.lane {
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+}
+.lane-immediate { background: var(--immediate-bg); border-color: var(--immediate-border); }
+.lane-shift { background: var(--shift-bg); border-color: var(--shift-border); }
+.lane-watch { background: var(--watch-bg); border-color: var(--watch-border); }
+.lane-parked { background: var(--parked-bg); border-color: var(--parked-border); }
+
+.lane-header {
+  padding: 8px 12px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--radius) var(--radius) 0 0;
+  cursor: pointer;
+  user-select: none;
+}
+.lane-immediate .lane-header { background: var(--immediate-border); color: white; }
+.lane-shift .lane-header { background: var(--shift-border); color: white; }
+.lane-watch .lane-header { background: var(--watch-border); color: white; }
+.lane-parked .lane-header { background: var(--parked-border); color: white; }
+
+.lane-title { font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.lane-count { font-size: 12px; opacity: 0.85; background: rgba(0,0,0,0.15); border-radius: 10px; padding: 1px 7px; }
+.lane-body { padding: 8px; flex: 1; display: flex; flex-direction: column; gap: 6px; min-height: 60px; }
+.lane-empty {
+  color: var(--text2);
+  font-size: 12px;
+  text-align: center;
+  padding: 12px 8px;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+/* ─── Cards ─── */
+.card {
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border-left: 4px solid var(--border);
+  user-select: none;
+}
+.card:active { transform: scale(0.98); }
+.card.selected {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 2px;
+}
+.card.selected-immediate { border-left-color: var(--immediate-border); }
+.card.selected-shift { border-left-color: var(--shift-border); }
+.card.selected-watch { border-left-color: var(--watch-border); }
+.card.selected-parked { border-left-color: var(--parked-border); }
+
+.card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+.card-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.tag {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+.tag-area { background: #ede7f6; color: #4527a0; }
+.tag-owner { background: #e8f5e9; color: #2e7d32; }
+.tag-sev { background: #ffebee; color: #b71c1c; }
+.tag-conf { background: #e3f2fd; color: #0d47a1; }
+.tag-stat { background: #fff3e0; color: #e65100; }
+
+.sev-critical { color: var(--danger); font-weight: 800; }
+.sev-high { color: #e65100; font-weight: 700; }
+.sev-medium { color: #f57f17; font-weight: 600; }
+.sev-low { color: var(--success); font-weight: 600; }
+
+/* ─── Quick Add Bar ─── */
+.quick-add-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--accent);
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 200;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.2);
+}
+.quick-add-bar .btn { flex-shrink: 0; }
+
+/* ─── Modal ─── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.modal-overlay.hidden { display: none; }
+
+.modal {
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.modal-lg {
+  max-height: 95vh;
+}
+
+.modal h2 { font-size: 18px; margin-bottom: 16px; color: var(--accent); }
+.modal h3 { font-size: 14px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin: 14px 0 8px; }
+.modal h3:first-child { margin-top: 0; }
+
+.form-row { margin-bottom: 12px; }
+.form-row label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+.form-row input,
+.form-row select,
+.form-row textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  appearance: none;
+  -webkit-appearance: none;
+}
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus { outline: none; border-color: var(--accent); }
+
+.toggle-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.toggle-btn {
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.toggle-btn:active { transform: scale(0.96); }
+.toggle-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.modal-actions .btn { flex: 1; min-width: 100px; padding: 12px; font-size: 15px; border-radius: 10px; }
+
+/* Lane selector in modal */
+.lane-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.lane-sel-btn {
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  background: var(--bg);
+  transition: all 0.15s;
+}
+.lane-sel-btn:active { transform: scale(0.96); }
+.lane-sel-btn.sel-immediate { background: var(--immediate-bg); border-color: var(--immediate-border); color: var(--immediate-h); }
+.lane-sel-btn.sel-shift { background: var(--shift-bg); border-color: var(--shift-border); color: var(--shift-h); }
+.lane-sel-btn.sel-watch { background: var(--watch-bg); border-color: var(--watch-border); color: var(--watch-h); }
+.lane-sel-btn.sel-parked { background: var(--parked-bg); border-color: var(--parked-border); color: var(--parked-h); }
+
+/* Move target buttons */
+.move-targets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }
+.move-btn {
+  border-radius: 8px;
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 2px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: white;
+}
+.move-btn:active { transform: scale(0.95); }
+.move-btn.mov-immediate { border-color: var(--immediate-border); color: var(--immediate-h); background: var(--immediate-bg); }
+.move-btn.mov-shift { border-color: var(--shift-border); color: var(--shift-h); background: var(--shift-bg); }
+.move-btn.mov-watch { border-color: var(--watch-border); color: var(--watch-h); background: var(--watch-bg); }
+.move-btn.mov-parked { border-color: var(--parked-border); color: var(--parked-h); background: var(--parked-bg); }
+
+/* ─── Summary ─── */
+.summary-content {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1.5px solid var(--border);
+}
+.summary-content .summary-lane { margin-bottom: 10px; }
+.summary-content .summary-lane-title { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.summary-content .summary-card { margin-left: 10px; padding-left: 10px; border-left: 2px solid var(--border); margin-bottom: 4px; }
+.summary-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ─── Desktop ─── */
+@media (min-width: 700px) {
+  .lanes { grid-template-columns: 1fr 1fr; }
+  .lane-immediate, .lane-shift, .lane-watch, .lane-parked { min-height: 200px; }
+  .modal { border-radius: 16px; margin: auto; max-height: 85vh; }
+  .quick-add-bar { border-radius: 12px 12px 0 0; }
+  .modal-overlay { align-items: center; }
+}
+
+/* ─── Utility ─── */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.text-sm { font-size: 13px; color: var(--text2); }
+</style>
+</head>
+<body>
+
+<!-- Warning Banner -->
+<div class="banner">
+  <strong>⚠ Experimental Tool — Not an Operational SOP or Decision Engine</strong>
+  For shift triage practice and handover composition only. Always apply professional judgment.
+</div>
+
+<!-- Header -->
+<header>
+  <h1>🍇 Vintage Ops Whiteboard</h1>
+  <div class="header-actions">
+    <button class="btn btn-secondary" onclick="showSummary()">📋 Handover</button>
+    <button class="btn btn-ghost" onclick="confirmReset()">🔄</button>
+  </div>
+</header>
+
+<!-- Lanes -->
+<div class="lanes" id="lanes">
+  <div class="lane lane-immediate" data-lane="immediate">
+    <div class="lane-header" onclick="toggleLane('immediate')">
+      <span class="lane-title">🚨 Immediate</span>
+      <span class="lane-count" id="count-immediate">0</span>
+    </div>
+    <div class="lane-body" id="body-immediate"></div>
+  </div>
+
+  <div class="lane lane-shift" data-lane="shift">
+    <div class="lane-header" onclick="toggleLane('shift')">
+      <span class="lane-title">⏱ This Shift</span>
+      <span class="lane-count" id="count-shift">0</span>
+    </div>
+    <div class="lane-body" id="body-shift"></div>
+  </div>
+
+  <div class="lane lane-watch" data-lane="watch">
+    <div class="lane-header" onclick="toggleLane('watch')">
+      <span class="lane-title">👁 Watch</span>
+      <span class="lane-count" id="count-watch">0</span>
+    </div>
+    <div class="lane-body" id="body-watch"></div>
+  </div>
+
+  <div class="lane lane-parked" data-lane="parked">
+    <div class="lane-header" onclick="toggleLane('parked')">
+      <span class="lane-title">🅿 Parked</span>
+      <span class="lane-count" id="count-parked">0</span>
+    </div>
+    <div class="lane-body" id="body-parked"></div>
+  </div>
+</div>
+
+<!-- Quick Add Bar -->
+<div class="quick-add-bar">
+  <button class="btn btn-primary" onclick="openAddModal()" style="flex:1; font-size:15px;">＋ Add Card</button>
+  <button class="btn btn-danger" onclick="confirmReset()">Reset</button>
+</div>
+
+<!-- ─── Add/Edit Card Modal ─── -->
+<div class="modal-overlay hidden" id="cardModal">
+  <div class="modal" id="cardModalInner">
+    <h2 id="modalTitle">Add Card</h2>
+
+    <div class="form-row">
+      <label>Issue / Description *</label>
+      <input type="text" id="fTitle" placeholder="e.g. Ferment temp drift — Tank 7" maxlength="80">
+    </div>
+
+    <div class="form-row">
+      <label>Area</label>
+      <select id="fArea">
+        <option value="">— select —</option>
+        <option value="Fermentation">Fermentation</option>
+        <option value="Transfers">Transfers</option>
+        <option value="Pressing">Pressing</option>
+        <option value="Filtration">Filtration</option>
+        <option value="Bottling">Bottling</option>
+        <option value="Lab">Lab</option>
+        <option value="Cold Room">Cold Room</option>
+        <option value="Utilities">Utilities</option>
+        <option value="Packaging">Packaging</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Owner</label>
+      <input type="text" id="fOwner" placeholder="e.g. Pete / Lab Team" maxlength="40">
+    </div>
+
+    <div class="form-row">
+      <label>Severity</label>
+      <div class="toggle-group" id="fSeverity">
+        <button class="toggle-btn" data-val="critical" onclick="setToggle('fSeverity','critical')">🔴 Critical</button>
+        <button class="toggle-btn" data-val="high" onclick="setToggle('fSeverity','high')">🟠 High</button>
+        <button class="toggle-btn" data-val="medium" onclick="setToggle('fSeverity','medium')">🟡 Medium</button>
+        <button class="toggle-btn" data-val="low" onclick="setToggle('fSeverity','low')">🟢 Low</button>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Confidence</label>
+      <div class="toggle-group" id="fConfidence">
+        <button class="toggle-btn" data-val="confirmed" onclick="setToggle('fConfidence','confirmed')">✓ Confirmed</button>
+        <button class="toggle-btn" data-val="probable" onclick="setToggle('fConfidence','probable')">~ Probable</button>
+        <button class="toggle-btn" data-val="suspected" onclick="setToggle('fConfidence','suspected')">? Suspected</button>
+        <button class="toggle-btn" data-val="unknown" onclick="setToggle('fConfidence','unknown')">— Unknown</button>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Status</label>
+      <div class="toggle-group" id="fStatus">
+        <button class="toggle-btn" data-val="active" onclick="setToggle('fStatus','active')">⚡ Active</button>
+        <button class="toggle-btn" data-val="monitoring" onclick="setToggle('fStatus','monitoring')">📊 Monitoring</button>
+        <button class="toggle-btn" data-val="pending" onclick="setToggle('fStatus','pending')">⏳ Pending</button>
+        <button class="toggle-btn" data-val="resolved" onclick="setToggle('fStatus','resolved')">✅ Resolved</button>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Notes</label>
+      <textarea id="fNotes" rows="2" placeholder="Optional detail, cause hypothesis, action taken…"></textarea>
+    </div>
+
+    <div class="form-row hidden" id="laneSelectorRow">
+      <label>Move to Lane</label>
+      <div class="lane-selector">
+        <button class="lane-sel-btn" onclick="setLaneSel('immediate')" id="lane-sel-immediate">🚨 Immediate</button>
+        <button class="lane-sel-btn" onclick="setLaneSel('shift')" id="lane-sel-shift">⏱ This Shift</button>
+        <button class="lane-sel-btn" onclick="setLaneSel('watch')" id="lane-sel-watch">👁 Watch</button>
+        <button class="lane-sel-btn" onclick="setLaneSel('parked')" id="lane-sel-parked">🅿 Parked</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="saveBtn" onclick="saveCard()">Save Card</button>
+      <button class="btn btn-danger" id="deleteBtn" onclick="deleteCard()" style="display:none">Delete</button>
+      <button class="btn btn-secondary" onclick="closeCardModal()" style="background:var(--border);color:var(--text)">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Move Card Modal ─── -->
+<div class="modal-overlay hidden" id="moveModal">
+  <div class="modal">
+    <h2>Move to Lane</h2>
+    <p class="text-sm" id="moveCardTitle" style="margin-bottom:12px;font-weight:600;"></p>
+    <div class="move-targets">
+      <button class="move-btn mov-immediate" onclick="moveCardTo('immediate')">🚨 Immediate</button>
+      <button class="move-btn mov-shift" onclick="moveCardTo('shift')">⏱ This Shift</button>
+      <button class="move-btn mov-watch" onclick="moveCardTo('watch')">👁 Watch</button>
+      <button class="move-btn mov-parked" onclick="moveCardTo('parked')">🅿 Parked</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeMoveModal()" style="background:var(--border);color:var(--text)">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Handover Summary Modal ─── -->
+<div class="modal-overlay hidden" id="summaryModal">
+  <div class="modal modal-lg">
+    <h2>📋 Shift Handover Summary</h2>
+    <p class="text-sm" style="margin-bottom:12px;">Generated from current board state — review before sharing.</p>
+    <div class="summary-content" id="summaryContent"></div>
+    <div class="summary-actions mt-12">
+      <button class="btn btn-primary" onclick="copySummary()">📋 Copy Text</button>
+      <button class="btn btn-secondary" style="background:var(--border);color:var(--text)" onclick="closeSummary()">Close</button>
+    </div>
+    <p class="text-sm mt-8" style="font-size:11px;opacity:0.7;">Tip: Copy the text above and paste into a message, whiteboard photo, or handover book.</p>
+  </div>
+</div>
+
+<!-- ─── Confirm Reset Modal ─── -->
+<div class="modal-overlay hidden" id="resetModal">
+  <div class="modal">
+    <h2>🔄 Reset Board?</h2>
+    <p class="text-sm" style="margin:12px 0;">This will clear all cards and reload the demo seed data. Current cards will be lost.</p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="doReset()">Yes — Reset</button>
+      <button class="btn btn-secondary" style="background:var(--border);color:var(--text)" onclick="closeResetModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'vintage_ops_board_v1';
+const LANES = ['immediate', 'shift', 'watch', 'parked'];
+const LANE_LABELS = {
+  immediate: '🚨 Immediate',
+  shift: '⏱ This Shift',
+  watch: '👁 Watch',
+  parked: '🅿 Parked'
+};
+const SEV_COLORS = { critical: 'sev-critical', high: 'sev-high', medium: 'sev-medium', low: 'sev-low' };
+const CONF_LABELS = { confirmed: '✓ Confirmed', probable: '~ Probable', suspected: '? Suspected', unknown: '— Unknown' };
+const STAT_LABELS = { active: '⚡ Active', monitoring: '📊 Monitoring', pending: '⏳ Pending', resolved: '✅ Resolved' };
+
+let state = { cards: [], selectedId: null, editingId: null, movingId: null };
+let collapsed = { immediate: false, shift: false, watch: false, parked: false };
+
+// ─── Seed Data ───────────────────────────────────────────────────────────────
+const SEED_CARDS = [
+  {
+    id: 'seed1',
+    title: 'Ferment temp drift — Tank 7',
+    area: 'Fermentation',
+    owner: 'Pete',
+    severity: 'critical',
+    confidence: 'confirmed',
+    status: 'active',
+    notes: 'Temp rising 1.2°C/hr above setpoint. Checking pump-over frequency and cooling bank status.',
+    lane: 'immediate'
+  },
+  {
+    id: 'seed2',
+    title: 'Stuck valve — Bay 4 drain',
+    area: 'Transfers',
+    owner: 'Marcus',
+    severity: 'high',
+    confidence: 'confirmed',
+    status: 'active',
+    notes: 'Manual override attempted. Requires full disassembly. Transfer from Tank 3 held.',
+    lane: 'immediate'
+  },
+  {
+    id: 'seed3',
+    title: 'Pump cavitation risk — R66',
+    area: 'Transfers',
+    owner: 'Maintenance',
+    severity: 'high',
+    confidence: 'probable',
+    status: 'monitoring',
+    notes: 'Air draw on suction side suspected after recent re-plumb. Monitoring for NPSH issues.',
+    lane: 'immediate'
+  },
+  {
+    id: 'seed4',
+    title: 'Press backlog — 2 batches waiting',
+    area: 'Pressing',
+    owner: 'Luisa',
+    severity: 'medium',
+    confidence: 'confirmed',
+    status: 'pending',
+    notes: 'Press scheduled 14:00. Marc removal crew confirmed. No tanks free yet.',
+    lane: 'shift'
+  },
+  {
+    id: 'seed5',
+    title: 'Lab sample pending — pH & Alc Batch 41',
+    area: 'Lab',
+    owner: 'Lab Team',
+    severity: 'medium',
+    confidence: 'confirmed',
+    status: 'pending',
+    notes: 'Results expected by 15:00. Needed before cross-flow filtration can start.',
+    lane: 'shift'
+  },
+  {
+    id: 'seed6',
+    title: 'Bottling label mismatch — Pinot 2024',
+    area: 'Bottling',
+    owner: 'Jenna',
+    severity: 'high',
+    confidence: 'confirmed',
+    status: 'active',
+    notes: 'Labels from print run don\'t match QR code batch data. Bottling on hold.',
+    lane: 'shift'
+  },
+  {
+    id: 'seed7',
+    title: 'Tank 12 nearing full — 88% and rising',
+    area: 'Fermentation',
+    owner: 'Pete',
+    severity: 'medium',
+    confidence: 'confirmed',
+    status: 'monitoring',
+    notes: 'Incoming must from Receival Bay 1. Check delivery schedule. May need early pressing.',
+    lane: 'watch'
+  },
+  {
+    id: 'seed8',
+    title: 'Cold room fault — Zone B header',
+    area: 'Cold Room',
+    owner: 'Facilities',
+    severity: 'high',
+    confidence: 'probable',
+    status: 'monitoring',
+    notes: 'Controller reporting fault F-04. Thermostat holding 8°C but compressor cycling heavily.',
+    lane: 'watch'
+  },
+  {
+    id: 'seed9',
+    title: 'CO₂ monitor battery low — Barrel Room',
+    area: 'Utilities',
+    owner: 'WHS',
+    severity: 'medium',
+    confidence: 'confirmed',
+    status: 'pending',
+    notes: 'Monitor showing low-battery warning. Spare CR2032 in toolbox. Replace before tomorrow.',
+    lane: 'parked'
+  },
+  {
+    id: 'seed10',
+    title: 'Filtration prep outstanding — Batch 38',
+    area: 'Filtration',
+    owner: 'Brett',
+    severity: 'low',
+    confidence: 'confirmed',
+    status: 'pending',
+    notes: 'Pre-coat and integrity test to be done AM shift. Can wait — no tank pressure issue yet.',
+    lane: 'parked'
+  }
+];
+
+// ─── Persistence ─────────────────────────────────────────────────────────────
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state.cards = parsed.cards || [];
+      return;
+    }
+  } catch(e) {}
+  // Seed
+  state.cards = SEED_CARDS.map(c => ({...c}));
+  saveState();
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ cards: state.cards }));
+  } catch(e) {}
+}
+
+function generateId() {
+  return 'card_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+// ─── Rendering ────────────────────────────────────────────────────────────────
+function renderBoard() {
+  LANES.forEach(lane => {
+    const cards = state.cards.filter(c => c.lane === lane);
+    const countEl = document.getElementById('count-' + lane);
+    const bodyEl = document.getElementById('body-' + lane);
+    if (countEl) countEl.textContent = cards.length;
+    if (bodyEl) {
+      if (cards.length === 0) {
+        bodyEl.innerHTML = '<div class="lane-empty">No cards</div>';
+      } else {
+        bodyEl.innerHTML = cards.map(c => renderCard(c)).join('');
+      }
+    }
+  });
+}
+
+function renderCard(c) {
+  const sevClass = SEV_COLORS[c.severity] || '';
+  const sevLabel = c.severity ? c.severity.charAt(0).toUpperCase() + c.severity.slice(1) : '';
+  const confLabel = CONF_LABELS[c.confidence] || c.confidence || '';
+  const statLabel = STAT_LABELS[c.status] || c.status || '';
+  const selClass = state.selectedId === c.id ? 'selected' : '';
+
+  let tags = [];
+  if (c.area) tags.push(`<span class="tag tag-area">${c.area}</span>`);
+  if (c.owner) tags.push(`<span class="tag tag-owner">${c.owner}</span>`);
+  if (c.severity) tags.push(`<span class="tag tag-sev ${sevClass}">${sevLabel}</span>`);
+  if (c.confidence) tags.push(`<span class="tag tag-conf">${confLabel}</span>`);
+  if (c.status) tags.push(`<span class="tag tag-stat">${statLabel}</span>`);
+
+  return `
+  <div class="card ${selClass}" id="card-${c.id}"
+       onclick="handleCardTap(event, '${c.id}')"
+       ontouchend="handleCardTap(event, '${c.id}')">
+    <div class="card-title">${escHtml(c.title)}</div>
+    <div class="card-meta">${tags.join('')}</div>
+  </div>`;
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Interaction ─────────────────────────────────────────────────────────────
+// Tap-to-select / tap-to-open on mobile
+let lastTapTime = 0;
+
+function handleCardTap(event, cardId) {
+  event.preventDefault();
+  const now = Date.now();
+  const isDoubleTap = (now - lastTapTime) < 300;
+  lastTapTime = now;
+
+  if (isDoubleTap) {
+    // Double-tap: open edit
+    openEditModal(cardId);
+  } else {
+    // Single tap: select
+    if (state.selectedId === cardId) {
+      // Second single-tap on same card: open edit
+      openEditModal(cardId);
+    } else {
+      state.selectedId = cardId;
+      renderBoard();
+    }
+  }
+}
+
+// ─── Add/Edit Modal ──────────────────────────────────────────────────────────
+function openAddModal() {
+  state.editingId = null;
+  document.getElementById('modalTitle').textContent = '＋ Add Card';
+  document.getElementById('saveBtn').textContent = 'Save Card';
+  document.getElementById('deleteBtn').style.display = 'none';
+  document.getElementById('laneSelectorRow').classList.add('hidden');
+  clearForm();
+  document.getElementById('cardModal').classList.remove('hidden');
+  document.getElementById('fTitle').focus();
+}
+
+function openEditModal(cardId) {
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card) return;
+  state.editingId = cardId;
+  document.getElementById('modalTitle').textContent = 'Edit Card';
+  document.getElementById('saveBtn').textContent = 'Update Card';
+  document.getElementById('deleteBtn').style.display = 'inline-block';
+  document.getElementById('laneSelectorRow').classList.remove('hidden');
+  populateForm(card);
+  document.getElementById('cardModal').classList.remove('hidden');
+}
+
+function closeCardModal() {
+  document.getElementById('cardModal').classList.add('hidden');
+  state.editingId = null;
+  state.selectedId = null;
+  renderBoard();
+}
+
+function clearForm() {
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fArea').value = '';
+  document.getElementById('fOwner').value = '';
+  document.getElementById('fNotes').value = '';
+  clearToggles('fSeverity');
+  clearToggles('fConfidence');
+  clearToggles('fStatus');
+  clearLaneSel();
+}
+
+function clearToggles(groupId) {
+  document.querySelectorAll('#' + groupId + ' .toggle-btn').forEach(b => b.classList.remove('active'));
+}
+
+function setToggle(groupId, val) {
+  document.querySelectorAll('#' + groupId + ' .toggle-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.val === val);
+  });
+}
+
+function getToggleVal(groupId) {
+  const active = document.querySelector('#' + groupId + ' .toggle-btn.active');
+  return active ? active.dataset.val : '';
+}
+
+function populateForm(card) {
+  document.getElementById('fTitle').value = card.title || '';
+  document.getElementById('fArea').value = card.area || '';
+  document.getElementById('fOwner').value = card.owner || '';
+  document.getElementById('fNotes').value = card.notes || '';
+  setToggle('fSeverity', card.severity || '');
+  setToggle('fConfidence', card.confidence || '');
+  setToggle('fStatus', card.status || '');
+  setLaneSel(card.lane || 'shift');
+}
+
+let currentLaneSel = 'shift';
+function setLaneSel(lane) {
+  currentLaneSel = lane;
+  LANES.forEach(l => {
+    const btn = document.getElementById('lane-sel-' + l);
+    if (btn) btn.classList.remove('sel-immediate','sel-shift','sel-watch','sel-parked');
+  });
+  const btn = document.getElementById('lane-sel-' + lane);
+  if (btn) btn.classList.add('sel-' + lane);
+}
+
+function clearLaneSel() {
+  setLaneSel('shift');
+}
+
+function saveCard() {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title) {
+    document.getElementById('fTitle').focus();
+    return;
+  }
+  const card = {
+    id: state.editingId || generateId(),
+    title,
+    area: document.getElementById('fArea').value,
+    owner: document.getElementById('fOwner').value.trim(),
+    severity: getToggleVal('fSeverity'),
+    confidence: getToggleVal('fConfidence'),
+    status: getToggleVal('fStatus'),
+    notes: document.getElementById('fNotes').value.trim(),
+    lane: currentLaneSel
+  };
+
+  if (state.editingId) {
+    const idx = state.cards.findIndex(c => c.id === state.editingId);
+    if (idx !== -1) state.cards[idx] = card;
+  } else {
+    state.cards.push(card);
+  }
+  saveState();
+  closeCardModal();
+  renderBoard();
+}
+
+function deleteCard() {
+  if (!state.editingId) return;
+  state.cards = state.cards.filter(c => c.id !== state.editingId);
+  saveState();
+  closeCardModal();
+  renderBoard();
+}
+
+// ─── Move Modal ─────────────────────────────────────────────────────────────
+function openMoveModal(cardId) {
+  const card = state.cards.find(c => c.id === cardId);
+  if (!card) return;
+  state.movingId = cardId;
+  document.getElementById('moveCardTitle').textContent = card.title;
+  document.getElementById('moveModal').classList.remove('hidden');
+}
+
+function closeMoveModal() {
+  document.getElementById('moveModal').classList.add('hidden');
+  state.movingId = null;
+}
+
+function moveCardTo(lane) {
+  if (!state.movingId) return;
+  const idx = state.cards.findIndex(c => c.id === state.movingId);
+  if (idx !== -1) {
+    state.cards[idx].lane = lane;
+    saveState();
+    renderBoard();
+  }
+  closeMoveModal();
+}
+
+// Tap selected card to open move options
+function handleSelectedCardTap(cardId) {
+  openMoveModal(cardId);
+}
+
+// ─── Lane collapse ───────────────────────────────────────────────────────────
+function toggleLane(lane) {
+  collapsed[lane] = !collapsed[lane];
+  const body = document.getElementById('body-' + lane);
+  if (body) body.style.display = collapsed[lane] ? 'none' : 'flex';
+}
+
+// ─── Summary ─────────────────────────────────────────────────────────────────
+function showSummary() {
+  const content = document.getElementById('summaryContent');
+  let now = new Date();
+  let text = `SHIFT HANDOVER SUMMARY — ${now.toLocaleDateString('en-AU')} ${now.toLocaleTimeString('en-AU', {hour:'2-digit',minute:'2-digit'})}\n`;
+  text += '─'.repeat(45) + '\n\n';
+
+  LANES.forEach(lane => {
+    const cards = state.cards.filter(c => c.lane === lane);
+    if (cards.length > 0) {
+      text += `[ ${LANE_LABELS[lane].replace(/[^\w\s]/g,'').trim()} ]\n`;
+      cards.forEach(c => {
+        let line = `  • ${c.title}`;
+        if (c.area) line += ` | Area: ${c.area}`;
+        if (c.owner) line += ` | Owner: ${c.owner}`;
+        if (c.severity) line += ` | Sev: ${c.severity}`;
+        if (c.confidence) line += ` | ${c.confidence}`;
+        if (c.status) line += ` | ${c.status}`;
+        if (c.notes) line += `\n    ↳ ${c.notes}`;
+        text += line + '\n';
+      });
+      text += '\n';
+    }
+  });
+
+  if (state.cards.length === 0) {
+    text += '(No items on board)\n';
+  }
+
+  content.textContent = text;
+  document.getElementById('summaryModal').classList.remove('hidden');
+}
+
+function closeSummary() {
+  document.getElementById('summaryModal').classList.add('hidden');
+}
+
+function copySummary() {
+  const text = document.getElementById('summaryContent').textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('#summaryModal .btn-primary');
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      }
+    }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  const btn = document.querySelector('#summaryModal .btn-primary');
+  if (btn) { const orig = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = orig; }, 1500); }
+}
+
+// ─── Reset ───────────────────────────────────────────────────────────────────
+function confirmReset() {
+  document.getElementById('resetModal').classList.remove('hidden');
+}
+
+function closeResetModal() {
+  document.getElementById('resetModal').classList.add('hidden');
+}
+
+function doReset() {
+  localStorage.removeItem(STORAGE_KEY);
+  state.cards = SEED_CARDS.map(c => ({...c}));
+  saveState();
+  closeResetModal();
+  renderBoard();
+}
+
+// ─── Boot ────────────────────────────────────────────────────────────────────
+loadState();
+renderBoard();
+
+// Close modals on overlay tap
+document.getElementById('cardModal').addEventListener('click', function(e) {
+  if (e.target === this) closeCardModal();
+});
+document.getElementById('moveModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMoveModal();
+});
+document.getElementById('summaryModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSummary();
+});
+document.getElementById('resetModal').addEventListener('click', function(e) {
+  if (e.target === this) closeResetModal();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeCardModal();
+    closeMoveModal();
+    closeSummary();
+    closeResetModal();
+  }
+});
+</script>
+</body>
+</html>

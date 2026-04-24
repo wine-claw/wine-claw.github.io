@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wine Input Cost Index</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d0a0e;
+      --surface: #1a1520;
+      --surface2: #241e2c;
+      --border: #3a3048;
+      --text: #f0e6d3;
+      --text-muted: #9a8aaa;
+      --text-dim: #5c5070;
+      --gold: #c9a84c;
+      --gold-light: #e8c96a;
+      --burgundy: #8b1a2a;
+      --burgundy-light: #b8283a;
+      --cream: #f5edd6;
+      --green: #3aaa6e;
+      --red: #c93a3a;
+      --orange: #d4852a;
+      --blue: #3a8fc9;
+      --purple: #8a4fc9;
+      --teal: #3ac9b8;
+      --pink: #c93a8a;
+      --lime: #8ac93a;
+      --cat-grapes: #9b2335;
+      --cat-water: #3a8fc9;
+      --cat-energy: #d4852a;
+      --cat-labour: #c9a84c;
+      --cat-chemicals: #3aaa6e;
+      --cat-packaging: #8a4fc9;
+      --cat-transport: #3ac9b8;
+      --cat-oak: #c9823a;
+      --cat-equipment: #5c5070;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; }
+    input[type="checkbox"] { accent-color: var(--gold); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Header */
+    .header {
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+    }
+    .header-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cream);
+      letter-spacing: 0.02em;
+    }
+    .header-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-weight: 300;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Nav tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 2px;
+      margin-top: 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--surface);
+      white-space: nowrap;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .nav-tab.active {
+      background: var(--burgundy);
+      color: var(--cream);
+    }
+    .nav-tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
+
+    /* Container */
+    .container { max-width: 600px; margin: 0 auto; padding: 0 16px 40px; }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+    .card-title-sm {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    /* Scenario Toggle */
+    .scenario-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .scenario-btn {
+      flex: 1;
+      padding: 10px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--surface2);
+      text-align: center;
+      line-height: 1.3;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .scenario-btn.active {
+      background: var(--burgundy);
+      color: var(--cream);
+      border-color: var(--burgundy-light);
+    }
+    .scenario-btn:hover:not(.active) { color: var(--text); }
+
+    /* Donut */
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .donut-canvas-wrap {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      flex-shrink: 0;
+    }
+    .donut-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+    .donut-center-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1;
+    }
+    .donut-center-label {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+    .donut-legend {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .legend-item:hover { background: var(--surface2); }
+    .legend-item.muted { opacity: 0.35; }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .legend-name { flex: 1; }
+    .legend-pct { font-weight: 600; color: var(--text); font-size: 0.78rem; }
+
+    /* Chart toggle */
+    .chart-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .toggle-btn {
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--surface2);
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      background: var(--gold);
+      color: var(--bg);
+    }
+    .toggle-btn:hover:not(.active) { color: var(--text); }
+    .chart-wrap {
+      position: relative;
+      height: 260px;
+    }
+
+    /* Category filter chips */
+    .cat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .cat-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 14px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    .cat-chip.selected {
+      border-color: currentColor;
+      color: var(--text);
+    }
+    .cat-chip-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Composite index */
+    .composite-display {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .composite-big {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .composite-meta { flex: 1; }
+    .composite-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .composite-change {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .composite-change.up { color: var(--red); }
+    .composite-change.down { color: var(--green); }
+
+    /* Sparkline SVG */
+    .sparkline-wrap {
+      height: 40px;
+      margin: 8px 0;
+    }
+
+    /* Deep dive detail card */
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 16px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .detail-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .detail-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      color: var(--cream);
+    }
+    .detail-index-badge {
+      margin-left: auto;
+      text-align: right;
+    }
+    .detail-index-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .detail-index-base {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+    .detail-narrative {
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin: 10px 0;
+    }
+    .detail-stats {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .detail-stat {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      flex: 1;
+    }
+    .detail-stat-val {
+      font-weight: 700;
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .detail-stat-lbl {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+    .detail-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .detail-trend.up { background: rgba(201,58,58,0.15); color: var(--red); }
+    .detail-trend.down { background: rgba(58,170,110,0.15); color: var(--green); }
+    .detail-close {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-top: 14px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .detail-close:hover { color: var(--text); background: var(--border); }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 20px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 6px; top: 4px; bottom: 4px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--burgundy), var(--gold));
+      border-radius: 1px;
+    }
+    .tl-item {
+      position: relative;
+      margin-bottom: 18px;
+    }
+    .tl-item:last-child { margin-bottom: 0; }
+    .tl-dot {
+      position: absolute;
+      left: -20px; top: 4px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--gold);
+      background: var(--bg);
+    }
+    .tl-dot.now {
+      background: var(--burgundy);
+      border-color: var(--burgundy-light);
+    }
+    .tl-year {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .tl-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 2px;
+    }
+    .tl-desc {
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* Tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Responsive */
+    @media (min-width: 500px) {
+      .donut-wrap { gap: 24px; }
+      .donut-canvas-wrap { width: 180px; height: 180px; }
+      .chart-wrap { height: 320px; }
+    }
+    @media (min-width: 768px) {
+      .container { max-width: 720px; }
+      .header { padding: 24px 20px 20px; }
+      .card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">Wine Input Cost Index</div>
+  <div class="header-sub">Australia · 2015–2025 · Base 2019 = 100</div>
+  <nav class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" data-tab="overview">Overview</button>
+    <button class="nav-tab" data-tab="trends">Trends</button>
+    <button class="nav-tab" data-tab="timeline">Events</button>
+  </nav>
+</div>
+
+<div class="container">
+
+  <!-- ===== OVERVIEW TAB ===== -->
+  <div class="tab-content active" id="tab-overview">
+
+    <!-- Scenario Toggle -->
+    <div class="card">
+      <div class="card-title">Wine Style Scenario</div>
+      <div class="scenario-bar">
+        <button class="scenario-btn active" data-scenario="barossa">Barossa Shiraz<br><span style="font-weight:300;font-size:0.65rem">Premium · Oak-heavy</span></button>
+        <button class="scenario-btn" data-scenario="margaret">Margaret Riv Chard<br><span style="font-weight:300;font-size:0.65rem">Premium · High oak</span></button>
+        <button class="scenario-btn" data-scenario="bulk">Budget Bulk<br><span style="font-weight:300;font-size:0.65rem">Value · Minimal oak</span></button>
+      </div>
+    </div>
+
+    <!-- Composite Index -->
+    <div class="card" id="compositeCard">
+      <div class="card-title">Composite Cost Index</div>
+      <div class="composite-display">
+        <div class="composite-big" id="compositeVal">127.4</div>
+        <div class="composite-meta">
+          <div class="composite-label">Index vs base (2019=100)</div>
+          <div class="composite-change up" id="compositeChange">▲ +27.4% since 2019</div>
+        </div>
+      </div>
+      <div class="sparkline-wrap" id="compositeSparkline"></div>
+    </div>
+
+    <!-- Donut -->
+    <div class="card">
+      <div class="card-title">Cost Composition</div>
+      <div class="donut-wrap">
+        <div class="donut-canvas-wrap">
+          <canvas id="donutCanvas" width="140" height="140"></canvas>
+          <div class="donut-center">
+            <div class="donut-center-val">100%</div>
+            <div class="donut-center-label">Total Cost</div>
+          </div>
+        </div>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <!-- Category Quick Picks -->
+    <div class="card">
+      <div class="card-title">Categories</div>
+      <div id="categoryGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+    </div>
+
+  </div>
+
+  <!-- ===== TRENDS TAB ===== -->
+  <div class="tab-content" id="tab-trends">
+    <div class="card">
+      <div class="card-title">Cost Index Trends</div>
+      <div class="cat-chips" id="trendChips"></div>
+      <div class="chart-toggle">
+        <button class="toggle-btn active" data-mode="index">Absolute Index</button>
+        <button class="toggle-btn" data-mode="yoy">YoY Change %</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TIMELINE TAB ===== -->
+  <div class="tab-content" id="tab-timeline">
+    <div class="card">
+      <div class="card-title">Key Industry Events</div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+
+  <!-- Deep Dive (hidden, shown dynamically) -->
+  <div id="deepDiveMount"></div>
+
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const YEARS = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+const BASE_YEAR = 2019;
+
+const CATEGORIES = [
+  {
+    id: 'grapes',
+    name: 'Grapes',
+    color: '#9b2335',
+    pct: { barossa: 38, margaret: 35, bulk: 30 },
+    narrative: 'Grape costs dominate winery spend. The 2020 Black Summer bushfires devastated parts of the Barossa and Clare Valley, destroying crops and driving prices up for affected growers. The 2022–23 La Niña floods hit South Australia hard, disrupting harvest logistics. Then in 2024, a massive oversupply — driven by years of vineyard expansion and declining exports, especially to China — caused grape prices to crash by 30–50%, bringing significant relief to wineries (but pain to growers).',
+    drivers: ['2020 bushfire crop losses', '2022–23 flood disruption', '2024 oversupply crash', 'China tariffs (2020–)', 'Seasonal yield variability'],
+  },
+  {
+    id: 'water',
+    name: 'Water',
+    color: '#3a8fc9',
+    pct: { barossa: 5, margaret: 5, bulk: 4 },
+    narrative: 'Water is a critical input — both for vineyard irrigation and within the winery itself. Australian water allocation prices are notoriously volatile, driven by drought conditions, Murray-Darling Basin politics, and commodity speculation. Prices spiked during the Millennium Drought (2017–2019) and again in 2022 when La Niña runoff failed to refill dams adequately.',
+    drivers: ['Murray-Darling Basin policy', 'Climate variability', 'Irrigation efficiency tech', 'Desalination use'],
+  },
+  {
+    id: 'energy',
+    name: 'Energy',
+    color: '#d4852a',
+    pct: { barossa: 6, margaret: 7, bulk: 8 },
+    narrative: 'Energy costs — gas for distillation/fermentation, electricity for refrigeration and presses — surged sharply from 2021 to 2023, driven by global LNG export demand, the Ukraine war, and domestic gas shortages. Australian wineries faced steep increases, with some reporting 40–60% bill rises. The crisis eased in 2024 as international prices normalised, providing modest relief.',
+    drivers: ['2021–23 global energy crisis', 'Ukraine war gas shock', 'Australian LNG export demand', 'Solar/battery adoption (mitigating)'],
+  },
+  {
+    id: 'labour',
+    name: 'Labour',
+    color: '#c9a84c',
+    pct: { barossa: 18, margaret: 20, bulk: 25 },
+    narrative: 'Labour is the second-largest cost, particularly for hand-picked premium fruit. The 457 visa changes and COVID-era border closures severely disrupted the seasonal backpackper workforce in 2020–2021, forcing wages up. Award wage increases and a tight labour market have kept upward pressure on costs throughout 2022–2025. Premium wine regions report particularly acute shortages.',
+    drivers: ['COVID backpacker shortage', 'Award wage rises', 'Regional labour shortages', 'Mechanical harvesting adoption'],
+  },
+  {
+    id: 'chemicals',
+    name: 'Chemicals',
+    color: '#3aaa6e',
+    pct: { barossa: 4, margaret: 4, bulk: 5 },
+    narrative: 'Sulfur, acids, fining agents, spray chemicals. Global supply chain disruptions and shipping container shortages (2020–2022) pushed chemical prices higher. Inputs like potassium metabisulfite and copper sulfate became noticeably more expensive. Prices have partially eased but remain elevated vs 2019.',
+    drivers: ['Global shipping disruption', 'Chemical feedstock costs', 'Organic/biodynamic shifts (premium)'],
+  },
+  {
+    id: 'packaging',
+    name: 'Packaging',
+    color: '#8a4fc9',
+    pct: { barossa: 12, margaret: 13, bulk: 15 },
+    narrative: 'Glass, labels, capsules, corks. The global glass shortage (2020–2022) — driven by construction demand and furnace rebuilds — significantly extended lead times and raised bottle prices. Label substrates and adhesive costs also climbed. While supply chains have improved, packaging remains substantially more expensive than 2019.',
+    drivers: ['Global glass shortage 2020–22', 'China tariffs on Australian goods', 'Label/substrate cost rises', 'Lightweight bottle trends (mitigating)'],
+  },
+  {
+    id: 'transport',
+    name: 'Transport',
+    color: '#3ac9b8',
+    pct: { barossa: 4, margaret: 6, bulk: 6 },
+    narrative: 'Fuel costs, freight, cold storage. Diesel prices rose sharply with global oil markets in 2021–2022, increasing road freight costs. The flooding in eastern Australia in 2022 disrupted rail and road logistics for weeks. International shipping container rates normalised after 2022\'s extraordinary spike.',
+    drivers: ['2022 flood logistics disruption', 'Fuel price rises', 'Export freight costs'],
+  },
+  {
+    id: 'oak',
+    name: 'Oak / Barrels',
+    color: '#c9823a',
+    pct: { barossa: 8, margaret: 7, bulk: 2 },
+    narrative: 'French and American oak barrels ($700–$1,500+ each) are a major cost for premium wines. Post-COVID supply chain disruptions and strong global demand from multiple wine regions caused barrel prices to spike significantly in 2021–2023. Toast level preferences and barrel reuse strategies are increasingly used to manage costs.',
+    drivers: ['Post-COVID French oak shortage', 'Global barrel demand', 'Barrel reuse programs', 'In-house toast programs'],
+  },
+  {
+    id: 'equipment',
+    name: 'Equipment',
+    color: '#5c5070',
+    pct: { barossa: 5, margaret: 3, bulk: 5 },
+    narrative: 'Crushers, presses, filters, tanks, temperature control systems. Capital equipment costs rose with global manufacturing price increases and AUD volatility against the Euro (most winery equipment is Italian/French/German). Wineries investing in automation and optical sorting technology face significant upfront costs.',
+    drivers: ['AUD/EUR exchange rates', 'Manufacturing cost inflation', 'Automation investment', 'Used equipment market'],
+  },
+];
+
+// Index data: base 100 in 2019. Realistic approximations.
+const INDEX_DATA = {
+  grapes: {
+    label: 'Grapes',
+    values: [92, 95, 98, 105, 100, 115, 118, 125, 130, 115, 88],
+    yoy:   [null, +3.3, +3.2, +7.1, -4.8, +15.0, +2.6, +5.9, +4.0, -11.5, -23.5],
+  },
+  water: {
+    label: 'Water',
+    values: [85, 90, 105, 110, 100, 95, 100, 115, 108, 102, 100],
+    yoy:   [null, +5.9, +16.7, +4.8, -9.1, -5.0, +5.3, +15.0, -6.1, -5.6, -2.0],
+  },
+  energy: {
+    label: 'Energy',
+    values: [94, 93, 95, 97, 100, 100, 108, 135, 142, 130, 118],
+    yoy:   [null, -1.1, +2.2, +2.1, +3.1, 0, +8.0, +25.0, +5.2, -8.5, -9.2],
+  },
+  labour: {
+    label: 'Labour',
+    values: [90, 92, 94, 97, 100, 100, 104, 110, 117, 124, 130],
+    yoy:   [null, +2.2, +2.2, +3.2, +3.1, 0, +4.0, +5.8, +6.4, +6.0, +4.8],
+  },
+  chemicals: {
+    label: 'Chemicals',
+    values: [94, 96, 98, 100, 100, 102, 108, 115, 118, 116, 112],
+    yoy:   [null, +2.1, +2.1, +2.0, 0, +2.0, +5.9, +6.5, +2.6, -1.7, -3.4],
+  },
+  packaging: {
+    label: 'Packaging',
+    values: [92, 94, 96, 99, 100, 108, 118, 130, 128, 122, 118],
+    yoy:   [null, +2.2, +2.1, +3.1, +1.0, +8.0, +9.3, +10.2, -1.5, -4.7, -3.3],
+  },
+  transport: {
+    label: 'Transport',
+    values: [93, 92, 94, 97, 100, 98, 105, 122, 125, 118, 112],
+    yoy:   [null, -1.1, +2.2, +3.2, +3.1, -2.0, +7.1, +16.2, +2.5, -5.6, -5.1],
+  },
+  oak: {
+    label: 'Oak',
+    values: [94, 95, 97, 99, 100, 102, 108, 122, 130, 126, 118],
+    yoy:   [null, +1.1, +2.1, +2.1, +1.0, +2.0, +5.9, +13.0, +6.6, -3.1, -6.3],
+  },
+  equipment: {
+    label: 'Equipment',
+    values: [95, 96, 98, 99, 100, 102, 106, 112, 116, 114, 110],
+    yoy:   [null, +1.1, +2.1, +1.0, +1.0, +2.0, +3.9, +5.7, +3.6, -1.7, -3.5],
+  },
+};
+
+// Timeline events
+const TIMELINE_EVENTS = [
+  {
+    year: 2015,
+    title: 'Wine Industry Buys Back',
+    desc: 'Winemakers launch "Wines of Australia" global push amid a soft domestic market.',
+  },
+  {
+    year: 2017,
+    title: 'Millennium Drought Ends',
+    desc: 'Murray-Darling Basin water allocations improve; water costs moderate from peaks.',
+  },
+  {
+    year: 2019,
+    title: 'China Wine Tariffs Begin',
+    desc: 'Anti-dumping investigation launched; Australia\'s largest export market begins to sour.',
+  },
+  {
+    year: 2020,
+    title: 'Black Summer Bushfires',
+    desc: 'Catastrophic fires burn 1 billion+ tonnes of biomass. Barossa, Adelaide Hills, and Riverland vineyards suffer major crop losses. Grape prices spike for fire-affected fruit.',
+    isMajor: true,
+  },
+  {
+    year: 2021,
+    title: 'China Tarsiffs 200%+',
+    desc: 'China imposes 200%+ tariffs on Australian wine. Exports collapse. Wineries scramble to redirect supply to other markets.',
+    isMajor: true,
+  },
+  {
+    year: 2021,
+    title: 'Global Energy Crisis',
+    desc: 'Natural gas prices surge globally following reopening demand and reduced Russian supply. Australian manufacturers face huge cost increases.',
+  },
+  {
+    year: 2022,
+    title: 'East Coast Floods',
+    desc: 'La Niña causes the wettest year on record for parts of eastern Australia. Vineyards waterlogged during harvest; logistics disrupted across SA and VIC.',
+    isMajor: true,
+  },
+  {
+    year: 2022,
+    title: 'Glass & Packaging Crunch',
+    desc: 'Global glass shortage hits hard. Bottle lead times stretch from weeks to months. Wineries face significant packaging cost increases.',
+  },
+  {
+    year: 2023,
+    title: 'Labour Cost Surge',
+    desc: 'Award wage increases, ongoing backpacker shortages, and regional competition keep vineyard and winery labour costs trending upward.',
+  },
+  {
+    year: 2024,
+    title: 'Grape Price Crash',
+    desc: 'Oversupply crisis deepens as vineyard capacity outpaces demand. Average grape prices fall 30–50% across many regions. Wineries enjoy relief; growers face financial strain.',
+    isMajor: true,
+  },
+  {
+    year: 2025,
+    title: 'Market Correction',
+    desc: 'Winegrape inventories begin to stabilise. Energy costs ease. The industry adjusts to a smaller but more sustainable China-independent export footprint.',
+  },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let currentScenario = 'barossa';
+let selectedCategories = new Set(['grapes', 'energy', 'labour', 'oak']);
+let chartMode = 'index';
+let trendChart = null;
+let donutChart = null;
+const STORAGE_KEY = 'wineCostIdx';
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      scenario: currentScenario,
+      selected: [...selectedCategories],
+      chartMode,
+    }));
+  } catch(e) {}
+}
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (s) {
+      currentScenario = s.scenario || 'barossa';
+      selectedCategories = new Set(s.selected || ['grapes', 'energy', 'labour', 'oak']);
+      chartMode = s.chartMode || 'index';
+    }
+  } catch(e) {}
+}
+
+// ============================================================
+// COMPUTED
+// ============================================================
+function compositeIndex(scenario) {
+  let total = 0;
+  CATEGORIES.forEach(c => {
+    total += c.pct[scenario] * (INDEX_DATA[c.id].values[YEARS.indexOf(2025)] || 100);
+  });
+  const baseTotal = CATEGORIES.reduce((s, c) => s + c.pct[scenario] * 100, 0);
+  return total / baseTotal;
+}
+
+function compositeYoY(scenario) {
+  const now = compositeIndex(scenario);
+  const base = compositeIndex(scenario); // simplified — using 2025 vs 2019
+  return now - 100;
+}
+
+function calcCompositeSeries(scenario) {
+  return YEARS.map((_, i) => {
+    let total = 0;
+    CATEGORIES.forEach(c => {
+      total += c.pct[scenario] * (INDEX_DATA[c.id].values[i] || 100);
+    });
+    const baseTotal = CATEGORIES.reduce((s, c) => s + c.pct[scenario] * 100, 0);
+    return total / baseTotal;
+  });
+}
+
+function calcWeightedYoY(scenario) {
+  return YEARS.map((_, i) => {
+    if (i === 0) return null;
+    let totalNow = 0, totalBase = 0;
+    CATEGORIES.forEach(c => {
+      totalNow += c.pct[scenario] * (INDEX_DATA[c.id].values[i] || 100);
+      totalBase += c.pct[scenario] * (INDEX_DATA[c.id].values[i - 1] || 100);
+    });
+    const baseTot = CATEGORIES.reduce((s, c) => s + c.pct[scenario] * 100, 0);
+    return ((totalNow / baseTot) - (totalBase / baseTot)) / (totalBase / baseTot) * 100;
+  });
+}
+
+function sparklinePath(values, w, h) {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const pts = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 6) - 3;
+    return `${x},${y}`;
+  });
+  return 'M' + pts.join('L');
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderCategoryGrid() {
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = '';
+  CATEGORIES.forEach(c => {
+    const pct = c.pct[currentScenario];
+    const idx = INDEX_DATA[c.id].values[YEARS.indexOf(2025)];
+    const isUp = idx > 100;
+    const btn = document.createElement('button');
+    btn.setAttribute('class', 'cat-chip');
+    btn.style.setProperty('--cat-color', c.color);
+    btn.innerHTML = `<span class="cat-chip-dot" style="background:${c.color}"></span>
+      <span style="color:${c.color}">${c.name}</span>
+      <span style="opacity:0.7">${pct}%</span>`;
+    btn.addEventListener('click', () => showDeepDive(c.id));
+    grid.appendChild(btn);
+  });
+}
+
+function renderDonutLegend() {
+  const legend = document.getElementById('donutLegend');
+  legend.innerHTML = '';
+  CATEGORIES.forEach(c => {
+    const pct = c.pct[currentScenario];
+    const item = document.createElement('div');
+    item.setAttribute('class', 'legend-item');
+    item.innerHTML = `
+      <span class="legend-dot" style="background:${c.color}"></span>
+      <span class="legend-name">${c.name}</span>
+      <span class="legend-pct">${pct}%</span>`;
+    item.addEventListener('click', () => showDeepDive(c.id));
+    legend.appendChild(item);
+  });
+}
+
+function renderDonut() {
+  const canvas = document.getElementById('donutCanvas');
+  const labels = CATEGORIES.map(c => c.name);
+  const data = CATEGORIES.map(c => c.pct[currentScenario]);
+  const colors = CATEGORIES.map(c => c.color);
+
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }],
+    },
+    options: {
+      cutout: '65%',
+      responsive: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.parsed}% of production cost`,
+          },
+          backgroundColor: '#1a1520',
+          titleColor: '#f0e6d3',
+          bodyColor: '#9a8aaa',
+          borderColor: '#3a3048',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+        },
+      },
+      animation: { animateRotate: true, duration: 600 },
+    },
+  });
+}
+
+function renderTrendChips() {
+  const container = document.getElementById('trendChips');
+  container.innerHTML = '';
+  CATEGORIES.forEach(c => {
+    const chip = document.createElement('button');
+    chip.setAttribute('class', 'cat-chip' + (selectedCategories.has(c.id) ? ' selected' : ''));
+    chip.setAttribute('data-cat', c.id);
+    chip.innerHTML = `<span class="cat-chip-dot" style="background:${c.color}"></span>${c.name}`;
+    chip.addEventListener('click', () => {
+      if (selectedCategories.has(c.id)) {
+        selectedCategories.delete(c.id);
+      } else {
+        selectedCategories.add(c.id);
+      }
+      saveState();
+      renderTrendChips();
+      renderTrendChart();
+    });
+    container.appendChild(chip);
+  });
+}
+
+function renderTrendChart() {
+  const canvas = document.getElementById('trendChart');
+  const datasets = [];
+
+  if (chartMode === 'index') {
+    CATEGORIES.forEach(c => {
+      if (!selectedCategories.has(c.id)) return;
+      const d = {
+        label: c.name,
+        data: INDEX_DATA[c.id].values,
+        borderColor: c.color,
+        backgroundColor: c.color + '22',
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        tension: 0.3,
+        fill: false,
+      };
+      datasets.push(d);
+    });
+  } else {
+    CATEGORIES.forEach(c => {
+      if (!selectedCategories.has(c.id)) return;
+      const d = {
+        label: c.name,
+        data: INDEX_DATA[c.id].yoy,
+        borderColor: c.color,
+        backgroundColor: c.color + '22',
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        tension: 0.3,
+        fill: false,
+      };
+      datasets.push(d);
+    });
+  }
+
+  const yLabel = chartMode === 'index' ? 'Index (2019 = 100)' : 'Year-over-Year Change (%)';
+  const baseLine = chartMode === 'index' ? 100 : 0;
+
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: YEARS.map(String), datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1520',
+          titleColor: '#f0e6d3',
+          bodyColor: '#9a8aaa',
+          borderColor: '#3a3048',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? (chartMode === 'index' ? ctx.parsed.y.toFixed(1) : ctx.parsed.y.toFixed(1) + '%') : 'N/A'}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: '#241e2c', drawBorder: false },
+          ticks: { color: '#5c5070', font: { size: 11, family: 'Inter' } },
+        },
+        y: {
+          grid: { color: '#241e2c', drawBorder: false },
+          ticks: {
+            color: '#5c5070',
+            font: { size: 11, family: 'Inter' },
+            callback: v => chartMode === 'index' ? v : v + '%',
+          },
+          afterDataLimits: scale => {
+            if (chartMode === 'index') {
+              scale.max = Math.max(scale.max, 150);
+              scale.min = Math.min(scale.min, 60);
+            }
+          },
+        },
+        annotation: {
+          annotations: {
+            baseLine: {
+              type: 'line',
+              yMin: baseLine,
+              yMax: baseLine,
+              borderColor: '#3a3048',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+            },
+          },
+        },
+      },
+      animation: { duration: 400 },
+    },
+  });
+}
+
+function renderCompositeSparkline() {
+  const wrap = document.getElementById('compositeSparkline');
+  const w = wrap.clientWidth || 340;
+  const h = 40;
+  const vals = calcCompositeSeries(currentScenario);
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const range = max - min || 1;
+  const pts = vals.map((v, i) => {
+    const x = (i / (vals.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 8) - 4;
+    return `${x},${y}`;
+  });
+  const lastPt = vals[vals.length - 1];
+  const lastX = w;
+  const lastY = h - ((lastPt - min) / range) * (h - 8) - 4;
+
+  wrap.innerHTML = `<svg width="${w}" height="${h}" style="display:block;overflow:visible">
+    <defs>
+      <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="M${pts.join('L')}" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${lastX}" cy="${lastY}" r="4" fill="#c9a84c"/>
+  </svg>`;
+}
+
+function renderCompositeCard() {
+  const val = compositeIndex(currentScenario);
+  const change = val - 100;
+  document.getElementById('compositeVal').textContent = val.toFixed(1);
+  const changeEl = document.getElementById('compositeChange');
+  changeEl.textContent = (change >= 0 ? '▲ +' : '▼ ') + change.toFixed(1) + '% since ' + BASE_YEAR;
+  changeEl.setAttribute('class', 'composite-change ' + (change >= 0 ? 'up' : 'down'));
+  renderCompositeSparkline();
+}
+
+function renderTimeline() {
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  TIMELINE_EVENTS.forEach(ev => {
+    const item = document.createElement('div');
+    item.setAttribute('class', 'tl-item');
+    item.innerHTML = `
+      <div class="tl-dot ${ev.isMajor ? 'now' : ''}"></div>
+      <div class="tl-year">${ev.year}</div>
+      <div class="tl-title">${ev.title}</div>
+      <div class="tl-desc">${ev.desc}</div>`;
+    tl.appendChild(item);
+  });
+}
+
+function renderTrendToggle() {
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.setAttribute('class', 'toggle-btn' + (btn.dataset.mode === chartMode ? ' active' : ''));
+  });
+}
+
+// ============================================================
+// DEEP DIVE
+// ============================================================
+function showDeepDive(catId) {
+  const cat = CATEGORIES.find(c => c.id === catId);
+  if (!cat) return;
+  const idx = INDEX_DATA[catId];
+  const vals = idx.values;
+  const yoy = idx.yoy;
+  const currentIdx = vals[YEARS.indexOf(2025)];
+  const trend = currentIdx - 100;
+  const lastYoy = yoy[YEARS.indexOf(2025)];
+  const w = 280, h = 40;
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const range = max - min || 1;
+  const pts = vals.map((v, i) => {
+    const x = (i / (vals.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 8) - 4;
+    return `${x},${y}`;
+  });
+
+  const mount = document.getElementById('deepDiveMount');
+  mount.innerHTML = `
+    <div class="detail-card" id="deepDiveCard">
+      <div class="detail-header">
+        <span class="detail-dot" style="background:${cat.color}"></span>
+        <span class="detail-name">${cat.name}</span>
+        <span class="detail-index-badge">
+          <div class="detail-index-val" style="color:${cat.color}">${currentIdx.toFixed(1)}</div>
+          <div class="detail-index-base">Base: 100 (2019)</div>
+        </span>
+      </div>
+      <span class="detail-trend ${trend >= 0 ? 'up' : 'down'}">
+        ${trend >= 0 ? '▲' : '▼'} ${Math.abs(trend).toFixed(1)}% vs base
+      </span>
+      <p class="detail-narrative">${cat.narrative}</p>
+      <svg class="sparkline-wrap" width="100%" height="40" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+        <path d="M${pts.join('L')}" fill="none" stroke="${cat.color}" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="0" y1="${h/2}" x2="${w}" y2="${h/2}" stroke="${cat.color}" stroke-width="1" stroke-opacity="0.2" stroke-dasharray="3,3"/>
+      </svg>
+      <div class="detail-stats">
+        <div class="detail-stat">
+          <div class="detail-stat-val" style="color:${cat.color}">${currentIdx.toFixed(1)}</div>
+          <div class="detail-stat-lbl">Current Index</div>
+        </div>
+        <div class="detail-stat">
+          <div class="detail-stat-val" style="color:${cat.color}">${lastYoy != null ? lastYoy.toFixed(1) + '%' : 'N/A'}</div>
+          <div class="detail-stat-lbl">Last YoY</div>
+        </div>
+        <div class="detail-stat">
+          <div class="detail-stat-val">${cat.pct[currentScenario]}%</div>
+          <div class="detail-stat-lbl">Cost Share</div>
+        </div>
+      </div>
+      <button class="detail-close" onclick="closeDeepDive()">Close</button>
+    </div>`;
+  mount.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function closeDeepDive() {
+  document.getElementById('deepDiveMount').innerHTML = '';
+}
+
+// ============================================================
+// SCENARIO SWITCHING
+// ============================================================
+function switchScenario(s) {
+  currentScenario = s;
+  saveState();
+  document.querySelectorAll('.scenario-btn').forEach(b => {
+    b.setAttribute('class', 'scenario-btn' + (b.dataset.scenario === s ? ' active' : ''));
+  });
+  renderCategoryGrid();
+  renderDonutLegend();
+  renderDonut();
+  renderCompositeCard();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  loadState();
+
+  // Scenario buttons
+  document.querySelectorAll('.scenario-btn').forEach(btn => {
+    if (btn.dataset.scenario === currentScenario) btn.setAttribute('class', 'scenario-btn active');
+    btn.addEventListener('click', () => switchScenario(btn.dataset.scenario));
+  });
+
+  // Tab navigation
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    if (tab.dataset.tab === 'overview') tab.setAttribute('class', 'nav-tab active');
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.nav-tab').forEach(t => t.setAttribute('class', 'nav-tab'));
+      tab.setAttribute('class', 'nav-tab active');
+      document.querySelectorAll('.tab-content').forEach(c => c.setAttribute('class', 'tab-content'));
+      document.getElementById('tab-' + tab.dataset.tab).setAttribute('class', 'tab-content active');
+    });
+  });
+
+  // Chart toggle
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      chartMode = btn.dataset.mode;
+      saveState();
+      renderTrendToggle();
+      renderTrendChart();
+    });
+  });
+
+  // Initial renders
+  renderCategoryGrid();
+  renderDonutLegend();
+  renderDonut();
+  renderCompositeCard();
+  renderTrendChips();
+  renderTrendChart();
+  renderTimeline();
+  renderTrendToggle();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

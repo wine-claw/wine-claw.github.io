@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wine SO₂ Speciation Explorer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M16 2C16 2 8 10 8 18a8 8 0 0016 0c0-8-8-16-8-16z" fill="#722F37" opacity="0.85"/>
+          <path d="M16 2C16 2 10 9 10 17a6 6 0 0012 0c0-8-6-15-6-15z" fill="#A13D4F"/>
+          <path d="M16 6c0 0-3.5 4.5-3.5 10a3.5 3.5 0 007 0c0-5.5-3.5-10-3.5-10z" fill="#D4A0A8"/>
+        </svg>
+        <span>Wine SO₂ Speciation Explorer</span>
+      </div>
+      <p class="tagline">A practical guide to molecular, bisulfite &amp; sulfite in wine</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="openclaw-warning">Experimental OpenClaw AI mini-app. Untested and not professionally validated. Do not rely on this for any decisions.</div>
+
+    <!-- About the tool -->
+    <section class="about-band">
+      <p>
+        <strong>Why does pH control your SO₂ effectiveness?</strong>
+        Molecular SO₂ (SO₂·H₂O) is the antimicrobial fraction — but it exists in equilibrium with bisulfite (HSO₃⁻),
+        which dominates at wine pH. As pH rises, the equilibrium shifts <em>away</em> from the protective molecular form,
+        requiring ever-larger additions of free SO₂ to maintain the same molecular level.
+        This tool visualises that relationship and helps you explore the trade-offs.
+      </p>
+    </section>
+
+    <!-- Inputs -->
+    <section class="card inputs-card">
+      <h2>Your Wine</h2>
+
+      <!-- Wine-style presets -->
+      <div class="presets-row">
+        <span class="preset-label">Style preset:</span>
+        <button class="preset-btn active" data-preset="red">Red (pH 3.4)</button>
+        <button class="preset-btn" data-preset="white">White (pH 3.2)</button>
+        <button class="preset-btn" data-preset="sparkling">Sparkling (pH 3.0)</button>
+      </div>
+
+      <div class="input-grid">
+        <!-- pH -->
+        <div class="input-group">
+          <label for="ph-input">
+            pH
+            <span class="info-icon" title="Use a calibrated pH meter. Typical wine pH range: 2.9 – 4.0.">?</span>
+          </label>
+          <input type="number" id="ph-input" min="2.5" max="4.5" step="0.01" value="3.40" />
+          <input type="range" id="ph-slider" min="2.5" max="4.5" step="0.01" value="3.40" class="range-slider" />
+        </div>
+
+        <!-- Free SO2 -->
+        <div class="input-group">
+          <label for="fso2-input">
+            Free SO₂ (mg/L)
+            <span class="info-icon" title="Measured by Ripper titration or automated analyser. Typical range: 10 – 80 mg/L.">?</span>
+          </label>
+          <input type="number" id="fso2-input" min="0" max="300" step="0.5" value="40" />
+        </div>
+
+        <!-- Molecular target -->
+        <div class="input-group">
+          <label for="mol-target-input">
+            Molecular SO₂ target (mg/L)
+            <span class="info-icon" title="Reference range for microbial protection: 0.5 – 0.8 mg/L for most wines; up to 1.0 mg/L for high-risk styles.">?</span>
+          </label>
+          <div class="target-presets">
+            <button class="target-btn" data-val="0.5">0.5</button>
+            <button class="target-btn active" data-val="0.8">0.8</button>
+            <button class="target-btn" data-val="1.0">1.0</button>
+            <input type="number" id="mol-target-input" min="0" max="5" step="0.05" value="0.8" placeholder="Custom" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section class="card results-card">
+
+      <h2>Speciation at current pH &amp; free SO₂</h2>
+
+      <!-- Species bars -->
+      <div class="species-chart" id="species-chart" aria-label="Speciation bar chart">
+        <div class="species-row">
+          <span class="species-name molecular">Molecular SO₂</span>
+          <div class="bar-track">
+            <div class="bar-fill molecular" id="bar-molecular"></div>
+          </div>
+          <span class="species-pct" id="pct-molecular">—</span>
+        </div>
+        <div class="species-row">
+          <span class="species-name bisulfite">Bisulfite (HSO₃⁻)</span>
+          <div class="bar-track">
+            <div class="bar-fill bisulfite" id="bar-bisulfite"></div>
+          </div>
+          <span class="species-pct" id="pct-bisulfite">—</span>
+        </div>
+        <div class="species-row">
+          <span class="species-name sulfite">Sulfite (SO₃²⁻)</span>
+          <div class="bar-track">
+            <div class="bar-fill sulfite" id="bar-sulfite"></div>
+          </div>
+          <span class="species-pct" id="pct-sulfite">—</span>
+        </div>
+      </div>
+
+      <!-- Key metrics -->
+      <div class="metrics-row">
+        <div class="metric-box highlight">
+          <span class="metric-label">Molecular SO₂</span>
+          <span class="metric-value" id="mol-so2-val">—</span>
+          <span class="metric-unit">mg/L</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Free SO₂ needed for target</span>
+          <span class="metric-value" id="required-fso2-val">—</span>
+          <span class="metric-unit">mg/L free SO₂</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Target molecular</span>
+          <span class="metric-value" id="target-val">—</span>
+          <span class="metric-unit">mg/L</span>
+        </div>
+      </div>
+
+      <!-- Interpretation band -->
+      <div class="interpretation-band" id="interpretation-band">
+        <span class="interp-icon" id="interp-icon">—</span>
+        <span class="interp-text" id="interp-text">—</span>
+      </div>
+    </section>
+
+    <!-- Chart -->
+    <section class="card chart-card">
+      <h2>pH vs Required Free SO₂ &amp; Molecular Fraction</h2>
+      <div class="chart-wrapper">
+        <canvas id="ph-chart" aria-label="pH vs free SO₂ and molecular fraction chart"></canvas>
+      </div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="dot" style="background:#722F37"></span>Molecular fraction (%)</span>
+        <span class="legend-item"><span class="dot" style="background:#4A90D9"></span>Required free SO₂ (mg/L) — target <span id="legend-target">0.8</span> mg/L</span>
+        <span class="legend-item"><span class="dot" style="background:#A13D4F"></span>Current point</span>
+      </div>
+    </section>
+
+    <!-- Caveats -->
+    <section class="card caveats-card">
+      <h2>Caveats &amp; Assumptions</h2>
+      <ul>
+        <li>
+          <strong>Equilibrium only.</strong> Calculations use the Henderson–Hasselbalch approximation with
+          pK<sub>a1</sub> = 1.81 (HSO₃⁻/SO₂·H₂O) and pK<sub>a2</sub> = 7.20 (SO₃²⁻/HSO₃⁻) at 20 °C.
+          Activity coefficients are assumed ≈ 1 (ideal dilute solution).
+        </li>
+        <li>
+          <strong>Temperature.</strong> pK<sub>a</sub> values shift ~−0.009 / °C above 20 °C, slightly increasing the
+          molecular fraction in warmer wines. This effect is not modelled here.
+        </li>
+        <li>
+          <strong>Sulfite (SO₃²⁻) is negligible</strong> at wine pH (&lt; 0.01 % of total free SO₂) and is shown
+          only for completeness.
+        </li>
+        <li>
+          <strong>Not compliance advice.</strong> This tool is for educational and exploratory purposes only.
+          It does not replace laboratory analysis, regional regulatory limits, or professional oenological advice.
+          Always verify free and molecular SO₂ by accepted analytical methods.
+        </li>
+        <li>
+          <strong>Molecular target references (0.5–1.0 mg/L)</strong> are indicative guidelines from the
+          winemaking literature for general protection against oxidation and microbial spoilage.
+          Actual requirements vary with wine composition, temperature, microbial pressure, and style goals.
+        </li>
+        <li>
+          <strong>Bound SO₂</strong> (reacting with aldehydes, ketones, sugars) is not accounted for;
+          total SO₂ is higher than free SO₂ in bottled wine.
+        </li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>
+      Wine SO₂ Speciation Explorer &mdash; educational tool only.
+      Formulas &amp; references in README.md.
+    </p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

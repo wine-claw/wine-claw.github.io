@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vintage Time Machine — Australian Wine Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Warning Banner -->
+  <div id="warning-banner" class="warning-banner" role="alert">
+    <span class="warning-text">⚠️ Experimental AI mini-app — not professionally validated, do not rely on for decisions</span>
+    <button class="warning-dismiss" aria-label="Dismiss warning" onclick="dismissWarning()">✕</button>
+  </div>
+
+  <!-- Hero Header -->
+  <header class="hero" id="hero">
+    <div class="hero-overlay">
+      <h1 class="hero-title">Vintage Time Machine</h1>
+      <p class="hero-subtitle">South Australian Wine Vintages · 1990–2024</p>
+      <nav class="mode-nav">
+        <button class="mode-btn active" data-mode="explore" onclick="switchMode('explore')">
+          <span class="mode-icon">🕰️</span> Explore
+        </button>
+        <button class="mode-btn" data-mode="quiz" onclick="switchMode('quiz')">
+          <span class="mode-icon">🧠</span> Quiz
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- EXPLORE Mode -->
+  <main id="explore-mode" class="mode-content">
+    <!-- Year Timeline -->
+    <section class="timeline-section">
+      <div class="timeline-track" id="timeline-track">
+        <!-- Year chips injected by JS -->
+      </div>
+    </section>
+
+    <!-- Selected Year Banner -->
+    <section class="year-banner" id="year-banner">
+      <h2 class="year-display" id="year-display">1990</h2>
+      <p class="year-headline" id="year-headline"></p>
+    </section>
+
+    <!-- Region Cards Grid -->
+    <section class="cards-grid" id="cards-grid">
+      <!-- Cards injected by JS -->
+    </section>
+  </main>
+
+  <!-- QUIZ Mode -->
+  <main id="quiz-mode" class="mode-content" style="display:none;">
+    <!-- Quiz Start Screen -->
+    <section id="quiz-start" class="quiz-screen">
+      <div class="quiz-intro-card">
+        <h2 class="quiz-title">Vintage Detective</h2>
+        <p class="quiz-tagline">Can you identify the year from the clues?</p>
+        <div class="quiz-rules">
+          <p>🎯 10 questions per round</p>
+          <p>✅ 10 points per correct answer</p>
+          <p>🔥 Streak bonus for consecutive correct answers</p>
+          <p>🏷️ Earn your title: Apprentice → Cellar Hand → Winemaker → Vigneron → Legend</p>
+        </div>
+        <button class="quiz-start-btn" onclick="startQuiz()">Start the Time Machine</button>
+      </div>
+    </section>
+
+    <!-- Quiz Play Screen -->
+    <section id="quiz-play" class="quiz-screen" style="display:none;">
+      <div class="quiz-hud">
+        <span class="quiz-progress" id="quiz-progress">1 / 10</span>
+        <span class="quiz-score" id="quiz-score">0 pts</span>
+        <span class="quiz-streak" id="quiz-streak"></span>
+      </div>
+      <div class="quiz-card" id="quiz-card">
+        <div class="quiz-clues" id="quiz-clues">
+          <!-- Clues injected by JS -->
+        </div>
+        <div class="quiz-options" id="quiz-options">
+          <!-- Options injected by JS -->
+        </div>
+      </div>
+      <div class="quiz-feedback" id="quiz-feedback" style="display:none;">
+        <p id="feedback-text"></p>
+        <p id="feedback-year" class="feedback-year"></p>
+      </div>
+    </section>
+
+    <!-- Quiz Results Screen -->
+    <section id="quiz-results" class="quiz-screen" style="display:none;">
+      <div class="results-card">
+        <h2 class="results-title">Round Complete!</h2>
+        <div class="results-score" id="results-score">0</div>
+        <div class="results-title-earned" id="results-title-earned">Apprentice</div>
+        <div class="results-breakdown" id="results-breakdown"></div>
+        <button class="quiz-start-btn" onclick="startQuiz()">Play Again</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Halftone Texture Overlay -->
+  <div class="halftone-overlay" aria-hidden="true"></div>
+
+  <footer class="app-footer">
+    <p>Vintage Time Machine · Crafted with 🍷 and a little AI magic</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

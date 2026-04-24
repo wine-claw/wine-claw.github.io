@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vineyard Mildew Pressure Playbook</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="experimental-banner">
+  <span class="warn-icon">⚠</span>
+  Educational simulator only — not a real spray recommendation engine.
+  Scores are qualitative guidance; consult a qualified viticulturist for actual spray decisions.
+</div>
+
+<header class="app-header">
+  <div class="header-vineyard-strip">
+    <svg class="vine-silhouette" viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+      <path d="M0,60 C20,40 30,55 50,45 C70,35 80,50 100,40 C120,30 130,50 150,42 C170,34 180,48 200,38 C220,28 230,50 250,40 C270,30 280,48 300,40 C320,32 330,50 350,42 C370,34 380,50 400,45 L400,60 Z" fill="currentColor" opacity="0.15"/>
+      <line x1="0" y1="58" x2="400" y2="58" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+    </svg>
+  </div>
+  <div class="header-content">
+    <div class="app-logo">🍇</div>
+    <h1 class="app-title">Mildew Pressure Playbook</h1>
+    <p class="app-subtitle">Powdery vs Downy — risk trainer for vineyard managers</p>
+  </div>
+</header>
+
+<main class="app-main">
+
+  <!-- Scenario Presets -->
+  <section class="section-presets">
+    <h2 class="section-label">⚡ Quick Scenarios</h2>
+    <div class="preset-grid" id="presetGrid">
+      <button class="preset-chip" data-preset="shaded-warm">🌿 Shaded Warm Trap</button>
+      <button class="preset-chip" data-preset="wet-outbreak">💧 Wet Outbreak Week</button>
+      <button class="preset-chip" data-preset="open-clean">🌬 Open Clean Canopy</button>
+      <button class="preset-chip" data-preset="late-humid">🌙 Late-Season Humid Spell</button>
+      <button class="preset-chip" data-preset="high-inoculum">🔴 High Inoculum Block</button>
+      <button class="preset-chip" data-preset="cool-damp">❄️ Cool &amp; Damp Morning</button>
+    </div>
+  </section>
+
+  <!-- Control Sliders -->
+  <section class="section-controls">
+
+    <div class="control-group" id="growthStageGroup">
+      <label class="control-label">
+        <span class="ctrl-icon">🌱</span> Growth Stage
+      </label>
+      <div class="slider-row">
+        <span class="slider-endlabel">Budburst</span>
+        <input type="range" min="0" max="5" value="2" class="slider" id="growthStage" data-param="growthStage">
+        <span class="slider-endlabel">Post-Harvest</span>
+      </div>
+      <div class="slider-value-display" id="growthStageDisplay">Bloom → Fruit Set</div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">
+        <span class="ctrl-icon">🌿</span> Canopy Density
+      </label>
+      <div class="slider-row">
+        <span class="slider-endlabel">Open</span>
+        <input type="range" min="0" max="4" value="2" class="slider" id="canopyDensity" data-param="canopyDensity">
+        <span class="slider-endlabel">Dense</span>
+      </div>
+      <div class="slider-value-display" id="canopyDensityDisplay">Moderate</div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">
+        <span class="ctrl-icon">🌡</span> Temperature Band
+      </label>
+      <div class="slider-row">
+        <span class="slider-endlabel">Cool (&lt;15°C)</span>
+        <input type="range" min="0" max="4" value="2" class="slider" id="temperature" data-param="temperature">
+        <span class="slider-endlabel">Hot (&gt;30°C)</span>
+      </div>
+      <div class="slider-value-display" id="temperatureDisplay">Moderate (15–25°C)</div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">
+        <span class="ctrl-icon">💧</span> Humidity Level
+      </label>
+      <div class="slider-row">
+        <span class="slider-endlabel">Dry (&lt;50%)</span>
+        <input type="range" min="0" max="4" value="2" class="slider" id="humidity" data-param="humidity">
+        <span class="slider-endlabel">Very Humid (&gt;90%)</span>
+      </div>
+      <div class="slider-value-display" id="humidityDisplay">Moderate</div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">
+        <span class="ctrl-icon">🌧</span> Recent Rain / Leaf Wetness
+      </label>
+      <div class="slider-row">
+        <span class="slider-endlabel">Dry</span>
+        <input type="range" min="0" max="4" value="1" class="slider" id="rainWetness" data-param="rainWetness">
+        <span class="slider-endlabel">Heavy Rain</span>
+      </div>
+      <div class="slider-value-display" id="rainWetnessDisplay">Light rain / Damp</div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">
+        <span class="ctrl-icon">🔴</span> Block History / Carryover Inoculum
+      </label>
+      <div class="slider-row">
+        <span class="slider-endlabel">Clean / New</span>
+        <input type="range" min="0" max="4" value="1" class="slider" id="inoculum" data-param="inoculum">
+        <span class="slider-endlabel">Heavy Pressure</span>
+      </div>
+      <div class="slider-value-display" id="inoculumDisplay">Low–Moderate</div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">
+        <span class="ctrl-icon">🛡</span> Spray Protection Status
+      </label>
+      <div class="slider-row">
+        <span class="slider-endlabel">Recently Sprayed</span>
+        <input type="range" min="0" max="4" value="1" class="slider" id="sprayStatus" data-param="sprayStatus">
+        <span class="slider-endlabel">Due / Unprotected</span>
+      </div>
+      <div class="slider-value-display" id="sprayStatusDisplay">Spray aging — reapply soon</div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">
+        <span class="ctrl-icon">🌬</span> Airflow / Row Openness
+      </label>
+      <div class="slider-row">
+        <span class="slider-endlabel">Open / Breezy</span>
+        <input type="range" min="0" max="4" value="2" class="slider" id="airflow" data-param="airflow">
+        <span class="slider-endlabel">Still / Sheltered</span>
+      </div>
+      <div class="slider-value-display" id="airflowDisplay">Moderate airflow</div>
+    </div>
+
+  </section>
+
+  <!-- Pressure Scorecards -->
+  <section class="section-scores">
+
+    <div class="disease-card powdery-card" id="powderyCard">
+      <div class="disease-card-header">
+        <div class="disease-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="14" cy="14" r="12" fill="none" stroke="#c08030" stroke-width="1.5"/>
+            <path d="M8 10 Q14 6 20 10 Q14 14 8 10Z" fill="#c08030" opacity="0.6"/>
+            <path d="M8 14 Q14 10 20 14 Q14 18 8 14Z" fill="#c08030" opacity="0.4"/>
+            <path d="M8 18 Q14 14 20 18 Q14 22 8 18Z" fill="#c08030" opacity="0.25"/>
+          </svg>
+        </div>
+        <div>
+          <div class="disease-name">Powdery Mildew</div>
+          <div class="disease-latin">Erysiphe necator</div>
+        </div>
+        <div class="pressure-badge" id="powderyBadge">MEDIUM</div>
+      </div>
+      <div class="pressure-meter-wrap">
+        <div class="meter-label-row">
+          <span>Risk</span>
+          <span id="powderyMeterPct">45%</span>
+        </div>
+        <div class="pressure-meter">
+          <div class="meter-fill powdery-fill" id="powderyFill" style="width:45%"></div>
+        </div>
+      </div>
+      <div class="disease-tags" id="powderyTags">
+        <span class="tag tag-neutral">Moderate temp favouring</span>
+        <span class="tag tag-warning">Dense canopy risk</span>
+      </div>
+      <div class="favouring-factors" id="powderyFactors">
+        <strong>Favouring:</strong> Moderate temp 15–25°C, moderate humidity, dense canopy shading, still air, aging spray
+      </div>
+    </div>
+
+    <div class="disease-card downy-card" id="downyCard">
+      <div class="disease-card-header">
+        <div class="disease-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="14" cy="14" r="12" fill="none" stroke="#2a7a50" stroke-width="1.5"/>
+            <ellipse cx="14" cy="12" rx="7" ry="4" fill="#2a7a50" opacity="0.5"/>
+            <ellipse cx="14" cy="17" rx="7" ry="4" fill="#2a7a50" opacity="0.3"/>
+            <ellipse cx="14" cy="22" rx="7" ry="4" fill="#2a7a50" opacity="0.15"/>
+            <circle cx="10" cy="12" r="1" fill="#fff" opacity="0.7"/>
+            <circle cx="17" cy="16" r="1" fill="#fff" opacity="0.7"/>
+          </svg>
+        </div>
+        <div>
+          <div class="disease-name">Downy Mildew</div>
+          <div class="disease-latin">Plasmopara viticola</div>
+        </div>
+        <div class="pressure-badge" id="downyBadge">LOW</div>
+      </div>
+      <div class="pressure-meter-wrap">
+        <div class="meter-label-row">
+          <span>Risk</span>
+          <span id="downyMeterPct">20%</span>
+        </div>
+        <div class="pressure-meter">
+          <div class="meter-fill downy-fill" id="downyFill" style="width:20%"></div>
+        </div>
+      </div>
+      <div class="disease-tags" id="downyTags">
+        <span class="tag tag-neutral">Limited leaf wetness</span>
+      </div>
+      <div class="favouring-factors" id="downyFactors">
+        <strong>Favouring:</strong> Prolonged leaf wetness, mild–warm temp 15–25°C, high humidity, recent rain, poor airflow
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Next 48h Coach Panel -->
+  <section class="coach-panel" id="coachPanel">
+    <div class="coach-header">
+      <span class="coach-icon">🎯</span>
+      <span>Next 48 Hours — Coach Verdict</span>
+    </div>
+    <div class="coach-body" id="coachBody">
+      <!-- populated by JS -->
+    </div>
+  </section>
+
+  <!-- Reset -->
+  <section class="reset-section">
+    <button class="btn-reset" id="resetBtn">↺ Reset to Defaults</button>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p>Educational guidance only. Not a spray recommendation engine. Consult a qualified viticulturist for spray decisions.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

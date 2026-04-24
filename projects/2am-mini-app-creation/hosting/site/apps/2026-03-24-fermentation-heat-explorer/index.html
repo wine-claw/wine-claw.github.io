@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fermentation Heat Explorer</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+    <div class="openclaw-warning">Experimental OpenClaw AI mini-app. Untested and not professionally validated. Do not rely on this for any decisions.</div>
+      <div>
+        <p class="eyebrow">Winery heat management tool</p>
+        <h1>Fermentation Heat Explorer</h1>
+        <p class="hero-copy">
+          Estimates heat release, jacket &#916;T demands, and peak cooling duty for grape must
+          fermentation &mdash; sized for early tank-specifying, vintage planning, and
+          back-of-envelope comparisons.
+        </p>
+      </div>
+      <div class="hero-note card glass">
+        <strong>Decision-support only</strong>
+        <p>
+          Not a replacement for refrigeration engineering, site-specific heat balances,
+          or real-time cellar data. Useful for comparing tank sizes, grape ripeness levels,
+          and fermenter strategies before and during vintage.
+        </p>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="card controls">
+
+        <!-- Presets -->
+        <div class="presets-row">
+          <span class="presets-label">Ferment type presets</span>
+          <div class="preset-buttons">
+            <button class="preset-btn" data-preset="red" type="button">Red ferment</button>
+            <button class="preset-btn" data-preset="white" type="button">White / Ros&#233;</button>
+          </div>
+        </div>
+        <div class="preset-note" id="presetNote"></div>
+
+        <div class="section-title-row">
+          <h2>Scenario inputs</h2>
+          <button id="resetBtn" class="secondary-btn" type="button">Reset defaults</button>
+        </div>
+
+        <div class="grid inputs-grid">
+
+          <label>
+            <span>Tank volume</span>
+            <div class="field-with-unit">
+              <input id="volumeL" type="number" min="100" max="10000000" step="500" value="10000"/>
+              <span>L</span>
+            </div>
+          </label>
+
+          <label>
+            <span>Sugar unit</span>
+            <div class="field-with-unit select-unit">
+              <select id="sugarUnit">
+                <option value="g/L" selected>g/L</option>
+                <option value="Brix">&#176;Bx</option>
+                <option value="Baum&#233;">&#176;Be</option>
+              </select>
+            </div>
+          </label>
+
+          <label>
+            <span>Starting sugar</span>
+            <div class="field-with-unit">
+              <input id="startSugar" type="number" min="0" max="400" step="1" value="230"/>
+              <span id="startSugarUnit">g/L</span>
+            </div>
+          </label>
+
+          <label>
+            <span>Residual sugar target</span>
+            <div class="field-with-unit">
+              <input id="endSugar" type="number" min="0" max="400" step="0.1" value="2"/>
+              <span id="endSugarUnit">g/L</span>
+            </div>
+          </label>
+
+          <label>
+            <span>Fermentation duration</span>
+            <div class="field-with-unit">
+              <input id="days" type="number" min="0.5" max="90" step="0.5" value="7"/>
+              <span>days</span>
+            </div>
+          </label>
+
+          <label>
+            <span>Peak-load factor</span>
+            <div class="field-with-unit">
+              <input id="peakFactor" type="number" min="1" max="10" step="0.1" value="1.8"/>
+              <span>&#215; avg</span>
+            </div>
+          </label>
+
+          <label>
+            <span>Heat release factor</span>
+            <div class="field-with-unit">
+              <input id="heatFactor" type="number" min="0.01" max="5" step="0.001" value="0.556"/>
+              <span>kJ/g sugar</span>
+            </div>
+          </label>
+
+          <label>
+            <span>Must density</span>
+            <div class="field-with-unit">
+              <input id="density" type="number" min="0.8" max="1.2" step="0.001" value="1.090"/>
+              <span>kg/L</span>
+            </div>
+          </label>
+
+          <label>
+            <span>Specific heat capacity</span>
+            <div class="field-with-unit">
+              <input id="cp" type="number" min="1" step="0.01" value="3.9"/>
+              <span>kJ/kg&#183;K</span>
+            </div>
+          </label>
+
+        </div>
+
+        <div class="assumptions">
+          <h3>Model notes</h3>
+          <ul>
+            <li><strong>Heat:</strong> total heat = sugar consumed (kg) &times; heat release factor (default 0.556 kJ/g sugar, calibrated for grape must fermentation).</li>
+            <li><strong>Cooling duty:</strong> average load = total heat &divide; duration (continuous kW); peak = average &times; peak factor (sizing headroom). <strong>Jacket &#916;T</strong> framing: UA = 10 W/K per 10,000 L (rough insulated jacket estimate); divide kW by UA to get &#176;C temperature difference the jacket must hold. Adjust UA in the heat-capacity box if your jacket performance differs.</li>
+            <li><strong>Peak factor:</strong> red ferments typically 1.8&ndash;2.2&times; average; whites 1.4&ndash;1.7&times;. Reflects the biology of a rising, peaking, then falling fermentation curve.</li>
+            <li><strong>Ethanol &amp; CO&#8322;:</strong> stoichiometric sketch from glucose-equivalent conversion (C&#x2086;H&#x2081;&#x2082;O&#x2086; &rarr; 2 C&#x2082;H&#x2085;OH + 2 CO&#x2082;). ABV uses 0.059 as a practical conservative coefficient (vs. stoichiometric maximum ~0.065).</li>
+            <li><strong>Unit conversions:</strong> &#176;Bx (g sucrose/100 g solution) and &#176;Be (Baum&#233; scale) are converted to g/L using the must density. &#176;Bx &asymp; Brix &times; 10 g/L for typical grape must; &#176;Be &asymp; &#176;Bx / 1.8 at typical densities.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="results-stack">
+        <section class="metrics-grid" id="metricsGrid"></section>
+
+        <section class="card chart-card">
+          <div class="section-title-row">
+            <div>
+              <h2>Fermentation profile sketch</h2>
+              <p class="muted">Front-loaded heat-release shape, peaking near one-third of total duration.
+                A visual aid &mdash; not a fitted kinetic model.</p>
+            </div>
+          </div>
+          <svg id="chart" viewBox="0 0 920 360" role="img" aria-label="Sugar remaining and cooling load profile chart"></svg>
+          <div class="legend">
+            <span><i class="legend-dot sugar"></i>Sugar remaining (<span id="legendSugarUnit">g/L</span>)</span>
+            <span><i class="legend-dot load"></i>Cooling load (kW)</span>
+          </div>
+        </section>
+
+        <section class="card explanation-card">
+          <h2>How to use this</h2>
+          <p>
+            Pick a ferment type preset or enter your own parameters. The tool estimates
+            total metabolic heat from sugar consumption, then converts it to average and
+            peak cooling loads. The jacket &#916;T framing helps you check whether your
+            glycol circuit can sustain the thermal demand.
+          </p>
+          <p>
+            The adiabatic rise shows how hot the tank would drift if cooling failed entirely &mdash;
+            a useful reference point for hot-vintage or高温浸发酵 planning. The CO&#8322; and ethanol
+            figures are stoichiometric sketches for educational context, not lab measurements.
+          </p>
+          <p class="what-it-is-not">
+            <strong>What this is not:</strong> a refrigeration design tool; it ignores
+            vessel wall conduction, latent heat of CO&#8322; escape, cap management (red ferments),
+            changing must specific heat as ethanol accumulates, and real yeast kinetic fitting.
+            The &#916;T / UA model assumes a well-circulated glycol jacket and ignores heating
+            from ambient. For tank-specifying, apply an appropriate safety factor and consult
+            a winery engineer.
+          </p>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

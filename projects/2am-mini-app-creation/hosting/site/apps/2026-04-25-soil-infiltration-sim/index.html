@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soil Water Infiltration Simulator</title>
+<style>
+  :root {
+    --bg-cream: #FDF6E3;
+    --bg-sand: #F5E6C8;
+    --soil-dark: #5D4037;
+    --soil-mid: #8D6E63;
+    --soil-light: #BCAAA4;
+    --water-deep: #1E88E5;
+    --water-mid: #64B5F6;
+    --water-light: #BBDEFB;
+    --water-pond: #42A5F5;
+    --text-dark: #3E2723;
+    --text-mid: #5D4037;
+    --accent-green: #558B2F;
+    --accent-amber: #FF8F00;
+    --warn-bg: #FFF3E0;
+    --warn-text: #E65100;
+    --panel-bg: #FFF8E1;
+    --border: #D7CCC8;
+    --shadow: rgba(93, 64, 55, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Warning Banner */
+  .warn-banner {
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    text-align: center;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 1px solid #FFE0B2;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, var(--soil-dark) 0%, var(--soil-mid) 100%);
+    color: #fff;
+    padding: 24px 32px;
+    text-align: center;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  header p {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    font-weight: 300;
+  }
+
+  /* Main Layout */
+  .main-wrap {
+    display: flex;
+    flex: 1;
+    gap: 20px;
+    padding: 20px 24px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  /* Controls Panel */
+  .controls {
+    flex: 0 0 340px;
+    background: var(--panel-bg);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 4px 16px var(--shadow);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    height: fit-content;
+  }
+
+  .controls h2 {
+    font-size: 1.1rem;
+    color: var(--soil-dark);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .soil-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .soil-btn {
+    padding: 10px 8px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .soil-btn:hover { border-color: var(--soil-mid); background: #FFF3E0; }
+  .soil-btn.active {
+    border-color: var(--accent-green);
+    background: #E8F5E9;
+    color: var(--accent-green);
+    box-shadow: 0 0 0 2px rgba(85,139,47,0.15);
+  }
+
+  .param-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    padding: 3px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .param-row:last-child { border-bottom: none; }
+  .param-val { font-weight: 600; color: var(--text-dark); }
+
+  .slider-wrap { margin-top: 4px; }
+  .slider-wrap label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--soil-dark);
+  }
+  .slider-wrap input[type="range"] {
+    width: 100%;
+    accent-color: var(--water-deep);
+    cursor: pointer;
+  }
+  .slider-val {
+    font-size: 0.85rem;
+    color: var(--water-deep);
+    font-weight: 700;
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .stat-card .stat-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-mid);
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-start { background: var(--accent-green); color: #fff; }
+  .btn-start:hover { background: #33691E; }
+  .btn-pause { background: var(--accent-amber); color: #fff; }
+  .btn-pause:hover { background: #EF6C00; }
+  .btn-reset { background: var(--soil-light); color: var(--text-dark); }
+  .btn-reset:hover { background: var(--soil-mid); color: #fff; }
+
+  /* Canvas Area */
+  .canvas-wrap {
+    flex: 1;
+    min-width: 360px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .canvas-header {
+    padding: 12px 18px;
+    background: var(--bg-sand);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #soilCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+  }
+
+  /* How it works */
+  .how-it-works {
+    max-width: 1400px;
+    margin: 0 auto 32px;
+    padding: 0 24px;
+    width: 100%;
+  }
+  .how-toggle {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .how-header {
+    padding: 14px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: var(--soil-dark);
+    user-select: none;
+    transition: background 0.2s;
+  }
+  .how-header:hover { background: #FFF3E0; }
+  .how-header .chevron {
+    transition: transform 0.3s;
+    font-size: 1.2rem;
+  }
+  .how-toggle.open .chevron { transform: rotate(180deg); }
+  .how-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+  .how-toggle.open .how-body { max-height: 600px; }
+  .how-body-inner {
+    padding: 0 20px 20px;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--text-mid);
+  }
+  .how-body-inner p { margin-bottom: 10px; }
+  .how-body-inner ul { padding-left: 20px; margin-bottom: 10px; }
+  .how-body-inner li { margin-bottom: 6px; }
+
+  /* Responsive */
+  @media (max-width: 860px) {
+    .main-wrap { flex-direction: column; }
+    .controls { flex: 1 1 auto; width: 100%; max-width: none; }
+    .canvas-wrap { min-height: 420px; }
+    header h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="warn-banner">
+  ⚠️ Experimental OpenClaw AI mini-app. Not professionally validated. Do not rely on for decisions.
+</div>
+
+<header>
+  <h1>💧 Soil Water Infiltration Simulator</h1>
+  <p>Watch how rainfall penetrates different soil types in real time</p>
+</header>
+
+<div class="main-wrap">
+  <aside class="controls">
+    <div>
+      <h2>🌱 Soil Type</h2>
+      <div class="soil-grid" id="soilGrid"></div>
+      <div style="margin-top:10px" id="paramDisplay"></div>
+    </div>
+
+    <div class="slider-wrap">
+      <label><span>☔ Rainfall Intensity</span></label>
+      <input type="range" id="rainSlider" min="1" max="100" value="25">
+      <div class="slider-val" id="rainVal">25 mm/h</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Elapsed Time</div>
+        <div class="stat-value" id="statTime">0.0 min</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Wetting Front</div>
+        <div class="stat-value" id="statFront">0 cm</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Infiltrated</div>
+        <div class="stat-value" id="statInfil">0 mm</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Runoff</div>
+        <div class="stat-value" id="statRunoff">0 mm</div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-start" id="btnStart">▶ Start</button>
+      <button class="btn btn-pause" id="btnPause">⏸ Pause</button>
+      <button class="btn btn-reset" id="btnReset">↺ Reset</button>
+    </div>
+  </aside>
+
+  <div class="canvas-wrap">
+    <div class="canvas-header">
+      <span>Soil Cross-Section (0–60 cm)</span>
+      <span id="soilLabel" style="color:var(--accent-green); font-weight:700;">Loam</span>
+    </div>
+    <canvas id="soilCanvas"></canvas>
+  </div>
+</div>
+
+<div class="how-it-works">
+  <div class="how-toggle" id="howToggle">
+    <div class="how-header">
+      <span>📖 How it works</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="how-body">
+      <div class="how-body-inner">
+        <p>This simulation uses a simplified <strong>Green-Ampt</strong> infiltration model. Here's what you're seeing:</p>
+        <ul>
+          <li><strong>Rain</strong> falls at the intensity you choose. Not all of it enters the soil.</li>
+          <li><strong>Infiltration rate</strong> depends on the soil's saturated hydraulic conductivity (<em>Ks</em>) and how deep the wetting front has already penetrated.</li>
+          <li><strong>Sand</strong> has huge pores and drains fast — water shoots deep with almost no runoff.</li>
+          <li><strong>Clay</strong> has tiny pores and low conductivity — water can't get in quickly, so it ponds on the surface and runs off.</li>
+          <li>The <strong>wetting front</strong> marks the boundary between wet (field capacity) and dry soil. It moves slower as it goes deeper because the pressure gradient weakens.</li>
+          <li><strong>Surface ponding</strong> appears when rainfall exceeds the soil's infiltration capacity for a sustained period.</li>
+        </ul>
+        <p>Parameters like porosity, field capacity, wilting point, and suction head are based on typical USDA soil texture values. The model is explicit-timestep and simplified for visual clarity — not for engineering design.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= SOIL DATA ================= */
+const SOILS = {
+  sand: {
+    name: 'Sand',
+    porosity: 0.43,
+    fc: 0.06,
+    wp: 0.02,
+    ks: 500,
+    suction: 50,
+    color: '#D7CCC8',
+    darkColor: '#A1887F',
+    desc: 'Fast infiltration, almost no runoff'
+  },
+  loam: {
+    name: 'Loam',
+    porosity: 0.45,
+    fc: 0.29,
+    wp: 0.12,
+    ks: 25,
+    suction: 150,
+    color: '#C5A882',
+    darkColor: '#8D6E63',
+    desc: 'Moderate infiltration and runoff'
+  },
+  clay: {
+    name: 'Clay',
+    porosity: 0.48,
+    fc: 0.41,
+    wp: 0.20,
+    ks: 5,
+    suction: 400,
+    color: '#A1887F',
+    darkColor: '#5D4037',
+    desc: 'Slow infiltration, high runoff'
+  },
+  sandyLoam: {
+    name: 'Sandy Loam',
+    porosity: 0.44,
+    fc: 0.20,
+    wp: 0.08,
+    ks: 100,
+    suction: 100,
+    color: '#D4B996',
+    darkColor: '#A1887F',
+    desc: 'Quick infiltration, some runoff'
+  },
+  clayLoam: {
+    name: 'Clay Loam',
+    porosity: 0.46,
+    fc: 0.34,
+    wp: 0.16,
+    ks: 10,
+    suction: 250,
+    color: '#B89F7D',
+    darkColor: '#795548',
+    desc: 'Slow infiltration, moderate runoff'
+  }
+};
+
+/* ================= STATE ================= */
+let currentSoilKey = 'loam';
+let rainfallIntensity = 25; // mm/h
+let running = false;
+let elapsedMin = 0;
+let wettingFrontCm = 0; // depth in cm
+let infiltratedMm = 0;
+let runoffMm = 0;
+let pondingMm = 0;
+let raindrops = [];
+let lastTime = 0;
+let animId = null;
+
+const MAX_DEPTH_CM = 60;
+const SKY_H_FRAC = 0.12; // fraction of canvas for sky
+
+/* ================= DOM REFS ================= */
+const canvas = document.getElementById('soilCanvas');
+const ctx = canvas.getContext('2d');
+const soilGrid = document.getElementById('soilGrid');
+const paramDisplay = document.getElementById('paramDisplay');
+const rainSlider = document.getElementById('rainSlider');
+const rainVal = document.getElementById('rainVal');
+const btnStart = document.getElementById('btnStart');
+const btnPause = document.getElementById('btnPause');
+const btnReset = document.getElementById('btnReset');
+const soilLabel = document.getElementById('soilLabel');
+const howToggle = document.getElementById('howToggle');
+
+/* ================= INIT UI ================= */
+function buildSoilButtons() {
+  soilGrid.innerHTML = '';
+  Object.keys(SOILS).forEach(key => {
+    const s = SOILS[key];
+    const btn = document.createElement('button');
+    btn.className = 'soil-btn' + (key === currentSoilKey ? ' active' : '');
+    btn.textContent = s.name;
+    btn.title = s.desc;
+    btn.onclick = () => selectSoil(key);
+    soilGrid.appendChild(btn);
+  });
+}
+
+function updateParams() {
+  const s = SOILS[currentSoilKey];
+  paramDisplay.innerHTML = `
+    <div class="param-row"><span>Porosity</span><span class="param-val">${s.porosity.toFixed(2)}</span></div>
+    <div class="param-row"><span>Field Capacity</span><span class="param-val">${s.fc.toFixed(2)}</span></div>
+    <div class="param-row"><span>Wilting Point</span><span class="param-val">${s.wp.toFixed(2)}</span></div>
+    <div class="param-row"><span>Ks (mm/h)</span><span class="param-val">${s.ks}</span></div>
+    <div class="param-row"><span>Suction (mm)</span><span class="param-val">${s.suction}</span></div>
+  `;
+  soilLabel.textContent = s.name;
+}
+
+function selectSoil(key) {
+  currentSoilKey = key;
+  buildSoilButtons();
+  updateParams();
+  resetSim();
+}
+
+rainSlider.addEventListener('input', e => {
+  rainfallIntensity = +e.target.value;
+  rainVal.textContent = rainfallIntensity + ' mm/h';
+});
+
+howToggle.querySelector('.how-header').addEventListener('click', () => {
+  howToggle.classList.toggle('open');
+});
+
+/* ================= CANVAS SETUP ================= */
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  const headerH = wrap.querySelector('.canvas-header').offsetHeight;
+  const w = wrap.clientWidth;
+  const h = Math.max(400, wrap.clientHeight - headerH);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+/* ================= SIMULATION ================= */
+function resetSim() {
+  running = false;
+  elapsedMin = 0;
+  wettingFrontCm = 0;
+  infiltratedMm = 0;
+  runoffMm = 0;
+  pondingMm = 0;
+  raindrops = [];
+  lastTime = 0;
+  if (animId) cancelAnimationFrame(animId);
+  updateStats();
+  draw();
+}
+
+function startSim() {
+  if (!running) {
+    running = true;
+    lastTime = performance.now();
+    animId = requestAnimationFrame(loop);
+  }
+}
+
+function pauseSim() {
+  running = false;
+  if (animId) cancelAnimationFrame(animId);
+}
+
+btnStart.onclick = startSim;
+btnPause.onclick = pauseSim;
+btnReset.onclick = resetSim;
+
+function updateStats() {
+  document.getElementById('statTime').textContent = elapsedMin.toFixed(1) + ' min';
+  document.getElementById('statFront').textContent = wettingFrontCm.toFixed(1) + ' cm';
+  document.getElementById('statInfil').textContent = infiltratedMm.toFixed(1) + ' mm';
+  document.getElementById('statRunoff').textContent = runoffMm.toFixed(1) + ' mm';
+}
+
+/* ================= PHYSICS ================= */
+function step(dtSec) {
+  const s = SOILS[currentSoilKey];
+  const dtHour = dtSec / 3600;
+  const dtMin = dtSec / 60;
+
+  // Rainfall amount this step (mm)
+  const rainThisStep = rainfallIntensity * dtHour;
+
+  // Infiltration capacity using simplified Green-Ampt
+  // f = Ks * (1 + (suction * (porosity - theta_i)) / (z * rainfall_time_factor))
+  // Use theta_i = wilting point as initial dry content
+  const thetaI = s.wp;
+  const deltaTheta = s.porosity - thetaI;
+
+  let infiltrationRate = s.ks; // mm/h base
+  if (wettingFrontCm > 0.1) {
+    const zMm = wettingFrontCm * 10; // depth in mm
+    // Simplified: suction head drives water into dry soil
+    const gradientTerm = (s.suction * deltaTheta) / (zMm * 0.5 + 10);
+    infiltrationRate = s.ks * (1 + gradientTerm);
+  } else {
+    // Very near surface: higher rate due to strong suction
+    infiltrationRate = s.ks * (1 + (s.suction * deltaTheta) / 20);
+  }
+
+  // Cap infiltration by rainfall rate (can't infiltrate more than falls)
+  // and by some practical max
+  const maxInfil = Math.min(rainfallIntensity, infiltrationRate);
+
+  // Actual infiltration this step
+  const infilThisStep = maxInfil * dtHour;
+  infiltratedMm += infilThisStep;
+
+  // Excess becomes runoff / ponding
+  const excess = rainThisStep - infilThisStep;
+  if (excess > 0) {
+    // Some excess ponds, some runs off immediately
+    // Ponding builds up, runoff is the overflow
+    pondingMm += excess * 0.6;
+    runoffMm += excess * 0.4;
+  } else {
+    // If no excess, ponding can slowly drain
+    pondingMm = Math.max(0, pondingMm - s.ks * dtHour * 0.3);
+  }
+
+  // Cap ponding to a visible max
+  pondingMm = Math.min(pondingMm, 15);
+
+  // Advance wetting front depth
+  // Volume balance: infil = deltaTheta * depthChange (in mm)
+  if (infilThisStep > 0 && wettingFrontCm < MAX_DEPTH_CM) {
+    const depthChangeMm = infilThisStep / deltaTheta;
+    wettingFrontCm += depthChangeMm / 10; // mm -> cm
+    if (wettingFrontCm > MAX_DEPTH_CM) wettingFrontCm = MAX_DEPTH_CM;
+  }
+
+  elapsedMin += dtMin;
+
+  // Spawn raindrops
+  const numDrops = Math.ceil(rainfallIntensity / 8);
+  for (let i = 0; i < numDrops; i++) {
+    if (Math.random() < dtSec * 10) {
+      raindrops.push({
+        x: Math.random() * canvas.width / (window.devicePixelRatio || 1),
+        y: 0,
+        speed: 120 + Math.random() * 180, // px/s
+        len: 6 + Math.random() * 8
+      });
+    }
+  }
+
+  // Update raindrops
+  const W = canvas.width / (window.devicePixelRatio || 1);
+  const H = canvas.height / (window.devicePixelRatio || 1);
+  const soilTop = H * SKY_H_FRAC;
+
+  for (let i = raindrops.length - 1; i >= 0; i--) {
+    const d = raindrops[i];
+    d.y += d.speed * dtSec;
+    // Remove if hits soil surface (or ponds)
+    const surfaceY = soilTop - Math.min(pondingMm * 2, 20);
+    if (d.y >= surfaceY) {
+      raindrops.splice(i, 1);
+    }
+  }
+
+  // Limit raindrops array
+  if (raindrops.length > 300) raindrops.splice(0, raindrops.length - 300);
+}
+
+/* ================= DRAWING ================= */
+function draw() {
+  const W = canvas.width / (window.devicePixelRatio || 1);
+  const H = canvas.height / (window.devicePixelRatio || 1);
+  const soilTop = H * SKY_H_FRAC;
+  const soilH = H - soilTop;
+  const s = SOILS[currentSoilKey];
+
+  ctx.clearRect(0, 0, W, H);
+
+  /* ---- Sky / Air ---- */
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, soilTop);
+  skyGrad.addColorStop(0, '#E3F2FD');
+  skyGrad.addColorStop(1, '#BBDEFB');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, soilTop);
+
+  /* ---- Clouds (subtle) ---- */
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.beginPath();
+  ctx.ellipse(W * 0.2, soilTop * 0.35, 40, 14, 0, 0, Math.PI * 2);
+  ctx.ellipse(W * 0.25, soilTop * 0.38, 28, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(W * 0.7, soilTop * 0.28, 48, 16, 0, 0, Math.PI * 2);
+  ctx.ellipse(W * 0.76, soilTop * 0.32, 32, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  /* ---- Surface ponding ---- */
+  if (pondingMm > 0.2) {
+    const pondH = Math.min(pondingMm * 2, 22);
+    ctx.fillStyle = 'rgba(66,165,245,0.55)';
+    ctx.beginPath();
+    ctx.moveTo(0, soilTop);
+    // Wavy surface
+    for (let x = 0; x <= W; x += 4) {
+      const wave = Math.sin(x * 0.04 + elapsedMin * 3) * 1.5;
+      ctx.lineTo(x, soilTop - pondH + wave * 0.5);
+    }
+    ctx.lineTo(W, soilTop);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  /* ---- Soil body (dry base) ---- */
+  ctx.fillStyle = s.color;
+  ctx.fillRect(0, soilTop, W, soilH);
+
+  /* ---- Soil texture grain ---- */
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, soilTop, W, soilH);
+  ctx.clip();
+  const seed = currentSoilKey.length * 1337;
+  const grainColor = s.darkColor;
+  for (let i = 0; i < 800; i++) {
+    // Deterministic-ish grain pattern
+    const gx = ((Math.sin(i * 1.7 + seed) * 0.5 + 0.5) * W);
+    const gy = soilTop + ((Math.cos(i * 2.3 + seed) * 0.5 + 0.5) * soilH);
+    const r = 0.6 + Math.sin(i * 3.1) * 0.4;
+    ctx.fillStyle = grainColor;
+    ctx.globalAlpha = 0.08 + Math.abs(Math.sin(i * 5.7)) * 0.08;
+    ctx.beginPath();
+    ctx.arc(gx, gy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  /* ---- Wet zones ---- */
+  if (wettingFrontCm > 0.1) {
+    const frontY = soilTop + (wettingFrontCm / MAX_DEPTH_CM) * soilH;
+
+    // Field capacity zone (behind front, lighter blue)
+    const fcDepthFactor = Math.min(wettingFrontCm / MAX_DEPTH_CM, 1);
+    const fcY = soilTop + fcDepthFactor * soilH;
+    const fcGrad = ctx.createLinearGradient(0, soilTop, 0, fcY);
+    fcGrad.addColorStop(0, 'rgba(187,222,251,0.45)');
+    fcGrad.addColorStop(0.7, 'rgba(187,222,251,0.25)');
+    fcGrad.addColorStop(1, 'rgba(187,222,251,0.0)');
+    ctx.fillStyle = fcGrad;
+    ctx.fillRect(0, soilTop, W, fcY - soilTop);
+
+    // Saturated zone near surface (darker blue)
+    const satH = Math.min((wettingFrontCm / MAX_DEPTH_CM) * soilH * 0.35, soilH * 0.25);
+    const satGrad = ctx.createLinearGradient(0, soilTop, 0, soilTop + satH);
+    satGrad.addColorStop(0, 'rgba(30,136,229,0.38)');
+    satGrad.addColorStop(1, 'rgba(30,136,229,0.05)');
+    ctx.fillStyle = satGrad;
+    ctx.fillRect(0, soilTop, W, satH);
+
+    // Wetting front line (sharp transition)
+    ctx.strokeStyle = 'rgba(30,136,229,0.55)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 3) {
+      const wiggle = Math.sin(x * 0.06 + elapsedMin * 2) * 2.5;
+      if (x === 0) ctx.moveTo(x, frontY + wiggle);
+      else ctx.lineTo(x, frontY + wiggle);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Front glow
+    const glowGrad = ctx.createLinearGradient(0, frontY - 10, 0, frontY + 18);
+    glowGrad.addColorStop(0, 'rgba(30,136,229,0.0)');
+    glowGrad.addColorStop(0.5, 'rgba(30,136,229,0.18)');
+    glowGrad.addColorStop(1, 'rgba(30,136,229,0.0)');
+    ctx.fillStyle = glowGrad;
+    ctx.fillRect(0, frontY - 10, W, 28);
+  }
+
+  /* ---- Raindrops ---- */
+  ctx.strokeStyle = 'rgba(30,136,229,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  for (const d of raindrops) {
+    ctx.beginPath();
+    ctx.moveTo(d.x, d.y);
+    ctx.lineTo(d.x - 1, d.y - d.len);
+    ctx.stroke();
+  }
+
+  /* ---- Depth markers ---- */
+  ctx.fillStyle = 'rgba(93,64,55,0.6)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  for (let d = 0; d <= MAX_DEPTH_CM; d += 10) {
+    const y = soilTop + (d / MAX_DEPTH_CM) * soilH;
+    ctx.strokeStyle = 'rgba(93,64,55,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(W - 55, y);
+    ctx.lineTo(W - 5, y);
+    ctx.stroke();
+    ctx.fillText(d + ' cm', W - 60, y);
+  }
+
+  /* ---- Legend ---- */
+  const legX = 14;
+  const legY = H - 110;
+  const legW = 155;
+  const legH = 95;
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.strokeStyle = 'rgba(93,64,55,0.2)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, legX, legY, legW, legH, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  const items = [
+    { color: '#1E88E5', label: 'Saturated zone' },
+    { color: '#BBDEFB', label: 'Field capacity zone' },
+    { color: s.color, label: 'Dry soil' },
+    { color: '#42A5F5', label: 'Runoff / ponding' }
+  ];
+  items.forEach((it, i) => {
+    const iy = legY + 10 + i * 20;
+    ctx.fillStyle = it.color;
+    roundRect(ctx, legX + 8, iy, 14, 10, 3);
+    ctx.fill();
+    ctx.fillStyle = '#3E2723';
+    ctx.fillText(it.label, legX + 26, iy - 1);
+  });
+
+  /* ---- Surface label ---- */
+  ctx.fillStyle = 'rgba(93,64,55,0.7)';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('Surface', 10, soilTop - 4);
+
+  ctx.strokeStyle = 'rgba(93,64,55,0.3)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(0, soilTop);
+  ctx.lineTo(W, soilTop);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+/* ================= LOOP ================= */
+function loop(now) {
+  if (!running) return;
+  const dtSec = Math.min((now - lastTime) / 1000, 0.1); // cap dt
+  lastTime = now;
+
+  step(dtSec);
+  updateStats();
+  draw();
+
+  animId = requestAnimationFrame(loop);
+}
+
+/* ================= INIT ================= */
+buildSoilButtons();
+updateParams();
+resetSim();
+
+/* Initial draw */
+draw();
+</script>
+</body>
+</html>

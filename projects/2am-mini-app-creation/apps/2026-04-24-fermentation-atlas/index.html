@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Fermentation Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-cream: #f8f4ed;
+      --bg-warm: #f0e8da;
+      --bg-card: #fffcf7;
+      --text-dark: #2d2319;
+      --text-medium: #5a4d3f;
+      --text-light: #8a7d6e;
+      --accent-terracotta: #c56a42;
+      --accent-amber: #d4962a;
+      --accent-brown: #8b6e4e;
+      --accent-olive: #6b7a52;
+      --accent-rust: #a0402a;
+      --color-lactic: #e8a87c;
+      --color-alcoholic: #d4a04d;
+      --color-acetic: #a8c090;
+      --color-mold: #c4a882;
+      --color-mixed: #b8a0a0;
+      --color-propionic: #a0b8c8;
+      --shadow-soft: 0 4px 20px rgba(45, 35, 25, 0.08);
+      --shadow-hover: 0 8px 32px rgba(45, 35, 25, 0.14);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg-cream);
+      color: var(--text-dark);
+      line-height: 1.55;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== Bubble Background ===== */
+    .bubble-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(197, 106, 66, 0.08), rgba(197, 106, 66, 0.02));
+      animation: floatUp linear infinite;
+      bottom: -80px;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+      10% { opacity: 0.6; }
+      50% { transform: translateY(-50vh) translateX(20px) scale(1.05); }
+      90% { opacity: 0.4; }
+      100% { transform: translateY(-110vh) translateX(-10px) scale(0.95); opacity: 0; }
+    }
+    .bubble:nth-child(1) { width: 40px; height: 40px; left: 10%; animation-duration: 18s; animation-delay: 0s; }
+    .bubble:nth-child(2) { width: 24px; height: 24px; left: 25%; animation-duration: 22s; animation-delay: 3s; }
+    .bubble:nth-child(3) { width: 56px; height: 56px; left: 40%; animation-duration: 20s; animation-delay: 6s; background: radial-gradient(circle at 30% 30%, rgba(212, 150, 42, 0.07), rgba(212, 150, 42, 0.01)); }
+    .bubble:nth-child(4) { width: 32px; height: 32px; left: 55%; animation-duration: 24s; animation-delay: 1s; background: radial-gradient(circle at 30% 30%, rgba(168, 192, 144, 0.07), rgba(168, 192, 144, 0.01)); }
+    .bubble:nth-child(5) { width: 48px; height: 48px; left: 70%; animation-duration: 19s; animation-delay: 8s; }
+    .bubble:nth-child(6) { width: 20px; height: 20px; left: 85%; animation-duration: 21s; animation-delay: 4s; background: radial-gradient(circle at 30% 30%, rgba(196, 168, 130, 0.07), rgba(196, 168, 130, 0.01)); }
+    .bubble:nth-child(7) { width: 36px; height: 36px; left: 5%; animation-duration: 23s; animation-delay: 10s; }
+    .bubble:nth-child(8) { width: 28px; height: 28px; left: 90%; animation-duration: 17s; animation-delay: 7s; background: radial-gradient(circle at 30% 30%, rgba(212, 150, 42, 0.06), rgba(212, 150, 42, 0.01)); }
+    .bubble:nth-child(9) { width: 44px; height: 44px; left: 30%; animation-duration: 25s; animation-delay: 12s; background: radial-gradient(circle at 30% 30%, rgba(160, 64, 42, 0.05), rgba(160, 64, 42, 0.01)); }
+    .bubble:nth-child(10) { width: 16px; height: 16px; left: 60%; animation-duration: 15s; animation-delay: 2s; }
+
+    /* ===== Header ===== */
+    .page-header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 48px 20px 32px;
+      background: linear-gradient(180deg, rgba(248,244,237,0) 0%, rgba(248,244,237,1) 60%, rgba(248,244,237,1) 100%);
+    }
+    .page-header h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2.2rem, 6vw, 3.4rem);
+      font-weight: 700;
+      color: var(--text-dark);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+    .page-header .subtitle {
+      font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+      color: var(--text-light);
+      margin-top: 10px;
+      font-weight: 400;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .header-decoration {
+      width: 60px;
+      height: 3px;
+      background: var(--accent-terracotta);
+      border-radius: 3px;
+      margin: 16px auto 0;
+      opacity: 0.7;
+    }
+
+    /* ===== Filters ===== */
+    .filter-bar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 20px 36px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .filter-chip {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 8px 18px;
+      border-radius: 100px;
+      border: 1.5px solid transparent;
+      background: var(--bg-card);
+      color: var(--text-medium);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 1px 6px rgba(45,35,25,0.05);
+      user-select: none;
+    }
+    .filter-chip:hover { transform: translateY(-1px); box-shadow: 0 3px 12px rgba(45,35,25,0.1); }
+    .filter-chip.active { background: var(--text-dark); color: #fff; border-color: var(--text-dark); box-shadow: 0 2px 10px rgba(45,35,25,0.2); }
+    .filter-chip[data-type="lactic"]:hover { background: #fff0e0; border-color: var(--color-lactic); }
+    .filter-chip[data-type="alcoholic"]:hover { background: #fff8e0; border-color: var(--color-alcoholic); }
+    .filter-chip[data-type="acetic"]:hover { background: #f0f8e8; border-color: var(--color-acetic); }
+    .filter-chip[data-type="mold"]:hover { background: #f5f0e5; border-color: var(--color-mold); }
+    .filter-chip[data-type="mixed"]:hover { background: #f0eae8; border-color: var(--color-mixed); }
+    .filter-chip[data-type="propionic"]:hover { background: #e8f0f5; border-color: var(--color-propionic); }
+
+    /* ===== Card Grid ===== */
+    .card-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px 48px;
+    }
+    @media (max-width: 640px) {
+      .card-grid { grid-template-columns: 1fr; gap: 16px; padding: 0 14px 40px; }
+    }
+
+    .fermentation-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.35s ease;
+      position: relative;
+      opacity: 1;
+    }
+    .fermentation-card.hidden { opacity: 0; pointer-events: none; position: absolute; }
+    .fermentation-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
+
+    .card-top-band {
+      height: 5px;
+      width: 100%;
+    }
+    .card-top-band.lactic { background: var(--color-lactic); }
+    .card-top-band.alcoholic { background: var(--color-alcoholic); }
+    .card-top-band.acetic { background: var(--color-acetic); }
+    .card-top-band.mold { background: var(--color-mold); }
+    .card-top-band.mixed { background: var(--color-mixed); }
+    .card-top-band.propionic { background: var(--color-propionic); }
+
+    .card-body { padding: 20px 22px 22px; }
+    .card-header-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .card-emoji {
+      font-size: 2rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .card-title-wrap { min-width: 0; }
+    .card-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      line-height: 1.25;
+    }
+    .card-type-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 100px;
+      margin-top: 5px;
+    }
+    .card-type-badge.lactic { background: #fff0e0; color: #b07040; }
+    .card-type-badge.alcoholic { background: #fff8e0; color: #a08030; }
+    .card-type-badge.acetic { background: #f0f8e8; color: #608050; }
+    .card-type-badge.mold { background: #f5f0e5; color: #8a7048; }
+    .card-type-badge.mixed { background: #f0eae8; color: #806060; }
+    .card-type-badge.propionic { background: #e8f0f5; color: #507090; }
+
+    .card-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 2px; }
+    .meta-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-light);
+    }
+    .meta-value {
+      font-size: 0.88rem;
+      color: var(--text-medium);
+      font-weight: 500;
+      line-height: 1.35;
+    }
+    .meta-full { grid-column: 1 / -1; }
+
+    .card-products {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(139,110,78,0.12);
+    }
+    .products-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .product-tag {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(139,110,78,0.08);
+      color: var(--text-medium);
+    }
+
+    /* ===== Modal / Detail Panel ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(45, 35, 25, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .modal-panel {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      max-width: 620px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(45,35,25,0.25);
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+    }
+    .modal-overlay.open .modal-panel { transform: translateY(0) scale(1); }
+
+    .modal-band { height: 6px; width: 100%; border-radius: var(--radius) var(--radius) 0 0; }
+    .modal-band.lactic { background: var(--color-lactic); }
+    .modal-band.alcoholic { background: var(--color-alcoholic); }
+    .modal-band.acetic { background: var(--color-acetic); }
+    .modal-band.mold { background: var(--color-mold); }
+    .modal-band.mixed { background: var(--color-mixed); }
+    .modal-band.propionic { background: var(--color-propionic); }
+
+    .modal-content { padding: 28px 32px 32px; }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(45,35,25,0.06);
+      color: var(--text-medium);
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease;
+      z-index: 2;
+    }
+    .modal-close:hover { background: rgba(45,35,25,0.12); }
+
+    .modal-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .modal-emoji { font-size: 3rem; line-height: 1; }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700; color: var(--text-dark); }
+    .modal-subtitle { font-size: 0.95rem; color: var(--text-light); margin-top: 3px; }
+
+    .detail-section { margin-bottom: 20px; }
+    .detail-section:last-child { margin-bottom: 0; }
+    .detail-heading {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+    .detail-body {
+      font-size: 0.95rem;
+      color: var(--text-medium);
+      line-height: 1.6;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .detail-stat {
+      background: rgba(139,110,78,0.06);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+    }
+    .detail-stat-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-light);
+      margin-bottom: 4px;
+    }
+    .detail-stat-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    .detail-stat-value small {
+      font-weight: 400;
+      font-size: 0.82rem;
+      color: var(--text-light);
+    }
+
+    .modal-products {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .modal-product-tag {
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+    .modal-product-tag.lactic { background: #fff0e0; color: #b07040; }
+    .modal-product-tag.alcoholic { background: #fff8e0; color: #a08030; }
+    .modal-product-tag.acetic { background: #f0f8e8; color: #608050; }
+    .modal-product-tag.mold { background: #f5f0e5; color: #8a7048; }
+    .modal-product-tag.mixed { background: #f0eae8; color: #806060; }
+    .modal-product-tag.propionic { background: #e8f0f5; color: #507090; }
+
+    .modal-example {
+      background: linear-gradient(135deg, rgba(197,106,66,0.08) 0%, rgba(212,150,42,0.06) 100%);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      border-left: 3px solid var(--accent-terracotta);
+    }
+    .modal-example-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-terracotta);
+      margin-bottom: 4px;
+    }
+    .modal-example-text {
+      font-size: 0.95rem;
+      color: var(--text-medium);
+      font-weight: 500;
+    }
+
+    @media (max-width: 640px) {
+      .modal-content { padding: 22px 20px 24px; }
+      .modal-emoji { font-size: 2.4rem; }
+      .modal-title { font-size: 1.5rem; }
+      .detail-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ===== Footer ===== */
+    .page-footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 20px;
+      margin-top: 8px;
+    }
+    .footer-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(139,110,78,0.08);
+      border: 1px solid rgba(139,110,78,0.15);
+      border-radius: 100px;
+      padding: 10px 22px;
+      font-size: 0.82rem;
+      color: var(--text-light);
+    }
+    .footer-banner svg { flex-shrink: 0; }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(139,110,78,0.25); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(139,110,78,0.4); }
+  </style>
+</head>
+<body>
+
+  <!-- Bubble Background -->
+  <div class="bubble-bg" aria-hidden="true">
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="page-header">
+    <h1>The Fermentation Atlas</h1>
+    <p class="subtitle">An interactive guide to the microbial world that feeds us</p>
+    <div class="header-decoration"></div>
+  </header>
+
+  <!-- Filters -->
+  <nav class="filter-bar" role="tablist" aria-label="Filter by fermentation type">
+    <button class="filter-chip active" data-type="all" role="tab" aria-selected="true">All</button>
+    <button class="filter-chip" data-type="lactic" role="tab" aria-selected="false">Lactic Acid</button>
+    <button class="filter-chip" data-type="alcoholic" role="tab" aria-selected="false">Alcoholic</button>
+    <button class="filter-chip" data-type="acetic" role="tab" aria-selected="false">Acetic</button>
+    <button class="filter-chip" data-type="mold" role="tab" aria-selected="false">Mold-Driven</button>
+    <button class="filter-chip" data-type="mixed" role="tab" aria-selected="false">Mixed</button>
+    <button class="filter-chip" data-type="propionic" role="tab" aria-selected="false">Propionic</button>
+  </nav>
+
+  <!-- Card Grid -->
+  <main class="card-grid" id="cardGrid"></main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-panel" id="modalPanel" role="document">
+      <button class="modal-close" id="modalClose" aria-label="Close details">&times;</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="page-footer">
+    <div class="footer-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Experimental AI mini-app — data for educational reference only
+    </div>
+  </footer>
+
+  <script>
+    // ===== Fermentation Data =====
+    const fermentations = [
+      {
+        id: 1,
+        name: "Kimchi",
+        emoji: "🥬",
+        type: "lactic",
+        organisms: "Lactobacillus spp., Leuconostoc mesenteroides",
+        substrate: "Napa cabbage, radishes, seasonings (garlic, ginger, chili)",
+        tempRange: "15–20°C",
+        phRange: "4.0–4.5",
+        timeRange: "2–7 days",
+        oxygen: "Anaerobic",
+        products: ["Lactic acid", "CO₂", "Ethanol (trace)"],
+        example: "Traditional Korean baechu kimchi, aged in onggi earthenware pots",
+        description: "A lactic acid fermentation where naturally occurring bacteria on vegetables convert sugars into lactic acid, creating the signature tangy flavor and preserving the vegetables."
+      },
+      {
+        id: 2,
+        name: "Wine",
+        emoji: "🍷",
+        type: "alcoholic",
+        organisms: "Saccharomyces cerevisiae (various strains)",
+        substrate: "Grape must (crushed grapes including skins, seeds, and juice)",
+        tempRange: "15–30°C",
+        phRange: "3.0–3.6",
+        timeRange: "5–21 days (primary)",
+        oxygen: "Anaerobic",
+        products: ["Ethanol", "CO₂", "Glycerol", "Higher alcohols"],
+        example: "Bordeaux red wine fermented at 25–28°C with indigenous yeasts",
+        description: "Alcoholic fermentation where yeast converts grape sugars into ethanol and carbon dioxide. Temperature control is critical to preserve aromatic compounds and avoid off-flavors."
+      },
+      {
+        id: 3,
+        name: "Hard Cheese",
+        emoji: "🧀",
+        type: "propionic",
+        organisms: "Lactobacillus spp., Propionibacterium freudenreichii, starter cultures",
+        substrate: "Milk (cow, goat, or sheep)",
+        tempRange: "8–22°C (aging)",
+        phRange: "5.1–5.9",
+        timeRange: "Weeks to months (aging)",
+        oxygen: "Anaerobic",
+        products: ["Lactic acid", "Propionic acid", "Acetic acid", "CO₂ (eyes)"],
+        example: "Emmental or Gruyère with their characteristic holes from CO₂ production",
+        description: "A complex process beginning with lactic acid fermentation of lactose, followed by propionic acid fermentation during aging that produces CO₂ bubbles creating the cheese's 'eyes'."
+      },
+      {
+        id: 4,
+        name: "Soy Sauce",
+        emoji: "🍶",
+        type: "mixed",
+        organisms: "Aspergillus oryzae, Lactobacillus spp., Saccharomyces spp.",
+        substrate: "Soybeans and wheat (koji), brine",
+        tempRange: "25–30°C",
+        phRange: "4.5–5.0",
+        timeRange: "6 months – 2 years",
+        oxygen: "Aerobic then anaerobic",
+        products: ["Amino acids", "Organic acids", "Alcohols", "Maillard products"],
+        example: "Japanese koikuchi shoyu, fermented in cedar barrels for 12+ months",
+        description: "A multi-stage fermentation: mold (koji) breaks down proteins and starches aerobically, followed by lactic acid and alcoholic fermentations in anaerobic brine."
+      },
+      {
+        id: 5,
+        name: "Yogurt",
+        emoji: "🥣",
+        type: "lactic",
+        organisms: "Lactobacillus delbrueckii subsp. bulgaricus, Streptococcus thermophilus",
+        substrate: "Milk (whole, skim, or reduced-fat)",
+        tempRange: "40–45°C",
+        phRange: "4.0–4.6",
+        timeRange: "4–12 hours",
+        oxygen: "Anaerobic",
+        products: ["Lactic acid", "Acetaldehyde", "Diacetyl"],
+        example: "Traditional Bulgarian yogurt with its characteristic tangy flavor and thick texture",
+        description: "Thermophilic lactic acid fermentation where two symbiotic bacteria work together to acidify milk, coagulating proteins and creating yogurt's creamy texture."
+      },
+      {
+        id: 6,
+        name: "Sourdough",
+        emoji: "🍞",
+        type: "mixed",
+        organisms: "Lactobacillus sanfranciscensis, wild yeasts (Candida, Saccharomyces)",
+        substrate: "Wheat flour and water (starter), additional flour for dough",
+        tempRange: "24–28°C",
+        phRange: "3.8–4.6",
+        timeRange: "4–24 hours (bulk fermentation)",
+        oxygen: "Anaerobic",
+        products: ["Lactic acid", "Acetic acid", "Ethanol", "CO₂"],
+        example: "San Francisco sourdough with its distinctive tang from Lb. sanfranciscensis",
+        description: "A mixed fermentation where wild yeasts produce CO₂ for leavening and lactic acid bacteria create the complex sour flavor profile. The starter culture is maintained indefinitely."
+      },
+      {
+        id: 7,
+        name: "Kombucha",
+        emoji: "🍵",
+        type: "mixed",
+        organisms: "Acetobacter spp., Gluconacetobacter, various yeasts",
+        substrate: "Sweetened tea (black, green, or oolong)",
+        tempRange: "20–26°C",
+        phRange: "2.5–3.5",
+        timeRange: "7–30 days",
+        oxygen: "Aerobic",
+        products: ["Acetic acid", "Gluconic acid", "Ethanol (low)", "CO₂"],
+        example: "Traditional SCOBY-fermented kombucha with a tart, effervescent character",
+        description: "A symbiotic culture of bacteria and yeast (SCOBY) ferments sweet tea. Yeasts produce ethanol, which bacteria oxidize into acetic and gluconic acids, creating a tart, lightly fizzy drink."
+      },
+      {
+        id: 8,
+        name: "Beer",
+        emoji: "🍺",
+        type: "alcoholic",
+        organisms: "Saccharomyces cerevisiae (ale), S. pastorianus (lager)",
+        substrate: "Malted barley wort (with hops)",
+        tempRange: "10–22°C (ale), 7–13°C (lager)",
+        phRange: "4.0–4.5",
+        timeRange: "1–4 weeks",
+        oxygen: "Anaerobic",
+        products: ["Ethanol", "CO₂", "Higher alcohols", "Esters"],
+        example: "Belgian Tripel fermented at 20–24°C with S. cerevisiae producing fruity esters",
+        description: "Alcoholic fermentation of malt sugars by yeast. Ale yeasts ferment warm (top-fermenting), while lager yeasts ferment cool (bottom-fermenting), producing distinctly different flavor profiles."
+      },
+      {
+        id: 9,
+        name: "Vinegar",
+        emoji: "🫙",
+        type: "acetic",
+        organisms: "Acetobacter aceti, Komagataeibacter spp.",
+        substrate: "Ethanol solution (wine, cider, grain alcohol)",
+        tempRange: "25–30°C",
+        phRange: "2.0–3.5",
+        timeRange: "Weeks to months",
+        oxygen: "Aerobic",
+        products: ["Acetic acid", "Gluconic acid", "Cellulose (mother)"],
+        example: "Traditional balsamic vinegar aged in wooden barrels for 12+ years in Modena, Italy",
+        description: "Acetic acid bacteria oxidize ethanol into acetic acid in the presence of oxygen. The 'mother of vinegar' is a cellulose biofilm produced by the bacteria."
+      },
+      {
+        id: 10,
+        name: "Tempeh",
+        emoji: "🫘",
+        type: "mold",
+        organisms: "Rhizopus oligosporus, R. oryzae",
+        substrate: "Cooked, dehulled soybeans (or other legumes/grains)",
+        tempRange: "30–35°C",
+        phRange: "4.5–6.0",
+        timeRange: "24–48 hours",
+        oxygen: "Aerobic",
+        products: ["Proteases", "Amylases", "Vitamins (B12 analog)", "Antioxidants"],
+        example: "Traditional Javanese tempeh wrapped in banana leaves, with a firm, white mycelium mat",
+        description: "A mold fermentation where Rhizopus mycelium binds cooked soybeans into a firm cake. The mold produces enzymes that partially digest proteins, making tempeh highly digestible and nutritious."
+      },
+      {
+        id: 11,
+        name: "Miso",
+        emoji: "🍲",
+        type: "mixed",
+        organisms: "Aspergillus oryzae (koji), Lactobacillus spp., Zygosaccharomyces rouxii",
+        substrate: "Soybeans, rice or barley koji, salt",
+        tempRange: "25–40°C",
+        phRange: "5.0–5.5",
+        timeRange: "3 months – 3 years",
+        oxygen: "Anaerobic",
+        products: ["Amino acids", "Organic acids", "Alcohols", "Maillard products"],
+        example: "Aged red miso (aka miso) fermented for 1–3 years, developing deep umami flavors",
+        description: "Koji mold first breaks down starches and proteins in a controlled aerobic phase. The mixture is then salted and aged anaerobically, allowing lactic acid bacteria and osmophilic yeast to develop complex flavors."
+      },
+      {
+        id: 12,
+        name: "Sauerkraut",
+        emoji: "🥬",
+        type: "lactic",
+        organisms: "Leuconostoc mesenteroides, Lactobacillus plantarum, L. brevis",
+        substrate: "Shredded white cabbage, salt (2–2.5%)",
+        tempRange: "18–22°C",
+        phRange: "3.5–4.0",
+        timeRange: "1–4 weeks",
+        oxygen: "Anaerobic",
+        products: ["Lactic acid", "Acetic acid (trace)", "CO₂", "Mannitol"],
+        example: "Traditional German sauerkraut fermented in ceramic crocks with weighted lids",
+        description: "A classic lactic acid fermentation. Salt draws moisture from cabbage to create brine, while suppressing undesirable bacteria. Successive bacterial species dominate as acidity increases."
+      },
+      {
+        id: 13,
+        name: "Kefir",
+        emoji: "🥛",
+        type: "mixed",
+        organisms: "Lactobacillus kefiri, Lc. lactis, Saccharomyces kefir, Kluyveromyces",
+        substrate: "Cow, goat, or sheep milk",
+        tempRange: "18–25°C",
+        phRange: "4.2–4.6",
+        timeRange: "18–24 hours",
+        oxygen: "Anaerobic",
+        products: ["Lactic acid", "Ethanol", "CO₂", "Exopolysaccharides (kefiran)"],
+        example: "Traditional Caucasian kefir with its characteristic slight fizz and tangy, yeasty flavor",
+        description: "Kefir grains—complex symbiotic communities of bacteria and yeast in a polysaccharide matrix—ferment milk sugars into a mildly alcoholic, effervescent, probiotic-rich beverage."
+      },
+      {
+        id: 14,
+        name: "Chocolate",
+        emoji: "🍫",
+        type: "mixed",
+        organisms: "Saccharomyces spp., Acetobacter spp., Lactobacillus spp., various yeasts",
+        substrate: "Cacao pulp and beans in pods",
+        tempRange: "25–50°C",
+        phRange: "3.5–5.0",
+        timeRange: "5–7 days",
+        oxygen: "Aerobic then anaerobic",
+        products: ["Lactic acid", "Acetic acid", "Ethanol", "Heat (exothermic)"],
+        example: "Fine-flavor Criollo cacao from Venezuela, fermented in wooden boxes with banana leaf covers",
+        description: "Cacao beans are covered in sweet pulp that ferments naturally. Yeasts dominate first, producing ethanol and heat. Bacteria then produce acids that kill the germ, develop flavor precursors, and prevent mould."
+      },
+      {
+        id: 15,
+        name: "Coffee (Washed)",
+        emoji: "☕",
+        type: "mixed",
+        organisms: "Lactobacillus spp., Acetobacter spp., various yeasts (Pichia, Hanseniaspora)",
+        substrate: "Depulped coffee cherries (mucilage layer)",
+        tempRange: "25–35°C",
+        phRange: "3.8–5.0",
+        timeRange: "12–72 hours",
+        oxygen: "Aerobic/Anaerobic",
+        products: ["Lactic acid", "Acetic acid", "Pectin-degrading enzymes", "Volatile aromatics"],
+        example: "Ethiopian Yirgacheffe washed process, fermented in concrete tanks for 24–48 hours",
+        description: "After depulping, the sticky mucilage on coffee beans ferments, breaking down pectin. This affects acidity, body, and flavor clarity in the final cup."
+      },
+      {
+        id: 16,
+        name: "Salami",
+        emoji: "🥓",
+        type: "lactic",
+        organisms: "Lactobacillus sakei, Pediococcus pentosaceus, Staphylococcus carnosus",
+        substrate: "Ground pork (or beef), fat, salt, spices, curing agents",
+        tempRange: "18–24°C (fermentation), 10–15°C (drying)",
+        phRange: "4.6–5.3",
+        timeRange: "Weeks to months",
+        oxygen: "Anaerobic",
+        products: ["Lactic acid", "Nitric oxide (color)", "Proteolysis products", "Lipolysis products"],
+        example: "Italian Felino salami, air-dried for 3–4 months in temperature-controlled curing rooms",
+        description: "Lactic acid bacteria acidify the meat, lowering water activity and preventing pathogen growth. Curing salts stabilize color and add safety. Drying develops concentrated, complex flavors."
+      },
+      {
+        id: 17,
+        name: "Natto",
+        emoji: "🫘",
+        type: "mixed",
+        organisms: "Bacillus subtilis var. natto",
+        substrate: "Steamed whole soybeans",
+        tempRange: "40–45°C",
+        phRange: "6.0–7.0",
+        timeRange: "18–24 hours",
+        oxygen: "Aerobic",
+        products: ["Poly-γ-glutamic acid (slime)", "Nattokinase", "Vitamin K2 (MK-7)", "Ammonia"],
+        example: "Traditional Japanese natto served over rice with soy sauce and karashi mustard",
+        description: "A Bacillus fermentation that produces the characteristic sticky, stringy texture (poly-γ-glutamic acid) and pungent ammonia aroma. Highly valued in Japan for its nutritional benefits."
+      },
+      {
+        id: 18,
+        name: "Idli / Dosa",
+        emoji: "🍘",
+        type: "mixed",
+        organisms: "Lactobacillus spp., Leuconostoc spp., wild yeasts (Saccharomyces, Candida)",
+        substrate: "Rice and urad dal (black gram), ground and soaked",
+        tempRange: "25–30°C",
+        phRange: "4.0–4.5",
+        timeRange: "8–12 hours (fermentation), 1–2 days (optional extended)",
+        oxygen: "Anaerobic",
+        products: ["Lactic acid", "Acetic acid", "CO₂ (leavening)", "Ethanol (trace)"],
+        example: "Soft, fluffy idlis and crispy fermented dosas, staples of South Indian breakfast",
+        description: "A natural mixed fermentation where lactic acid bacteria acidify the batter while yeasts produce CO₂ for leavening. The result is a light, digestible, probiotic-rich staple."
+      },
+      {
+        id: 19,
+        name: "Injera",
+        emoji: "🫓",
+        type: "lactic",
+        organisms: "Lactobacillus spp., Candida spp. (teff-adapted strains)",
+        substrate: "Teff flour (Eragrostis tef) and water",
+        tempRange: "20–25°C",
+        phRange: "3.5–4.2",
+        timeRange: "2–5 days",
+        oxygen: "Anaerobic",
+        products: ["Lactic acid", "Acetic acid", "CO₂", "Ethanol"],
+        example: "Ethiopian injera, a large spongy flatbread used as both plate and utensil for stews",
+        description: "A teff-based sourdough-like fermentation. The long fermentation develops a complex sour flavor and the characteristic bubbly, spongy texture used to scoop up wat (stews)."
+      },
+      {
+        id: 20,
+        name: "Industrial Ethanol",
+        emoji: "⚗️",
+        type: "alcoholic",
+        organisms: "Saccharomyces cerevisiae (highly optimized strains)",
+        substrate: "Corn starch, sugarcane molasses, or cellulosic biomass",
+        tempRange: "30–35°C",
+        phRange: "4.5–5.5",
+        timeRange: "2–3 days (continuous systems)",
+        oxygen: "Anaerobic",
+        products: ["Ethanol", "CO₂", "Fusel oils (byproducts)"],
+        example: "Bioethanol production in large continuous stirred-tank reactors (CSTRs) reaching 15–20% v/v",
+        description: "Industrial-scale alcoholic fermentation optimized for maximum ethanol yield. Strains are engineered for high temperature and ethanol tolerance, and processes may run continuously for fuel or industrial alcohol production."
+      }
+    ];
+
+    // ===== DOM Elements =====
+    const cardGrid = document.getElementById('cardGrid');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalPanel = document.getElementById('modalPanel');
+    const modalContent = document.getElementById('modalContent');
+    const modalClose = document.getElementById('modalClose');
+    const filterButtons = document.querySelectorAll('.filter-chip');
+
+    // ===== Helpers =====
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function renderCard(entry) {
+      const productsHtml = entry.products.slice(0, 3).map(p =>
+        `<span class="product-tag">${escapeHtml(p)}</span>`
+      ).join('');
+
+      return `
+        <article class="fermentation-card" data-id="${entry.id}" data-type="${entry.type}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(entry.name)}">
+          <div class="card-top-band ${entry.type}"></div>
+          <div class="card-body">
+            <div class="card-header-row">
+              <div class="card-emoji">${entry.emoji}</div>
+              <div class="card-title-wrap">
+                <div class="card-title">${escapeHtml(entry.name)}</div>
+                <div class="card-type-badge ${entry.type}">${escapeHtml(entry.type)}</div>
+              </div>
+            </div>
+            <div class="card-meta">
+              <div class="meta-item">
+                <span class="meta-label">Organisms</span>
+                <span class="meta-value">${escapeHtml(entry.organisms.split(',')[0])}${entry.organisms.includes(',') ? '…' : ''}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Temp</span>
+                <span class="meta-value">${escapeHtml(entry.tempRange)}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Time</span>
+                <span class="meta-value">${escapeHtml(entry.timeRange)}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Oxygen</span>
+                <span class="meta-value">${escapeHtml(entry.oxygen)}</span>
+              </div>
+              <div class="meta-item meta-full">
+                <span class="meta-label">Substrate</span>
+                <span class="meta-value">${escapeHtml(entry.substrate)}</span>
+              </div>
+            </div>
+            <div class="card-products">
+              <span class="meta-label">Key Products</span>
+              <div class="products-list">${productsHtml}</div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderModal(entry) {
+      const productsHtml = entry.products.map(p =>
+        `<span class="modal-product-tag ${entry.type}">${escapeHtml(p)}</span>`
+      ).join('');
+
+      return `
+        <div class="modal-band ${entry.type}"></div>
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-emoji">${entry.emoji}</div>
+            <div>
+              <div class="modal-title">${escapeHtml(entry.name)}</div>
+              <div class="modal-subtitle">${escapeHtml(entry.type.charAt(0).toUpperCase() + entry.type.slice(1))} fermentation</div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-heading">Overview</div>
+            <div class="detail-body">${escapeHtml(entry.description)}</div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-heading">Conditions</div>
+            <div class="detail-grid">
+              <div class="detail-stat">
+                <div class="detail-stat-label">Temperature</div>
+                <div class="detail-stat-value">${escapeHtml(entry.tempRange)}</div>
+              </div>
+              <div class="detail-stat">
+                <div class="detail-stat-label">pH Range</div>
+                <div class="detail-stat-value">${escapeHtml(entry.phRange)}</div>
+              </div>
+              <div class="detail-stat">
+                <div class="detail-stat-label">Duration</div>
+                <div class="detail-stat-value">${escapeHtml(entry.timeRange)}</div>
+              </div>
+              <div class="detail-stat">
+                <div class="detail-stat-label">Oxygen</div>
+                <div class="detail-stat-value">${escapeHtml(entry.oxygen)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-heading">Microorganisms</div>
+            <div class="detail-body">${escapeHtml(entry.organisms)}</div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-heading">Substrate</div>
+            <div class="detail-body">${escapeHtml(entry.substrate)}</div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-heading">Key Products</div>
+            <div class="modal-products">${productsHtml}</div>
+          </div>
+
+          <div class="detail-section">
+            <div class="modal-example">
+              <div class="modal-example-label">Real-World Example</div>
+              <div class="modal-example-text">${escapeHtml(entry.example)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ===== Build Grid =====
+    function buildGrid() {
+      cardGrid.innerHTML = fermentations.map(renderCard).join('');
+    }
+
+    // ===== Filter Logic =====
+    function applyFilter(type) {
+      const cards = cardGrid.querySelectorAll('.fermentation-card');
+      cards.forEach(card => {
+        if (type === 'all' || card.dataset.type === type) {
+          card.classList.remove('hidden');
+          card.style.display = '';
+        } else {
+          card.classList.add('hidden');
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        applyFilter(btn.dataset.type);
+      });
+    });
+
+    // ===== Modal Logic =====
+    function openModal(id) {
+      const entry = fermentations.find(f => f.id === id);
+      if (!entry) return;
+      modalContent.innerHTML = renderModal(entry);
+      modalOverlay.classList.add('open');
+      modalOverlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      // Focus management
+      setTimeout(() => modalClose.focus(), 50);
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('open');
+      modalOverlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    cardGrid.addEventListener('click', e => {
+      const card = e.target.closest('.fermentation-card');
+      if (card) openModal(Number(card.dataset.id));
+    });
+
+    cardGrid.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const card = e.target.closest('.fermentation-card');
+        if (card) { e.preventDefault(); openModal(Number(card.dataset.id)); }
+      }
+    });
+
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', e => {
+      if (e.target === modalOverlay) closeModal();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('open')) closeModal();
+    });
+
+    // ===== Init =====
+    buildGrid();
+  </script>
+</body>
+</html>

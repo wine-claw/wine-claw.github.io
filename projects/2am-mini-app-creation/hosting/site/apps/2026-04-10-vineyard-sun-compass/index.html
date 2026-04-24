@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vineyard Sun Compass</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Warning banner -->
+  <div class="warning-banner" role="banner">
+    <span class="warning-icon" aria-hidden="true">⚠</span>
+    <span>Educational visual aid only — not a scientific tool. Do not use for real vineyard management decisions.</span>
+    <button class="banner-close" aria-label="Dismiss warning" onclick="this.parentElement.style.display='none'">✕</button>
+  </div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="app-logo-row">
+        <span class="app-icon" aria-hidden="true">🌞</span>
+        <h1 class="app-title">Vineyard Sun Compass</h1>
+      </div>
+      <p class="app-tagline">Explore how row orientation shapes cluster exposure in hot climates</p>
+    </div>
+  </header>
+
+  <!-- Canvas -->
+  <section class="canvas-section" aria-label="Sun path visualisation">
+    <div class="canvas-wrapper">
+      <canvas id="sunCanvas" width="600" height="600"></canvas>
+    </div>
+    <div class="time-control">
+      <label class="control-label" for="timeSlider">Time of day</label>
+      <div class="slider-row">
+        <span class="time-edge">6 AM</span>
+        <input type="range" id="timeSlider" min="0" max="100" value="40" step="1" class="slider" />
+        <span class="time-edge">9 PM</span>
+      </div>
+      <div class="time-display" id="timeDisplay">10:24 AM</div>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section class="controls-section" aria-label="Exposure parameters">
+
+    <!-- Presets -->
+    <div class="preset-bar" role="group" aria-label="Preset scenarios">
+      <span class="preset-label">Presets</span>
+      <div class="preset-pills" id="presetPills">
+        <button class="pill" data-preset="barossa">Barossa heatwave</button>
+        <button class="pill" data-preset="morning">Cool slope morning fruit</button>
+        <button class="pill" data-preset="ns-vsp">N-S VSP hot afternoon</button>
+        <button class="pill" data-preset="ew-alter">E-W alternating shade</button>
+        <button class="pill" data-preset="steep-cool">Steep cool aspect</button>
+        <button class="pill" data-preset="flat-mid">Flat mid-latitude</button>
+      </div>
+    </div>
+
+    <!-- Sliders -->
+    <div class="sliders-grid">
+
+      <div class="control-group">
+        <label class="control-label" for="rowSlider">
+          Row orientation
+          <span class="value-badge" id="rowVal">N-S (0°)</span>
+        </label>
+        <input type="range" id="rowSlider" min="0" max="180" value="0" step="1" class="slider" />
+        <div class="slider-ticks">
+          <span>N</span><span>NE</span><span>E</span><span>SE</span><span>S</span><span>SW</span><span>W</span><span>NW</span><span>N</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Hemisphere</label>
+        <div class="toggle-row" id="hemiToggle" role="group" aria-label="Hemisphere">
+          <button class="toggle-btn" data-value="S" id="btnSouth" aria-pressed="true">Southern</button>
+          <button class="toggle-btn" data-value="N" id="btnNorth" aria-pressed="false">Northern</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="slopeSlider">
+          Slope angle
+          <span class="value-badge" id="slopeVal">Flat (0°)</span>
+        </label>
+        <input type="range" id="slopeSlider" min="0" max="45" value="0" step="1" class="slider" />
+        <div class="slider-ticks">
+          <span>Flat</span><span>5°</span><span>15°</span><span>30°</span><span>45°</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="slopeDirSlider">
+          Slope direction (aspect)
+          <span class="value-badge" id="slopeDirVal">No slope</span>
+        </label>
+        <input type="range" id="slopeDirSlider" min="0" max="360" value="0" step="1" class="slider" disabled />
+        <div class="slider-ticks">
+          <span>N</span><span>E</span><span>S</span><span>W</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="canopySelect">Canopy system</label>
+        <div class="select-wrapper">
+          <select id="canopySelect" class="select-control">
+            <option value="vsp">VSP (Vertical Shoot Positioning)</option>
+            <option value="sprawl">Sprawl / sprawling</option>
+            <option value="scott-henry">Scott-Henry</option>
+            <option value="geneva">Geneva Double Curtain</option>
+            <option value="lyre">Lyre / U-shape</option>
+            <option value="guyot">Guyot (single bilateral)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="densitySlider">
+          Canopy density / shading
+          <span class="value-badge" id="densityVal">Moderate</span>
+        </label>
+        <input type="range" id="densitySlider" min="1" max="5" value="3" step="1" class="slider" />
+        <div class="slider-ticks sparse-ticks">
+          <span>Open</span><span>Light</span><span>Moderate</span><span>Dense</span><span>Very dense</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="heatSlider">
+          Heatwave severity
+          <span class="value-badge" id="heatVal">None</span>
+        </label>
+        <input type="range" id="heatSlider" min="0" max="4" value="0" step="1" class="slider" />
+        <div class="slider-ticks sparse-ticks">
+          <span>None</span><span>Mild</span><span>Moderate</span><span>Severe</span><span>Extreme</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Interpretation cards -->
+  <section class="cards-section" aria-label="Exposure interpretation">
+    <h2 class="section-heading">What this means for your fruit zone</h2>
+    <div class="cards-grid">
+
+      <div class="interp-card" id="cardAfternoon">
+        <div class="card-icon" aria-hidden="true">🔥</div>
+        <div class="card-content">
+          <h3>Afternoon burn risk</h3>
+          <p class="card-main" id="afternoonText">West-side clusters face significant afternoon radiation. Direct sunburn risk is elevated.</p>
+          <div class="card-meter"><div class="meter-fill" id="afternoonFill" style="width:65%"></div></div>
+        </div>
+      </div>
+
+      <div class="interp-card" id="cardMorning">
+        <div class="card-icon" aria-hidden="true">🌅</div>
+        <div class="card-content">
+          <h3>Morning light quality</h3>
+          <p class="card-main" id="morningText">East side gets gentle morning sun — good for slow, even ripening.</p>
+          <div class="card-meter"><div class="meter-fill morning-fill" id="morningFill" style="width:55%"></div></div>
+        </div>
+      </div>
+
+      <div class="interp-card" id="cardSunburn">
+        <div class="card-icon" aria-hidden="true">☀️</div>
+        <div class="card-content">
+          <h3>Overall sunburn pressure</h3>
+          <p class="card-main" id="sunburnText">VSP canopy leaves clusters relatively exposed to direct radiation.</p>
+          <div class="card-meter"><div class="meter-fill sunburn-fill" id="sunburnFill" style="width:50%"></div></div>
+        </div>
+      </div>
+
+      <div class="interp-card" id="cardHeat">
+        <div class="card-icon" aria-hidden="true">🌡️</div>
+        <div class="card-content">
+          <h3>Heat stress potential</h3>
+          <p class="card-main" id="heatText">No heatwave active. Ambient temperatures — vine should cope well.</p>
+          <div class="card-meter"><div class="meter-fill heat-fill" id="heatFill" style="width:20%"></div></div>
+        </div>
+      </div>
+
+      <div class="interp-card card-tip" id="cardTip">
+        <div class="card-icon" aria-hidden="true">💡</div>
+        <div class="card-content">
+          <h3>Practical tip</h3>
+          <p class="card-main" id="tipText">Consider west-side leaf removal carefully — you're in a high-exposure zone for afternoon sun. Partial shading films or kaolin clay reflectants may help reduce sunburn on the most exposed fruit.</p>
+        </div>
+      </div>
+
+      <div class="interp-card" id="cardShade">
+        <div class="card-icon" aria-hidden="true">🍃</div>
+        <div class="card-content">
+          <h3>Shade buffer from canopy</h3>
+          <p class="card-main" id="shadeText">Moderate canopy density provides some afternoon shade buffer to fruit zone.</p>
+          <div class="card-meter"><div class="meter-fill shade-fill" id="shadeFill" style="width:45%"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p class="disclaimer">
+      <strong>Disclaimer:</strong> This tool is an <em>educational visual aid only</em>. All calculations are qualitative estimates based on simplified solar geometry — not ET₀, radiation flux, or vineyard-specific models. Do not use for irrigation, spray timing, harvest decisions, or any commercial viticultural application. and contributors accept no liability for decisions made based on this tool.
+    </p>
+    <p class="footer-credit">Vineyard Sun Compass — built for exploration, not prescription.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

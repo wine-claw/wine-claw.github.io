@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O₂ Risk Map — Winery Oxygen Risk Explorer</title>
+<style>
+/* === RESET & BASE === */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--fg:#e8e8ef;--fg2:#a0a0b0;
+  --red:#ef4444;--amber:#f59e0b;--green:#22c55e;--accent:#6366f1;
+  --red-glow:rgba(239,68,68,.15);--amber-glow:rgba(245,158,11,.15);--green-glow:rgba(34,197,94,.15);
+  --pipe:#2a2a3a;--pipe-glow:rgba(99,102,241,.08);
+  --radius:10px;--card-pad:16px;
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.55;overflow-x:hidden;min-height:100vh}
+
+/* === WARNING BANNER === */
+.warning-banner{
+  background:linear-gradient(90deg,#7c2d12,#92400e);
+  color:#fde68a;font-size:.82rem;padding:10px 16px;text-align:center;
+  font-weight:500;letter-spacing:.02em;position:sticky;top:0;z-index:100;
+}
+
+/* === HERO === */
+.hero{
+  position:relative;width:100%;min-height:260px;max-height:340px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.35) saturate(.7)}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,15,.3) 0%,rgba(10,10,15,.85) 100%)}
+.hero-text{position:relative;z-index:2;text-align:center;padding:24px 16px}
+.hero-text h1{font-size:2.2rem;font-weight:700;letter-spacing:-.02em;color:#fff;margin-bottom:4px}
+.hero-text h1 span{color:var(--accent)}
+.hero-text p{font-size:1rem;color:var(--fg2);font-weight:400}
+
+/* === TOGGLE === */
+.toggle-bar{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:20px 16px 8px;position:sticky;top:38px;z-index:90;
+  background:linear-gradient(180deg,var(--bg) 60%,transparent);
+}
+.toggle-bar label{font-size:.85rem;color:var(--fg2);cursor:pointer;transition:color .2s}
+.toggle-bar label.active{color:#fff;font-weight:600}
+.toggle-switch{
+  position:relative;width:52px;height:28px;cursor:pointer;
+}
+.toggle-switch input{display:none}
+.toggle-track{
+  position:absolute;inset:0;border-radius:14px;background:var(--bg3);
+  border:1px solid #333;transition:background .25s;
+}
+.toggle-switch input:checked~.toggle-track{background:var(--accent);border-color:var(--accent)}
+.toggle-knob{
+  position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+  background:#fff;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.4);
+}
+.toggle-switch input:checked~.toggle-knob{transform:translateX(24px)}
+
+/* === PROCESS FLOW === */
+.flow{padding:8px 16px 40px;max-width:520px;margin:0 auto}
+.flow-container{position:relative}
+
+/* SVG pipe lines */
+.pipe-svg{position:absolute;top:0;left:50%;width:4px;height:100%;transform:translateX(-50%);z-index:0}
+.pipe-line{
+  position:absolute;left:50%;width:3px;background:var(--pipe);transform:translateX(-50%);z-index:0;
+}
+.pipe-line::after{
+  content:'';position:absolute;inset:0;width:100%;
+  background:linear-gradient(180deg,transparent,var(--accent),transparent);
+  opacity:.25;animation:pipe-pulse 3s ease-in-out infinite;
+}
+@keyframes pipe-pulse{0%,100%{opacity:.1}50%{opacity:.35}}
+
+/* Nodes */
+.node{
+  position:relative;z-index:2;margin:0 auto 0;
+  max-width:420px;width:100%;
+}
+.node-card{
+  background:var(--bg2);border:1px solid #222;border-radius:var(--radius);
+  padding:var(--card-pad);cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .15s;
+  min-height:44px;touch-action:manipulation;user-select:none;
+}
+.node-card:hover,.node-card:focus-visible{border-color:#444;transform:translateY(-1px)}
+.node-card.open{border-color:var(--accent);box-shadow:0 0 20px var(--pipe-glow)}
+
+.node-header{display:flex;align-items:center;gap:12px}
+.risk-dot{
+  width:14px;height:14px;border-radius:50%;flex-shrink:0;
+  box-shadow:0 0 8px currentColor;
+}
+.risk-high{color:var(--red);background:var(--red)}
+.risk-med-high{color:var(--amber);background:linear-gradient(135deg,var(--red),var(--amber))}
+.risk-medium{color:var(--amber);background:var(--amber)}
+.risk-low{color:var(--green);background:var(--green)}
+
+.node-title{flex:1;font-weight:600;font-size:.95rem;color:#fff}
+.node-do{font-size:.78rem;color:var(--fg2);text-align:right;white-space:nowrap}
+.node-step{font-size:.7rem;color:var(--fg2);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+
+/* Detail panel */
+.detail{
+  max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .25s;
+  opacity:0;
+}
+.detail.open{opacity:1}
+.detail-inner{
+  padding:14px 0 4px;border-top:1px solid #1e1e2a;margin-top:12px;
+}
+.detail-section{margin-bottom:12px}
+.detail-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700;margin-bottom:4px}
+.detail-text{font-size:.84rem;color:var(--fg2);line-height:1.5}
+.detail-text strong{color:var(--fg)}
+.detail-text ul{padding-left:18px}
+.detail-text li{margin-bottom:3px}
+.risk-badge{
+  display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;
+  letter-spacing:.04em;
+}
+.risk-badge-high{background:var(--red-glow);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.risk-badge-med-high{background:var(--amber-glow);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.risk-badge-medium{background:var(--amber-glow);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.risk-badge-low{background:var(--green-glow);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+
+/* Pipe connectors between nodes */
+.connector{
+  display:flex;justify-content:center;padding:0;margin:0;height:36px;position:relative;z-index:1;
+}
+.connector svg{width:20px;height:36px}
+.connector line{stroke:var(--pipe);stroke-width:2.5}
+.connector .flow-dot{
+  fill:var(--accent);opacity:.6;
+}
+.flow-anim{
+  animation:flow-down 2s linear infinite;
+}
+@keyframes flow-down{0%{transform:translateY(-8px);opacity:0}30%{opacity:.7}70%{opacity:.7}100%{transform:translateY(8px);opacity:0}}
+
+/* === SUMMARY === */
+.summary{
+  max-width:520px;margin:0 auto 40px;padding:0 16px;
+}
+.summary-card{
+  background:var(--bg2);border:1px solid #222;border-radius:var(--radius);padding:20px;
+}
+.summary-card h2{font-size:1rem;font-weight:700;margin-bottom:14px;color:#fff}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a26;font-size:.85rem}
+.summary-row:last-child{border-bottom:none}
+.summary-label{color:var(--fg2)}
+.summary-value{font-weight:700;color:#fff}
+.summary-value.good{color:var(--green)}
+.summary-value.warn{color:var(--amber)}
+.summary-value.bad{color:var(--red)}
+
+.tpo-bar{
+  margin-top:16px;height:8px;border-radius:4px;overflow:hidden;display:flex;
+  background:var(--bg3);
+}
+.tpo-seg{height:100%;transition:width .5s}
+
+.insight-box{
+  margin-top:14px;padding:12px;background:var(--bg3);border-radius:8px;border-left:3px solid var(--accent);
+  font-size:.82rem;color:var(--fg2);line-height:1.5;
+}
+.insight-box strong{color:var(--accent)}
+
+/* === RESPONSIVE === */
+@media(min-width:480px){
+  .hero{min-height:300px}
+  .hero-text h1{font-size:2.6rem}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- Warning Banner -->
+<div class="warning-banner" role="banner">⚠️ Experimental OpenClaw AI mini-app. Untested, not professionally validated. Do not rely on this for any decisions.</div>
+
+<!-- Hero -->
+<div class="hero">
+  <img class="hero-img" src="hero.png" alt="Winery" loading="eager">
+  <div class="hero-overlay"></div>
+  <div class="hero-text">
+    <h1><span>O₂</span> Risk Map</h1>
+    <p>Winery Oxygen Risk Explorer</p>
+  </div>
+</div>
+
+<!-- Toggle -->
+<div class="toggle-bar">
+  <label id="label-normal" class="active">Normal Practice</label>
+  <div class="toggle-switch" onclick="this.querySelector('input').click()">
+    <input type="checkbox" id="practice-toggle" onchange="togglePractice()">
+    <div class="toggle-track"></div>
+    <div class="toggle-knob"></div>
+  </div>
+  <label id="label-best">Best Practice</label>
+</div>
+
+<!-- Process Flow -->
+<div class="flow">
+  <div class="flow-container" id="flow-container">
+    <!-- Pipe spine rendered by JS -->
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary" id="summary"></div>
+
+<script>
+// === DATA ===
+const stages = [
+  {
+    id:1, name:"Grape Receival / Hopper", risk:"medium", riskLabel:"MEDIUM",
+    mechanism:"Mechanical harvesting introduces DO through berry rupture and auger exposure. Drop heights from bins add air entrainment.",
+    doNormal:"0.2–0.5 mg/L", doNormalMin:.2, doNormalMax:.5,
+    doBest:"0.05–0.15 mg/L", doBestMin:.05, doBestMax:.15,
+    mitigations:["Inert gas (N₂/CO₂) blanketing on receival hopper","Minimise drop heights from harvest bins","Cover auger with flexible sealing","Process fruit promptly after delivery"],
+    measure:"Measure DO at must pump-out. Target <0.3 mg/L with best practice."
+  },
+  {
+    id:2, name:"Crusher/Destemmer", risk:"high", riskLabel:"HIGH",
+    mechanism:"Open auger and must exposure at crusher inlet allows significant air contact. Destemming action creates turbulent surfaces that entrain oxygen.",
+    doNormal:"0.3–1.0 mg/L", doNormalMin:.3, doNormalMax:1.0,
+    doBest:"0.1–0.3 mg/L", doBestMin:.1, doBestMax:.3,
+    mitigations:["CO₂ blanket on crusher hopper","Enclosed or semi-enclosed crusher design","Dry ice addition during crushing","Minimise free-fall distances"],
+    measure:"Sample must immediately post-crusher. Values >0.8 mg/L indicate inadequate protection."
+  },
+  {
+    id:3, name:"Pressing", risk:"medium", riskLabel:"MEDIUM",
+    mechanism:"Air exposure during press cycle — especially at press cake formation and juice release. Open drainage trays allow gas exchange.",
+    doNormal:"0.2–0.8 mg/L", doNormalMin:.2, doNormalMax:.8,
+    doBest:"0.05–0.2 mg/L", doBestMin:.05, doBestMax:.2,
+    mitigations:["Inert gas blanket inside press cage","Closed drainage system to tank","N₂ sparge during press loading","Use gentle press cycles to reduce turbulence"],
+    measure:"Measure DO in press fraction immediately. Hard pressing fractions typically show higher DO."
+  },
+  {
+    id:4, name:"Fermentation", risk:"low", riskLabel:"LOW",
+    mechanism:"Active fermentation produces CO₂ which blankets the vessel. Primary risk is at onset (lag phase) and if fermentation sticks or slows.",
+    doNormal:"~0 mg/L (active)", doNormalMin:0, doNormalMax:.05,
+    doBest:"~0 mg/L (active)", doBestMin:0, doBestMax:.02,
+    mitigations:["Maintain fermentation temperature within yeast tolerance","Monitor sugar depletion daily","Nutrient additions (DAP) to avoid stuck ferment","Inert gas cover during any pump-over on lagging ferments"],
+    measure:"DO near zero during active ferment. If DO rises >0.2 mg/L, investigate stuck/slow fermentation."
+  },
+  {
+    id:5, name:"Racking / Transfer", risk:"high", riskLabel:"HIGH",
+    mechanism:"Major oxygen entry point. Pump suction draws air through leaky fittings. Empty hoses and ullage spaces fill with air. Vortexing in source tank entrains oxygen.",
+    doNormal:"0.5–2.0 mg/L per transfer", doNormalMin:.5, doNormalMax:2.0,
+    doBest:"0.05–0.2 mg/L per transfer", doBestMin:.05, doBestMax:.2,
+    mitigations:["Purge all lines with inert gas before transfer","Bottom-fill receiving vessel","Avoid vortexing — use floating inlet or slow pump speed","Check hose fittings and pump seals before each transfer","Use closed transfer systems where possible"],
+    measure:"Measure DO before and after each transfer. ΔDO >0.3 mg/L with best practice indicates a leak or air pocket."
+  },
+  {
+    id:6, name:"Maturation / Storage", risk:"medium", riskLabel:"MEDIUM",
+    mechanism:"Headspace oxygen diffuses into wine over time. Barrels allow micro-oxygenation through wood staves (~0.5–2.5 mL O₂/month). Stainless tanks risk ullage gas exchange at top fittings.",
+    doNormal:"0.01–0.05 mg/L/month (SS); higher for barrels", doNormalMin:.01, doNormalMax:.05,
+    doBest:"<0.01 mg/L/month (SS); ~0.2 mL O₂/month barrel", doBestMin:.005, doBestMax:.01,
+    mitigations:["Inert gas headspace cover (N₂/CO₂/Ar)","Regular topping-up schedule for barrels","Micro-bulk inert gas systems for tank farms","Monitor headspace O₂ with inline sensors","Seal tank lids properly — check gaskets"],
+    measure:"Measure DO monthly in storage. Wine should maintain <0.5 mg/L DO. Rising trend indicates headspace issue."
+  },
+  {
+    id:7, name:"Filtration", risk:"med-high", riskLabel:"MEDIUM-HIGH",
+    mechanism:"Filter housings trap air pockets that dissolve into wine under pressure. Leaks at cartridge connections and housing seals introduce oxygen. Filter changes break the closed system.",
+    doNormal:"0.2–1.0 mg/L", doNormalMin:.2, doNormalMax:1.0,
+    doBest:"0.05–0.15 mg/L", doBestMin:.05, doBestMax:.15,
+    mitigations:["Purge filter housing thoroughly with inert gas before wine contact","Check and replace gaskets/seals regularly","Apply inert gas back-pressure on filter outlet","Avoid filter changes mid-batch if possible","Use pre-wetted cartridges to displace air"],
+    measure:"Measure DO pre- and post-filtration. ΔDO >0.2 mg/L indicates air entrainment in the filter path."
+  },
+  {
+    id:8, name:"Bottling", risk:"high", riskLabel:"HIGH",
+    mechanism:"Filler bowl is a major air-contact surface. Bottle headspace contributes 60%+ of total package oxygen. Closure application may trap air. Foaming and turbulence at fill increase DO.",
+    doNormal:"0.5–2.8 mg/L (TPO); 4–5 mg/L if unmanaged", doNormalMin:.5, doNormalMax:2.8,
+    doBest:"<0.5 mg/L DO; TPO <1.5 mg/L", doBestMin:.1, doBestMax:.5,
+    mitigations:["Vacuum or counter-pressure fillers","Inert gas (N₂) bottle sparge before filling","Minimise headspace — consistent fill heights","Monitor TPO every bottling run","Keep wine DO <0.5 mg/L pre-bottling","Optimise closure application to avoid air trapping"],
+    measure:"Measure DO pre-bottling (target <0.5 mg/L) and TPO from filled bottles. AWRI best practice TPO <1.5 mg/L."
+  }
+];
+
+let bestPractice = false;
+let openNode = null;
+
+// === RENDER ===
+function render() {
+  const container = document.getElementById('flow-container');
+  let html = '';
+
+  stages.forEach((s, i) => {
+    const riskClass = s.risk === 'high' ? 'risk-high' : s.risk === 'med-high' ? 'risk-med-high' : s.risk === 'medium' ? 'risk-medium' : 'risk-low';
+    const badgeClass = s.risk === 'high' ? 'risk-badge-high' : s.risk === 'med-high' ? 'risk-badge-med-high' : s.risk === 'medium' ? 'risk-badge-medium' : 'risk-badge-low';
+    const doRange = bestPractice ? s.doBest : s.doNormal;
+    const mitigationsHtml = s.mitigations.map(m => `<li>${m}</li>`).join('');
+
+    html += `
+    <div class="node" data-id="${s.id}">
+      <div class="node-card" onclick="toggleNode(${s.id})" role="button" tabindex="0" aria-expanded="false" aria-label="${s.name}">
+        <div class="node-step">Stage ${s.id} of ${stages.length}</div>
+        <div class="node-header">
+          <div class="risk-dot ${riskClass}"></div>
+          <div class="node-title">${s.name}</div>
+          <div class="node-do">${doRange}</div>
+        </div>
+      </div>
+      <div class="detail" id="detail-${s.id}">
+        <div class="detail-inner">
+          <div class="detail-section">
+            <div class="detail-label">Risk Level</div>
+            <div class="detail-text"><span class="risk-badge ${badgeClass}">${s.riskLabel}</span></div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Mechanism</div>
+            <div class="detail-text">${s.mechanism}</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Typical DO Pickup</div>
+            <div class="detail-text"><strong>Normal:</strong> ${s.doNormal} &nbsp;|&nbsp; <strong>Best practice:</strong> ${s.doBest}</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Mitigation Strategies</div>
+            <div class="detail-text"><ul>${mitigationsHtml}</ul></div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-label">Measurement Tip</div>
+            <div class="detail-text">${s.measure}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${i < stages.length - 1 ? `
+    <div class="connector">
+      <svg viewBox="0 0 20 36" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="0" x2="10" y2="36"/>
+        <circle class="flow-anim" cx="10" cy="18" r="3" fill="#6366f1" opacity=".5"/>
+      </svg>
+    </div>` : ''}
+    `;
+  });
+
+  container.innerHTML = html;
+  renderSummary();
+}
+
+function renderSummary() {
+  const el = document.getElementById('summary');
+  const mode = bestPractice ? 'best' : 'normal';
+
+  // Cumulative midpoints
+  const normalTotal = stages.reduce((sum, s) => sum + (s.doNormalMin + s.doNormalMax) / 2, 0);
+  const bestTotal = stages.reduce((sum, s) => sum + (s.doBestMin + s.doBestMax) / 2, 0);
+  const currentTotal = bestPractice ? bestTotal : normalTotal;
+
+  // TPO scale
+  const tpoBest = 1.5, tpoAcceptable = 2.5, tpoNeeds = 3.0;
+
+  const tpoClass = currentTotal < tpoBest ? 'good' : currentTotal < tpoAcceptable ? 'warn' : 'bad';
+  const tpoLabel = currentTotal < tpoBest ? 'Best Practice' : currentTotal < tpoAcceptable ? 'Acceptable' : currentTotal < tpoNeeds ? 'Needs Improvement' : 'Poor';
+
+  el.innerHTML = `
+  <div class="summary-card">
+    <h2>Total Risk Journey — Cumulative DO Pickup</h2>
+    <div class="summary-row">
+      <span class="summary-label">Normal practice (midpoint)</span>
+      <span class="summary-value ${normalTotal > tpoBest ? 'bad' : 'good'}">${normalTotal.toFixed(2)} mg/L</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">Best practice (midpoint)</span>
+      <span class="summary-value good">${bestTotal.toFixed(2)} mg/L</span>
+    </div>
+    <div class="summary-row" style="border-top:2px solid #333;padding-top:10px;margin-top:4px">
+      <span class="summary-label" style="font-weight:700">Current view estimate</span>
+      <span class="summary-value ${tpoClass}">${currentTotal.toFixed(2)} mg/L</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">AWRI TPO rating</span>
+      <span class="summary-value ${tpoClass}">${tpoLabel}</span>
+    </div>
+
+    <div class="tpo-bar" title="AWRI TPO Scale">
+      <div class="tpo-seg" style="width:${Math.min(tpoBest/5*100,100)}%;background:var(--green)"></div>
+      <div class="tpo-seg" style="width:${(tpoAcceptable-tpoBest)/5*100}%;background:var(--amber)"></div>
+      <div class="tpo-seg" style="width:${(tpoNeeds-tpoAcceptable)/5*100}%;background:#f97316"></div>
+      <div class="tpo-seg" style="flex:1;background:var(--red)"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--fg2);margin-top:4px">
+      <span>&lt;1.5 Best</span><span>1.5–2.5 OK</span><span>2.5–3.0 Needs work</span><span>&gt;3.0 Poor</span>
+    </div>
+
+    <div class="insight-box">
+      <strong>💡 Key Insight:</strong> Typically <strong>60%+</strong> of bottle oxygen comes from headspace, not dissolved oxygen. Even with low DO wine, poor headspace management at bottling can result in high TPO. AWRI best practice: TPO &lt;1.5 mg/L.
+    </div>
+    <div class="insight-box" style="margin-top:8px;border-left-color:var(--amber)">
+      <strong>⚠️ Note:</strong> Cumulative values above treat each stage's DO as a single pass. In practice, maturation adds DO per <em>month</em> of storage, and wine may undergo multiple rackings/transfers. A real TPO budget depends on your specific process path.
+    </div>
+  </div>
+  `;
+}
+
+function toggleNode(id) {
+  const detail = document.getElementById('detail-' + id);
+  const card = detail.previousElementSibling;
+
+  if (openNode === id) {
+    // Close
+    detail.style.maxHeight = '0';
+    detail.classList.remove('open');
+    card.classList.remove('open');
+    card.setAttribute('aria-expanded', 'false');
+    openNode = null;
+  } else {
+    // Close previous
+    if (openNode !== null) {
+      const prevDetail = document.getElementById('detail-' + openNode);
+      const prevCard = prevDetail.previousElementSibling;
+      prevDetail.style.maxHeight = '0';
+      prevDetail.classList.remove('open');
+      prevCard.classList.remove('open');
+      prevCard.setAttribute('aria-expanded', 'false');
+    }
+    // Open new
+    detail.style.maxHeight = detail.scrollHeight + 'px';
+    detail.classList.add('open');
+    card.classList.add('open');
+    card.setAttribute('aria-expanded', 'true');
+    openNode = id;
+  }
+}
+
+function togglePractice() {
+  bestPractice = document.getElementById('practice-toggle').checked;
+  document.getElementById('label-normal').classList.toggle('active', !bestPractice);
+  document.getElementById('label-best').classList.toggle('active', bestPractice);
+  openNode = null;
+  render();
+}
+
+// Keyboard support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const card = e.target.closest('.node-card');
+    if (card) {
+      e.preventDefault();
+      card.click();
+    }
+  }
+});
+
+// Init
+render();
+</script>
+</body>
+</html>
