@@ -94,6 +94,28 @@ def publish(source_dir, slug=None):
         f.write(new_content)
     
     print(f"Added card to index.html")
+    
+    # Commit and push to GitHub Pages
+    import subprocess
+    try:
+        # Stage only the app and index.html (avoid unrelated changes)
+        subprocess.run(
+            ["git", "-C", str(GALLERY_DIR), "add", str(dest_dir.relative_to(GALLERY_DIR)), str(INDEX_FILE.relative_to(GALLERY_DIR))],
+            check=True, capture_output=True, text=True
+        )
+        subprocess.run(
+            ["git", "-C", str(GALLERY_DIR), "commit", "-m", f"Add {app_slug} mini-app"],
+            check=True, capture_output=True, text=True
+        )
+        subprocess.run(
+            ["git", "-C", str(GALLERY_DIR), "push", "origin", "main"],
+            check=True, capture_output=True, text=True
+        )
+        print(f"Pushed to GitHub Pages")
+    except subprocess.CalledProcessError as e:
+        print(f"Warning: git push failed: {e.stderr}")
+        print("App files copied locally but not deployed. Manual commit/push needed.")
+    
     return True
 
 if __name__ == "__main__":
