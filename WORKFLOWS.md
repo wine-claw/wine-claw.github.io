@@ -550,7 +550,7 @@ When handling normal user requests, the main agent may use the configured sub-ag
 14. After a first build or draft exists, prefer sending one additional refinement pass to `mm-worker` when it is likely to improve polish, mobile usability, clarity, or completeness before the main agent does final review.
 15. The main agent must still do final judgment, final packaging, and sanity checks before user-visible delivery or important action.
 16. For all newly developed mini-apps going forward, optimise for phone use by default unless Simon explicitly asks for a desktop-first design. That means prioritising mobile layout, touch-friendly controls, legible typography on small screens, lightweight interaction patterns, and avoiding assumptions about wide viewports or hover-only affordances.
-16b. **For mini-apps, do substantive web research before building.** Search for authoritative sources, real data, historical facts, technical specifications, and best practices. Do not rely only on internal knowledge. Include the sources found in the app content or a references section.
+16b. **For all mini-apps (overnight 2am runs and user-requested), do substantive web research before building.** Search for authoritative sources, real data, historical facts, technical specifications, and best practices. Do not rely only on internal knowledge. Include the sources found in the app content or a references section.
 16c. **Include real images, diagrams, and visual assets from the web where appropriate.** Use `image_generate` for custom illustrations, but also search for and include actual photographs, diagrams, charts, and technical drawings from authoritative sources (manufacturer sites, technical manuals, academic papers, Wikipedia). Provide image attribution and links where applicable.
 16d. **Provide references and citations** in mini-apps. Link to source pages, cite technical standards, attribute historical facts, and include further reading links. An app without references is less useful than one with them.
 16e. **Before building a mini-app, verify the accuracy of key facts** through at least one web search or reference lookup. Do not guess specifications, historical dates, technical parameters, or product details.
@@ -577,6 +577,7 @@ When handling normal user requests, the main agent may use the configured sub-ag
    - commit and push to GitHub Pages
 27. After publishing, send Simon a WhatsApp message that includes the direct app link and the gallery link so he can access it from his phone.
 28. If publishing fails, treat that as a packaging failure — the app build is not complete until it is live in the gallery.
+29. **After publishing, verify the app works.** Open the gallery URL, navigate to the new app, test basic functionality (links load, interactive elements work, no console errors). If problems are found, fix them before reporting completion.
 
 **Done condition:** the main agent can use `mm-worker` to save Codex time on easy first-pass work, while the main agent still verifies the result before the user sees it, and unattended overnight runs avoid approval-dependent browser flows.
 
