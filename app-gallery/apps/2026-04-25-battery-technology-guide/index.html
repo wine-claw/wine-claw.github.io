@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Battery Technology Guide</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #071014;
+      --panel: rgba(14, 27, 34, 0.78);
+      --panel-strong: #10212a;
+      --ink: #eef8fb;
+      --muted: #a5bdc5;
+      --subtle: #6f8790;
+      --line: rgba(160, 222, 235, 0.18);
+      --cyan: #51d8ee;
+      --green: #70efbd;
+      --amber: #ffd166;
+      --rose: #ff6b8a;
+      --violet: #a991ff;
+      --shadow: 0 22px 70px rgba(0, 0, 0, 0.35);
+      --radius: 22px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(81, 216, 238, 0.18), transparent 34rem),
+        radial-gradient(circle at 82% 18%, rgba(112, 239, 189, 0.13), transparent 30rem),
+        linear-gradient(135deg, #071014 0%, #0b151d 48%, #081015 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    a { color: var(--cyan); }
+    .wrap { width: min(1180px, calc(100% - 34px)); margin: 0 auto; }
+
+    header {
+      padding: 54px 0 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 42px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--ink);
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-size: .86rem;
+    }
+
+    .mark {
+      width: 38px; height: 22px; border: 2px solid var(--cyan); border-radius: 7px; position: relative;
+      box-shadow: 0 0 28px rgba(81,216,238,.25), inset 0 0 20px rgba(81,216,238,.12);
+    }
+    .mark::after { content: ""; position: absolute; right: -7px; top: 6px; width: 5px; height: 8px; border-radius: 0 3px 3px 0; background: var(--cyan); }
+    .mark::before { content: ""; position: absolute; inset: 4px 8px 4px 4px; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--cyan)); animation: charge 2.4s ease-in-out infinite; transform-origin: left; }
+    @keyframes charge { 0%, 100% { transform: scaleX(.25); opacity: .65; } 60% { transform: scaleX(1); opacity: 1; } }
+
+    .navlinks { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .navlinks a {
+      text-decoration: none;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,.03);
+      font-size: .9rem;
+    }
+    .navlinks a:hover { color: var(--ink); border-color: rgba(81,216,238,.45); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 34px;
+      align-items: center;
+    }
+    h1 { font-size: clamp(2.4rem, 6vw, 5.6rem); line-height: .94; margin: 0 0 20px; letter-spacing: -.07em; }
+    .gradient { background: linear-gradient(90deg, var(--cyan), var(--green), var(--amber)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lede { color: var(--muted); font-size: clamp(1.05rem, 2.1vw, 1.3rem); line-height: 1.65; max-width: 66ch; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+    .btn {
+      border: 1px solid var(--line); background: rgba(255,255,255,.05); color: var(--ink); text-decoration: none;
+      padding: 12px 16px; border-radius: 14px; font-weight: 760; display: inline-flex; align-items: center; gap: 9px;
+      cursor: pointer;
+    }
+    .btn.primary { background: linear-gradient(135deg, rgba(81,216,238,.95), rgba(112,239,189,.9)); color: #031014; border: none; }
+
+    .hero-card {
+      background: linear-gradient(180deg, rgba(20,43,53,.9), rgba(11,23,31,.82));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      min-height: 330px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before { content: ""; position: absolute; inset: -40% -25% auto auto; width: 300px; height: 300px; border-radius: 999px; background: radial-gradient(circle, rgba(81,216,238,.18), transparent 70%); }
+    .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 18px; position: relative; }
+    .metric { padding: 16px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.035); }
+    .metric strong { display: block; font-size: 1.55rem; color: var(--green); margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: .9rem; }
+    .mini-caption { color: var(--subtle); font-size: .84rem; margin-top: 12px; }
+
+    section { padding: 34px 0; }
+    .section-head { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin-bottom: 18px; }
+    h2 { margin: 0; font-size: clamp(1.7rem, 3vw, 2.5rem); letter-spacing: -.04em; }
+    .section-head p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; max-width: 68ch; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .timeline-tools { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); }
+    input[type="search"] {
+      width: 100%; background: rgba(0,0,0,.22); color: var(--ink); border: 1px solid var(--line); border-radius: 14px;
+      padding: 13px 14px; font: inherit; outline: none;
+    }
+    input[type="search"]:focus { border-color: rgba(81,216,238,.72); box-shadow: 0 0 0 4px rgba(81,216,238,.1); }
+    .count { align-self: center; color: var(--muted); white-space: nowrap; font-size: .92rem; }
+
+    .timeline-layout { display: grid; grid-template-columns: minmax(280px, 430px) 1fr; min-height: 490px; }
+    .timeline-list { max-height: 540px; overflow: auto; padding: 14px; border-right: 1px solid var(--line); }
+    .milestone {
+      display: grid; grid-template-columns: 74px 1fr; gap: 14px; width: 100%; text-align: left; color: inherit;
+      border: 1px solid transparent; border-radius: 18px; background: transparent; padding: 12px; cursor: pointer;
+    }
+    .milestone:hover, .milestone.active { background: rgba(81,216,238,.08); border-color: rgba(81,216,238,.22); }
+    .year { color: var(--amber); font-weight: 850; font-size: 1.08rem; letter-spacing: -.02em; }
+    .milestone h3 { margin: 0 0 5px; font-size: 1rem; }
+    .milestone p { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.45; }
+    .detail { padding: 26px; display: flex; flex-direction: column; justify-content: center; }
+    .detail-kicker { color: var(--cyan); font-weight: 850; letter-spacing: .08em; text-transform: uppercase; font-size: .8rem; }
+    .detail h3 { font-size: clamp(1.7rem, 3.8vw, 3.2rem); letter-spacing: -.06em; margin: 8px 0 12px; }
+    .detail p { color: var(--muted); line-height: 1.7; font-size: 1.04rem; }
+    .detail-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .tag { border: 1px solid var(--line); color: var(--muted); padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.035); font-size: .85rem; }
+
+    .compare-grid { display: grid; grid-template-columns: 310px 1fr; gap: 18px; align-items: start; }
+    .chooser { padding: 18px; position: sticky; top: 12px; }
+    .check-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; color: var(--muted); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .check-row:last-child { border-bottom: none; }
+    .check-row input { accent-color: var(--cyan); width: 18px; height: 18px; }
+    .comparison { padding: 18px; overflow: hidden; }
+    .chart-wrap { min-height: 310px; border: 1px solid var(--line); border-radius: 18px; padding: 14px; background: rgba(0,0,0,.18); margin-bottom: 16px; }
+    svg { max-width: 100%; display: block; }
+    .bar { transition: width .7s cubic-bezier(.2,.8,.2,1), y .5s ease, opacity .4s ease; }
+    .axis, .chart-label { fill: var(--muted); font-size: 12px; }
+    .chart-title { fill: var(--ink); font-weight: 800; font-size: 16px; }
+
+    .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 18px; }
+    table { width: 100%; min-width: 760px; border-collapse: collapse; }
+    th, td { padding: 13px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: top; }
+    th { color: var(--ink); font-size: .84rem; text-transform: uppercase; letter-spacing: .06em; background: rgba(255,255,255,.04); }
+    td { color: var(--muted); line-height: 1.45; }
+    tr:last-child td { border-bottom: none; }
+    td:first-child { color: var(--ink); font-weight: 800; }
+
+    .future-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .future-card { padding: 20px; position: relative; overflow: hidden; }
+    .future-card h3 { margin: 0 0 10px; font-size: 1.25rem; }
+    .future-card p { margin: 0 0 16px; color: var(--muted); line-height: 1.6; }
+    .future-card .big { font-size: 2rem; font-weight: 900; letter-spacing: -.05em; color: var(--green); }
+    .future-card::after { content: ""; position: absolute; right: -70px; bottom: -70px; width: 170px; height: 170px; border-radius: 50%; background: radial-gradient(circle, rgba(81,216,238,.15), transparent 70%); }
+    .meter { height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; margin: 14px 0 7px; }
+    .meter span { display: block; height: 100%; width: var(--w); background: linear-gradient(90deg, var(--cyan), var(--green)); border-radius: inherit; animation: grow 1.3s ease both; }
+    @keyframes grow { from { width: 0; } to { width: var(--w); } }
+
+    .refs { padding: 22px; }
+    .refs ol { margin: 10px 0 0; padding-left: 22px; columns: 2; column-gap: 38px; }
+    .refs li { break-inside: avoid; color: var(--muted); margin: 0 0 12px; line-height: 1.48; }
+
+    footer { padding: 30px 0 54px; color: var(--subtle); text-align: center; }
+    .note { color: var(--subtle); font-size: .86rem; line-height: 1.5; }
+
+    @media (max-width: 900px) {
+      .hero, .timeline-layout, .compare-grid { grid-template-columns: 1fr; }
+      .timeline-list { border-right: none; border-bottom: 1px solid var(--line); max-height: 390px; }
+      .chooser { position: static; }
+      .future-grid { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .refs ol { columns: 1; }
+      .nav { align-items: flex-start; flex-direction: column; }
+      .navlinks { justify-content: flex-start; }
+    }
+    @media (max-width: 540px) {
+      .wrap { width: min(100% - 22px, 1180px); }
+      header { padding-top: 24px; }
+      .timeline-tools { grid-template-columns: 1fr; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .milestone { grid-template-columns: 58px 1fr; }
+      .detail { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <nav class="nav" aria-label="Page navigation">
+      <div class="brand"><span class="mark" aria-hidden="true"></span> Battery Lab</div>
+      <div class="navlinks">
+        <a href="#timeline">Timeline</a>
+        <a href="#compare">Compare</a>
+        <a href="#future">Future batteries</a>
+        <a href="#references">References</a>
+      </div>
+    </nav>
+    <div class="hero">
+      <div>
+        <h1>From <span class="gradient">Volta’s pile</span> to solid-state EV cells.</h1>
+        <p class="lede">Explore the history, trade-offs, and next-generation chemistry of batteries through a searchable timeline, side-by-side comparison tool, and animated energy-density charts.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#timeline">Start exploring</a>
+          <a class="btn" href="#compare">Compare technologies</a>
+        </div>
+      </div>
+      <aside class="hero-card" aria-label="Battery technology highlights">
+        <svg viewBox="0 0 420 155" role="img" aria-label="Stylized battery cells connected by current traces">
+          <defs>
+            <linearGradient id="cellGrad" x1="0" x2="1">
+              <stop offset="0" stop-color="#51d8ee" stop-opacity=".95" />
+              <stop offset="1" stop-color="#70efbd" stop-opacity=".95" />
+            </linearGradient>
+            <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <path d="M20 78 H95 C125 78 122 35 154 35 H392" stroke="#51d8ee" stroke-opacity=".38" stroke-width="3" fill="none"/>
+          <path d="M20 98 H145 C184 98 178 123 214 123 H392" stroke="#70efbd" stroke-opacity=".34" stroke-width="3" fill="none"/>
+          <g filter="url(#glow)">
+            <rect x="70" y="42" width="64" height="82" rx="12" fill="none" stroke="url(#cellGrad)" stroke-width="3" />
+            <rect x="86" y="31" width="32" height="11" rx="4" fill="#51d8ee" />
+            <rect x="178" y="22" width="64" height="112" rx="12" fill="none" stroke="url(#cellGrad)" stroke-width="3" />
+            <rect x="194" y="11" width="32" height="11" rx="4" fill="#70efbd" />
+            <rect x="286" y="50" width="64" height="74" rx="12" fill="none" stroke="url(#cellGrad)" stroke-width="3" />
+            <rect x="302" y="39" width="32" height="11" rx="4" fill="#ffd166" />
+          </g>
+          <circle cx="154" cy="35" r="5" fill="#ffd166"/><circle cx="214" cy="123" r="5" fill="#70efbd"/>
+        </svg>
+        <div class="metric-grid">
+          <div class="metric"><strong>1800</strong><span>Volta’s pile delivers continuous current</span></div>
+          <div class="metric"><strong>1859</strong><span>Lead-acid becomes the first rechargeable battery</span></div>
+          <div class="metric"><strong>1991</strong><span>Sony commercializes lithium-ion cells</span></div>
+          <div class="metric"><strong>500+</strong><span>Wh/kg potential for lithium-sulfur concepts</span></div>
+        </div>
+        <p class="mini-caption">Figures are representative ranges from cited sources and public technical literature; actual products vary by manufacturer and cell design.</p>
+      </aside>
+    </div>
+  </header>
+
+  <main>
+    <section id="timeline" class="wrap">
+      <div class="section-head">
+        <div>
+          <h2>Interactive battery history timeline</h2>
+          <p>Search by inventor, chemistry, year, or concept. Select a milestone to see why it mattered.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="timeline-tools">
+          <input id="timelineSearch" type="search" placeholder="Filter timeline — e.g. Volta, rechargeable, lithium-ion…" aria-label="Filter battery history timeline" />
+          <div class="count" id="timelineCount"></div>
+        </div>
+        <div class="timeline-layout">
+          <div class="timeline-list" id="timelineList" role="listbox" aria-label="Battery milestones"></div>
+          <article class="detail" id="timelineDetail" aria-live="polite"></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="compare" class="wrap">
+      <div class="section-head">
+        <div>
+          <h2>Technology comparison tool</h2>
+          <p>Select two or more battery types to compare energy density, cycle life, safety, cost position, applications, and commercial maturity.</p>
+        </div>
+      </div>
+      <div class="compare-grid">
+        <aside class="panel chooser">
+          <h3 style="margin-top:0">Choose chemistries</h3>
+          <div id="batteryChoices"></div>
+          <p class="note">Tip: the chart animates whenever the selected set changes. Energy density is shown as representative gravimetric Wh/kg.</p>
+        </aside>
+        <div class="panel comparison">
+          <div class="chart-wrap">
+            <svg id="energyChart" viewBox="0 0 820 300" role="img" aria-label="Animated bar chart comparing battery energy density"></svg>
+          </div>
+          <div class="table-scroll"><table id="comparisonTable"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="future" class="wrap">
+      <div class="section-head">
+        <div>
+          <h2>Future batteries</h2>
+          <p>Three directions are especially important: safer high-density solid-state cells, lower-cost sodium-ion systems, and very high specific-energy lithium-sulfur chemistry.</p>
+        </div>
+      </div>
+      <div class="future-grid">
+        <article class="panel future-card">
+          <h3>Solid-state batteries</h3>
+          <div class="big">2027–2028</div>
+          <div class="meter" aria-hidden="true"><span style="--w:82%"></span></div>
+          <p>Toyota has publicized plans targeting all-solid-state EV batteries around 2027–2028, with claims including roughly 1,200 km range and 10-minute fast charging. The core idea: replace flammable liquid electrolyte with a solid electrolyte for improved safety and energy density.</p>
+          <span class="tag">High density</span> <span class="tag">Fast charging</span> <span class="tag">Scaling challenge</span>
+        </article>
+        <article class="panel future-card">
+          <h3>Sodium-ion batteries</h3>
+          <div class="big">Low cost</div>
+          <div class="meter" aria-hidden="true"><span style="--w:68%"></span></div>
+          <p>Sodium is abundant and geographically widespread, making sodium-ion a compelling alternative where low cost and supply-chain resilience matter more than maximum energy density. Early applications point toward grid storage, lower-cost vehicles, and stationary backup.</p>
+          <span class="tag">Abundant materials</span> <span class="tag">Grid storage</span> <span class="tag">Emerging</span>
+        </article>
+        <article class="panel future-card">
+          <h3>Lithium-sulfur batteries</h3>
+          <div class="big">500+ Wh/kg</div>
+          <div class="meter" aria-hidden="true"><span style="--w:95%"></span></div>
+          <p>Lithium-sulfur systems promise very high specific energy using sulfur, a cheap and abundant cathode material. The hard parts are cycle life, shuttle effects, and manufacturing durability, so the technology remains mostly developmental.</p>
+          <span class="tag">Very high specific energy</span> <span class="tag">Aviation potential</span> <span class="tag">R&amp;D stage</span>
+        </article>
+      </div>
+    </section>
+
+    <section id="references" class="wrap">
+      <div class="section-head"><div><h2>References</h2><p>Source links used for historical milestones and current technology context.</p></div></div>
+      <div class="panel refs">
+        <ol>
+          <li><a href="https://en.wikipedia.org/wiki/History_of_the_battery" target="_blank" rel="noopener">Wikipedia — History of the battery</a>, overview of early battery inventions and commercialization timeline.</li>
+          <li><a href="https://nationalmaglab.org/magnet-academy/history-of-electricity-magnetism/museum/voltaic-pile-1800" target="_blank" rel="noopener">National MagLab — Voltaic Pile, 1800</a>, notes Alessandro Volta’s first continuous source of electric current.</li>
+          <li><a href="https://www.sciencedirect.com/science/article/abs/pii/S0378775310000546" target="_blank" rel="noopener">Journal of Power Sources — Gaston Planté and the genesis of the lead-acid battery</a>, historical context for the 1859 rechargeable lead-acid battery.</li>
+          <li><a href="https://www.britannica.com/technology/battery-electronics/Development-of-batteries" target="_blank" rel="noopener">Encyclopaedia Britannica — Development of batteries</a>, battery development history and major chemistries.</li>
+          <li><a href="https://electrek.co/2025/10/08/toyota-aims-to-launch-worlds-first-all-solid-state-ev-batteries/" target="_blank" rel="noopener">Electrek — Toyota aims to launch all-solid-state EV batteries</a>, report on Toyota’s 2027–2028 target and performance claims.</li>
+          <li><a href="https://insideevs.com/news/775251/toyota-solid-state-cathode-sumimoto/" target="_blank" rel="noopener">InsideEVs — Toyota solid-state battery deal</a>, report on Toyota/Sumitomo materials agreement for solid-state cathodes.</li>
+          <li><a href="https://www.nature.com/articles/s41560-024-01701-9" target="_blank" rel="noopener">Nature Energy — Sodium-ion competitiveness</a>, analysis of sodium-ion cost and competitiveness potential.</li>
+          <li><a href="https://www.irena.org/Publications/2025" target="_blank" rel="noopener">IRENA — Sodium-ion technology brief 2025</a>, renewable-energy storage context for sodium-ion batteries.</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">Built as a self-contained HTML/CSS/JS mini-app. No external libraries or image dependencies.</footer>
+
+  <script>
+    const milestones = [
+      { year: 1800, title: "Voltaic pile", inventor: "Alessandro Volta", summary: "First practical source of continuous electric current.", description: "Alessandro Volta stacked alternating discs of zinc and copper separated by brine-soaked material to create the voltaic pile. It transformed electricity from a static curiosity into a continuous current source for experiments.", tags: ["Primary cell", "Continuous current", "Italy"], source: "National MagLab; Wikipedia" },
+      { year: 1859, title: "Lead-acid battery", inventor: "Gaston Planté", summary: "First rechargeable battery chemistry.", description: "Gaston Planté demonstrated a rechargeable lead-acid cell using lead dioxide and sponge lead plates in sulfuric acid. It remains important today in starter batteries, backup power, and industrial systems because it is rugged and inexpensive.", tags: ["Rechargeable", "Automotive", "France"], source: "Journal of Power Sources; Britannica; Wikipedia" },
+      { year: 1866, title: "Leclanché cell", inventor: "Georges Leclanché", summary: "Zinc-carbon chemistry that helped popularize portable batteries.", description: "Georges Leclanché’s zinc-carbon cell used zinc as the anode and manganese dioxide as a depolarizer. Later dry-cell versions made batteries more portable for telegraphy, bells, flashlights, and consumer devices.", tags: ["Zinc-carbon", "Dry cell", "Portable power"], source: "Britannica; Wikipedia" },
+      { year: 1899, title: "Nickel-cadmium battery", inventor: "Waldemar Jungner", summary: "Durable alkaline rechargeable battery.", description: "Waldemar Jungner developed nickel-cadmium chemistry, which offered long cycle life and high discharge capability. Environmental concerns around cadmium later pushed many applications toward nickel-metal hydride and lithium-ion.", tags: ["Rechargeable", "Alkaline", "High cycle life"], source: "Wikipedia; Britannica" },
+      { year: 1970, title: "Lithium battery research accelerates", inventor: "Multiple researchers", summary: "Lithium becomes a focus for high specific energy cells.", description: "Lithium’s low atomic mass and high electrochemical potential made it attractive for high-energy batteries. Research through the 1970s and 1980s laid groundwork for safer intercalation electrodes and practical rechargeable lithium-ion cells.", tags: ["Lithium", "Research era", "High energy"], source: "Britannica; Wikipedia" },
+      { year: 1991, title: "Commercial lithium-ion", inventor: "Sony; based on John B. Goodenough’s cathode research", summary: "Lithium-ion becomes a commercial product.", description: "Sony commercialized lithium-ion batteries in 1991. The chemistry paired high energy density with rechargeability and became dominant in phones, laptops, power tools, and electric vehicles.", tags: ["Lithium-ion", "Consumer electronics", "EVs"], source: "Wikipedia; Britannica" },
+      { year: 2024, title: "Sodium-ion enters serious competition", inventor: "Global manufacturers and researchers", summary: "A lower-cost alternative emerges for storage and entry EVs.", description: "Recent research and commercialization work show sodium-ion batteries can be competitive when material availability, low cost, cold-weather behavior, and supply-chain resilience are valued over maximum energy density.", tags: ["Sodium-ion", "Grid storage", "Low cost"], source: "Nature Energy; IRENA" },
+      { year: 2027, title: "Solid-state launch targets", inventor: "Toyota and partners", summary: "Automakers target high-range, fast-charging solid-state cells.", description: "Toyota has announced goals around 2027–2028 for all-solid-state EV batteries, with reported ambitions around 1,200 km range and 10-minute charging. Manufacturing scale, interface stability, and cost remain key hurdles.", tags: ["Solid-state", "EVs", "Future"], source: "Electrek; InsideEVs" }
+    ];
+
+    const batteries = [
+      { id: "lead", name: "Lead-acid", energy: 35, range: "30–50", cycles: "300–700", cost: "Very low", safety: "Good; acid/lead handling", status: "Mature", applications: "Starter batteries, UPS, forklifts, backup power", color: "#9fb4c7" },
+      { id: "zinc", name: "Zinc-carbon", energy: 60, range: "40–80", cycles: "Primary only", cost: "Very low", safety: "Good for low-drain use", status: "Mature / declining", applications: "Flashlights, remotes, low-cost disposable cells", color: "#ffd166" },
+      { id: "nicd", name: "Nickel-cadmium", energy: 55, range: "45–80", cycles: "1,000–2,000", cost: "Moderate", safety: "Cadmium toxicity concern", status: "Restricted legacy", applications: "Aviation, emergency lighting, legacy tools", color: "#a991ff" },
+      { id: "nimh", name: "Nickel-metal hydride", energy: 85, range: "60–120", cycles: "500–1,000", cost: "Moderate", safety: "Robust", status: "Mature niche", applications: "Hybrid vehicles, AA rechargeables", color: "#70efbd" },
+      { id: "liion", name: "Lithium-ion", energy: 275, range: "250–300", cycles: "800–2,000+", cost: "Falling / mid", safety: "Needs battery management", status: "Dominant mature", applications: "Phones, laptops, EVs, tools, storage", color: "#51d8ee" },
+      { id: "sodium", name: "Sodium-ion", energy: 150, range: "100–180", cycles: "1,000–4,000", cost: "Low potential", safety: "Generally favorable", status: "Emerging commercial", applications: "Grid storage, low-cost EVs, backup systems", color: "#ffb86b" },
+      { id: "solid", name: "Solid-state", energy: 400, range: "350–500+", cycles: "Target: high", cost: "High today", safety: "Potentially improved", status: "Pilot / pre-scale", applications: "Future EVs, premium electronics, aerospace", color: "#ff6b8a" },
+      { id: "lis", name: "Lithium-sulfur", energy: 500, range: "500+ potential", cycles: "Developing", cost: "Low materials potential", safety: "Development dependent", status: "R&D / early pilots", applications: "Aviation, drones, long-range lightweight systems", color: "#7cf7ff" }
+    ];
+
+    const timelineList = document.getElementById('timelineList');
+    const timelineDetail = document.getElementById('timelineDetail');
+    const timelineSearch = document.getElementById('timelineSearch');
+    const timelineCount = document.getElementById('timelineCount');
+    let activeYear = 1800;
+
+    function renderTimeline() {
+      const q = timelineSearch.value.trim().toLowerCase();
+      const filtered = milestones.filter(m => [m.year, m.title, m.inventor, m.summary, m.description, m.tags.join(' ')].join(' ').toLowerCase().includes(q));
+      timelineCount.textContent = `${filtered.length} milestone${filtered.length === 1 ? '' : 's'}`;
+      timelineList.innerHTML = '';
+      filtered.forEach(m => {
+        const btn = document.createElement('button');
+        btn.className = 'milestone' + (m.year === activeYear ? ' active' : '');
+        btn.setAttribute('role', 'option');
+        btn.setAttribute('aria-selected', m.year === activeYear ? 'true' : 'false');
+        btn.innerHTML = `<div class="year">${m.year}</div><div><h3>${m.title}</h3><p>${m.inventor} — ${m.summary}</p></div>`;
+        btn.addEventListener('click', () => { activeYear = m.year; renderTimeline(); renderDetail(m); });
+        timelineList.appendChild(btn);
+      });
+      const selected = filtered.find(m => m.year === activeYear) || filtered[0];
+      if (selected) { activeYear = selected.year; renderDetail(selected); }
+      else { timelineDetail.innerHTML = '<p>No matching milestones. Try a broader search.</p>'; }
+    }
+
+    function renderDetail(m) {
+      timelineDetail.innerHTML = `
+        <div class="detail-kicker">${m.year} · ${m.inventor}</div>
+        <h3>${m.title}</h3>
+        <p>${m.description}</p>
+        <div class="detail-tags">${m.tags.map(t => `<span class="tag">${t}</span>`).join('')}<span class="tag">Source: ${m.source}</span></div>
+      `;
+      [...timelineList.children].forEach(child => {
+        const isActive = child.querySelector('.year')?.textContent == m.year;
+        child.classList.toggle('active', isActive);
+        child.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+    }
+    timelineSearch.addEventListener('input', renderTimeline);
+
+    const choices = document.getElementById('batteryChoices');
+    const chart = document.getElementById('energyChart');
+    const table = document.getElementById('comparisonTable');
+    let selected = new Set(['lead','liion','sodium','solid','lis']);
+
+    function renderChoices() {
+      choices.innerHTML = '';
+      batteries.forEach(b => {
+        const label = document.createElement('label');
+        label.className = 'check-row';
+        label.innerHTML = `<input type="checkbox" value="${b.id}" ${selected.has(b.id) ? 'checked' : ''}/><span>${b.name}</span>`;
+        label.querySelector('input').addEventListener('change', (e) => {
+          if (e.target.checked) selected.add(b.id); else selected.delete(b.id);
+          if (selected.size < 2) { selected.add(b.id); e.target.checked = true; alert('Select at least two battery types for comparison.'); }
+          renderComparison();
+        });
+        choices.appendChild(label);
+      });
+    }
+
+    function renderComparison() {
+      const rows = batteries.filter(b => selected.has(b.id));
+      renderChart(rows);
+      table.innerHTML = `
+        <thead><tr><th>Technology</th><th>Energy density (Wh/kg)</th><th>Cycle life</th><th>Cost position</th><th>Safety</th><th>Commercial status</th><th>Applications</th></tr></thead>
+        <tbody>${rows.map(b => `<tr><td>${b.name}</td><td>${b.range}</td><td>${b.cycles}</td><td>${b.cost}</td><td>${b.safety}</td><td>${b.status}</td><td>${b.applications}</td></tr>`).join('')}</tbody>
+      `;
+    }
+
+    function renderChart(rows) {
+      const max = 540;
+      const top = 48, left = 148, barH = Math.min(28, 180 / rows.length), gap = Math.max(9, 26 - rows.length * 2);
+      const width = 610;
+      chart.innerHTML = `<text x="18" y="24" class="chart-title">Representative gravimetric energy density</text>
+        <line x1="${left}" y1="260" x2="${left + width}" y2="260" stroke="rgba(255,255,255,.18)" />
+        ${[0,100,200,300,400,500].map(t => `<g><line x1="${left + (t/max)*width}" y1="42" x2="${left + (t/max)*width}" y2="260" stroke="rgba(255,255,255,.06)"/><text x="${left + (t/max)*width - 10}" y="282" class="axis">${t}</text></g>`).join('')}
+        <text x="${left + width - 58}" y="282" class="axis">Wh/kg</text>`;
+      rows.forEach((b, i) => {
+        const y = top + i * (barH + gap);
+        const w = Math.max(10, (b.energy / max) * width);
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.innerHTML = `<text x="18" y="${y + barH - 8}" class="chart-label">${b.name}</text>
+          <rect x="${left}" y="${y}" width="0" height="${barH}" rx="8" fill="${b.color}" opacity=".9" class="bar" />
+          <text x="${left + w + 10}" y="${y + barH - 8}" class="chart-label">${b.range}</text>`;
+        chart.appendChild(g);
+        requestAnimationFrame(() => g.querySelector('.bar').setAttribute('width', w));
+      });
+    }
+
+    renderTimeline();
+    renderChoices();
+    renderComparison();
+  </script>
+</body>
+</html>
