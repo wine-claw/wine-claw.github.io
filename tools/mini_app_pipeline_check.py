@@ -12,8 +12,8 @@ PROJECT = WORKSPACE / 'projects' / '2am-mini-app-creation'
 STATE_PATH = PROJECT / 'state.json'
 SUMMARY_PATH = PROJECT / 'latest-summary.md'
 RUNS_DIR = PROJECT / 'runs'
-PUBLIC_GALLERY = 'https://wine-claw.github.io/mini-apps/'
-PUBLIC_LATEST = 'https://wine-claw.github.io/mini-apps/latest/'
+PUBLIC_GALLERY = 'https://wine-claw.github.io/app-gallery/'
+PUBLIC_LATEST = 'https://wine-claw.github.io/app-gallery/latest/'
 
 
 def fetch_text(url: str, timeout: int = 12) -> str:

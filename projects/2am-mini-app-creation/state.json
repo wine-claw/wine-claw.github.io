@@ -2,7 +2,7 @@
   "name": "2am Mini-App Creation",
   "slug": "2am-mini-app-creation",
   "status": "active",
-  "summary": "Recurring 2:00 AM mini-app project. Apr 25: Soil Water Infiltration Simulator — interactive real-time physics sandbox showing rainfall infiltration through different soil types using a simplified Green-Ampt model with realistic USDA parameters.",
+  "summary": "Recurring 2:00 AM mini-app project. Apr 25: Soil Water Infiltration Simulator \u2014 interactive real-time physics sandbox showing rainfall infiltration through different soil types using a simplified Green-Ampt model with realistic USDA parameters.",
   "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/README.md",
   "specPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/SPEC.md",
   "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/latest-summary.md",
@@ -10,12 +10,12 @@
   "nextStep": "Apr 26: Choose new mini-app concept. Continue rotating archetypes and domain topics.",
   "primaryLink": {
     "label": "Soil Water Infiltration Simulator",
-    "url": "https://wine-claw.github.io/mini-apps/apps/2026-04-25-soil-infiltration-sim/"
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-25-soil-infiltration-sim/"
   },
   "secondaryClosedLinks": [
     {
       "label": "Gallery",
-      "url": "https://wine-claw.github.io/mini-apps/"
+      "url": "https://wine-claw.github.io/app-gallery/"
     }
   ],
   "links": [],
@@ -25,11 +25,11 @@
     "notes": "Interactive real-time simulation of rainfall infiltration through 5 soil types using simplified Green-Ampt physics. Animated canvas cross-section with wetting front, saturated zone, field capacity zone, surface ponding, runoff. Realistic USDA soil parameters. Responsive layout.",
     "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-25-soil-infiltration-sim",
     "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-25-soil-infiltration-sim/index.html",
-    "verification": "Partial — local file review only. Browser verification blocked by overnight policy.",
+    "verification": "Partial \u2014 local file review only. Browser verification blocked by overnight policy.",
     "delegation": {
       "used": true,
       "worker": "worker1 (K2.6)",
-      "workerHandled": "Full implementation — HTML/CSS/JS, canvas animation, Green-Ampt physics, soil data for 5 types, rain simulation, responsive layout, expandable how-it-works section.",
+      "workerHandled": "Full implementation \u2014 HTML/CSS/JS, canvas animation, Green-Ampt physics, soil data for 5 types, rain simulation, responsive layout, expandable how-it-works section.",
       "mainHandled": "Concept selection, research, review, verification attempt, packaging, state updates, publish orchestration.",
       "estimatedSplit": {
         "workerPercent": 75,

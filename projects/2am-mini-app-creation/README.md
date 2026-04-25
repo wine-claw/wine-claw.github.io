@@ -75,9 +75,9 @@ The agent should choose something itself from those categories using its knowled
 ## Hosted publishing
 - The current standard remote publishing path is the hosted `openclaw-mini-apps` area on `wine-claw.github.io`.
 - Publish target URLs:
-  - gallery: `https://wine-claw.github.io/mini-apps/`
-  - stable latest link: `https://wine-claw.github.io/mini-apps/latest/index.html`
-  - app pages: `https://wine-claw.github.io/mini-apps/apps/<date>-<slug>/`
+  - gallery: `https://wine-claw.github.io/app-gallery/`
+  - stable latest link: `https://wine-claw.github.io/app-gallery/latest/index.html`
+  - app pages: `https://wine-claw.github.io/app-gallery/apps/<date>-<slug>/`
 - Gallery UX preference: do not show `Open latest app` or `Refresh gallery` buttons in the gallery hero area; keep it simpler and rely on the stable latest link text plus the app cards themselves.
 - Publishing currently uses a jailed FTPS deploy account rooted at the `openclaw-mini-apps` subtree so the main site/game is not touched.
 - Connection details live locally in `secrets/grapecrushrush-openclaw-mini-apps.ftp.env`.

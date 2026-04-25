@@ -1,6 +1,6 @@
 {
   "title": "Wine Claw Project Tracking",
-  "updatedAt": "2026-04-24T21:22:42.720083+10:30",
+  "updatedAt": "2026-04-25T12:06:52.031729+10:30",
   "columns": [
     "active",
     "blocked",
@@ -12,15 +12,15 @@
       "name": "2am Mini-App Creation",
       "slug": "2am-mini-app-creation",
       "status": "active",
-      "summary": "Recurring 2:00 AM mini-app project. Apr 24: The Fermentation Atlas \u2014 interactive explorer of 20 major fermentation processes (kimchi, cheese, wine, soy sauce, yogurt, etc.) with filterable card grid, detail modals, and warm organic design.",
+      "summary": "Recurring 2:00 AM mini-app project. Apr 25: Soil Water Infiltration Simulator \u2014 interactive real-time physics sandbox showing rainfall infiltration through different soil types using a simplified Green-Ampt model with realistic USDA parameters.",
       "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/README.md",
       "specPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/SPEC.md",
       "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/latest-summary.md",
-      "updatedAt": "2026-04-24T02:30:00+09:30",
-      "nextStep": "Apr 25: Choose new mini-app concept. Consider rotating back to vineyard/engineering topics or mission-advancement ideas.",
+      "updatedAt": "2026-04-25T02:15:00+09:30",
+      "nextStep": "Apr 26: Choose new mini-app concept. Continue rotating archetypes and domain topics.",
       "primaryLink": {
-        "label": "The Fermentation Atlas",
-        "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-24-fermentation-atlas/"
+        "label": "Soil Water Infiltration Simulator",
+        "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-25-soil-infiltration-sim/"
       },
       "secondaryClosedLinks": [
         {
@@ -30,17 +30,17 @@
       ],
       "links": [],
       "latestRun": {
-        "date": "2026-04-24",
-        "title": "The Fermentation Atlas",
-        "notes": "Interactive explorer of 20 fermentation processes. Filterable card grid, detail modals, warm organic design. Domain rotation to food science beyond wine.",
-        "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-24-fermentation-atlas",
-        "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-24-fermentation-atlas/index.html",
-        "verification": "Partial \u2014 local HTML review only, automated screenshot verification blocked.",
+        "date": "2026-04-25",
+        "title": "Soil Water Infiltration Simulator",
+        "notes": "Interactive real-time simulation of rainfall infiltration through 5 soil types using simplified Green-Ampt physics. Animated canvas cross-section with wetting front, saturated zone, field capacity zone, surface ponding, runoff. Realistic USDA soil parameters. Responsive layout.",
+        "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-25-soil-infiltration-sim",
+        "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-25-soil-infiltration-sim/index.html",
+        "verification": "Partial \u2014 local file review only. Browser verification blocked by overnight policy.",
         "delegation": {
           "used": true,
           "worker": "worker1 (K2.6)",
-          "workerHandled": "Full implementation \u2014 HTML/CSS/JS, data for 20 entries, card grid, filters, modal, animations, responsive layout.",
-          "mainHandled": "Concept selection, research, review, verification attempt, packaging, state updates.",
+          "workerHandled": "Full implementation \u2014 HTML/CSS/JS, canvas animation, Green-Ampt physics, soil data for 5 types, rain simulation, responsive layout, expandable how-it-works section.",
+          "mainHandled": "Concept selection, research, review, verification attempt, packaging, state updates, publish orchestration.",
           "estimatedSplit": {
             "workerPercent": 75,
             "mainPercent": 25
@@ -57,7 +57,7 @@
       "path": "/Users/wineclaw/.openclaw/workspace/projects/awri-grant-watch/README.md",
       "updatedAt": "2026-03-30T09:01:00+10:30",
       "nextStep": "Run the next Monday scan, keep prioritising official-source Australian opportunities, and continue watching for stronger verified international fits.",
-      "blocker": "Stale: no meaningful update for 611.7h while active.",
+      "blocker": "Stale: no meaningful update for 626.7h while active.",
       "links": [],
       "autonomous": {
         "enabled": true,
@@ -76,11 +76,23 @@
       "summary": "Nightly 1:00 AM scan for strong real-world OpenClaw use cases, with a rotating concise pick queue kept fresh for the daily brief.",
       "path": "/Users/wineclaw/.openclaw/workspace/projects/openclaw-use-case-watch/README.md",
       "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/openclaw-use-case-watch/latest-summary.md",
-      "updatedAt": "2026-04-24T01:00:00+09:30",
-      "nextStep": "Keep watching for independently linkable OpenClaw deployments, especially from non-developer operators, enterprise production stories, and novel categories like freelance-skill-as-service. The ZooClaw non-developer setup and Ben Utting Upwork engagement represent two emerging signal categories worth tracking.",
+      "updatedAt": "2026-04-25T01:00:00+09:30",
+      "nextStep": "Keep watching for: (1) longer-term follow-ups to the OpenClaw Challenge deployments \u2014 do the 7-agent and 12-agent setups scale past initial hype, (2) non-Challenge production narratives with similar operational depth, (3) enterprise/team deployments with measured productivity gains, (4) novel architectural patterns like the ClawForge multi-agent pipeline, and (5) verified revenue numbers beyond the Felix experiment.",
       "links": [
         {
-          "label": "2026-04-24 \u2014 armorbreak 3-month autonomous production agent (69+ PRs, 2 live products)",
+          "label": "2026-04-25 \u2014 17-week production run 7 autonomous agents (200dollarceo dev.to)",
+          "url": "https://dev.to/the200dollarceo/17-weeks-running-7-autonomous-ai-agents-in-production-real-lessons-and-real-numbers-3o12"
+        },
+        {
+          "label": "2026-04-25 \u2014 Travel SaaS 12 agents 48 cron jobs on one VPS (egorceo dev.to)",
+          "url": "https://dev.to/egorceo/i-run-a-travel-saas-with-12-ai-agents-and-48-cron-jobs-on-openclaw-heres-my-exact-setup-264h"
+        },
+        {
+          "label": "2026-04-25 \u2014 ClawForge one-message full-app deployment (mamoor_ahmad dev.to)",
+          "url": "https://dev.to/mamoor_ahmad/i-sent-one-message-and-5-ai-agents-built-audited-tested-deployed-a-full-app-3oma"
+        },
+        {
+          "label": "2026-04-24 \u2014 3-month autonomous production agent (armorbreak dev.to)",
           "url": "https://dev.to/armorbreak/how-i-built-an-autonomous-ai-agent-that-pays-for-its-own-server-a-real-world-openclaw-story-2e4p"
         },
         {
@@ -98,6 +110,18 @@
         {
           "label": "2026-04-24 \u2014 de la Mothe Ventures production execution discipline gap (GitHub #65490)",
           "url": "https://github.com/openclaw/openclaw/issues/65490"
+        },
+        {
+          "label": "2026-04-24 \u2014 Felix $14.7K revenue in 3 weeks (BuiltWithAgents)",
+          "url": "https://www.builtwithagents.ai/strategy/openclaw-autonomous-agent-14700-revenue-3-weeks"
+        },
+        {
+          "label": "2026-04-24 \u2014 Slack agent observability gap ($8/day reading cost)",
+          "url": "https://dev.to/helen_mireille_47b02db70c/your-openclaw-slack-agent-is-flying-blind-32b5"
+        },
+        {
+          "label": "2026-04-24 \u2014 First month on old Windows desktop (primaryobjects dev.to)",
+          "url": "https://dev.to/primaryobjects/my-first-month-running-openclaw-nonstop-heres-what-everyone-gets-wrong-1ni2"
         },
         {
           "label": "2026-04-16 \u2014 Red Hat AI + OpenClaw enterprise deployment reference",
@@ -215,7 +239,7 @@
       "path": "/Users/wineclaw/.openclaw/workspace/projects/ezeio-google-sheet-sync/README.md",
       "updatedAt": "2026-04-12T10:30:00+09:30",
       "nextStep": "Verify collector is writing live data and charts are updating correctly.",
-      "blocker": "Stale: no meaningful update for 297.2h while monitoring.",
+      "blocker": "Stale: no meaningful update for 312.2h while monitoring.",
       "links": [
         {
           "label": "Live sheet",
