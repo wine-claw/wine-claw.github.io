@@ -73,20 +73,23 @@ The agent should choose something itself from those categories using its knowled
 - Those two hosted URLs are fixed required outputs for the morning brief and should be included even if project `state.json` is temporarily stale; morning reporting should prefer the newest overnight artifact (`latest-summary.md` / latest run folder) over dashboard state.
 
 ## Hosted publishing
-- The current standard remote publishing path is the hosted `openclaw-mini-apps` area on `wine-claw.github.io`.
+- The current standard remote publishing path is **GitHub Pages** via the `wine-claw/wine-claw.github.io` repo.
 - Publish target URLs:
   - gallery: `https://wine-claw.github.io/app-gallery/`
   - stable latest link: `https://wine-claw.github.io/app-gallery/latest/index.html`
   - app pages: `https://wine-claw.github.io/app-gallery/apps/<date>-<slug>/`
 - Gallery UX preference: do not show `Open latest app` or `Refresh gallery` buttons in the gallery hero area; keep it simpler and rely on the stable latest link text plus the app cards themselves.
-- Publishing currently uses a jailed FTPS deploy account rooted at the `openclaw-mini-apps` subtree so the main site/game is not touched.
-- Connection details live locally in `secrets/grapecrushrush-openclaw-mini-apps.ftp.env`.
-- The publish/build helper is `tools/publish_mini_apps.py`.
-- If the overnight pipeline check shows only the public gallery/latest pages are stale while the direct app URL is already live, prefer a narrow FTPS repair first: re-upload `index.html`, `latest/index.html`, `manifest.json`, `.htaccess`, and `robots.txt` from `projects/2am-mini-app-creation/hosting/site/` instead of waiting on a full republish.
-- The publisher must upload the full app directory tree for each app (not just the top-level `index.html`), otherwise newly added app folders can be missing remotely even when the local gallery build looks correct.
+- The live gallery lives in `app-gallery/` at the workspace root. It is a git worktree of the `wine-claw.github.io` repo.
+- To publish: copy app files into `app-gallery/apps/<date>-<slug>/`, update `app-gallery/index.html` and `manifest.json`, update `app-gallery/latest/index.html`, then `git add -A && git commit && git push` from within `app-gallery/`.
+- The publisher must include the full app directory tree (including assets) for each app.
 - The hosted gallery build must not depend on the dashboard-facing `state.json` `links` list, because Simon may intentionally trim dashboard links for UX reasons. Build the hosted gallery from the durable run folders (and latest-run metadata where helpful) instead.
 - Mini-apps should remain unlisted and mobile-friendly by default.
 - Hosted mini-apps should include a visible warning banner stating that they are experimental OpenClaw AI mini-apps, untested, not professionally validated, and should not be relied on for any decisions.
+
+## Legacy (DEPRECATED)
+- Old gallery: `https://wine-claw.github.io/mini-apps/` — was a redirect, now deleted
+- Old FTP target: `grapecrushrush.com/openclaw-mini-apps/` — no longer used
+- Old build helper: `tools/publish_mini_apps.py` — no longer used
 
 ## Deliverables
 Each overnight cycle should aim to produce:
