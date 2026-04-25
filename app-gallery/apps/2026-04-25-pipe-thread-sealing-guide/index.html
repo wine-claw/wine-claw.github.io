@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pipe Thread Sealing Guide — PTFE Tape & Thread Sealants</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #647086;
+      --line: #d8e0ec;
+      --blue: #1d6fd6;
+      --blue-2: #e8f2ff;
+      --teal: #069a8e;
+      --amber: #e39d16;
+      --red: #c84545;
+      --green: #16845f;
+      --shadow: 0 18px 50px rgba(22, 34, 51, .10);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(29, 111, 214, .13), transparent 34rem),
+        linear-gradient(180deg, #fbfdff 0%, var(--bg) 42%, #eef3fa 100%);
+      line-height: 1.55;
+    }
+
+    a { color: var(--blue); }
+    .wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+    .hero {
+      padding: 34px 0 18px;
+      border-bottom: 1px solid rgba(216,224,236,.75);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 28px;
+      align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.75);
+      color: #38506f;
+      font-size: .84rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+    h1 {
+      margin: 18px 0 12px;
+      font-size: clamp(2.15rem, 5vw, 4.7rem);
+      line-height: .95;
+      letter-spacing: -.055em;
+    }
+    .lead {
+      max-width: 64ch;
+      color: var(--muted);
+      font-size: clamp(1.02rem, 2.2vw, 1.23rem);
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    .btn, button, select, input[type="range"] { font: inherit; }
+    .btn, button.primary, button.ghost {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover, button:hover { transform: translateY(-1px); }
+    .primary, .btn.primary { background: var(--blue); color: #fff; box-shadow: 0 10px 22px rgba(29,111,214,.23); }
+    .ghost, .btn.ghost { background: #fff; color: #23324a; border: 1px solid var(--line); }
+    .hero-card {
+      background: rgba(255,255,255,.78);
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 8px);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      overflow: hidden;
+    }
+    .hero-svg { width: 100%; height: auto; display: block; }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      backdrop-filter: blur(14px);
+      background: rgba(244,247,251,.84);
+      border-bottom: 1px solid rgba(216,224,236,.78);
+    }
+    .nav .wrap { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; }
+    .nav a {
+      white-space: nowrap;
+      text-decoration: none;
+      color: #425069;
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: .9rem;
+      font-weight: 750;
+    }
+    section { padding: 34px 0; }
+    .section-head { display: flex; justify-content: space-between; gap: 18px; align-items: end; margin-bottom: 18px; }
+    h2 { margin: 0; font-size: clamp(1.55rem, 3.2vw, 2.45rem); letter-spacing: -.03em; line-height: 1.05; }
+    .section-head p { color: var(--muted); max-width: 56ch; margin: 0; }
+    .grid { display: grid; gap: 16px; }
+    .two { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .three { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .four { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 9px 28px rgba(25, 38, 59, .06);
+    }
+    .card h3 { margin: 0 0 8px; font-size: 1.1rem; letter-spacing: -.015em; }
+    .card p, .card li { color: #526077; }
+    .card p:last-child { margin-bottom: 0; }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--blue-2);
+      color: #205997;
+      font-size: .76rem;
+      font-weight: 850;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+    .timeline { position: relative; padding-left: 20px; }
+    .timeline:before { content:""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--blue), var(--teal)); }
+    .era { position: relative; padding: 0 0 18px 18px; }
+    .era:before { content:""; position: absolute; left: -18px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 3px solid var(--blue); }
+    .era strong { display:block; color: #1e314e; }
+    .demo-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 16px; align-items: stretch; }
+    .controls { display: grid; gap: 12px; }
+    .control-row { display: grid; grid-template-columns: 1fr 1.15fr; gap: 10px; align-items: center; }
+    label { font-weight: 800; color: #33435d; }
+    select, .pill-input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 10px 12px;
+      color: var(--ink);
+    }
+    .readout {
+      background: #0f223c;
+      color: #e9f3ff;
+      border-radius: 16px;
+      padding: 16px;
+      display: grid;
+      gap: 9px;
+    }
+    .readout .big { font-size: 2.4rem; font-weight: 950; line-height: 1; letter-spacing: -.05em; }
+    .readout small { color: #b7cce8; }
+    .demo-stage {
+      min-height: 440px;
+      background: linear-gradient(180deg, #f9fbfe, #eef4fb);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr 1fr;
+    }
+    .motion-panel { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 12px; position: relative; overflow: hidden; }
+    .motion-panel h3 { margin: 0 0 2px; font-size: 1rem; }
+    .motion-panel.correct h3 { color: var(--green); }
+    .motion-panel.wrong h3 { color: var(--red); }
+    .svg-demo { width: 100%; height: 285px; display:block; }
+    .tape-strip { filter: drop-shadow(0 2px 2px rgba(20,30,45,.15)); transform-box: fill-box; transform-origin: center; }
+    .animate .tape-right { animation: wrapRight 2.8s linear infinite; }
+    .animate .tape-wrong { animation: wrapWrong 2.8s linear infinite; }
+    @keyframes wrapRight { from { stroke-dashoffset: 170; } to { stroke-dashoffset: -170; } }
+    @keyframes wrapWrong { from { stroke-dashoffset: -170; } to { stroke-dashoffset: 170; } }
+    .hint { font-size: .88rem; color: var(--muted); margin: 6px 0 0; }
+    .direction-chip { display:inline-flex; align-items:center; gap:6px; padding: 6px 8px; border-radius:999px; background:#f4f7fb; font-size:.82rem; font-weight:800; color:#425069; }
+    .advisor { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    .checklist { display: grid; gap: 8px; }
+    .choice { display:flex; gap: 9px; align-items:center; padding: 10px 11px; border: 1px solid var(--line); border-radius: 12px; background:#fff; cursor:pointer; }
+    .choice input { accent-color: var(--blue); }
+    .result-box { border-radius: 18px; padding: 18px; background: linear-gradient(135deg, #0f223c, #174f8d); color:#fff; min-height: 190px; }
+    .result-box h3 { margin: 0 0 8px; font-size: 1.45rem; }
+    .result-box p { color: #d8e8fb; }
+    .score-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:7px; }
+    .score-list li { display:flex; justify-content:space-between; gap:12px; color:#d8e8fb; border-top:1px solid rgba(255,255,255,.15); padding-top:7px; }
+    table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; font-size: .94rem; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #eef4fb; color: #27374f; font-size:.82rem; text-transform: uppercase; letter-spacing:.04em; }
+    tr:last-child td { border-bottom: 0; }
+    .table-scroll { overflow-x: auto; border:1px solid var(--line); border-radius: 16px; background:#fff; }
+    .std-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .std-tabs button { border: 1px solid var(--line); background:#fff; color:#34445f; border-radius:999px; padding:8px 12px; font-weight:850; }
+    .std-tabs button.active { background: var(--blue); color:#fff; border-color: var(--blue); }
+    .thread-card { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items:center; }
+    .diagram { width: 100%; min-height: 260px; background:#f8fbff; border:1px solid var(--line); border-radius:16px; }
+    .compat { display:grid; gap:10px; }
+    .compat-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+    .ok { color: var(--green); font-weight:900; }
+    .warn { color: var(--amber); font-weight:900; }
+    .bad { color: var(--red); font-weight:900; }
+    details { border:1px solid var(--line); background:#fff; border-radius:16px; padding: 12px 14px; }
+    details + details { margin-top: 10px; }
+    summary { cursor:pointer; font-weight:900; color:#253651; }
+    .trouble-grid { grid-template-columns: 1fr 1fr; }
+    .callout {
+      border-left: 5px solid var(--amber);
+      background: #fff8e8;
+      color: #574117;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    footer { padding: 28px 0 42px; color: var(--muted); }
+    .mini { font-size: .86rem; color: var(--muted); }
+
+    @media (max-width: 860px) {
+      .hero-grid, .two, .three, .four, .demo-grid, .advisor, .thread-card, .trouble-grid { grid-template-columns: 1fr; }
+      .section-head { display:block; }
+      .section-head p { margin-top: 8px; }
+      .demo-stage { grid-template-columns: 1fr; min-height: auto; }
+      .svg-demo { height: 240px; }
+      .control-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      .wrap { width: min(100% - 22px, 1180px); }
+      .card, .hero-card { padding: 14px; }
+      th, td { padding: 9px 8px; }
+      .readout .big { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">🔧 Technical reference • PTFE tape focus</span>
+        <h1>Pipe Thread Sealing Guide</h1>
+        <p class="lead">A practical, visual mini-reference for tapered pipe threads, sealing compounds, and correct thread tape application—from hemp and oil to modern PTFE and anaerobic sealants.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#guide">Start wrapping guide</a>
+          <a class="btn ghost" href="#standards">Thread standards</a>
+        </div>
+      </div>
+      <div class="hero-card" aria-label="Cutaway illustration of pipe thread sealing">
+        <svg class="hero-svg" viewBox="0 0 640 430" role="img" aria-labelledby="heroTitle heroDesc">
+          <title id="heroTitle">Pipe thread sealant cutaway</title>
+          <desc id="heroDesc">A threaded male pipe entering a female fitting with blue tape filling the thread valleys.</desc>
+          <defs>
+            <linearGradient id="metal" x1="0" x2="1">
+              <stop offset="0" stop-color="#d7e1ee"/><stop offset=".52" stop-color="#f7fbff"/><stop offset="1" stop-color="#aebdce"/>
+            </linearGradient>
+            <linearGradient id="darkmetal" x1="0" x2="1">
+              <stop offset="0" stop-color="#8fa0b4"/><stop offset="1" stop-color="#d9e2ee"/>
+            </linearGradient>
+            <filter id="soft"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-opacity=".18"/></filter>
+          </defs>
+          <rect x="0" y="0" width="640" height="430" rx="28" fill="#f5f9fe"/>
+          <g filter="url(#soft)">
+            <rect x="348" y="122" width="196" height="184" rx="28" fill="url(#darkmetal)"/>
+            <rect x="376" y="154" width="142" height="120" rx="12" fill="#eff5fb"/>
+            <path d="M380 164 L512 164 M380 188 L512 188 M380 212 L512 212 M380 236 L512 236 M380 260 L512 260" stroke="#8fa0b4" stroke-width="7" stroke-linecap="round" opacity=".75"/>
+            <path d="M96 177 C160 160 220 160 292 177 L410 177 L410 253 L292 253 C220 270 160 270 96 253 Z" fill="url(#metal)" stroke="#7d8fa5" stroke-width="2"/>
+            <path d="M284 180 L405 180 M284 204 L405 204 M284 228 L405 228 M284 252 L405 252" stroke="#6b7f96" stroke-width="8" stroke-linecap="round"/>
+            <path d="M279 170 C303 182 327 182 351 170 C375 158 392 160 410 172" fill="none" stroke="#20a8ff" stroke-width="13" stroke-linecap="round" opacity=".83"/>
+            <path d="M279 204 C303 216 327 216 351 204 C375 192 392 194 410 206" fill="none" stroke="#20a8ff" stroke-width="13" stroke-linecap="round" opacity=".83"/>
+            <path d="M279 238 C303 250 327 250 351 238 C375 226 392 228 410 240" fill="none" stroke="#20a8ff" stroke-width="13" stroke-linecap="round" opacity=".83"/>
+          </g>
+          <g transform="translate(80 332)">
+            <rect width="480" height="54" rx="15" fill="#fff" stroke="#d8e0ec"/>
+            <circle cx="32" cy="27" r="12" fill="#20a8ff"/>
+            <text x="54" y="23" font-size="16" font-weight="800" fill="#24354f">Sealant fills spiral leak paths</text>
+            <text x="54" y="42" font-size="13" fill="#647086">Tape lubricates threads and compresses into voids as tapered threads engage.</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav" aria-label="Page sections">
+    <div class="wrap">
+      <a href="#history">History</a>
+      <a href="#sealants">Sealants</a>
+      <a href="#guide">Tape guide</a>
+      <a href="#advisor">Chooser</a>
+      <a href="#standards">Standards</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+    </div>
+  </nav>
+
+  <main>
+    <section id="history">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>From hemp and oil to PTFE</h2>
+          <p>Pipe sealing evolved from packing irregular joints to deliberately filling the helical leak path left by threaded fittings.</p>
+        </div>
+        <div class="grid two">
+          <div class="card timeline">
+            <div class="era"><strong>Pre-industrial joints</strong><span class="mini">Hemp, flax, leather, tallow, oil, white lead, and red lead were used to pack and lubricate low-pressure water and gas joints.</span></div>
+            <div class="era"><strong>19th century standardization</strong><span class="mini">Industrial plumbing and steam piping drove standardized tapered threads. The taper let male and female threads wedge together under torque.</span></div>
+            <div class="era"><strong>20th century compounds</strong><span class="mini">Pipe dopes blended oils, fillers, solvents, and resins to lubricate, seal voids, and resist vibration or temperature.</span></div>
+            <div class="era"><strong>Modern PTFE era</strong><span class="mini">PTFE tape became popular because it is clean, chemically resistant, low-friction, and convenient for small threaded fittings.</span></div>
+          </div>
+          <div class="card">
+            <span class="badge">Key principle</span>
+            <h3>Tapered threads seal by interference, not by the thread crest alone</h3>
+            <p>NPT and similar tapered systems tighten because the thread diameter increases along the fitting. Sealant fills the spiral clearance between crests and roots while also reducing galling so the fitting can reach proper engagement.</p>
+            <div class="callout">PTFE tape is not “glue.” It is a deformable, low-friction film that packs into thread valleys. Too much tape can split female fittings; too little leaves leak paths.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sealants">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Sealant types compared</h2>
+          <p>Each sealant has a different balance of cleanliness, chemical resistance, vibration tolerance, and serviceability.</p>
+        </div>
+        <div class="table-scroll">
+          <table aria-label="Thread sealant comparison table">
+            <thead><tr><th>Type</th><th>Best for</th><th>Strengths</th><th>Watch-outs</th></tr></thead>
+            <tbody>
+              <tr><td><strong>PTFE tape</strong></td><td>Water, air, many small metal pipe threads</td><td>Clean, inexpensive, chemically inert, immediate assembly</td><td>Wrong direction unravels; excess can crack plastic/brass; fragments can contaminate valves</td></tr>
+              <tr><td><strong>Pipe dope / paste</strong></td><td>Larger diameters, rough threads, mixed metals</td><td>Fills imperfections well; good lubrication; many specialty formulations</td><td>Compatibility varies by gas, oxygen, potable water, plastic, and temperature</td></tr>
+              <tr><td><strong>Anaerobic sealant</strong></td><td>Hydraulic, pneumatic, vibration-prone metal joints</td><td>Cures without air between metal threads; resists vibration; seals high pressure</td><td>Needs clean active metal surfaces; cure time; not ideal for many plastics</td></tr>
+              <tr><td><strong>Liquid thread sealant</strong></td><td>Potable water, gas-rated systems, maintenance work</td><td>Brush-on convenience; often easier to control than tape</td><td>Must match approvals and media; can require set time before pressure</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="guide">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Interactive tape-wrapping guide</h2>
+          <p>Wrap male threads in the same direction the fitting will tighten, normally clockwise when looking at the pipe end.</p>
+        </div>
+        <div class="demo-grid">
+          <div class="card controls">
+            <div class="control-row">
+              <label for="pipeSize">Pipe size</label>
+              <select id="pipeSize">
+                <option value="1/8">1/8 in NPT</option>
+                <option value="1/4">1/4 in NPT</option>
+                <option value="3/8">3/8 in NPT</option>
+                <option value="1/2" selected>1/2 in NPT</option>
+                <option value="3/4">3/4 in NPT</option>
+                <option value="1">1 in NPT</option>
+                <option value="1-1/2">1-1/2 in NPT</option>
+                <option value="2">2 in NPT</option>
+              </select>
+            </div>
+            <div class="control-row">
+              <label for="tapeDensity">Tape type</label>
+              <select id="tapeDensity">
+                <option value="standard">Standard white PTFE</option>
+                <option value="premium">High-density PTFE</option>
+                <option value="gas">Yellow gas-rated PTFE</option>
+              </select>
+            </div>
+            <div class="control-row">
+              <label for="threadMaterial">Fitting material</label>
+              <select id="threadMaterial">
+                <option value="steel">Steel / iron</option>
+                <option value="brass">Brass / bronze</option>
+                <option value="plastic">PVC / plastic female fitting</option>
+                <option value="stainless">Stainless steel</option>
+              </select>
+            </div>
+            <div class="readout" aria-live="polite">
+              <small>Recommended wraps</small>
+              <div class="big"><span id="wrapCount">3–4</span></div>
+              <div id="wrapAdvice">Start one thread back from the end, overlap by about half the tape width, and pull snug—not stretched thin.</div>
+            </div>
+            <div class="callout" id="materialWarning">For most 1/2 in metal threads, 3–4 wraps of standard PTFE is a practical starting point. Always follow local code and product instructions.</div>
+            <button class="primary" id="toggleAnim" type="button">Pause animation</button>
+          </div>
+
+          <div class="demo-stage animate" id="demoStage">
+            <div class="motion-panel correct">
+              <h3>Correct: clockwise from pipe end</h3>
+              <span class="direction-chip">↻ Tightening keeps tape seated</span>
+              <svg class="svg-demo" viewBox="0 0 300 280" role="img" aria-label="Correct PTFE tape direction animation">
+                <defs>
+                  <linearGradient id="pipeG" x1="0" x2="1"><stop offset="0" stop-color="#c9d5e2"/><stop offset=".5" stop-color="#f9fcff"/><stop offset="1" stop-color="#9babbf"/></linearGradient>
+                </defs>
+                <rect x="35" y="90" width="180" height="100" rx="50" fill="url(#pipeG)" stroke="#71839a" stroke-width="2"/>
+                <ellipse cx="214" cy="140" rx="44" ry="50" fill="#e9f0f8" stroke="#71839a" stroke-width="2"/>
+                <ellipse cx="214" cy="140" rx="24" ry="29" fill="#425169" opacity=".18"/>
+                <g opacity=".7" stroke="#667990" stroke-width="5" stroke-linecap="round">
+                  <path d="M70 99 C96 122 130 122 156 99"/><path d="M66 124 C96 151 130 151 160 124"/><path d="M66 154 C96 181 130 181 160 154"/>
+                </g>
+                <path class="tape-strip tape-right" d="M63 110 C95 139 133 139 165 110 C190 88 219 93 245 114 M62 140 C96 169 133 169 166 140 C190 118 219 123 245 144 M62 170 C96 199 133 199 166 170 C190 148 219 153 245 174" fill="none" stroke="#1fa7ff" stroke-width="13" stroke-linecap="round" stroke-dasharray="70 100"/>
+                <path d="M210 64 A72 72 0 0 1 265 136" fill="none" stroke="#16845f" stroke-width="5" stroke-linecap="round"/>
+                <path d="M265 136 l-12 -9 l2 15 z" fill="#16845f"/>
+              </svg>
+              <p class="hint">Tape tail is dragged tighter as the fitting turns on.</p>
+            </div>
+            <div class="motion-panel wrong">
+              <h3>Incorrect: counter-clockwise</h3>
+              <span class="direction-chip">↺ Tightening peels tape back</span>
+              <svg class="svg-demo" viewBox="0 0 300 280" role="img" aria-label="Incorrect PTFE tape direction animation">
+                <rect x="35" y="90" width="180" height="100" rx="50" fill="url(#pipeG)" stroke="#71839a" stroke-width="2"/>
+                <ellipse cx="214" cy="140" rx="44" ry="50" fill="#e9f0f8" stroke="#71839a" stroke-width="2"/>
+                <ellipse cx="214" cy="140" rx="24" ry="29" fill="#425169" opacity=".18"/>
+                <g opacity=".7" stroke="#667990" stroke-width="5" stroke-linecap="round">
+                  <path d="M70 99 C96 122 130 122 156 99"/><path d="M66 124 C96 151 130 151 160 124"/><path d="M66 154 C96 181 130 181 160 154"/>
+                </g>
+                <path class="tape-strip tape-wrong" d="M63 110 C95 139 133 139 165 110 C190 88 219 93 245 114 M62 140 C96 169 133 169 166 140 C190 118 219 123 245 144 M62 170 C96 199 133 199 166 170 C190 148 219 153 245 174" fill="none" stroke="#ef6b6b" stroke-width="13" stroke-linecap="round" stroke-dasharray="70 100"/>
+                <path d="M210 64 A72 72 0 0 0 155 136" fill="none" stroke="#c84545" stroke-width="5" stroke-linecap="round"/>
+                <path d="M155 136 l12 -9 l-2 15 z" fill="#c84545"/>
+                <path d="M206 88 C226 78 247 78 264 88" fill="none" stroke="#ef6b6b" stroke-width="8" stroke-linecap="round" opacity=".85"/>
+              </svg>
+              <p class="hint">Loose tape can bunch up, shed fragments, or leak.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="advisor">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Sealant chooser</h2>
+          <p>Select the job conditions and the tool will rank common thread sealing options.</p>
+        </div>
+        <div class="advisor">
+          <div class="card checklist" id="advisorInputs">
+            <label class="choice"><input type="checkbox" value="water" checked> Potable / service water</label>
+            <label class="choice"><input type="checkbox" value="gas"> Gas service</label>
+            <label class="choice"><input type="checkbox" value="vibration"> Vibration or hydraulic shock</label>
+            <label class="choice"><input type="checkbox" value="large"> Large or rough threads</label>
+            <label class="choice"><input type="checkbox" value="plastic"> Plastic female fitting</label>
+            <label class="choice"><input type="checkbox" value="serviceable"> Needs easy disassembly</label>
+          </div>
+          <div class="result-box">
+            <h3 id="bestSealant">PTFE tape</h3>
+            <p id="sealantReason">Good for clean water service and small metal tapered threads when applied in the tightening direction.</p>
+            <ul class="score-list" id="scoreList"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="standards">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Thread standards reference</h2>
+          <p>Thread forms can look similar but differ in taper, angle, and sealing method. Mixing standards is a common leak source.</p>
+        </div>
+        <div class="grid two">
+          <div class="card">
+            <div class="std-tabs" role="tablist" aria-label="Thread standard details">
+              <button class="active" data-std="npt" type="button">NPT</button>
+              <button data-std="bsp" type="button">BSP</button>
+              <button data-std="metric" type="button">Metric</button>
+            </div>
+            <div id="stdText"></div>
+            <div class="compat" aria-label="Compatibility notes">
+              <div class="compat-row"><span>NPT male → NPT female</span><span class="ok">Compatible</span></div>
+              <div class="compat-row"><span>BSPT male → BSPT female</span><span class="ok">Compatible</span></div>
+              <div class="compat-row"><span>NPT ↔ BSPT</span><span class="bad">Do not assume</span></div>
+              <div class="compat-row"><span>BSPP parallel thread</span><span class="warn">Usually needs gasket/O-ring</span></div>
+            </div>
+          </div>
+          <div class="card thread-card">
+            <div>
+              <span class="badge">Visual engagement</span>
+              <h3>Male and female threads create a spiral path</h3>
+              <p>The sealing material compresses between thread flanks, crests, and roots. Taper helps load the joint; sealant controls leakage along the helix.</p>
+              <p class="mini">Diagram is conceptual, not to scale.</p>
+            </div>
+            <svg class="diagram" viewBox="0 0 360 260" role="img" aria-label="Thread engagement diagram">
+              <rect width="360" height="260" rx="16" fill="#f8fbff"/>
+              <path d="M30 70 L145 70 L160 92 L175 70 L190 92 L205 70 L220 92 L235 70 L250 92 L265 70 L330 70" fill="none" stroke="#73849a" stroke-width="9" stroke-linejoin="round"/>
+              <path d="M30 190 L145 190 L160 168 L175 190 L190 168 L205 190 L220 168 L235 190 L250 168 L265 190 L330 190" fill="none" stroke="#73849a" stroke-width="9" stroke-linejoin="round"/>
+              <path d="M153 89 L170 75 L188 90 L205 75 L223 90 L240 75 L258 90" fill="none" stroke="#1fa7ff" stroke-width="13" stroke-linejoin="round" stroke-linecap="round" opacity=".88"/>
+              <path d="M153 171 L170 185 L188 170 L205 185 L223 170 L240 185 L258 170" fill="none" stroke="#1fa7ff" stroke-width="13" stroke-linejoin="round" stroke-linecap="round" opacity=".88"/>
+              <path d="M126 112 C175 132 217 132 270 112" fill="none" stroke="#e39d16" stroke-width="4" stroke-dasharray="7 7"/>
+              <text x="28" y="38" font-size="14" fill="#33435d" font-weight="800">Female thread</text>
+              <text x="28" y="232" font-size="14" fill="#33435d" font-weight="800">Male thread</text>
+              <text x="192" y="128" font-size="13" fill="#80580e" font-weight="800">Helical leak path</text>
+              <text x="185" y="104" font-size="12" fill="#126ca8" font-weight="800">sealant film</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Common mistakes & troubleshooting</h2>
+          <p>Most leaks trace back to incompatible threads, poor preparation, wrong direction, or over/under application.</p>
+        </div>
+        <div class="grid trouble-grid">
+          <div class="card">
+            <details open><summary>Tape unravels during assembly</summary><p>It was likely wrapped opposite the tightening direction. Re-clean the male threads and wrap clockwise as viewed from the pipe end.</p></details>
+            <details><summary>Leak after several extra turns</summary><p>Stop. More torque can crack female fittings. Disassemble, inspect thread damage, verify standard compatibility, and reapply sealant correctly.</p></details>
+            <details><summary>Valve or regulator contaminated</summary><p>Tape may have been started over the first thread. Start one to two threads back so fragments do not enter the flow path.</p></details>
+          </div>
+          <div class="card">
+            <details open><summary>Plastic fitting splits</summary><p>PTFE reduces friction so over-tightening is easy. Use fewer wraps, hand-tight plus specified turns, and prefer a sealant approved by the fitting maker.</p></details>
+            <details><summary>Stainless threads gall</summary><p>Use appropriate anti-galling sealant or high-quality paste. Stainless-on-stainless may seize without lubrication.</p></details>
+            <details><summary>NPT and BSP seem to fit but leak</summary><p>They may engage a few turns but have different thread forms/pitches. Use adapters designed for the standards rather than forcing compatibility.</p></details>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p><strong>Safety note:</strong> This guide is educational. For gas, oxygen, high-pressure, chemical, potable water, and code-regulated systems, use approved products and follow manufacturer/local requirements.</p>
+    </div>
+  </footer>
+
+  <script>
+    const pipeData = {
+      '1/8': { standard: '2–3', premium: '1–2', gas: '2–3', note: 'Small threads need a light, controlled wrap to avoid splitting fittings.' },
+      '1/4': { standard: '2–3', premium: '2', gas: '2–3', note: 'Keep tape behind the first thread to avoid loose fragments.' },
+      '3/8': { standard: '3', premium: '2', gas: '3', note: 'Overlap about half the tape width and smooth the tail down.' },
+      '1/2': { standard: '3–4', premium: '2–3', gas: '3–4', note: 'Common starting point for household water and air fittings.' },
+      '3/4': { standard: '4–5', premium: '3', gas: '4', note: 'Larger diameter usually benefits from a little more coverage.' },
+      '1': { standard: '5–6', premium: '3–4', gas: '4–5', note: 'Consider paste for rough or older threads.' },
+      '1-1/2': { standard: '6–8', premium: '4–5', gas: '5–6', note: 'Large fittings often seal better with approved pipe dope or tape + paste when allowed.' },
+      '2': { standard: '7–9', premium: '5–6', gas: '6–7', note: 'Check product limits; paste may be preferred for large industrial joints.' }
+    };
+
+    const pipeSize = document.getElementById('pipeSize');
+    const tapeDensity = document.getElementById('tapeDensity');
+    const threadMaterial = document.getElementById('threadMaterial');
+    const wrapCount = document.getElementById('wrapCount');
+    const wrapAdvice = document.getElementById('wrapAdvice');
+    const materialWarning = document.getElementById('materialWarning');
+    const demoStage = document.getElementById('demoStage');
+    const toggleAnim = document.getElementById('toggleAnim');
+
+    function updateWraps() {
+      const data = pipeData[pipeSize.value];
+      const type = tapeDensity.value;
+      wrapCount.textContent = data[type];
+      wrapAdvice.textContent = data.note + ' Wrap clockwise as viewed from the pipe end.';
+      const mat = threadMaterial.value;
+      const warnings = {
+        steel: 'Steel and iron tolerate normal wrapping, but old or damaged threads may need paste or replacement.',
+        brass: 'Brass is softer than steel. Avoid excessive tape thickness and stop if the fitting feels wedged early.',
+        plastic: 'Plastic female fittings are easy to split. Use minimal wraps and follow the fitting maker’s torque guidance.',
+        stainless: 'Stainless can gall. Use a suitable anti-galling paste/sealant if the joint is stainless-on-stainless.'
+      };
+      materialWarning.textContent = warnings[mat];
+    }
+    [pipeSize, tapeDensity, threadMaterial].forEach(el => el.addEventListener('change', updateWraps));
+    updateWraps();
+
+    toggleAnim.addEventListener('click', () => {
+      demoStage.classList.toggle('animate');
+      toggleAnim.textContent = demoStage.classList.contains('animate') ? 'Pause animation' : 'Play animation';
+    });
+
+    const sealants = {
+      'PTFE tape': { base: 50, text: 'Good for clean water service and small metal tapered threads when applied in the tightening direction.' },
+      'Pipe dope / paste': { base: 48, text: 'Best when threads are larger, older, rough, or need extra void filling and lubrication.' },
+      'Anaerobic sealant': { base: 40, text: 'Strong choice for clean metal hydraulic/pneumatic threads where vibration resistance matters.' },
+      'Liquid thread sealant': { base: 44, text: 'Convenient brush-on option when the product approval matches the service media.' }
+    };
+    const weights = {
+      water: { 'PTFE tape': 14, 'Pipe dope / paste': 10, 'Liquid thread sealant': 12, 'Anaerobic sealant': 2 },
+      gas: { 'PTFE tape': -4, 'Pipe dope / paste': 14, 'Liquid thread sealant': 14, 'Anaerobic sealant': 4 },
+      vibration: { 'PTFE tape': -2, 'Pipe dope / paste': 5, 'Liquid thread sealant': 4, 'Anaerobic sealant': 22 },
+      large: { 'PTFE tape': -6, 'Pipe dope / paste': 20, 'Liquid thread sealant': 8, 'Anaerobic sealant': 6 },
+      plastic: { 'PTFE tape': -10, 'Pipe dope / paste': 8, 'Liquid thread sealant': 10, 'Anaerobic sealant': -12 },
+      serviceable: { 'PTFE tape': 12, 'Pipe dope / paste': 8, 'Liquid thread sealant': 4, 'Anaerobic sealant': -12 }
+    };
+    const advisorInputs = document.getElementById('advisorInputs');
+    const bestSealant = document.getElementById('bestSealant');
+    const sealantReason = document.getElementById('sealantReason');
+    const scoreList = document.getElementById('scoreList');
+
+    function updateAdvisor() {
+      const checked = [...advisorInputs.querySelectorAll('input:checked')].map(i => i.value);
+      const scores = Object.fromEntries(Object.keys(sealants).map(k => [k, sealants[k].base]));
+      checked.forEach(c => Object.entries(weights[c]).forEach(([k,v]) => scores[k] += v));
+      const ranked = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+      const winner = ranked[0][0];
+      bestSealant.textContent = winner;
+      sealantReason.textContent = sealants[winner].text + (checked.includes('gas') ? ' For gas work, use only products explicitly approved/rated for the gas and jurisdiction.' : '');
+      scoreList.innerHTML = ranked.map(([name, score]) => `<li><span>${name}</span><strong>${score}</strong></li>`).join('');
+    }
+    advisorInputs.addEventListener('change', updateAdvisor);
+    updateAdvisor();
+
+    const stdCopy = {
+      npt: `<h3>NPT — National Pipe Taper</h3><p><strong>Profile:</strong> 60° thread angle, tapered 1:16. Common in North America. NPT generally seals on tapered thread interference with sealant.</p><p><strong>Note:</strong> NPTF “dryseal” variants are designed for metal-to-metal crest/root contact but often still use approved sealant in practice.</p>`,
+      bsp: `<h3>BSP — British Standard Pipe</h3><p><strong>Profile:</strong> 55° Whitworth thread form. BSPT is tapered; BSPP is parallel.</p><p><strong>Note:</strong> BSPP normally seals with a bonded washer, gasket, O-ring, or machined seat rather than tape on the thread itself.</p>`,
+      metric: `<h3>Metric pipe / machine threads</h3><p><strong>Profile:</strong> Metric threads are usually 60° and may be parallel. They often seal with an elastomer, washer, cone, flare, or face seal.</p><p><strong>Note:</strong> Do not assume a metric thread is a pipe-sealing thread just because a fitting screws on.</p>`
+    };
+    const stdText = document.getElementById('stdText');
+    document.querySelectorAll('.std-tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.std-tabs button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        stdText.innerHTML = stdCopy[btn.dataset.std];
+      });
+    });
+    stdText.innerHTML = stdCopy.npt;
+  </script>
+</body>
+</html>
