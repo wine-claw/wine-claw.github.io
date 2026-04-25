@@ -1,0 +1,61 @@
+{
+  "sources": [
+    {
+      "title": "How Does a Hydraulic Ram Pump Work? — Practical Engineering",
+      "url": "https://practical.engineering/blog/2019/12/17/how-does-a-hydraulic-ram-pump-work",
+      "keyFacts": [
+        "Invented over 200 years ago; pumps water uphill with no external power except the flowing water itself",
+        "Only two moving parts: waste valve and delivery valve",
+        "Works by converting velocity energy (kinetic) into pressure via water hammer when the waste valve slams shut",
+        "Redistributes energy: converts low head / high flow into high head / low flow",
+        "Air chamber smooths pressure spikes and provides even delivery flow",
+        "Can pump water well above the source elevation — Grady demonstrated above his shed roof",
+        "Types of fluid energy: gravitational potential, pressure head, velocity head (v²/2g)"
+      ]
+    },
+    {
+      "title": "Hydraulic Ram Pump Design Calculator — Borst Engineering",
+      "url": "https://www.borstengineeringconstruction.com/Hydraulic_Ram_Pump_Performance_Calculator.html",
+      "keyFacts": [
+        "Key inputs: source flow rate, fall, lift, drive line diameter & length, delivery line diameter & length, material (galvanized steel vs PVC)",
+        "Outputs: delivery flow rate (GPM/GPD), waste flow rate, efficiency %, head ratio, Joukowski ratio, reliability %, line pressure (PSI)",
+        "Head ratio = Lift / Fall (minimum 2 required, 5+ recommended)",
+        "Joukowski ratio relates to water hammer peak pressure; avoid even integers for reliability",
+        "Installation efficiency typically ~60%",
+        "Calvert criteria for min/max drive line length",
+        "Friction head loss recommendations: drive line ≤5% of fall, total ≤10%, delivery ≤10% of lift"
+      ]
+    },
+    {
+      "title": "Hydraulic Ram Pumps — NC State Extension",
+      "url": "https://content.ces.ncsu.edu/hydraulic-ram-pumps",
+      "keyFacts": [
+        "EBAE 161-92 publication; suitable for household/garden/livestock water where power is limited",
+        "Requires minimum 3 ft usable fall from source to pump",
+        "Cycle repeats 20–100 times per minute depending on flow",
+        "Equation: Q = 1440 × (E × S) / (L/F) where Q=gpd, E=efficiency (0.6), S=source gpm, L=lift ft, F=fall ft",
+        "Example: 20 gpm source, 4 ft fall, 24 ft lift = 2880 gpd (2 gpm) at 60% efficiency",
+        "Components: drive pipe (A), waste valve (B), delivery valve (C), air chamber (D), delivery pipe (E)",
+        "Slam of waste valve → pressure surge → opens delivery valve → compresses air chamber → rebound → discharge valve closes → slight vacuum → waste valve opens → cycle repeats"
+      ]
+    },
+    {
+      "title": "Hydraulic Ram — Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Hydraulic_ram",
+      "keyFacts": [
+        "Invented 1793 by Joseph Michel Montgolfier (of hot air balloon fame) in France",
+        "Also called hydram; cyclic water pump powered by hydropower",
+        "Takes in water at one hydraulic head and flow rate, outputs at higher head and lower flow rate",
+        "No external motor or electricity required"
+      ]
+    }
+  ],
+  "designNotes": [
+    "Animated SVG cross-section showing the pump in action: water flowing from source, waste valve opening/closing, pressure spike visualisation, delivery valve opening, air chamber compression, water rising up delivery pipe",
+    "Interactive sliders: fall, lift, source flow rate, drive pipe diameter, air chamber size",
+    "Real-time calculator using Q = 1440 × E × S / (L/F)",
+    "Visual feedback: head ratio indicator, efficiency gauge, reliability meter, flow arrows",
+    "Cycle speed visualization showing 20-100 cycles/minute",
+    "Dark engineering theme with water blue and copper/brass accents for the pump"
+  ]
+}
