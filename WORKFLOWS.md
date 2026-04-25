@@ -567,6 +567,12 @@ When handling normal user requests, the main agent may use the configured sub-ag
 23. If browser verification is useful overnight, prefer the isolated OpenClaw-managed browser only, plus non-interactive checks such as local tests, static file inspection, screenshots, and build/lint validation.
 24. If unattended browser verification still cannot run reliably, do not block the overnight mini-app on it. Skip that step, record `partial verification`, and explain exactly what remains unverified in the morning brief/project note.
 25. Treat any macOS/browser permission prompt discovered during daytime testing as a setup task to resolve proactively before relying on that verification path overnight.
+26. **For all mini-apps (overnight 2am or user-requested): after building, always publish to the app gallery.** Do not ask Simon — just do it. Use `tools/publish_to_gallery.py` or equivalent to:
+   - copy the app to `app-gallery/apps/<date>-<slug>/`
+   - insert a card into `app-gallery/index.html`
+   - commit and push to GitHub Pages
+27. After publishing, send Simon a WhatsApp message that includes the direct app link and the gallery link so he can access it from his phone.
+28. If publishing fails, treat that as a packaging failure — the app build is not complete until it is live in the gallery.
 
 **Done condition:** the main agent can use `mm-worker` to save Codex time on easy first-pass work, while the main agent still verifies the result before the user sees it, and unattended overnight runs avoid approval-dependent browser flows.
 
@@ -600,64 +606,7 @@ When Simon wants a rolling summary of the best OpenClaw use cases found on the i
 
 **Done condition:** the project exists, the nightly scan is backed by cron, and the source queue is durable rather than living only in chat.
 
-## 6bb) Daily 7:50 AM WhatsApp brief workflow
-
-When generating Simon's daily 7:50 AM WhatsApp brief, treat this workflow as the source of truth.
-
-1. Schedule it for **7:50 AM Australia/Adelaide every day**.
-2. Use a single delivery owner:
-   - cron `delivery.mode=none`
-   - the agent turn itself sends the WhatsApp message via the `message` tool
-3. Start the brief with the **day name + date** at the top.
-4. Format the brief for WhatsApp as clean plain text with short labelled blocks and one item per line. Avoid dense paragraphs. Preferred shape:
-   - line 1: day + date
-   - blank line
-   - `Models:` block
-   - `Search:` block
-   - `OpenClaw:` block
-   - `2am app:` block
-   - `Last 24h:` block
-   - `Next 24h:` block
-   - `Use case:` block
-   Use simple bullets or dash-prefixed lines only; do not use markdown tables.
-5. Include usage stats for the configured main model and first fallback model using verified data from `tools/model_usage_snapshot.py`:
-   - **main model (`Codex GPT-5.4`)**: 5h window % remaining + reset time, and week window % remaining + reset time
-   - **fallback model (`MiniMax-M2.7`)**: 5h window % remaining + reset time
-6. Never invent or approximate quota/reset values. If a required usage window is unavailable, say so plainly.
-7. Include a succinct web search status section derived from the helper snapshot:
-   - `Search provider: Brave (healthy)` when the active provider is Brave and the helper probe succeeds
-   - if runtime falls back, say so plainly, e.g. `Search provider: DuckDuckGo (Brave unhealthy)`
-   - when Brave is unhealthy due to API billing/quota, prefer explicit wording like `Search provider: DuckDuckGo (Brave billing/quota issue)` rather than a vague unhealthy label
-   - `OpenClaw web searches (24h): X`
-   - do **not** include Brave account balance/credit lines in the daily brief
-8. Include the **most recently built 2am mini-app** using the durable overnight project state as the primary source of truth (`projects/2am-mini-app-creation/state.json`), with `latest-summary.md` and the latest run note only as supporting detail.
-   - app name
-   - estimated delivered-work split between the main agent and `mm-worker`
-   - the mini-app gallery link: `https://wine-claw.github.io/app-gallery/`
-   - if `state.json`, `latest-summary.md`, and the newest run folder disagree, treat that as a packaging failure, not a normal ambiguity; do not silently choose the stale file
-8. Summarise the **things worked on in the last 24 hours** using durable local context (daily memory + project notes) rather than chat recall alone.
-10. Include **recommendations for the next 24 hours**.
-11. Include exactly **one OpenClaw use case** from `projects/openclaw-use-case-watch/brief-picks.json`.
-12. Vary that OpenClaw use case day-to-day where possible, preferring newer findings first and avoiding consecutive repeats when there is a reasonable alternative.
-13. Keep local state recording which use-case source/title was used most recently so daily repetition can be avoided deterministically.
-14. Prefer local durable inputs over optional live web/search steps; transient search failures should not block the brief if local files and helper output are available.
-15. Include OpenClaw version status in a succinct form:
-   - detect the installed local version (for example via `openclaw --version`)
-   - compare it with the latest published stable OpenClaw release
-   - if current, say so briefly and definitively (for example `OpenClaw: up to date (2026.4.2)`) with **no** suggestion to update or reconsider updating
-   - if behind, say so briefly and include a very short summary of the latest release's most relevant new features/fixes
-15. Prefer official OpenClaw release sources for this version check (GitHub releases and/or local docs if mirrored). Keep the changelog summary concise and practical rather than pasting a long release note block.
-17. Treat version-status contradictions as a reliability failure. If the checks disagree about whether Simon is current, resolve the discrepancy first or send a blocker message; do not emit a brief that simultaneously implies both `latest` and `consider update`.
-18. The `OpenClaw web searches (24h): X` line is intended as a practical **recent research/search activity** signal for the last 24 hours, not a brittle literal count of one narrow transcript pattern. It should include verified `web_search`/`web_fetch` activity and may also include durable same-window research progress signals from local project state or daily memory when that better reflects real work done.
-19. The daily brief's search-provider wording must track the **current search strategy**, not stale historical wording. If Google/Gemini is the active primary provider, say so plainly (for example `Search provider: Google/Gemini (healthy)`), with DuckDuckGo only as fallback wording when that fallback is actually in use. Mention Brave only when it is the live provider or when Brave reserve/failure context is specifically relevant.
-20. If Brave is configured but the helper probe returns HTTP 402, interpret that as a Brave billing/quota problem rather than a missing-config problem, fall back cleanly, and state that plainly if mentioned.
-20. If the brief cannot be fully generated, send a short explicit WhatsApp blocker message instead of failing silently.
-21. Keep a pre-brief watchdog cron shortly before the 7:50 run so detectable drift can be repaired before the main brief job executes.
-22. Keep a post-2am watchdog cron shortly after the overnight mini-app run so packaging/publish drift is caught and repaired automatically where possible.
-
-**Done condition:** Simon receives one concise WhatsApp brief at 7:50 AM each day with exact verified usage, recent overnight mini-app context, last-24h work summary, next-24h recommendations, and one varying OpenClaw use case.
-
-## 6bc) Mission Control stale-project driver workflow
+## 6bb) Mission Control stale-project driver workflow
 
 When Mission Control marks a project as stale, do not treat that state as merely informational by default.
 
@@ -776,3 +725,36 @@ Drive location rule:
 18. Do not rotate/reset the workbook schedule as part of outage recovery unless Simon explicitly asks for that next step after the data backfill is verified.
 
 **Done condition:** merged data tab is live and correctly named, local archive active, watchdog active, backfill path documented, and charts/tabs reflect the current sheet structure.
+
+
+## 6bb) Daily 8:00 AM WhatsApp brief workflow
+
+When generating Simon's daily 8:00 AM WhatsApp brief, treat this workflow as the source of truth.
+
+1. Schedule it for **8:00 AM Australia/Adelaide every day**.
+2. Use a single delivery owner:
+   - cron `delivery.mode=none`
+   - the agent turn itself sends the WhatsApp message via the `message` tool
+3. Format the brief for WhatsApp as clean plain text with short labelled blocks and one item per line. Avoid dense paragraphs. Use simple bullets or dash-prefixed lines only; do not use markdown tables.
+4. Include **only the currently active model name** — not the full fallback chain, not config settings. The active model is the one the main agent is actually running on right now.
+5. Include usage stats for **OpenAI GPT Plus** (5h and weekly windows with remaining % and reset times).
+6. Include **OpenClaw version status**:
+   - detect the installed local version
+   - compare with the latest published stable release
+   - if current, say so briefly and definitively
+   - if behind, say so briefly and include a short summary of the latest release's most relevant changes
+7. Include **overnight 2am mini-app** from `projects/2am-mini-app-creation/state.json` as the primary source of truth:
+   - app name
+   - % work split between agents/sub-agents
+   - only the overnight 2am app goes here, not extras
+8. Include **extra mini-apps** created in the last 24h separately (any runs in `projects/2am-mini-app-creation/runs/` that are not the overnight 2am app):
+   - app name + date
+   - % work split between agents/sub-agents
+9. If no mini-apps were created, say so plainly rather than omitting the section.
+10. Summarise **last-24h activity** from daily memory files.
+11. Include **next-24h suggestions**.
+12. Include exactly **one novel OpenClaw use case** from web search (HN, Reddit, etc.).
+13. Keep the brief **concise** — WhatsApp-friendly, not a wall of text.
+14. If the brief cannot be fully generated, send a short explicit WhatsApp blocker message instead of failing silently.
+
+**Done condition:** Simon receives one concise WhatsApp brief at 8:00 AM each day with the active model, OpenAI usage, OpenClaw version, overnight + extra mini-apps with agent splits, activity summary, suggestions, and one novel use case.
