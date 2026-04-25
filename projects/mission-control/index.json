@@ -1,6 +1,6 @@
 {
   "title": "Wine Claw Project Tracking",
-  "updatedAt": "2026-04-25T12:06:52.031729+10:30",
+  "updatedAt": "2026-04-25T12:38:43.009572+10:30",
   "columns": [
     "active",
     "blocked",
@@ -33,8 +33,8 @@
         "date": "2026-04-25",
         "title": "Soil Water Infiltration Simulator",
         "notes": "Interactive real-time simulation of rainfall infiltration through 5 soil types using simplified Green-Ampt physics. Animated canvas cross-section with wetting front, saturated zone, field capacity zone, surface ponding, runoff. Realistic USDA soil parameters. Responsive layout.",
-        "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-25-soil-infiltration-sim",
-        "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-25-soil-infiltration-sim/index.html",
+        "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-25/soil-infiltration-sim",
+        "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-25/soil-infiltration-sim/index.html",
         "verification": "Partial \u2014 local file review only. Browser verification blocked by overnight policy.",
         "delegation": {
           "used": true,
@@ -234,10 +234,10 @@
     {
       "name": "CO2 Capture Trial Data Logging",
       "slug": "ezeio-google-sheet-sync",
-      "status": "monitoring",
+      "status": "complete",
       "summary": "Live 5-second Ezeio logging to Google Sheets with rotating workbook snapshots and charted monitoring.",
       "path": "/Users/wineclaw/.openclaw/workspace/projects/ezeio-google-sheet-sync/README.md",
-      "updatedAt": "2026-04-12T10:30:00+09:30",
+      "updatedAt": "2026-04-25T12:15:51.408176+10:30",
       "nextStep": "Verify collector is writing live data and charts are updating correctly.",
       "blocker": "Stale: no meaningful update for 312.2h while monitoring.",
       "links": [

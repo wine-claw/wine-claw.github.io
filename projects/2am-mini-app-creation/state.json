@@ -23,8 +23,8 @@
     "date": "2026-04-25",
     "title": "Soil Water Infiltration Simulator",
     "notes": "Interactive real-time simulation of rainfall infiltration through 5 soil types using simplified Green-Ampt physics. Animated canvas cross-section with wetting front, saturated zone, field capacity zone, surface ponding, runoff. Realistic USDA soil parameters. Responsive layout.",
-    "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-25-soil-infiltration-sim",
-    "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/apps/2026-04-25-soil-infiltration-sim/index.html",
+    "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-25/soil-infiltration-sim",
+    "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-25/soil-infiltration-sim/index.html",
     "verification": "Partial \u2014 local file review only. Browser verification blocked by overnight policy.",
     "delegation": {
       "used": true,
