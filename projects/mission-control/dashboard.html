@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wine Claw Project Tracking</title>
+  <link rel="icon" type="image/x-icon" href="/avatars/wine-claw-logo.ico" />
+  <link rel="icon" type="image/png" href="/avatars/wine-claw-logo.png" />
+  <link rel="apple-touch-icon" href="/avatars/wine-claw-logo.png" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0e0d10;
+      --bg-soft: #141217;
+      --panel: #17141a;
+      --panel-edge: rgba(255,255,255,0.05);
+      --card: #1c1820;
+      --card-edge: rgba(255,255,255,0.06);
+      --text: #f2ede7;
+      --muted: #aea295;
+      --accent: #85b9b2;
+      --shadow-panel: 0 10px 26px rgba(0,0,0,.18);
+      --shadow-card: 0 4px 10px rgba(0,0,0,.10);
+      --radius-lg: 14px;
+      --radius-md: 11px;
+      --board-min: 1040px;
+      --page-pad: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; overflow-x: auto; }
+    body {
+      font-family: "SF Pro Text", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, var(--bg-soft), var(--bg));
+      letter-spacing: 0.002em;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 18px var(--page-pad) 14px;
+      border-bottom: 1px solid var(--panel-edge);
+      background: rgba(14, 13, 16, 0.92);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .brand {
+      flex: 0 0 auto;
+      width: 60px;
+      height: 60px;
+      display: grid;
+      place-items: center;
+    }
+
+    .logo {
+      display: block;
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.08;
+      font-weight: 700;
+      letter-spacing: -0.024em;
+      font-family: "SF Pro Display", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .board-shell {
+      overflow-x: auto;
+      padding: 22px var(--page-pad) 10px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(232px, 1fr));
+      gap: 14px;
+      align-items: start;
+      min-width: var(--board-min);
+    }
+
+    .col {
+      background: var(--panel);
+      border: 1px solid var(--panel-edge);
+      border-radius: var(--radius-lg);
+      min-height: 70vh;
+      padding: 14px;
+      box-shadow: var(--shadow-panel);
+      min-width: 0;
+    }
+
+    .col.drag-over {
+      outline: 2px solid rgba(133,185,178,.45);
+      outline-offset: -5px;
+    }
+
+    .col h2 {
+      margin: 0 0 12px;
+      font-size: 10px;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #cdbfae;
+    }
+
+    .card {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--card-edge);
+      border-radius: var(--radius-md);
+      padding: 13px 14px 18px;
+      margin-bottom: 10px;
+      cursor: grab;
+      box-shadow: var(--shadow-card);
+      overflow: visible;
+    }
+
+    .card.dragging { opacity: .6; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .card-title a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13.5px;
+      line-height: 1.38;
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      letter-spacing: -0.006em;
+    }
+
+    .rename-btn {
+      border: 0;
+      background: transparent;
+      color: rgba(255,255,255,.22);
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      opacity: .65;
+    }
+
+    .rename-btn:hover {
+      opacity: .9;
+      color: rgba(255,255,255,.48);
+    }
+
+    .rename-btn svg {
+      width: 11px;
+      height: 11px;
+      display: block;
+    }
+
+    .rename-row {
+      display: none;
+      margin-top: 10px;
+      grid-template-columns: minmax(0,1fr) auto auto;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .card.renaming .rename-row { display: grid; }
+
+    .rename-input {
+      min-width: 0;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 8px 10px;
+      font: inherit;
+    }
+
+    .rename-save,
+    .rename-cancel {
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 8px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    .card-primary-link {
+      margin-top: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card-primary-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.002em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-primary-link a::after {
+      content: '↗';
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    .card-primary-link-secondary {
+      margin-top: 4px;
+    }
+
+    .card-primary-link-secondary a {
+      display: inline-flex;
+    }
+
+    .details {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.5;
+      display: none;
+      overflow-wrap: anywhere;
+    }
+
+    .card.expanded .details { display: block; }
+
+    .summary {
+      color: #d7cabd;
+      font-size: 12px;
+      line-height: 1.5;
+      letter-spacing: 0.001em;
+    }
+
+    .links {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 7px;
+    }
+
+    .links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.002em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .links a::after {
+      content: '↗';
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    .meta-list {
+      margin-top: 10px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .meta-row {
+      display: grid;
+      grid-template-columns: 68px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+
+    .meta-label {
+      color: #8f8377;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 10px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .meta-value {
+      color: var(--muted);
+    }
+
+    .expand-btn {
+      position: static;
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      margin: 0;
+    }
+
+    .empty { min-height: 1px; }
+
+    .footer {
+      width: var(--board-min);
+      max-width: var(--board-min);
+      margin-left: calc(var(--page-pad) + 14px);
+      padding: 6px 0 22px;
+      color: var(--muted);
+      font-size: 11.5px;
+      text-align: left;
+      letter-spacing: 0.01em;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: rgba(19,14,16,.96);
+      color: var(--text);
+      border: 1px solid var(--panel-edge);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow-panel);
+      display: none;
+    }
+
+    @media (max-width: 940px) {
+      .title-wrap h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hero">
+      <div class="brand"><img class="logo" src="/avatars/wine-claw-logo.png" alt="Wine Claw logo" /></div>
+      <div class="title-wrap"><h1>Wine Claw Project Tracking</h1></div>
+    </div>
+  </header>
+
+  <div class="board-shell">
+    <main class="board" id="board"></main>
+  </div>
+  <footer class="footer" id="last-updated"></footer>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let current = null;
+
+    function esc(s) { return (s ?? '').toString(); }
+    function displayCol(col) {
+      if (col === 'complete') return 'Complete';
+      if (col === 'blocked') return 'Blocked / Car Park';
+      return col;
+    }
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(window.__toast);
+      window.__toast = setTimeout(() => t.style.display = 'none', 1800);
+    }
+
+    function formatUpdated(s) {
+      if (!s) return '';
+      try {
+        const d = new Date(s);
+        return d.toLocaleString('en-AU', {
+          year: 'numeric', month: 'short', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        });
+      } catch {
+        return s;
+      }
+    }
+
+    async function api(path, opts = {}) {
+      const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+      if (!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function renameProject(slug, name) {
+      return await api('/api/rename', { method: 'POST', body: JSON.stringify({ slug, name }) });
+    }
+
+    function pencilIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+    }
+
+    async function load() {
+      const data = await api('/api/index');
+      current = data;
+      document.title = data.title;
+      document.getElementById('last-updated').textContent = `Last updated: ${formatUpdated(data.updatedAt)}`;
+
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+
+      for (const col of data.columns) {
+        const wrap = document.createElement('section');
+        wrap.className = 'col';
+        wrap.dataset.status = col;
+
+        wrap.addEventListener('dragover', e => {
+          e.preventDefault();
+          wrap.classList.add('drag-over');
+        });
+
+        wrap.addEventListener('dragleave', () => wrap.classList.remove('drag-over'));
+
+        wrap.addEventListener('drop', async e => {
+          e.preventDefault();
+          wrap.classList.remove('drag-over');
+          const slug = e.dataTransfer.getData('text/plain');
+          if (!slug) return;
+          const existing = current.projects.find(p => p.slug === slug);
+          if (existing && existing.status === col) return;
+          await api('/api/move', { method: 'POST', body: JSON.stringify({ slug, status: col }) });
+          toast(`Moved ${slug}`);
+          await load();
+        });
+
+        const h = document.createElement('h2');
+        h.textContent = displayCol(col);
+        wrap.appendChild(h);
+
+        const items = data.projects.filter(p => p.status === col);
+        if (!items.length) {
+          const spacer = document.createElement('div');
+          spacer.className = 'empty';
+          spacer.textContent = '';
+          wrap.appendChild(spacer);
+        }
+
+        for (const p of items) {
+          const card = document.createElement('article');
+          card.className = 'card';
+          card.draggable = true;
+
+          card.addEventListener('dragstart', e => {
+            if (card.classList.contains('renaming')) {
+              e.preventDefault();
+              return;
+            }
+            card.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', p.slug);
+          });
+
+          card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+          const title = document.createElement('div');
+          title.className = 'card-title';
+          title.innerHTML = `<a href="file://${esc(p.path)}">${esc(p.name)}</a>`;
+
+          const renameBtn = document.createElement('button');
+          renameBtn.className = 'rename-btn';
+          renameBtn.type = 'button';
+          renameBtn.title = 'Rename project';
+          renameBtn.innerHTML = pencilIcon();
+
+          const renameRow = document.createElement('div');
+          renameRow.className = 'rename-row';
+
+          const renameInput = document.createElement('input');
+          renameInput.className = 'rename-input';
+          renameInput.type = 'text';
+          renameInput.value = p.name;
+
+          const saveBtn = document.createElement('button');
+          saveBtn.className = 'rename-save';
+          saveBtn.type = 'button';
+          saveBtn.textContent = 'Save';
+
+          const cancelBtn = document.createElement('button');
+          cancelBtn.className = 'rename-cancel';
+          cancelBtn.type = 'button';
+          cancelBtn.textContent = 'Cancel';
+
+          renameRow.appendChild(renameInput);
+          renameRow.appendChild(saveBtn);
+          renameRow.appendChild(cancelBtn);
+
+          renameBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            card.classList.add('renaming');
+            renameInput.focus();
+            renameInput.select();
+          });
+
+          cancelBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            card.classList.remove('renaming');
+            renameInput.value = p.name;
+          });
+
+          saveBtn.addEventListener('click', async e => {
+            e.stopPropagation();
+            const newName = renameInput.value.trim();
+            if (!newName || newName === p.name) {
+              card.classList.remove('renaming');
+              return;
+            }
+            await renameProject(p.slug, newName);
+            toast('Project renamed');
+            await load();
+          });
+
+          renameInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              saveBtn.click();
+            }
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              cancelBtn.click();
+            }
+          });
+
+          const details = document.createElement('div');
+          details.className = 'details';
+
+          if (p.summary) {
+            const summary = document.createElement('div');
+            summary.className = 'summary';
+            summary.textContent = p.summary;
+            details.appendChild(summary);
+          }
+
+          const closedPrimary = p.primaryLink || ((p.links || []).find(link => /live|sheet|dashboard|board/i.test(link.label || '')) || (p.links || [])[0]);
+          const closedSecondary = Array.isArray(p.secondaryClosedLinks) ? p.secondaryClosedLinks : [];
+          const hiddenOpenCardKeys = new Set();
+          if (closedPrimary && closedPrimary.url) {
+            hiddenOpenCardKeys.add(`${closedPrimary.label || ''}||${closedPrimary.url}`);
+          }
+          for (const link of closedSecondary) {
+            if (link && link.url) hiddenOpenCardKeys.add(`${link.label || ''}||${link.url}`);
+          }
+
+          const links = document.createElement('div');
+          links.className = 'links';
+
+          if (p.folderPath) {
+            const folderLink = document.createElement('a');
+            folderLink.href = `/open-folder?folderPath=${encodeURIComponent(p.folderPath)}`;
+            folderLink.textContent = 'Project Folder';
+            folderLink.target = '_blank';
+            links.appendChild(folderLink);
+          }
+
+          if ((p.links || []).length) {
+            for (const link of p.links) {
+              const linkKey = `${link.label || ''}||${link.url || ''}`;
+              if (hiddenOpenCardKeys.has(linkKey)) continue;
+              const a = document.createElement('a');
+              a.href = link.url;
+              a.textContent = link.label;
+              a.target = '_blank';
+              links.appendChild(a);
+            }
+          }
+
+          if (links.childNodes.length) {
+            details.appendChild(links);
+          }
+
+          const meta = document.createElement('div');
+          meta.className = 'meta-list';
+
+          const metaRows = [
+            ['Next', p.nextStep || '—'],
+            ['Blocker', p.blocker || 'None'],
+            ['Updated', formatUpdated(p.updatedAt) || p.updatedAt || '—']
+          ];
+
+          for (const [label, value] of metaRows) {
+            const row = document.createElement('div');
+            row.className = 'meta-row';
+            row.innerHTML = `<div class="meta-label">${esc(label)}</div><div class="meta-value">${esc(value)}</div>`;
+            meta.appendChild(row);
+          }
+
+          details.appendChild(meta);
+
+          const btn = document.createElement('button');
+          btn.className = 'expand-btn';
+          btn.type = 'button';
+          btn.textContent = '⌄';
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            card.classList.toggle('expanded');
+            btn.textContent = card.classList.contains('expanded') ? '⌃' : '⌄';
+          });
+
+          const actions = document.createElement('div');
+          actions.className = 'card-actions';
+          actions.appendChild(renameBtn);
+          actions.appendChild(btn);
+
+          const topRow = document.createElement('div');
+          topRow.className = 'card-top';
+          topRow.appendChild(title);
+          topRow.appendChild(actions);
+
+          card.appendChild(topRow);
+          card.appendChild(renameRow);
+
+          if (closedPrimary || closedSecondary.length) {
+            const primaryLinkWrap = document.createElement('div');
+            primaryLinkWrap.className = 'card-primary-link';
+            if (closedPrimary) {
+              const a = document.createElement('a');
+              a.href = closedPrimary.url;
+              a.textContent = closedPrimary.label || 'Link';
+              a.target = '_blank';
+              primaryLinkWrap.appendChild(a);
+            }
+            if (closedSecondary.length) {
+              const secondaryWrap = document.createElement('div');
+              secondaryWrap.className = 'card-primary-link-secondary';
+              for (const link of closedSecondary) {
+                const a2 = document.createElement('a');
+                a2.href = link.url;
+                a2.textContent = link.label || 'Link';
+                a2.target = '_blank';
+                secondaryWrap.appendChild(a2);
+              }
+              primaryLinkWrap.appendChild(secondaryWrap);
+            }
+            card.appendChild(primaryLinkWrap);
+          }
+
+          card.appendChild(details);
+          wrap.appendChild(card);
+        }
+
+        board.appendChild(wrap);
+      }
+    }
+
+    load();
+    setInterval(load, 30000);
+  </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 {
   "title": "Wine Claw Project Tracking",
-  "updatedAt": "2026-04-25T12:38:43.009572+10:30",
+  "updatedAt": "2026-04-25T12:59:59.402056+10:30",
   "columns": [
     "active",
     "blocked",
@@ -57,7 +57,7 @@
       "path": "/Users/wineclaw/.openclaw/workspace/projects/awri-grant-watch/README.md",
       "updatedAt": "2026-03-30T09:01:00+10:30",
       "nextStep": "Run the next Monday scan, keep prioritising official-source Australian opportunities, and continue watching for stronger verified international fits.",
-      "blocker": "Stale: no meaningful update for 626.7h while active.",
+      "blocker": "Stale: no meaningful update for 627.7h while active.",
       "links": [],
       "autonomous": {
         "enabled": true,

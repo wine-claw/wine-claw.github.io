@@ -1,0 +1,17 @@
+{
+  "name": "Wine Claw Project Tracking",
+  "slug": "mission-control",
+  "status": "complete",
+  "summary": "Kanban-style command centre for Wine Claw projects, with durable project state, drag/drop status changes, and remote summary support.",
+  "path": "/Users/wineclaw/.openclaw/workspace/projects/mission-control/README.md",
+  "updatedAt": "2026-03-23T19:50:06.588897+10:30",
+  "nextStep": "Embed the real Wine Claw logo asset once it is saved into the workspace, then keep refining the board UX.",
+  "blocker": "Stale: no meaningful update for 27.3h while active.",
+  "links": [],
+  "autonomous": {
+    "enabled": true,
+    "mechanism": "launchagent",
+    "notes": "Local dashboard server stays running and auto-opens at login.",
+    "jobIds": []
+  }
+}
