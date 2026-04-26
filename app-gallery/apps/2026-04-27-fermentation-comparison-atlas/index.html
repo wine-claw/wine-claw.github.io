@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fermentation Comparison Atlas</title>
+<style>
+  :root{
+    --bg:#fdf8f3;
+    --card:#fff;
+    --text:#3a2e2a;
+    --muted:#8a7e76;
+    --border:#e8dfd6;
+    --purple:#6b3a7d;
+    --purple-light:#a66dba;
+    --green:#2d6a4f;
+    --green-light:#5da882;
+    --amber:#b58900;
+    --amber-light:#e6b800;
+    --warn:#c9a227;
+    --radius:12px;
+    --shadow:0 2px 8px rgba(58,46,42,.08);
+    --shadow-hover:0 6px 20px rgba(58,46,42,.14);
+  }
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:0;line-height:1.5;min-height:100vh}
+  .container{max-width:1200px;margin:0 auto;padding:16px}
+  .banner{background:#fff8e1;border-left:4px solid var(--warn);padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:.85rem;color:#5c4a1f}
+  header{text-align:center;margin-bottom:24px}
+  header h1{font-size:clamp(1.6rem,4vw,2.4rem);margin:0 0 6px;letter-spacing:-.02em}
+  header p{color:var(--muted);margin:0;font-size:1rem}
+
+  /* Selection strip */
+  .strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:24px;scrollbar-width:thin}
+  .strip::-webkit-scrollbar{height:6px}
+  .strip::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .scard{flex:0 0 auto;width:140px;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;box-shadow:var(--shadow);position:relative}
+  .scard:hover{border-color:var(--muted);transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+  .scard.active{border-color:var(--text);box-shadow:var(--shadow-hover)}
+  .scard .icon{width:42px;height:42px;margin:0 auto 8px}
+  .scard .name{font-weight:600;font-size:.92rem;margin-bottom:4px}
+  .scard .badge{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:999px;color:#fff;font-weight:500}
+  .scard .temp{font-size:.75rem;color:var(--muted);margin-top:4px}
+  .scard .check{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--text);color:#fff;font-size:11px;display:none;align-items:center;justify-content:center}
+  .scard.active .check{display:flex}
+
+  /* Main view */
+  .main-view{display:none}
+  .main-view.visible{display:block}
+  .welcome{text-align:center;padding:60px 20px;color:var(--muted)}
+  .welcome h2{margin:0 0 8px;color:var(--text)}
+
+  /* Comparison layout */
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:800px){.compare-grid{grid-template-columns:1fr}}
+
+  .pane{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow)}
+  .pane-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .pane-icon{width:48px;height:48px;flex-shrink:0}
+  .pane-title h3{margin:0;font-size:1.15rem}
+  .pane-title .sub{color:var(--muted);font-size:.85rem}
+
+  /* Gauges */
+  .gauges{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+  .gauge-box{flex:1;min-width:120px;text-align:center}
+  .gauge-box label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+  .gauge-svg{max-width:160px;margin:0 auto}
+  .gauge-needle{transition:transform .8s cubic-bezier(.34,1.56,.64,1)}
+  .gauge-value{font-size:.85rem;font-weight:600;margin-top:2px}
+
+  /* pH arc */
+  .ph-box{margin-bottom:18px}
+  .ph-box label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .ph-bar{height:10px;border-radius:5px;background:linear-gradient(90deg,#e74c3c,#f39c12,#2ecc71,#3498db,#9b59b6);position:relative;margin-top:6px}
+  .ph-range{position:absolute;top:-4px;height:18px;border-radius:3px;background:rgba(0,0,0,.15);border:2px solid var(--text);transition:all .8s}
+  .ph-labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:4px}
+
+  /* Duration bar */
+  .dur-box{margin-bottom:18px}
+  .dur-box label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .dur-track{height:14px;border-radius:7px;background:var(--border);position:relative;margin-top:6px;overflow:hidden}
+  .dur-fill{height:100%;border-radius:7px;transition:width .8s ease}
+  .dur-text{font-size:.8rem;margin-top:4px}
+
+  /* Organism */
+  .org-box{text-align:center;margin-bottom:18px;padding:14px;background:var(--bg);border-radius:var(--radius)}
+  .org-svg{max-width:120px;height:80px;margin:0 auto}
+  .org-name{font-size:.8rem;color:var(--muted);margin-top:6px;font-style:italic}
+
+  /* Timeline */
+  .timeline{position:relative;margin-bottom:18px}
+  .tl-track{height:4px;background:var(--border);border-radius:2px;position:relative;margin:30px 0 10px}
+  .tl-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--border);border:2px solid var(--card);transition:all .3s}
+  .tl-dot.active{background:var(--text);transform:translate(-50%,-50%) scale(1.3)}
+  .tl-dot .lbl{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:.65rem;white-space:nowrap;color:var(--muted)}
+  .tl-dot .lbl.below{top:auto;bottom:-20px}
+  .tl-progress{position:absolute;top:0;left:0;height:100%;border-radius:2px;transition:width .3s linear}
+  .tl-status{background:var(--bg);border-radius:var(--radius);padding:12px;font-size:.85rem;margin-top:8px;min-height:60px}
+  .tl-status .phase{font-weight:700;margin-bottom:4px}
+
+  /* Controls */
+  .controls{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+  .btn{background:var(--text);color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:.85rem;cursor:pointer;transition:opacity .2s}
+  .btn:hover{opacity:.85}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-outline{background:#fff;color:var(--text);border:1px solid var(--border)}
+  .speed-group{display:flex;gap:4px}
+  .speed-btn{font-size:.75rem;padding:5px 10px;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer}
+  .speed-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+
+  /* Byproducts */
+  .byprods{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:18px;min-height:40px}
+  .bp-item{display:flex;align-items:center;gap:5px;font-size:.78rem;padding:4px 10px;border-radius:999px;background:var(--bg)}
+  .bp-icon{width:16px;height:16px}
+
+  /* Fact popup */
+  .fact-box{background:var(--bg);border-radius:var(--radius);padding:14px;margin-bottom:18px;border-left:3px solid var(--amber)}
+  .fact-box h4{margin:0 0 6px;font-size:.85rem}
+  .fact-box p{margin:0;font-size:.82rem;color:var(--muted)}
+
+  /* Educational */
+  .edu{margin-bottom:18px}
+  .edu summary{cursor:pointer;font-weight:600;font-size:.88rem;padding:8px 0}
+  .edu .body{font-size:.84rem;color:var(--muted);padding:0 0 8px 14px;border-left:2px solid var(--border)}
+
+  /* Table */
+  .tbl-wrap{overflow-x:auto;margin-bottom:24px}
+  table{width:100%;border-collapse:collapse;font-size:.82rem}
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+  th{background:var(--bg);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}
+  tr.highlight td{background:rgba(107,58,125,.06)}
+  tr.highlight.lactic td{background:rgba(45,106,79,.06)}
+  tr.highlight.acetic td{background:rgba(181,137,0,.06)}
+
+  /* Single view */
+  .single-pane{max-width:800px;margin:0 auto}
+  .single-pane .gauges{justify-content:center}
+
+  /* Animations */
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .bob{animation:bob 2.5s ease-in-out infinite}
+  @keyframes rise{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-30px);opacity:0}}
+  .bubble{animation:rise 1.5s ease-out infinite}
+  @keyframes pulse-ring{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.6);opacity:0}}
+  .pulse-ring{animation:pulse-ring 1.2s ease-out infinite}
+
+  .badge-alcoholic{background:var(--purple)}
+  .badge-lactic{background:var(--green)}
+  .badge-acetic{background:var(--amber)}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="banner">This is an experimental OpenClaw AI mini-app. Not professionally validated. For educational use only.</div>
+  <header>
+    <h1>Fermentation Comparison Atlas</h1>
+    <p>Explore how microbes transform food and drink — from wine to sauerkraut</p>
+  </header>
+
+  <div class="strip" id="strip"></div>
+
+  <div id="view">
+    <div class="welcome">
+      <h2>Select two fermentation types</h2>
+      <p>Compare them side by side with animated timelines, gauges, and microbe visuals.<br>All data is approximate and varies by recipe.</p>
+    </div>
+  </div>
+
+  <div class="tbl-wrap" id="tableWrap" style="display:none">
+    <details><summary style="cursor:pointer;font-weight:600;margin-bottom:8px">Full Comparison Table</summary>
+      <table id="compTable"></table>
+    </details>
+  </div>
+</div>
+
+<script>
+const processes=[
+  {id:"red",name:"Red Wine",type:"alcoholic",organism:"Saccharomyces cerevisiae",tempMin:20,tempMax:30,durDays:10.5,durLabel:"7–14 days",phMin:3.0,phMax:4.0,byproducts:["Ethanol","CO₂","Glycerol","Heat","Aroma volatiles"],whyTemp:"Warmer temps extract colour and tannin faster but risk volatile loss.",whatWrong:"Stuck ferment (nutrient depletion), excessive heat (>32°C kills yeast), volatile acidity spike.",funFact:"A vigorous red wine ferment can raise the must temperature by 10–15°C above ambient.",science:"Yeast metabolise grape sugars via glycolysis and the Embden–Meyerhof pathway, producing ethanol and CO₂ while releasing significant heat.",timeline:[{t:"0–24h",phase:"Lag",desc:"Yeast acclimatising. No visible bubbling yet.",temp:22,active:false},{t:"Day 1–3",phase:"Exponential",desc:"Rapid sugar consumption. Temperature rises. Foam cap forms.",temp:28,active:true},{t:"Day 3–7",phase:"Stationary",desc:"Sugar depleting. Alcohol rising. Aroma compounds developing.",temp:26,active:true},{t:"Day 7–14",phase:"Decline",desc:"Fermentation slowing. Yeast settling to bottom.",temp:23,active:false},{t:"Day 14",phase:"Complete",desc:"Dry wine. Ready for press-off or ageing.",temp:20,active:false}]},
+  {id:"white",name:"White Wine",type:"alcoholic",organism:"Saccharomyces cerevisiae",tempMin:12,tempMax:15,durDays:21,durLabel:"2–4 weeks",phMin:3.0,phMax:3.6,byproducts:["Ethanol","CO₂","Esters"],whyTemp:"Cooler fermentation preserves delicate floral and fruity volatile compounds.",whatWrong:"Stuck ferment (too cold), sulfur off-odours, oxidation if not protected.",funFact:"Some premium white wines ferment at 8–10°C for maximum aroma preservation.",science:"Low temperatures slow yeast metabolism but protect thermally labile esters that give white wines their aromatic character.",timeline:[{t:"0–48h",phase:"Lag",desc:"Slow start at low temperature.",temp:13,active:false},{t:"Day 2–5",phase:"Early",desc:"Gentle bubbling. Delicate aromas protected.",temp:14,active:true},{t:"Day 5–14",phase:"Mid",desc:"Steady progress. Esters forming.",temp:14,active:true},{t:"Day 14–21",phase:"Late",desc:"Sugar nearly depleted. Wine clarifying.",temp:13,active:false},{t:"Day 21–28",phase:"Complete",desc:"Crisp, aromatic white wine ready.",temp:12,active:false}]},
+  {id:"beer",name:"Beer (Ale)",type:"alcoholic",organism:"Saccharomyces cerevisiae (ale)",tempMin:18,tempMax:22,durDays:10.5,durLabel:"1–2 weeks",phMin:4.0,phMax:4.5,byproducts:["Ethanol","CO₂","Esters","Higher alcohols"],whyTemp:"Ale yeast produces fruity esters at warmer temps; lagers need cold for clean flavour.",whatWrong:"Infection (wild bacteria), fusel alcohols (too warm), stuck ferment.",funFact:"Ale yeast is top-fermenting — it rises to the surface and is skimmed off in traditional breweries.",science:"Ale yeast flocculates at the top (top-cropping), producing esters that give ales their fruity, often banana or pear-like notes.",timeline:[{t:"0–12h",phase:"Lag",desc:"Yeast absorbing oxygen and nutrients.",temp:19,active:false},{t:"Day 1–3",phase:"Krausen",desc:"Foamy head forms. Vigorous bubbling begins.",temp:21,active:true},{t:"Day 3–5",phase:"High Krausen",desc:"Peak activity. Most flavour compounds produced.",temp:22,active:true},{t:"Day 5–10",phase:"Settling",desc:"Krausen falls. Yeast flocculates to bottom.",temp:20,active:false},{t:"Day 10–14",phase:"Conditioning",desc:"Flavours mature. Ready to rack or bottle.",temp:18,active:false}]},
+  {id:"sourdough",name:"Sourdough",type:"lactic",organism:"Lactobacillus + wild yeasts",tempMin:22,tempMax:26,durDays:0.5,durLabel:"4–24 hours",phMin:4.0,phMax:5.0,byproducts:["Lactic acid","Acetic acid","CO₂"],whyTemp:"Room temp favours lactic acid (mild); cold retard favours acetic acid (tangy).",whatWrong:"Over-proofed (collapses), under-proofed (dense), wrong acid balance (too sour or bland).",funFact:"San Francisco sourdough's distinctive tang comes from Lactobacillus sanfranciscensis, named after the city.",science:"Wild yeast leavens the dough while Lactobacillus acidify it, producing a complex mix of lactic and acetic acids.",timeline:[{t:"30m–2h",phase:"Autolyse",desc:"Flour hydrates. Enzymes activate.",temp:24,active:false},{t:"2–6h",phase:"Bulk Ferment",desc:"Bacteria multiply. Acidity builds. Dough rises.",temp:24,active:true},{t:"6–7h",phase:"Shape",desc:"Dough is shaped. Tension surface created.",temp:24,active:false},{t:"7–10h",phase:"Final Proof",desc:"Final rise. Oven spring potential builds.",temp:24,active:true},{t:"30–45m",phase:"Bake",desc:"Heat kills microbes. Acidity sets crumb structure.",temp:220,active:false}]},
+  {id:"yogurt",name:"Yogurt",type:"lactic",organism:"L. bulgaricus + S. thermophilus",tempMin:40,tempMax:45,durDays:0.33,durLabel:"4–12 hours",phMin:4.0,phMax:4.6,byproducts:["Lactic acid","Gelation"],whyTemp:"These thermophilic bacteria thrive at body-warm temperatures but die above 50°C.",whatWrong:"Too hot (kills cultures), too cold (stalled), contamination (off-flavours), whey separation.",funFact:"The symbiotic relationship between L. bulgaricus and S. thermophilus was first described in the early 1900s — neither grows as well alone.",science:"The two bacteria work synergistically: S. thermophilus produces formate and CO₂ that stimulate L. bulgaricus, which produces amino acids that feed S. thermophilus.",timeline:[{t:"0",phase:"Inoculation",desc:"Starter cultures mixed into warm milk.",temp:42,active:false},{t:"1–3h",phase:"Acidification",desc:"pH drops rapidly. Milk proteins begin to coagulate.",temp:43,active:true},{t:"3–6h",phase:"Gelation",desc:"Curd forms. Texture sets.",temp:43,active:true},{t:"6–10h",phase:"Stabilisation",desc:"Final pH reached. Flavour develops.",temp:42,active:false},{t:"10–12h",phase:"Cooling",desc:"Refrigeration stops fermentation. Shelf life begins.",temp:4,active:false}]},
+  {id:"kraut",name:"Sauerkraut",type:"lactic",organism:"Leuconostoc → L. plantarum",tempMin:18,tempMax:22,durDays:14,durLabel:"1–4 weeks",phMin:3.1,phMax:3.7,byproducts:["Lactic acid","CO₂","Vitamins"],whyTemp:"Too warm = mushy; too cold = stall; 18–22°C gives best crunch and flavour balance.",whatWrong:"Mould (air exposure), pink yeast (salt too low), mushy (too warm or over-fermented), slimy (wrong bacteria).",funFact:"Captain James Cook took sauerkraut on his voyages to prevent scurvy — the fermentation increases vitamin C bioavailability.",science:"Sauerkraut undergoes heterolactic fermentation first (mixed acids) then homolactic fermentation (pure lactic acid), dropping pH to preserve the vegetable.",timeline:[{t:"0–24h",phase:"Brine Formation",desc:"Salt draws water from cabbage. Anaerobic environment forms.",temp:20,active:false},{t:"Day 1–3",phase:"Leuconostoc Phase",desc:"Initial LAB produce mixed acids. pH drops from ~6.0 to 4.5.",temp:20,active:true},{t:"Day 3–7",phase:"Transition",desc:"Leuconostoc gives way to acid-tolerant Lactobacillus.",temp:20,active:true},{t:"Day 7–21",phase:"L. plantarum Phase",desc:"Homofermentative lactic acid dominates. pH continues falling.",temp:20,active:true},{t:"Day 21–28",phase:"Maturation",desc:"Flavour rounds out. Kraut is ready to eat.",temp:18,active:false}]},
+  {id:"kombucha",name:"Kombucha",type:"acetic",organism:"SCOBY (Acetobacter + yeast)",tempMin:20,tempMax:30,durDays:14,durLabel:"7–21 days",phMin:2.5,phMax:3.5,byproducts:["Acetic acid","Gluconic acid","Ethanol","Cellulose","CO₂"],whyTemp:"Warmer = faster but risk imbalance; cooler = slower but often more complex flavour.",whatWrong:"Mould (contamination), too acidic (over-fermented), no pellicle (weak culture), off-flavours (wrong temp or bacteria).",funFact:"The cellulose pellicle produced by kombucha bacteria is so pure that researchers have used it to create biodegradable textiles and wound dressings.",science:"Yeast first produce ethanol and CO₂; then acetic acid bacteria oxidise ethanol to acetic acid via the membrane-bound alcohol dehydrogenase enzyme complex.",timeline:[{t:"0–3d",phase:"Yeast Phase",desc:"Yeast convert sugar to ethanol and CO₂. Sweet tea flavour dominates.",temp:25,active:true},{t:"Day 3–7",phase:"Early Acetic",desc:"Acetobacter begin converting ethanol to acetic acid. Tang develops.",temp:25,active:true},{t:"Day 7–10",phase:"Pellicle Formation",desc:"Cellulose mat forms on surface. pH drops sharply.",temp:24,active:true},{t:"Day 10–18",phase:"Maturation",desc:"Acid balance stabilises. Complex flavours develop.",temp:24,active:true},{t:"Day 18–21",phase:"Ready",desc:"pH ~2.5–3.0. Vinegary but balanced.",temp:23,active:false},{t:"Day 21+",phase:"Over-fermented",desc:"Vinegar-like. Can be used as kombucha vinegar.",temp:22,active:false}]}
+];
+
+const maxDur=21;
+const iconMap={
+  red:`<svg viewBox="0 0 48 48"><circle cx="24" cy="28" r="14" fill="#7a1f1f"/><rect x="20" y="8" width="8" height="14" fill="#c0c0c0"/><ellipse cx="24" cy="6" rx="8" ry="3" fill="#a0a0a0"/></svg>`,
+  white:`<svg viewBox="0 0 48 48"><circle cx="24" cy="28" r="14" fill="#e8d5a3"/><rect x="20" y="8" width="8" height="14" fill="#c0c0c0"/><ellipse cx="24" cy="6" rx="8" ry="3" fill="#a0a0a0"/></svg>`,
+  beer:`<svg viewBox="0 0 48 48"><rect x="12" y="10" width="20" height="30" rx="3" fill="#d4a017"/><rect x="14" y="12" width="16" height="26" rx="2" fill="#f5d76e"/><path d="M32 16h6v12h-6z" fill="#c0c0c0"/><ellipse cx="22" cy="8" rx="6" ry="3" fill="#fff" opacity=".5"/></svg>`,
+  sourdough:`<svg viewBox="0 0 48 48"><ellipse cx="24" cy="26" rx="16" ry="12" fill="#c4956a"/><ellipse cx="24" cy="24" rx="14" ry="10" fill="#deb887"/><path d="M14 22 Q24 10 34 22" stroke="#8b6914" fill="none" stroke-width="2"/></svg>`,
+  yogurt:`<svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="14" ry="10" fill="#fff"/><ellipse cx="24" cy="26" rx="12" ry="8" fill="#f0f0f0"/><rect x="16" y="12" width="16" height="10" rx="2" fill="#e0e0e0"/></svg>`,
+  kraut:`<svg viewBox="0 0 48 48"><circle cx="24" cy="26" r="14" fill="#e8f5e9"/><circle cx="20" cy="24" r="3" fill="#a5d6a7"/><circle cx="28" cy="24" r="3" fill="#a5d6a7"/><circle cx="24" cy="30" r="3" fill="#a5d6a7"/><circle cx="20" cy="30" r="2" fill="#81c784"/><circle cx="28" cy="30" r="2" fill="#81c784"/></svg>`,
+  kombucha:`<svg viewBox="0 0 48 48"><rect x="14" y="10" width="20" height="28" rx="3" fill="#d4a017" opacity=".3"/><rect x="16" y="12" width="16" height="24" rx="2" fill="#f5d76e" opacity=".4"/><ellipse cx="24" cy="14" rx="8" ry="3" fill="#fff" opacity=".6"/></svg>`
+};
+
+const microbeMap={
+  alcoholic:`<svg viewBox="0 0 120 80"><ellipse cx="40" cy="45" rx="18" ry="12" fill="#a66dba"/><ellipse cx="55" cy="38" rx="8" ry="5" fill="#d4a5e0"/><ellipse cx="75" cy="50" rx="18" ry="12" fill="#a66dba"/><ellipse cx="88" cy="42" rx="7" ry="4" fill="#d4a5e0"/><text x="60" y="72" text-anchor="middle" font-size="8" fill="#8a7e76">Yeast cells</text></svg>`,
+  lactic:`<svg viewBox="0 0 120 80"><rect x="20" y="38" width="24" height="8" rx="4" fill="#5da882"/><rect x="50" y="34" width="24" height="8" rx="4" fill="#5da882"/><rect x="80" y="40" width="24" height="8" rx="4" fill="#5da882"/><text x="60" y="72" text-anchor="middle" font-size="8" fill="#8a7e76">Lactobacillus rods</text></svg>`,
+  acetic:`<svg viewBox="0 0 120 80"><ellipse cx="30" cy="45" rx="16" ry="10" fill="#e6b800" opacity=".6"/><ellipse cx="60" cy="42" rx="18" ry="12" fill="#b58900" opacity=".5"/><ellipse cx="90" cy="48" rx="16" ry="10" fill="#e6b800" opacity=".6"/><ellipse cx="45" cy="38" rx="8" ry="5" fill="#d4a017" opacity=".7"/><text x="60" y="72" text-anchor="middle" font-size="8" fill="#8a7e76">SCOBY film</text></svg>`
+};
+
+let selected=[];
+let animId=null,animStart=null,paused=true,speed=1,tlProgress=0,currentStage=[0,0];
+
+function typeColor(type){return type==='alcoholic'?'var(--purple)':type==='lactic'?'var(--green)':'var(--amber)';}
+function typeLight(type){return type==='alcoholic'?'var(--purple-light)':type==='lactic'?'var(--green-light)':'var(--amber-light)';}
+
+function renderStrip(){
+  const s=document.getElementById('strip');
+  s.innerHTML=processes.map((p,i)=>{
+    const sel=selected.indexOf(i);
+    const active=sel!==-1;
+    return `<div class="scard ${active?'active':''}" onclick="toggleSelect(${i})">
+      <div class="check">${sel===0?'1':sel===1?'2':''}</div>
+      <div class="icon">${iconMap[p.id]}</div>
+      <div class="name">${p.name}</div>
+      <span class="badge badge-${p.type}">${p.type}</span>
+      <div class="temp">${p.tempMin}–${p.tempMax}°C</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSelect(i){
+  const idx=selected.indexOf(i);
+  if(idx!==-1){selected.splice(idx,1);}
+  else if(selected.length<2){selected.push(i);}
+  else{selected=[selected[1],i];}
+  stopAnim();
+  renderStrip();
+  renderView();
+}
+
+function gaugeSVG(minVal,maxVal,currentVal,color,label){
+  const pct=(currentVal-minVal)/(maxVal-minVal);
+  const angle=-135+pct*270;
+  return `<svg viewBox="0 0 160 100" class="gauge-svg">
+    <path d="M 20 90 A 60 60 0 0 1 140 90" fill="none" stroke="var(--border)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M 20 90 A 60 60 0 0 1 140 90" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${pct*189}" stroke-dashoffset="0"/>
+    <line x1="80" y1="90" x2="80" y2="35" stroke="#3a2e2a" stroke-width="3" stroke-linecap="round" class="gauge-needle" style="transform-origin:80px 90px;transform:rotate(${angle}deg)"/>
+    <text x="80" y="105" text-anchor="middle" font-size="11" fill="var(--muted)">${label}</text>
+  </svg>`;
+}
+
+function phSVG(minPh,maxPh,color){
+  const left=(minPh/14)*100;
+  const width=((maxPh-minPh)/14)*100;
+  return `<div class="ph-box">
+    <label>pH Range</label>
+    <div class="ph-bar">
+      <div class="ph-range" style="left:${left}%;width:${width}%;border-color:${color}"></div>
+    </div>
+    <div class="ph-labels"><span>0</span><span>7</span><span>14</span></div>
+    <div class="gauge-value">${minPh} – ${maxPh}</div>
+  </div>`;
+}
+
+function durBar(days,color,label){
+  const pct=(days/maxDur)*100;
+  return `<div class="dur-box">
+    <label>Duration</label>
+    <div class="dur-track"><div class="dur-fill" style="width:${pct}%;background:${color}"></div></div>
+    <div class="dur-text">${label}</div>
+  </div>`;
+}
+
+function bpIcons(list,type){
+  const color=typeColor(type);
+  const drops=list.map(b=>{
+    if(b.includes('CO'))return `<div class="bp-item"><span class="bp-icon" style="color:${color}"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="10" r="3" opacity=".6"/><circle cx="6" cy="6" r="2" opacity=".4"/></svg></span>${b}</div>`;
+    if(b.includes('Heat'))return `<div class="bp-item"><span class="bp-icon" style="color:#e74c3c"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2c0 2-2 3-2 5 0 2.5 2 4 2 4s2-1.5 2-4c0-2-2-3-2-5z" opacity=".7"/></svg></span>${b}</div>`;
+    if(b.includes('Cellulose'))return `<div class="bp-item"><span class="bp-icon" style="color:#8d6e63"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="4" width="10" height="8" rx="1" opacity=".5"/></svg></span>${b}</div>`;
+    return `<div class="bp-item"><span class="bp-icon" style="color:${color}"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2c-3 0-5 3-5 6 0 3 2 6 5 6s5-3 5-6c0-3-2-6-5-6z" opacity=".7"/></svg></span>${b}</div>`;
+  }).join('');
+  return `<div class="byprods">${drops}</div>`;
+}
+
+function timelineHTML(proc,sideIdx){
+  const tl=proc.timeline;
+  const dots=tl.map((s,j)=>{
+    const left=(j/(tl.length-1))*100;
+    const below=j%2===1;
+    return `<div class="tl-dot ${j===0?'active':''}" style="left:${left}%" data-idx="${j}"><span class="lbl ${below?'below':''}">${s.t}</span></div>`;
+  }).join('');
+  const color=typeColor(proc.type);
+  return `<div class="timeline" data-side="${sideIdx}">
+    <div class="tl-track">
+      <div class="tl-progress" style="width:0%;background:${color}"></div>
+      ${dots}
+    </div>
+    <div class="tl-status">
+      <div class="phase" style="color:${color}">${tl[0].phase}</div>
+      <div>${tl[0].desc}</div>
+    </div>
+  </div>`;
+}
+
+function eduCards(proc){
+  const c=typeColor(proc.type);
+  return `<div class="edu">
+    <details><summary style="color:${c}">Why this temperature?</summary><div class="body">${proc.whyTemp}</div></details>
+    <details><summary style="color:${c}">What happens if it goes wrong?</summary><div class="body">${proc.whatWrong}</div></details>
+    <details><summary style="color:${c}">Fun fact</summary><div class="body">${proc.funFact}</div></details>
+    <details><summary style="color:${c}">Science deep dive</summary><div class="body">${proc.science}</div></details>
+  </div>`;
+}
+
+function renderPane(proc,sideIdx){
+  const c=typeColor(proc.type);
+  const cl=typeLight(proc.type);
+  const avgTemp=(proc.tempMin+proc.tempMax)/2;
+  return `<div class="pane">
+    <div class="pane-header">
+      <div class="pane-icon">${iconMap[proc.id]}</div>
+      <div class="pane-title">
+        <h3>${proc.name}</h3>
+        <div class="sub"><span class="badge badge-${proc.type}">${proc.type}</span> · ${proc.organism}</div>
+      </div>
+    </div>
+    <div class="gauges">
+      <div class="gauge-box">
+        <label>Temperature</label>
+        ${gaugeSVG(0,50,avgTemp,c,`${proc.tempMin}–${proc.tempMax}°C`)}
+      </div>
+    </div>
+    ${phSVG(proc.phMin,proc.phMax,c)}
+    ${durBar(proc.durDays,c,proc.durLabel)}
+    <div class="org-box">
+      <div class="org-svg bob">${microbeMap[proc.type]}</div>
+      <div class="org-name">${proc.organism}</div>
+    </div>
+    ${bpIcons(proc.byproducts,proc.type)}
+    ${timelineHTML(proc,sideIdx)}
+    <div class="fact-box" id="fact-${sideIdx}" style="display:none">
+      <h4>Did you know?</h4>
+      <p>${proc.funFact}</p>
+    </div>
+    ${eduCards(proc)}
+  </div>`;
+}
+
+function renderSingle(proc){
+  document.getElementById('view').innerHTML=`<div class="main-view visible single-pane">${renderPane(proc,0)}</div>`;
+  document.getElementById('tableWrap').style.display='block';
+}
+
+function renderCompare(p1,p2){
+  const html=`<div class="main-view visible">
+    <div class="controls">
+      <button class="btn" id="playBtn" onclick="togglePlay()">▶ Play</button>
+      <button class="btn btn-outline" onclick="resetAnim()">↺ Reset</button>
+      <div class="speed-group">
+        <button class="speed-btn ${speed===2?'active':''}" onclick="setSpeed(2)">Slow</button>
+        <button class="speed-btn ${speed===1?'active':''}" onclick="setSpeed(1)">Normal</button>
+        <button class="speed-btn ${speed===0.5?'active':''}" onclick="setSpeed(0.5)">Fast</button>
+      </div>
+    </div>
+    <div class="compare-grid">
+      ${renderPane(p1,0)}
+      ${renderPane(p2,1)}
+    </div>
+  </div>`;
+  document.getElementById('view').innerHTML=html;
+  document.getElementById('tableWrap').style.display='block';
+}
+
+function renderWelcome(){
+  document.getElementById('view').innerHTML=`<div class="welcome"><h2>Select two fermentation types</h2><p>Compare them side by side with animated timelines, gauges, and microbe visuals.<br>All data is approximate and varies by recipe.</p></div>`;
+  document.getElementById('tableWrap').style.display='none';
+}
+
+function renderView(){
+  stopAnim();
+  if(selected.length===0)renderWelcome();
+  else if(selected.length===1)renderSingle(processes[selected[0]]);
+  else renderCompare(processes[selected[0]],processes[selected[1]]);
+  renderTable();
+}
+
+function renderTable(){
+  const rows=processes.map((p,i)=>{
+    const hl=selected.includes(i);
+    const cls=hl?`highlight ${p.type}`:'';
+    return `<tr class="${cls}"><td>${p.name}</td><td><span class="badge badge-${p.type}">${p.type}</span></td><td>${p.organism}</td><td>${p.tempMin}–${p.tempMax}°C</td><td>${p.durLabel}</td><td>${p.phMin}–${p.phMax}</td><td>${p.byproducts.join(', ')}</td></tr>`;
+  }).join('');
+  document.getElementById('compTable').innerHTML=`<thead><tr><th>Process</th><th>Type</th><th>Organism</th><th>Temp</th><th>Duration</th><th>pH</th><th>Key Byproducts</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+/* Timeline animation */
+function togglePlay(){
+  paused=!paused;
+  const btn=document.getElementById('playBtn');
+  if(btn)btn.textContent=paused?'▶ Play':'⏸ Pause';
+  if(!paused){animStart=performance.now()-tlProgress;requestAnimationFrame(animFrame);}
+}
+
+function setSpeed(s){
+  speed=s;
+  renderView();
+  if(!paused){animStart=performance.now()-tlProgress;requestAnimationFrame(animFrame);}
+}
+
+function resetAnim(){
+  tlProgress=0;currentStage=[0,0];paused=true;
+  renderView();
+}
+
+function stopAnim(){paused=true;tlProgress=0;currentStage=[0,0];}
+
+function animFrame(now){
+  if(paused)return;
+  const duration=20000*speed; // total ms
+  tlProgress=now-animStart;
+  if(tlProgress>=duration){tlProgress=duration;paused=true;const btn=document.getElementById('playBtn');if(btn)btn.textContent='▶ Play';}
+  updateTimelines(tlProgress/duration);
+  if(!paused)requestAnimationFrame(animFrame);
+}
+
+function updateTimelines(pct){
+  if(selected.length<2)return;
+  [0,1].forEach(sideIdx=>{
+    const proc=processes[selected[sideIdx]];
+    const tl=proc.timeline;
+    const stageIdx=Math.min(Math.floor(pct*tl.length),tl.length-1);
+    const stagePct=(pct*tl.length)-stageIdx;
+    const pane=document.querySelectorAll('.compare-grid .pane')[sideIdx];
+    if(!pane)return;
+    const track=pane.querySelector('.tl-track');
+    const progress=pane.querySelector('.tl-progress');
+    const dots=pane.querySelectorAll('.tl-dot');
+    const status=pane.querySelector('.tl-status');
+    const fact=pane.querySelector(`#fact-${sideIdx}`);
+    if(progress)progress.style.width=`${(stageIdx+stagePct)/(tl.length-1)*100}%`;
+    dots.forEach((d,j)=>{d.classList.toggle('active',j===stageIdx);});
+    if(status){
+      const s=tl[stageIdx];
+      status.innerHTML=`<div class="phase" style="color:${typeColor(proc.type)}">${s.phase}</div><div>${s.desc}</div>`;
+    }
+    if(fact){fact.style.display=stageIdx===tl.length-1?'block':'none';}
+    // Animate gauge needle if stage has temp
+    const s=tl[stageIdx];
+    const needle=pane.querySelector('.gauge-needle');
+    if(needle&&s.temp){
+      const angle=-135+((s.temp)/50)*270;
+      needle.style.transform=`rotate(${angle}deg)`;
+    }
+  });
+}
+
+/* Init */
+selected=[0,3]; // Red Wine vs Sourdough default
+renderStrip();
+renderView();
+</script>
+</body>
+</html>
