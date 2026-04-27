@@ -2,13 +2,48 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-04-25",
-    "title": "Soil Water Infiltration Simulator",
-    "slug": "soil-infiltration-sim",
-    "publishedSlug": "2026-04-25-soil-infiltration-sim",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-25-soil-infiltration-sim/"
+    "date": "2026-04-28",
+    "title": "Globe Projector",
+    "slug": "globe-projector",
+    "publishedSlug": "2026-04-28-globe-projector",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-28-globe-projector/"
   },
   "apps": [
+    {
+      "date": "2026-04-28",
+      "title": "Globe Projector",
+      "slug": "globe-projector",
+      "publishedSlug": "2026-04-28-globe-projector",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-28-globe-projector/"
+    },
+    {
+      "date": "2026-04-27",
+      "title": "Fermentation Comparison Atlas",
+      "slug": "fermentation-comparison-atlas",
+      "publishedSlug": "2026-04-27-fermentation-comparison-atlas",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-27-fermentation-comparison-atlas/"
+    },
+    {
+      "date": "2026-04-26",
+      "title": "Hydraulic Ram Pump Simulator",
+      "slug": "hydraulic-ram-pump",
+      "publishedSlug": "2026-04-26-hydraulic-ram-pump",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-26-hydraulic-ram-pump/"
+    },
+    {
+      "date": "2026-04-25",
+      "title": "Battery Technology Guide",
+      "slug": "battery-technology-guide",
+      "publishedSlug": "2026-04-25-battery-technology-guide",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-25-battery-technology-guide/"
+    },
+    {
+      "date": "2026-04-25",
+      "title": "Pipe Thread Sealing Guide",
+      "slug": "pipe-thread-sealing-guide",
+      "publishedSlug": "2026-04-25-pipe-thread-sealing-guide",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-25-pipe-thread-sealing-guide/"
+    },
     {
       "date": "2026-04-25",
       "title": "Soil Water Infiltration Simulator",
