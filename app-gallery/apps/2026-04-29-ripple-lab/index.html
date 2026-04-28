@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ripple Lab — Wave Interference Sandbox</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0a0e1a;
+  color: #c8d6e5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Warning banner */
+.banner {
+  background: linear-gradient(90deg, #ff6b3520, #ff6b3510);
+  border-bottom: 1px solid #ff6b3540;
+  color: #ffb088;
+  font-size: 11px;
+  padding: 6px 12px;
+  text-align: center;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+.banner span { color: #ff6b35; font-weight: 600; }
+
+/* Canvas area */
+#canvasWrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+#simCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+/* Top info bar */
+.topbar {
+  position: absolute;
+  top: 8px; left: 8px; right: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+}
+.topbar .fps {
+  font-size: 11px;
+  color: #4a5568;
+  font-variant-numeric: tabular-nums;
+}
+.topbar .title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #00e5ff90;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Control panel */
+.controls {
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #0f1525, #0a0e1a);
+  border-top: 1px solid #1a2340;
+  padding: 10px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Mode buttons */
+.mode-btn {
+  background: #151d30;
+  border: 1px solid #1f2b4a;
+  color: #8899aa;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.mode-btn:hover { background: #1a2540; color: #aabbcc; }
+.mode-btn.active {
+  background: #00e5ff18;
+  border-color: #00e5ff60;
+  color: #00e5ff;
+  box-shadow: 0 0 8px #00e5ff20;
+}
+.mode-btn .icon { font-size: 14px; }
+
+/* Preset buttons */
+.preset-btn {
+  background: #151d30;
+  border: 1px solid #1f2b4a;
+  color: #8899aa;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  min-height: 36px;
+  transition: all 0.15s;
+}
+.preset-btn:hover { background: #1a2540; color: #aabbcc; }
+.preset-btn.active {
+  background: #7c3aed18;
+  border-color: #7c3aed60;
+  color: #a78bfa;
+}
+
+/* Action buttons */
+.action-btn {
+  background: #151d30;
+  border: 1px solid #1f2b4a;
+  color: #8899aa;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  min-height: 36px;
+  transition: all 0.15s;
+}
+.action-btn:hover { background: #1a2540; color: #aabbcc; }
+
+/* Toggle button */
+.toggle-btn {
+  background: #151d30;
+  border: 1px solid #1f2b4a;
+  color: #8899aa;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  min-height: 36px;
+  transition: all 0.15s;
+}
+.toggle-btn.active {
+  background: #ff6b3518;
+  border-color: #ff6b3560;
+  color: #ffb088;
+}
+
+/* Sliders */
+.slider-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.slider-label {
+  font-size: 11px;
+  color: #5a6a80;
+  min-width: 56px;
+  text-align: right;
+}
+.slider-val {
+  font-size: 11px;
+  color: #4a5a70;
+  min-width: 28px;
+  font-variant-numeric: tabular-nums;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: #1a2340;
+  outline: none;
+  flex: 1;
+  min-width: 60px;
+  max-width: 120px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #00e5ff;
+  cursor: pointer;
+  box-shadow: 0 0 6px #00e5ff40;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #00e5ff;
+  cursor: pointer;
+  border: none;
+}
+
+/* Pause overlay */
+.pause-overlay {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  color: #00e5ff80;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  pointer-events: none;
+  display: none;
+}
+.pause-overlay.visible { display: block; }
+
+/* Responsive tweaks */
+@media (max-width: 500px) {
+  .mode-btn { padding: 6px 8px; font-size: 11px; min-height: 40px; }
+  .slider-label { min-width: 40px; font-size: 10px; }
+  input[type="range"] { max-width: 80px; }
+}
+</style>
+</head>
+<body>
+
+<div class="banner"><span>⚡ Experimental AI Mini-App</span> — Ripple Lab is a prototype. Physics may not be perfectly accurate.</div>
+
+<div id="canvasWrap">
+  <canvas id="simCanvas"></canvas>
+  <div class="topbar">
+    <div class="title">Ripple Lab</div>
+    <div class="fps" id="fpsDisplay">60 fps</div>
+  </div>
+  <div class="pause-overlay" id="pauseOverlay">PAUSED</div>
+</div>
+
+<div class="controls">
+  <!-- Mode row -->
+  <div class="ctrl-row">
+    <button class="mode-btn active" data-mode="tap" title="Click to drop a pebble"><span class="icon">💧</span> Tap</button>
+    <button class="mode-btn" data-mode="drag" title="Click and drag to stir"><span class="icon">〰️</span> Drag</button>
+    <button class="mode-btn" data-mode="source" title="Place a persistent wave source"><span class="icon">📡</span> Source</button>
+    <button class="mode-btn" data-mode="wall" title="Draw walls that reflect waves"><span class="icon">🧱</span> Wall</button>
+    <button class="mode-btn" data-mode="erase" title="Erase walls and sources"><span class="icon">🧹</span> Erase</button>
+  </div>
+
+  <!-- Preset + actions row -->
+  <div class="ctrl-row">
+    <button class="preset-btn active" data-preset="freeform">Freeform</button>
+    <button class="preset-btn" data-preset="doubleslit">Double Slit</button>
+    <button class="preset-btn" data-preset="circular">Circular Pool</button>
+    <div style="flex:1"></div>
+    <button class="toggle-btn" id="modeToggle">🌊 Water</button>
+    <button class="action-btn" id="playPause">⏸</button>
+    <button class="action-btn" id="clearWaves">Clear Waves</button>
+    <button class="action-btn" id="clearAll">Clear All</button>
+  </div>
+
+  <!-- Slider row -->
+  <div class="ctrl-row">
+    <div class="slider-group">
+      <span class="slider-label">Speed</span>
+      <input type="range" id="speedSlider" min="0.1" max="0.5" step="0.01" value="0.28">
+      <span class="slider-val" id="speedVal">0.28</span>
+    </div>
+    <div class="slider-group">
+      <span class="slider-label">Freq</span>
+      <input type="range" id="freqSlider" min="0.02" max="0.2" step="0.005" value="0.08">
+      <span class="slider-val" id="freqVal">0.08</span>
+    </div>
+    <div class="slider-group">
+      <span class="slider-label">Damp</span>
+      <input type="range" id="dampSlider" min="0.95" max="0.999" step="0.001" value="0.990">
+      <span class="slider-val" id="dampVal">0.990</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Ripple Lab — Wave Interference Sandbox ───
+
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvasWrap');
+const fpsDisplay = document.getElementById('fpsDisplay');
+const pauseOverlay = document.getElementById('pauseOverlay');
+
+// ─── Config ───
+let COLS = 200, ROWS = 200;
+let c = 0.28;          // wave speed
+let damping = 0.990;   // damping factor
+let freq = 0.08;       // source frequency
+let colorMode = 'water'; // 'water' or 'sound'
+let paused = false;
+let currentMode = 'tap';
+let currentPreset = 'freeform';
+let frameCount = 0;
+
+// ─── Grid ───
+let u, uPrev, uNext; // current, previous, next displacement
+let walls;            // boolean grid — true = wall
+let sources;          // array of {x, y} persistent sources
+let imgData;
+
+function allocGrid() {
+  const n = COLS * ROWS;
+  u = new Float32Array(n);
+  uPrev = new Float32Array(n);
+  uNext = new Float32Array(n);
+  walls = new Uint8Array(n);
+  sources = [];
+}
+
+function idx(x, y) { return y * COLS + x; }
+
+// ─── Resize ───
+function resize() {
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  // Determine grid size — aim for cell size ~3-5px
+  const cellSize = Math.max(3, Math.min(5, Math.floor(Math.min(w, h) / 200)));
+  COLS = Math.floor(w / cellSize);
+  ROWS = Math.floor(h / cellSize);
+  COLS = Math.max(60, Math.min(400, COLS));
+  ROWS = Math.max(60, Math.min(400, ROWS));
+
+  canvas.width = COLS;
+  canvas.height = ROWS;
+  canvas.style.imageRendering = 'auto';
+
+  allocGrid();
+  imgData = ctx.createImageData(COLS, ROWS);
+
+  applyPreset(currentPreset);
+}
+
+// ─── Presets ───
+function clearWaves() {
+  u.fill(0);
+  uPrev.fill(0);
+  uNext.fill(0);
+}
+
+function clearAll() {
+  clearWaves();
+  walls.fill(0);
+  sources = [];
+}
+
+function applyPreset(name) {
+  clearAll();
+  currentPreset = name;
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === name));
+
+  if (name === 'doubleslit') {
+    // Wall across the middle with two slits
+    const wallY = Math.floor(ROWS * 0.45);
+    const slitW = Math.max(2, Math.floor(COLS * 0.025));
+    const slitGap = Math.floor(COLS * 0.15);
+    const center = Math.floor(COLS / 2);
+    for (let x = 0; x < COLS; x++) {
+      const inSlit1 = Math.abs(x - (center - slitGap / 2)) < slitW;
+      const inSlit2 = Math.abs(x - (center + slitGap / 2)) < slitW;
+      if (!inSlit1 && !inSlit2) {
+        walls[idx(x, wallY)] = 1;
+        walls[idx(x, wallY + 1)] = 1;
+      }
+    }
+    // Source on the left side
+    sources.push({ x: Math.floor(COLS * 0.2), y: wallY });
+  } else if (name === 'circular') {
+    // Circular wall boundary
+    const cx = Math.floor(COLS / 2);
+    const cy = Math.floor(ROWS / 2);
+    const r = Math.min(cx, cy) * 0.85;
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const dx = x - cx, dy = y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > r && dist < r + 3) {
+          walls[idx(x, y)] = 1;
+        }
+      }
+    }
+    // Source in the center
+    sources.push({ x: cx, y: cy });
+  } else {
+    // Freeform — single central source so it's not blank
+    sources.push({ x: Math.floor(COLS / 2), y: Math.floor(ROWS / 2) });
+  }
+}
+
+// ─── Physics Step ───
+function step() {
+  const c2 = c * c;
+  for (let y = 1; y < ROWS - 1; y++) {
+    for (let x = 1; x < COLS - 1; x++) {
+      const i = idx(x, y);
+      if (walls[i]) {
+        uNext[i] = 0;
+        continue;
+      }
+      const avg = (
+        u[idx(x - 1, y)] + u[idx(x + 1, y)] +
+        u[idx(x, y - 1)] + u[idx(x, y + 1)]
+      ) * 0.25;
+      uNext[i] = (2 * u[i] - uPrev[i] + c2 * (avg - u[i])) * damping;
+    }
+  }
+
+  // Absorbing boundaries — ramp damping near edges
+  const edgeZone = 8;
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const i = idx(x, y);
+      if (walls[i]) continue;
+      const dx = Math.min(x, COLS - 1 - x);
+      const dy = Math.min(y, ROWS - 1 - y);
+      const d = Math.min(dx, dy);
+      if (d < edgeZone) {
+        const factor = d / edgeZone;
+        uNext[i] *= factor;
+      }
+    }
+  }
+
+  // Drive sources
+  const t = frameCount * freq;
+  for (const s of sources) {
+    const si = idx(s.x, s.y);
+    if (!walls[si]) {
+      uNext[si] = Math.sin(t * Math.PI * 2) * 1.0;
+    }
+  }
+
+  // Rotate buffers
+  const tmp = uPrev;
+  uPrev = u;
+  u = uNext;
+  uNext = tmp;
+  frameCount++;
+}
+
+// ─── Render ───
+function render() {
+  const data = imgData.data;
+
+  if (colorMode === 'water') {
+    // Water: deep blue base, cyan/teal crests, dark troughs
+    for (let i = 0, n = COLS * ROWS; i < n; i++) {
+      const pi = i << 2;
+      if (walls[i]) {
+        data[pi] = 30; data[pi + 1] = 40; data[pi + 2] = 60; data[pi + 3] = 255;
+        continue;
+      }
+      const v = u[i];
+      // Normalize: v is roughly -1..1 from sources
+      const vn = Math.max(-1, Math.min(1, v));
+      if (vn >= 0) {
+        // Crest: dark navy → bright cyan
+        const t = vn;
+        data[pi]     = Math.floor(10 + t * 0);      // R
+        data[pi + 1] = Math.floor(14 + t * 215);     // G
+        data[pi + 2] = Math.floor(26 + t * 229);     // B
+        data[pi + 3] = 255;
+      } else {
+        // Trough: dark navy → even darker
+        const t = -vn;
+        data[pi]     = Math.floor(10 - t * 6);
+        data[pi + 1] = Math.floor(14 - t * 8);
+        data[pi + 2] = Math.floor(26 + t * 15); // slight blue push
+        data[pi + 3] = 255;
+      }
+    }
+  } else {
+    // Sound mode: dark background, warm orange/red crests, cool purple troughs
+    for (let i = 0, n = COLS * ROWS; i < n; i++) {
+      const pi = i << 2;
+      if (walls[i]) {
+        data[pi] = 35; data[pi + 1] = 25; data[pi + 2] = 20; data[pi + 3] = 255;
+        continue;
+      }
+      const v = u[i];
+      const vn = Math.max(-1, Math.min(1, v));
+      if (vn >= 0) {
+        const t = vn;
+        data[pi]     = Math.floor(10 + t * 245);    // R — orange/red
+        data[pi + 1] = Math.floor(10 + t * 97);     // G
+        data[pi + 2] = Math.floor(20 + t * 33);     // B
+        data[pi + 3] = 255;
+      } else {
+        const t = -vn;
+        data[pi]     = Math.floor(10 + t * 72);     // R — purple
+        data[pi + 1] = Math.floor(10 - t * 4);      // G
+        data[pi + 2] = Math.floor(20 + t * 140);    // B
+        data[pi + 3] = 255;
+      }
+    }
+  }
+
+  // Highlight sources with bright dots
+  for (const s of sources) {
+    const pi = (idx(s.x, s.y)) << 2;
+    data[pi] = 255; data[pi + 1] = 255; data[pi + 2] = 255; data[pi + 3] = 255;
+    // glow around
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const nx = s.x + dx, ny = s.y + dy;
+        if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+          const gpi = idx(nx, ny) << 2;
+          data[gpi] = Math.min(255, data[gpi] + 80);
+          data[gpi + 1] = Math.min(255, data[gpi + 1] + 80);
+          data[gpi + 2] = Math.min(255, data[gpi + 2] + 80);
+        }
+      }
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+// ─── Input Handling ───
+let pointerDown = false;
+let lastPointer = null;
+
+function canvasToGrid(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = COLS / rect.width;
+  const scaleY = ROWS / rect.height;
+  return {
+    x: Math.floor((clientX - rect.left) * scaleX),
+    y: Math.floor((clientY - rect.top) * scaleY)
+  };
+}
+
+function addPebble(gx, gy) {
+  // Drop a pebble — set displacement in a small radius
+  const r = 3;
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      const nx = gx + dx, ny = gy + dy;
+      if (nx >= 1 && nx < COLS - 1 && ny >= 1 && ny < ROWS - 1) {
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= r && !walls[idx(nx, ny)]) {
+          const amp = 1.0 - (dist / r) * 0.5;
+          u[idx(nx, ny)] += amp;
+        }
+      }
+    }
+  }
+}
+
+function addDrag(gx, gy) {
+  // Continuous disturbance while dragging
+  const r = 2;
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      const nx = gx + dx, ny = gy + dy;
+      if (nx >= 1 && nx < COLS - 1 && ny >= 1 && ny < ROWS - 1) {
+        if (!walls[idx(nx, ny)]) {
+          u[idx(nx, ny)] += 0.3;
+        }
+      }
+    }
+  }
+}
+
+function addSource(gx, gy) {
+  if (gx >= 1 && gx < COLS - 1 && gy >= 1 && gy < ROWS - 1) {
+    // Check if source already exists nearby (within 3 cells)
+    const existing = sources.findIndex(s => Math.abs(s.x - gx) < 3 && Math.abs(s.y - gy) < 3);
+    if (existing >= 0) {
+      sources.splice(existing, 1);
+    } else {
+      sources.push({ x: gx, y: gy });
+    }
+  }
+}
+
+function drawWall(gx, gy) {
+  if (gx >= 1 && gx < COLS - 1 && gy >= 1 && gy < ROWS - 1) {
+    const r = 2;
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const nx = gx + dx, ny = gy + dy;
+        if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+          walls[idx(nx, ny)] = 1;
+          u[idx(nx, ny)] = 0;
+          uPrev[idx(nx, ny)] = 0;
+        }
+      }
+    }
+  }
+}
+
+function eraseAt(gx, gy) {
+  if (gx >= 1 && gx < COLS - 1 && gy >= 1 && gy < ROWS - 1) {
+    const r = 3;
+    // Erase walls
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const nx = gx + dx, ny = gy + dy;
+        if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
+          walls[idx(nx, ny)] = 0;
+        }
+      }
+    }
+    // Remove sources near this point
+    sources = sources.filter(s => {
+      const dx = s.x - gx, dy = s.y - gy;
+      return dx * dx + dy * dy > r * r;
+    });
+  }
+}
+
+function handlePointerDown(clientX, clientY) {
+  pointerDown = true;
+  const g = canvasToGrid(clientX, clientY);
+  lastPointer = g;
+
+  switch (currentMode) {
+    case 'tap': addPebble(g.x, g.y); break;
+    case 'drag': addDrag(g.x, g.y); break;
+    case 'source': addSource(g.x, g.y); break;
+    case 'wall': drawWall(g.x, g.y); break;
+    case 'erase': eraseAt(g.x, g.y); break;
+  }
+}
+
+function handlePointerMove(clientX, clientY) {
+  if (!pointerDown) return;
+  const g = canvasToGrid(clientX, clientY);
+
+  switch (currentMode) {
+    case 'tap': break; // no drag action for tap
+    case 'drag': addDrag(g.x, g.y); break;
+    case 'source': break; // single placement
+    case 'wall': drawWall(g.x, g.y); break;
+    case 'erase': eraseAt(g.x, g.y); break;
+  }
+  lastPointer = g;
+}
+
+function handlePointerUp() {
+  pointerDown = false;
+  lastPointer = null;
+}
+
+// Mouse
+canvas.addEventListener('mousedown', e => {
+  e.preventDefault();
+  handlePointerDown(e.clientX, e.clientY);
+});
+canvas.addEventListener('mousemove', e => {
+  e.preventDefault();
+  handlePointerMove(e.clientX, e.clientY);
+});
+canvas.addEventListener('mouseup', e => {
+  handlePointerUp();
+});
+canvas.addEventListener('mouseleave', () => handlePointerUp());
+
+// Touch
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  handlePointerDown(t.clientX, t.clientY);
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  handlePointerMove(t.clientX, t.clientY);
+}, { passive: false });
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  handlePointerUp();
+}, { passive: false });
+canvas.addEventListener('touchcancel', () => handlePointerUp());
+
+// ─── UI Wiring ───
+
+// Mode buttons
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentMode = btn.dataset.mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Preset buttons
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    applyPreset(btn.dataset.preset);
+  });
+});
+
+// Play/Pause
+document.getElementById('playPause').addEventListener('click', () => {
+  paused = !paused;
+  document.getElementById('playPause').textContent = paused ? '▶' : '⏸';
+  pauseOverlay.classList.toggle('visible', paused);
+});
+
+// Clear Waves
+document.getElementById('clearWaves').addEventListener('click', clearWaves);
+
+// Clear All
+document.getElementById('clearAll').addEventListener('click', () => {
+  clearAll();
+  // Re-add default source so it's not blank
+  if (currentPreset === 'freeform') {
+    sources.push({ x: Math.floor(COLS / 2), y: Math.floor(ROWS / 2) });
+  }
+});
+
+// Color mode toggle
+document.getElementById('modeToggle').addEventListener('click', () => {
+  const btn = document.getElementById('modeToggle');
+  colorMode = colorMode === 'water' ? 'sound' : 'water';
+  btn.textContent = colorMode === 'water' ? '🌊 Water' : '🔊 Sound';
+  btn.classList.toggle('active', colorMode === 'sound');
+});
+
+// Sliders
+const speedSlider = document.getElementById('speedSlider');
+const freqSlider = document.getElementById('freqSlider');
+const dampSlider = document.getElementById('dampSlider');
+
+speedSlider.addEventListener('input', () => {
+  c = parseFloat(speedSlider.value);
+  document.getElementById('speedVal').textContent = c.toFixed(2);
+});
+freqSlider.addEventListener('input', () => {
+  freq = parseFloat(freqSlider.value);
+  document.getElementById('freqVal').textContent = freq.toFixed(3);
+});
+dampSlider.addEventListener('input', () => {
+  damping = parseFloat(dampSlider.value);
+  document.getElementById('dampVal').textContent = damping.toFixed(3);
+});
+
+// ─── Main Loop ───
+let lastTime = 0;
+let fpsFrames = 0;
+let fpsTime = 0;
+
+function loop(timestamp) {
+  requestAnimationFrame(loop);
+
+  // FPS counter
+  fpsFrames++;
+  if (timestamp - fpsTime >= 1000) {
+    fpsDisplay.textContent = fpsFrames + ' fps';
+    fpsFrames = 0;
+    fpsTime = timestamp;
+  }
+
+  if (!paused) {
+    // Run 2 physics steps per frame for smoother propagation
+    step();
+    step();
+  }
+  render();
+}
+
+// ─── Init ───
+window.addEventListener('resize', () => {
+  resize();
+});
+
+resize();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

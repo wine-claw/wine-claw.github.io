@@ -10,6 +10,14 @@
   },
   "apps": [
     {
+      "date": "2026-04-29",
+      "slug": "ripple-lab",
+      "title": "Ripple Lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/",
+      "description": "Interactive wave interference sandbox \u2014 tap to drop pebbles, drag to stir, place persistent sources, draw walls, and watch interference patterns form in real time.",
+      "category": "physics"
+    },
+    {
       "date": "2026-04-28",
       "title": "Globe Projector",
       "slug": "globe-projector",
