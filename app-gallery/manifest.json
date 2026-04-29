@@ -2,13 +2,22 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-04-28",
-    "title": "Globe Projector",
-    "slug": "globe-projector",
-    "publishedSlug": "2026-04-28-globe-projector",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-28-globe-projector/"
+    "date": "2026-04-29",
+    "title": "Rocket Simulator",
+    "slug": "rocket-simulator",
+    "publishedSlug": "2026-04-29-rocket-simulator",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-rocket-simulator/"
   },
   "apps": [
+    {
+      "date": "2026-04-29",
+      "slug": "rocket-simulator",
+      "title": "Rocket Simulator",
+      "publishedSlug": "2026-04-29-rocket-simulator",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-rocket-simulator/",
+      "description": "3D rocket launch simulator with realistic physics, stage separation, live telemetry HUD, and cinematic camera tracking. Built with Three.js and React.",
+      "category": "simulation"
+    },
     {
       "date": "2026-04-29",
       "slug": "ripple-lab",
