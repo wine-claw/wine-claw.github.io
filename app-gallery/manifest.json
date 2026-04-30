@@ -2,13 +2,22 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-04-29",
-    "title": "Rocket Simulator",
-    "slug": "rocket-simulator",
-    "publishedSlug": "2026-04-29-rocket-simulator",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-rocket-simulator/"
+    "date": "2026-05-01",
+    "title": "Turing's Canvas",
+    "slug": "turing-canvas",
+    "publishedSlug": "2026-05-01-turing-canvas",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-01-turing-canvas/"
   },
   "apps": [
+    {
+      "date": "2026-05-01",
+      "slug": "turing-canvas",
+      "title": "Turing's Canvas",
+      "publishedSlug": "2026-05-01-turing-canvas",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-01-turing-canvas/",
+      "description": "Interactive Gray-Scott reaction-diffusion sandbox. Paint chemical B onto a grid and watch Turing patterns emerge in real time. 5 presets, 4 colour palettes, adjustable feed/kill rates.",
+      "category": "simulation"
+    },
     {
       "date": "2026-04-29",
       "slug": "rocket-simulator",
@@ -22,8 +31,9 @@
       "date": "2026-04-29",
       "slug": "ripple-lab",
       "title": "Ripple Lab",
+      "publishedSlug": "2026-04-29-ripple-lab",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/",
-      "description": "Interactive wave interference sandbox \u2014 tap to drop pebbles, drag to stir, place persistent sources, draw walls, and watch interference patterns form in real time.",
+      "description": "Interactive wave interference sandbox — tap to drop pebbles, drag to stir, place persistent sources, draw walls, and watch interference patterns form in real time.",
       "category": "physics"
     },
     {
