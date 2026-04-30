@@ -64,7 +64,7 @@ def main():
     for path in PROJECTS.rglob('state.json'):
         data = json.loads(path.read_text())
         projects.append(enrich_project(data))
-    projects.sort(key=lambda p: (COLUMNS.index(p['status']) if p['status'] in COLUMNS else 999, p['name'].lower()))
+    projects.sort(key=lambda p: (COLUMNS.index(p.get('status')) if p.get('status') in COLUMNS else 999, (p.get('name') or '').lower()))
     payload = {
         'title': 'Wine Claw Project Tracking',
         'updatedAt': datetime.now(TZ).isoformat(),

@@ -2,15 +2,15 @@
   "name": "2am Mini-App Creation",
   "slug": "2am-mini-app-creation",
   "status": "active",
-  "summary": "Recurring 2:00 AM mini-app project. Apr 25: Soil Water Infiltration Simulator \u2014 interactive real-time physics sandbox showing rainfall infiltration through different soil types using a simplified Green-Ampt model with realistic USDA parameters.",
+  "summary": "Recurring 2:00 AM mini-app project. Apr 29: Ripple Lab \u2014 interactive wave interference sandbox. Tap to drop pebbles, drag to stir, place persistent sources, draw walls, and watch interference patterns form in real time. Dark physics toy with 5 interaction modes, 3 presets, and adjustable parameters.",
   "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/README.md",
   "specPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/SPEC.md",
   "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/latest-summary.md",
-  "updatedAt": "2026-04-25T02:15:00+09:30",
-  "nextStep": "Apr 26: Choose new mini-app concept. Continue rotating archetypes and domain topics.",
+  "updatedAt": "2026-04-29T02:20:00+09:30",
+  "nextStep": "Apr 30: Choose a new mini-app concept; continue rotating domains and archetypes.",
   "primaryLink": {
-    "label": "Soil Water Infiltration Simulator",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-25-soil-infiltration-sim/"
+    "label": "Ripple Lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/"
   },
   "secondaryClosedLinks": [
     {
@@ -20,21 +20,57 @@
   ],
   "links": [],
   "latestRun": {
-    "date": "2026-04-25",
-    "title": "Soil Water Infiltration Simulator",
-    "notes": "Interactive real-time simulation of rainfall infiltration through 5 soil types using simplified Green-Ampt physics. Animated canvas cross-section with wetting front, saturated zone, field capacity zone, surface ponding, runoff. Realistic USDA soil parameters. Responsive layout.",
-    "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-25/soil-infiltration-sim",
-    "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-25/soil-infiltration-sim/index.html",
-    "verification": "Partial \u2014 local file review only. Browser verification blocked by overnight policy.",
+    "date": "2026-04-29",
+    "title": "Ripple Lab",
+    "kind": "overnight",
+    "notes": "Interactive wave interference sandbox \u2014 tap to drop pebbles, drag to stir, place persistent wave sources, draw reflective walls, and watch interference patterns form in real time. 5 interaction modes, 3 presets (freeform, double slit, circular pool), adjustable speed/frequency/damping, water/sound color modes. Dark scientific responsive UI.",
+    "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab",
+    "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/index.html",
+    "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/summary.md",
+    "verification": "Playwright CLI screenshots captured (mobile 390x844, desktop 1280x800). Pixel sanity check passed: non-blank dark UI (~96-98% dark pixels) with visible wave crests. Static checks passed. Full interactive verification deferred to daytime (overnight policy).",
+    "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/",
     "delegation": {
       "used": true,
-      "worker": "worker1 (K2.6)",
-      "workerHandled": "Full implementation \u2014 HTML/CSS/JS, canvas animation, Green-Ampt physics, soil data for 5 types, rain simulation, responsive layout, expandable how-it-works section.",
-      "mainHandled": "Concept selection, research, review, verification attempt, packaging, state updates, publish orchestration.",
+      "worker": "worker1 (Kimi K2.6 / glm-5.1)",
+      "workerHandled": "Full HTML/CSS/JS implementation, wave physics simulation, canvas rendering, responsive layout, mobile touch handling, presets, UI controls (~75%)",
+      "mainHandled": "Concept selection, domain research, requirements framing, code review, verification (screenshots), packaging, gallery publishing, state updates (~25%)",
       "estimatedSplit": {
         "workerPercent": 75,
-        "mainPercent": 25
+        "mainPercent": 25,
+        "worker2Percent": 0
       }
     }
-  }
+  },
+  "extraRuns": [
+    {
+      "date": "2026-04-28",
+      "title": "Globe Projector",
+      "notes": "Interactive cartography sandbox / projection guessing game. Draggable source globe, 9 projection lenses, simplified continent outlines, graticule, Tissot-style distortion circles, live thumbnails, side-by-side compare mode, and guess-the-projection streak game. Dark scientific responsive UI.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-28/globe-projector",
+      "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-28/globe-projector/index.html",
+      "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-28/globe-projector/summary.md",
+      "verification": "Static checks passed; local HTTP smoke test passed; Playwright CLI screenshot captured; screenshot pixel sanity check confirmed non-blank dark UI; mini_app_pipeline_check.py passed after GitHub Pages refreshed. Full recorded-video loop not completed because only CLI screenshot verification was available in this unattended run.",
+      "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-04-28-globe-projector/",
+      "delegation": {
+        "used": true,
+        "worker": "worker1 (K2.6)",
+        "workerHandled": "Attempted \u2014 worker1 timed out before producing files.",
+        "mainHandled": "Concept selection, research synthesis, complete HTML/CSS/JS implementation, verification, packaging, state updates, and gallery publishing.",
+        "estimatedSplit": {
+          "workerPercent": 0,
+          "mainPercent": 100,
+          "worker2Percent": 0
+        }
+      }
+    },
+    {
+      "date": "2026-04-27",
+      "title": "Fermentation Comparison Atlas",
+      "notes": "Interactive side-by-side comparison explorer of 7 fermentation types with animated timelines, temperature gauges, pH arcs, microbe illustrations, byproduct visualisations, and expandable educational cards. Warm cream theme. Single-file HTML/CSS/JS. Responsive.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas",
+      "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas/index.html",
+      "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas/summary.md"
+    }
+  ],
+  "blocker": "Stale: no meaningful update for 34.4h while active."
 }

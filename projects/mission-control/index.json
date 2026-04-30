@@ -1,10 +1,9 @@
 {
   "title": "Wine Claw Project Tracking",
-  "updatedAt": "2026-04-25T12:59:59.402056+10:30",
+  "updatedAt": "2026-04-30T13:42:01.488209+10:30",
   "columns": [
     "active",
     "blocked",
-    "monitoring",
     "complete"
   ],
   "projects": [
@@ -12,15 +11,15 @@
       "name": "2am Mini-App Creation",
       "slug": "2am-mini-app-creation",
       "status": "active",
-      "summary": "Recurring 2:00 AM mini-app project. Apr 25: Soil Water Infiltration Simulator \u2014 interactive real-time physics sandbox showing rainfall infiltration through different soil types using a simplified Green-Ampt model with realistic USDA parameters.",
+      "summary": "Recurring 2:00 AM mini-app project. Apr 29: Ripple Lab \u2014 interactive wave interference sandbox. Tap to drop pebbles, drag to stir, place persistent sources, draw walls, and watch interference patterns form in real time. Dark physics toy with 5 interaction modes, 3 presets, and adjustable parameters.",
       "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/README.md",
       "specPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/SPEC.md",
       "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/latest-summary.md",
-      "updatedAt": "2026-04-25T02:15:00+09:30",
-      "nextStep": "Apr 26: Choose new mini-app concept. Continue rotating archetypes and domain topics.",
+      "updatedAt": "2026-04-29T02:20:00+09:30",
+      "nextStep": "Apr 30: Choose a new mini-app concept; continue rotating domains and archetypes.",
       "primaryLink": {
-        "label": "Soil Water Infiltration Simulator",
-        "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-25-soil-infiltration-sim/"
+        "label": "Ripple Lab",
+        "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/"
       },
       "secondaryClosedLinks": [
         {
@@ -30,23 +29,59 @@
       ],
       "links": [],
       "latestRun": {
-        "date": "2026-04-25",
-        "title": "Soil Water Infiltration Simulator",
-        "notes": "Interactive real-time simulation of rainfall infiltration through 5 soil types using simplified Green-Ampt physics. Animated canvas cross-section with wetting front, saturated zone, field capacity zone, surface ponding, runoff. Realistic USDA soil parameters. Responsive layout.",
-        "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-25/soil-infiltration-sim",
-        "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-25/soil-infiltration-sim/index.html",
-        "verification": "Partial \u2014 local file review only. Browser verification blocked by overnight policy.",
+        "date": "2026-04-29",
+        "title": "Ripple Lab",
+        "kind": "overnight",
+        "notes": "Interactive wave interference sandbox \u2014 tap to drop pebbles, drag to stir, place persistent wave sources, draw reflective walls, and watch interference patterns form in real time. 5 interaction modes, 3 presets (freeform, double slit, circular pool), adjustable speed/frequency/damping, water/sound color modes. Dark scientific responsive UI.",
+        "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab",
+        "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/index.html",
+        "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/summary.md",
+        "verification": "Playwright CLI screenshots captured (mobile 390x844, desktop 1280x800). Pixel sanity check passed: non-blank dark UI (~96-98% dark pixels) with visible wave crests. Static checks passed. Full interactive verification deferred to daytime (overnight policy).",
+        "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/",
         "delegation": {
           "used": true,
-          "worker": "worker1 (K2.6)",
-          "workerHandled": "Full implementation \u2014 HTML/CSS/JS, canvas animation, Green-Ampt physics, soil data for 5 types, rain simulation, responsive layout, expandable how-it-works section.",
-          "mainHandled": "Concept selection, research, review, verification attempt, packaging, state updates, publish orchestration.",
+          "worker": "worker1 (Kimi K2.6 / glm-5.1)",
+          "workerHandled": "Full HTML/CSS/JS implementation, wave physics simulation, canvas rendering, responsive layout, mobile touch handling, presets, UI controls (~75%)",
+          "mainHandled": "Concept selection, domain research, requirements framing, code review, verification (screenshots), packaging, gallery publishing, state updates (~25%)",
           "estimatedSplit": {
             "workerPercent": 75,
-            "mainPercent": 25
+            "mainPercent": 25,
+            "worker2Percent": 0
           }
         }
       },
+      "extraRuns": [
+        {
+          "date": "2026-04-28",
+          "title": "Globe Projector",
+          "notes": "Interactive cartography sandbox / projection guessing game. Draggable source globe, 9 projection lenses, simplified continent outlines, graticule, Tissot-style distortion circles, live thumbnails, side-by-side compare mode, and guess-the-projection streak game. Dark scientific responsive UI.",
+          "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-28/globe-projector",
+          "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-28/globe-projector/index.html",
+          "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-28/globe-projector/summary.md",
+          "verification": "Static checks passed; local HTTP smoke test passed; Playwright CLI screenshot captured; screenshot pixel sanity check confirmed non-blank dark UI; mini_app_pipeline_check.py passed after GitHub Pages refreshed. Full recorded-video loop not completed because only CLI screenshot verification was available in this unattended run.",
+          "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-04-28-globe-projector/",
+          "delegation": {
+            "used": true,
+            "worker": "worker1 (K2.6)",
+            "workerHandled": "Attempted \u2014 worker1 timed out before producing files.",
+            "mainHandled": "Concept selection, research synthesis, complete HTML/CSS/JS implementation, verification, packaging, state updates, and gallery publishing.",
+            "estimatedSplit": {
+              "workerPercent": 0,
+              "mainPercent": 100,
+              "worker2Percent": 0
+            }
+          }
+        },
+        {
+          "date": "2026-04-27",
+          "title": "Fermentation Comparison Atlas",
+          "notes": "Interactive side-by-side comparison explorer of 7 fermentation types with animated timelines, temperature gauges, pH arcs, microbe illustrations, byproduct visualisations, and expandable educational cards. Warm cream theme. Single-file HTML/CSS/JS. Responsive.",
+          "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas",
+          "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas/index.html",
+          "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas/summary.md"
+        }
+      ],
+      "blocker": "Stale: no meaningful update for 34.4h while active.",
       "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation"
     },
     {
@@ -55,9 +90,8 @@
       "status": "active",
       "summary": "Weekly Monday 9am scan for grants relevant to AWRI, with verified summary email output.",
       "path": "/Users/wineclaw/.openclaw/workspace/projects/awri-grant-watch/README.md",
-      "updatedAt": "2026-03-30T09:01:00+10:30",
+      "updatedAt": "2026-04-27T09:00:00+09:30",
       "nextStep": "Run the next Monday scan, keep prioritising official-source Australian opportunities, and continue watching for stronger verified international fits.",
-      "blocker": "Stale: no meaningful update for 627.7h while active.",
       "links": [],
       "autonomous": {
         "enabled": true,
@@ -70,130 +104,56 @@
       "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/awri-grant-watch"
     },
     {
-      "name": "OpenClaw Use Case Watch",
       "slug": "openclaw-use-case-watch",
+      "name": "OpenClaw Use Case Watch",
       "status": "active",
-      "summary": "Nightly 1:00 AM scan for strong real-world OpenClaw use cases, with a rotating concise pick queue kept fresh for the daily brief.",
-      "path": "/Users/wineclaw/.openclaw/workspace/projects/openclaw-use-case-watch/README.md",
-      "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/openclaw-use-case-watch/latest-summary.md",
-      "updatedAt": "2026-04-25T01:00:00+09:30",
-      "nextStep": "Keep watching for: (1) longer-term follow-ups to the OpenClaw Challenge deployments \u2014 do the 7-agent and 12-agent setups scale past initial hype, (2) non-Challenge production narratives with similar operational depth, (3) enterprise/team deployments with measured productivity gains, (4) novel architectural patterns like the ClawForge multi-agent pipeline, and (5) verified revenue numbers beyond the Felix experiment.",
-      "links": [
-        {
-          "label": "2026-04-25 \u2014 17-week production run 7 autonomous agents (200dollarceo dev.to)",
-          "url": "https://dev.to/the200dollarceo/17-weeks-running-7-autonomous-ai-agents-in-production-real-lessons-and-real-numbers-3o12"
-        },
-        {
-          "label": "2026-04-25 \u2014 Travel SaaS 12 agents 48 cron jobs on one VPS (egorceo dev.to)",
-          "url": "https://dev.to/egorceo/i-run-a-travel-saas-with-12-ai-agents-and-48-cron-jobs-on-openclaw-heres-my-exact-setup-264h"
-        },
-        {
-          "label": "2026-04-25 \u2014 ClawForge one-message full-app deployment (mamoor_ahmad dev.to)",
-          "url": "https://dev.to/mamoor_ahmad/i-sent-one-message-and-5-ai-agents-built-audited-tested-deployed-a-full-app-3oma"
-        },
-        {
-          "label": "2026-04-24 \u2014 3-month autonomous production agent (armorbreak dev.to)",
-          "url": "https://dev.to/armorbreak/how-i-built-an-autonomous-ai-agent-that-pays-for-its-own-server-a-real-world-openclaw-story-2e4p"
-        },
-        {
-          "label": "2026-04-24 \u2014 ZooClaw 6-week Mac Mini M4 production setup by non-developer",
-          "url": "https://zooclaw.ai/help/en/2026-04-07/secure-openclaw-production-setup/"
-        },
-        {
-          "label": "2026-04-24 \u2014 Ben Utting content-creator skill (2hrs \u2192 10min, Upwork engagement)",
-          "url": "https://medium.com/@benutting/how-i-cut-a-content-creators-prep-time-from-2-hours-to-10-minutes-with-a-custom-openclaw-skill-4a6ab23d7667"
-        },
-        {
-          "label": "2026-04-24 \u2014 Clawctl 12 incidents in 30 days self-hosting log",
-          "url": "https://www.clawctl.com/blog/self-hosted-openclaw-broke-me-12-incidents"
-        },
-        {
-          "label": "2026-04-24 \u2014 de la Mothe Ventures production execution discipline gap (GitHub #65490)",
-          "url": "https://github.com/openclaw/openclaw/issues/65490"
-        },
-        {
-          "label": "2026-04-24 \u2014 Felix $14.7K revenue in 3 weeks (BuiltWithAgents)",
-          "url": "https://www.builtwithagents.ai/strategy/openclaw-autonomous-agent-14700-revenue-3-weeks"
-        },
-        {
-          "label": "2026-04-24 \u2014 Slack agent observability gap ($8/day reading cost)",
-          "url": "https://dev.to/helen_mireille_47b02db70c/your-openclaw-slack-agent-is-flying-blind-32b5"
-        },
-        {
-          "label": "2026-04-24 \u2014 First month on old Windows desktop (primaryobjects dev.to)",
-          "url": "https://dev.to/primaryobjects/my-first-month-running-openclaw-nonstop-heres-what-everyone-gets-wrong-1ni2"
-        },
-        {
-          "label": "2026-04-16 \u2014 Red Hat AI + OpenClaw enterprise deployment reference",
-          "url": "https://developers.redhat.com/articles/2026/04/14/deploying-agents-red-hat-ai-openclaw"
-        },
-        {
-          "label": "2026-04-16 \u2014 N26 Head of Product four-agent OpenClaw staff on Lightsail",
-          "url": "https://medium.com/@jp.sleiman/built-myself-an-openclaw-ai-staff-the-onboarding-was-intense-but-im-keeping-them-ab11198a6fc2"
-        },
-        {
-          "label": "2026-04-16 \u2014 10+ personalised OpenClaw agents as Railway swarm",
-          "url": "https://pub.towardsai.net/how-i-deployed-an-ai-agent-swarm-on-railway-and-why-it-actually-works-5d8d142a2c5a"
-        },
-        {
-          "label": "2026-04-15 \u2014 ClawWork (HKU) OpenClaw agent earning $10K in 7 hours from $10 seed",
-          "url": "https://github.com/HKUDS/ClawWork"
-        },
-        {
-          "label": "2026-04-15 \u2014 Deploying OpenClaw: 16 incidents, one day, $1.50",
-          "url": "https://blog.rezvov.com/deploying-openclaw-sixteen-incidents-one-day"
-        },
-        {
-          "label": "2026-04-14 \u2014 Build to Launch Substack four-week production OpenClaw walkthrough",
-          "url": "https://buildtolaunch.substack.com/p/openclaw-autonomous-agent-live-demo"
-        },
-        {
-          "label": "2026-04-14 \u2014 Alfred Home household OS built on OpenClaw",
-          "url": "https://www.reddit.com/r/selfhosted/comments/1rgpkmj/alfred_home_after_30_years_of_failed_attempts_i/"
-        },
-        {
-          "label": "2026-04-14 \u2014 OpenClaw full sales assistant for $20/month",
-          "url": "https://www.reddit.com/r/OpenClawUseCases/comments/1rr58wa/i_turned_openclaw_into_a_full_sales_assistant_for/"
-        },
-        {
-          "label": "2026-04-14 \u2014 BSWEN self-learning skills setup for OpenClaw",
-          "url": "https://docs.bswen.com/blog/2026-04-07-openclaw-self-learning-setup"
-        },
-        {
-          "label": "2026-04-14 \u2014 Clawly production approval gates rollout guide",
-          "url": "https://www.clawly.org/news/production-approval-gates-for-openclaw-agents-a-practical-rollout-guide-april-2026"
-        },
-        {
-          "label": "2026-04-14 \u2014 Self-hosted content automation with OpenClaw in Docker",
-          "url": "https://www.reddit.com/r/selfhosted/comments/1rsnp8z/how_to_selfhost_openclaw_for_content_automation/"
-        },
-        {
-          "label": "2026-04-13 \u2014 Agency Boxx 32-hours/week measured OpenClaw case study",
-          "url": "https://dev.to/agencyboxx/how-i-reclaimed-32-hoursweek-with-diy-ai-agents-openclaw-case-study-1bp0"
-        },
-        {
-          "label": "2026-04-12 \u2014 OpenClaw + LanceDB + Seed 2.0 design-reference pipeline",
-          "url": "https://www.lancedb.com/blog/openclaw-lancedb-seed2"
-        },
-        {
-          "label": "2026-04-11 \u2014 Linear CLI for OpenClaw-style issue and project operations",
-          "url": "https://github.com/Finesssee/linear-cli"
-        },
-        {
-          "label": "2026-04-11 \u2014 Agents UI desktop manager for OpenClaw skills and commands",
-          "url": "https://releaseflow.net/kitze/agents-ui"
-        }
+      "updatedAt": "2026-04-30T01:00:00+09:30",
+      "lastRun": "2026-04-30T01:00:00+09:30",
+      "sources": [
+        "dev.to",
+        "github.com",
+        "medium.com",
+        "reddit.com",
+        "news.ycombinator.com",
+        "twitter.com",
+        "substack.com"
       ],
-      "autonomous": {
-        "enabled": true,
-        "mechanism": "openclaw-cron",
-        "notes": "Runs nightly at 1:00 AM Australia/Adelaide to search for new OpenClaw use cases and keep a brief-ready pick list current.",
-        "jobIds": [
-          "129f0b06-193a-4609-8f33-5f2ca014b10f"
-        ]
-      },
-      "blocker": null,
-      "folderPath": "/Users/wineclaw/.openclaw/workspace/projects/openclaw-use-case-watch"
+      "links": [
+        "https://dev.to/seekdb/harness-engineering-in-practice-building-a-6-agent-system-that-runs-itself-31b",
+        "https://dev.to/dean0x/securely-deploying-openclaw-on-a-vps-with-enterprise-grade-access-control-32ji",
+        "https://dev.to/stevengonsalvez/clawdbot-the-chrome-extension-that-lets-agents-drive-your-browser-c2f",
+        "https://dev.to/virtualunc/openclaw-in-production-real-costs-security-setup-and-what-a-month-of-daily-use-actually-looks-10dg",
+        "https://dev.to/arezvov/deploying-openclaw-16-incidents-one-day-150-3i9d",
+        "https://dev.to/armorbreak/i-built-a-self-healing-pr-monitor-with-openclaw-and-it-caught-its-own-bugs-41e8",
+        "https://medium.com/@takamasa1222/keep-openclaw-working-while-you-sleep-92752cd575ce",
+        "https://www.reddit.com/r/openclaw/comments/1rry5ly/running_openclaw_for_30_days_lessons_from_an.json",
+        "https://dev.to/mrclaw207/the-setup-i-run-247-3dc1",
+        "https://medium.com/@ironclawAI/from-openclaw-to-ironclaw-a-real-builders-experience-5e809a5c2a51",
+        "https://dev.to/the200dollarceo/17-weeks-running-7-autonomous-ai-agents-in-production-real-lessons-and-real-numbers-3o12",
+        "https://dev.to/egorceo/i-run-a-travel-saas-with-12-ai-agents-and-48-cron-jobs-on-openclaw-heres-my-exact-setup-264h",
+        "https://dev.to/mamoor_ahmad/i-sent-one-message-and-5-ai-agents-built-audited-tested-deployed-a-full-app-3oma",
+        "https://dev.to/armorbreak/how-i-built-an-autonomous-ai-agent-that-pays-for-its-own-server-a-real-world-openclaw-story-2e4p",
+        "https://zooclaw.ai/help/en/2026-04-07/secure-openclaw-production-setup/",
+        "https://www.managemyclaw.com/blog/openclaw-google-workspace-deployment/",
+        "https://github.com/openclaw/openclaw/issues/65490",
+        "https://github.com/openclaw/openclaw/discussions/39147",
+        "https://dev.to/salimcodes/i-wasnt-going-to-write-for-the-openclaw-challenge-then-2026424-dropped-36oa",
+        "https://dev.to/agencyboxx/how-i-reclaimed-32-hoursweek-with-diy-ai-agents-openclaw-case-study-1bp0",
+        "https://dev.to/rosgluk/openclaw-production-setup-patterns-with-plugins-and-skills-1jfj",
+        "https://dev.to/sbhooley/how-we-turned-a-flaky-openclaw-agent-into-a-deterministic-72x-cheaper-production-workflow-40b4",
+        "https://dev.to/wonderlab/i-spent-thousands-of-dollars-in-tokens-building-an-ai-driven-end-to-end-bug-fix-pipeline-36p0",
+        "https://medium.com/@jp.sleiman/built-myself-an-openclaw-ai-staff-the-onboarding-was-intense-but-im-keeping-them-ab11198a6fc2",
+        "https://nekuda.substack.com/p/we-connected-openclaw-with-instacart",
+        "https://dev.to/snapon_equipment_4104e160/i-gave-an-ai-agent-the-keys-to-my-business-for-30-days-heres-what-actually-happened-2n1d"
+      ],
+      "nextWatchList": [
+        "github.com/openclaw/openclaw/discussions",
+        "dev.to/t/openclaw",
+        "reddit.com/r/OpenClaw",
+        "news.ycombinator.com/search?q=openclaw",
+        "medium.com/tag/openclaw",
+        "substack.com (search openclaw)"
+      ]
     },
     {
       "name": "Tank Insulation Tool",
@@ -203,7 +163,7 @@
       "path": "/Users/wineclaw/.openclaw/workspace/projects/tank-insulation-evaluation-tool/README.md",
       "updatedAt": "2026-03-24T14:21:02.949258+10:30",
       "nextStep": "Capture requirements once Simon provides them.",
-      "blocker": "Stale: no meaningful update for 48.2h while active.",
+      "blocker": "Stale: no meaningful update for 887.3h while monitoring.",
       "links": [],
       "autonomous": {
         "enabled": false,
@@ -221,7 +181,7 @@
       "path": "/Users/wineclaw/.openclaw/workspace/projects/voice-ai/minimax-agent/README.md",
       "updatedAt": "2026-03-29T09:39:00.882700+10:30",
       "nextStep": "When deliberately testing voice, run `uv run python src/agent.py dev`, generate a hosted playground token, and do a phone/browser test. Do not rely on this hosted playground path for unattended automation. Add MINIMAX_GROUP_ID later if you want direct MiniMax TTS instead of the fallback path.",
-      "blocker": "Stale: no meaningful update for 128.7h while active.",
+      "blocker": "Stale: no meaningful update for 772.0h while monitoring.",
       "links": [],
       "autonomous": {
         "enabled": false,
