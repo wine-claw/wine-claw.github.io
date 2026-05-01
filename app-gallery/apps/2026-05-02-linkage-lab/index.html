@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linkage Lab</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--panel:#161b22;--btn:#21262d;--btn-hover:#30363d;
+  --border:#c69026;--text:#c9d1d9;--text-dim:#8b949e;
+  --link:#58a6ff;--crank:#f0883e;--joint:#c69026;--ground:#30363d;
+  --trace:#3fb950;--slider:#8b949e;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'SF Mono',Consolas,'Liberation Mono',monospace;font-size:14px}
+#app{display:flex;flex-direction:column;height:100%}
+#banner{background:#1c1e22;padding:4px 12px;font-size:11px;color:#f0883e;text-align:center;border-bottom:1px solid #30363d;flex-shrink:0}
+#header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--panel);border-bottom:1px solid #30363d;flex-shrink:0}
+#header h1{font-size:20px;font-weight:700;color:var(--joint);letter-spacing:1px}
+#grashof{font-size:12px;color:var(--text-dim);background:var(--btn);padding:4px 10px;border-radius:4px;border:1px solid var(--ground);white-space:nowrap}
+#main{display:flex;flex:1;overflow:hidden}
+#canvas-wrap{flex:1;position:relative;min-width:0;touch-action:none}
+canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
+#panel{width:280px;flex-shrink:0;background:var(--panel);border-left:1px solid #30363d;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+#panel h2{font-size:13px;text-transform:uppercase;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:2px}
+.presets{display:flex;flex-direction:column;gap:6px}
+.presets button{background:var(--btn);color:var(--text);border:1px solid var(--border);padding:8px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px;text-align:left;transition:background .15s}
+.presets button:hover{background:var(--btn-hover)}
+.presets button.active{background:#2d333b;border-color:var(--crank);color:#fff}
+.controls{display:flex;flex-direction:column;gap:10px}
+.control-row{display:flex;align-items:center;gap:8px}
+.control-row label{font-size:12px;min-width:70px;color:var(--text-dim)}
+.control-row input[type=range]{flex:1;accent-color:var(--crank)}
+.control-row .val{font-size:12px;min-width:36px;text-align:right;color:var(--text)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--btn);color:var(--text);border:1px solid var(--ground);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px;transition:background .15s}
+.btn:hover{background:var(--btn-hover)}
+.btn.active{border-color:var(--crank);color:var(--crank)}
+.checkbox-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim);cursor:pointer}
+.checkbox-row input{accent-color:var(--crank)}
+#status{font-size:11px;color:var(--text-dim);min-height:16px;margin-top:4px}
+#toggle-msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(13,17,23,0.88);color:#f0883e;padding:10px 20px;border-radius:8px;font-size:14px;pointer-events:none;opacity:0;transition:opacity .3s;border:1px solid #f0883e44}
+#toggle-msg.show{opacity:1}
+@media(max-width:767px){
+  #main{flex-direction:column}
+  #canvas-wrap{flex:2;min-height:0}
+  #panel{width:100%;border-left:none;border-top:1px solid #30363d;flex:1;padding:12px;overflow-y:auto}
+  .presets{flex-direction:row;flex-wrap:wrap}
+  .presets button{flex:1;min-width:0;text-align:center;font-size:11px;padding:6px 4px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="banner">⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated.</div>
+  <div id="header">
+    <h1>Linkage Lab</h1>
+    <div id="grashof">—</div>
+  </div>
+  <div id="main">
+    <div id="canvas-wrap">
+      <canvas id="canvas"></canvas>
+      <div id="toggle-msg"></div>
+    </div>
+    <div id="panel">
+      <div>
+        <h2>Presets</h2>
+        <div class="presets">
+          <button data-preset="crank-rocker" class="active">Crank-Rocker</button>
+          <button data-preset="double-crank">Double-Crank</button>
+          <button data-preset="chebyshev">Chebyshev Lambda</button>
+          <button data-preset="peaucellier">Peaucellier Straight-Line</button>
+          <button data-preset="crank-slider">Crank-Slider</button>
+        </div>
+      </div>
+      <div>
+        <h2>Animation</h2>
+        <div class="controls">
+          <div class="btn-row">
+            <button id="play-btn" class="btn active">⏸ Pause</button>
+            <button id="clear-btn" class="btn">Clear Traces</button>
+          </div>
+          <div class="control-row">
+            <label>Speed</label>
+            <input type="range" id="speed" min="0" max="120" value="30">
+            <span class="val" id="speed-val">30 RPM</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2>Display</h2>
+        <div class="controls">
+          <label class="checkbox-row"><input type="checkbox" id="trace-cb" checked> Trace coupler curve</label>
+          <label class="checkbox-row"><input type="checkbox" id="vectors-cb"> Velocity vectors</label>
+        </div>
+      </div>
+      <div id="status"></div>
+    </div>
+  </div>
+</div>
+<script>
+// ============================================================
+// LINKAGE LAB — Interactive Kinematic Linkage Sandbox
+// ============================================================
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const toggleMsg = document.getElementById('toggle-msg');
+const grashofEl = document.getElementById('grashof');
+const statusEl = document.getElementById('status');
+
+let dpr = window.devicePixelRatio || 1;
+let W, H;
+let playing = true;
+let rpm = 30;
+let traceOn = true;
+let vectorsOn = false;
+let theta = 0;
+let lastTime = 0;
+let traces = [];
+const MAX_TRACE = 600;
+let dragging = null;
+let currentPreset = 'crank-rocker';
+
+let links = {};
+let jointPositions = [];
+let couplerIndex = -1;
+let toggleState = false;
+let toggleDir = 1;
+let prevJointPositions = [];
+let drawInfo = null;
+
+// ============================================================
+// PRESETS
+// ============================================================
+const presets = {
+  'crank-rocker': {
+    name: 'Crank-Rocker',
+    type: 'fourbar',
+    build: () => {
+      // Classic Grashof crank-rocker: s(60)+l(200) < p(120)+q(160) = 260
+      // Shortest link is crank (adjacent to ground)
+      const g = 200, a = 60, b = 120, c = 160;
+      return { g, a, b, c };
+    }
+  },
+  'double-crank': {
+    name: 'Double-Crank',
+    type: 'fourbar',
+    build: () => {
+      // Grashof double-crank (drag link): shortest link is ground
+      // s(60)+l(180) < p(100)+q(140) = 240
+      const g = 60, a = 100, b = 140, c = 180;
+      return { g, a, b, c };
+    }
+  },
+  'chebyshev': {
+    name: 'Chebyshev Lambda',
+    type: 'chebyshev',
+    build: () => {
+      // Chebyshev's approximate straight-line mechanism
+      // Proportions: ground = 2a, crank = a, coupler = 2.5a, rocker = 2.5a
+      // The midpoint of the coupler traces an approximately straight line
+      // This is a special case: s=a, l=2.5a, and s+l = 3.5a = p+q, so it's
+      // actually a change-point mechanism. For clean motion, let's adjust:
+      // Use proportions where the midpoint of the coupler gives best straight line.
+      // Classic Chebyshev: O2O4=2d, crank=d, coupler=rocker=~2.5d
+      // Let's use d=70: g=140, a=70, b=175, c=175
+      // s=70, l=175, p=140, q=175: s+l=245, p+q=315. So s+l < p+q → Grashof.
+      // Shortest is a (crank), so this is a crank-rocker class. Good.
+      const a = 70;
+      const g = 2 * a;
+      const b = 2.5 * a;
+      const c = 2.5 * a;
+      return { g, a, b, c, couplerFrac: 0.5 };
+    }
+  },
+  'peaucellier': {
+    name: 'Peaucellier Straight-Line',
+    type: 'peaucellier',
+    build: () => {
+      // Peaucellier-Lipkin inversor
+      // Two fixed pivots: O and O4 (distance d apart)
+      // Crank: O4 → A (length r), A moves on circle around O4
+      // Rhombus of side l1: A→B, A→C, B→P, C→P (all = l1)
+      // Long links: O→B, O→C (length l2)
+      // P traces an exact straight line!
+      // The line is perpendicular to O-O4, at distance (l2²-l1²)/d from O
+      //
+      // For nice visuals: d=80, r=50, l1=70, l2=120
+      // Straight line at y = (14400-4900)/80 = 118.75 from O
+      // That's a bit far. Let's try: d=100, r=55, l1=75, l2=110
+      // y_line = (12100-5625)/100 = 64.75 from O ← nice
+      const d = 100, r = 55, l1 = 75, l2 = 110;
+      return { d, r, l1, l2 };
+    }
+  },
+  'crank-slider': {
+    name: 'Crank-Slider',
+    type: 'slider',
+    build: () => {
+      const a = 80, b = 240;
+      return { a, b };
+    }
+  }
+};
+
+// ============================================================
+// LOAD PRESET
+// ============================================================
+function loadPreset(name) {
+  currentPreset = name;
+  const p = presets[name];
+  links = p.build();
+  theta = 0;
+  traces = [];
+  toggleState = false;
+  toggleDir = 1;
+  dragging = null;
+  recenter();
+  updateGrashof();
+  solvePositions();
+  prevJointPositions = jointPositions.map(j => ({...j}));
+}
+
+function recenter() {
+  const p = presets[currentPreset];
+  if (p.type === 'fourbar' || p.type === 'chebyshev') {
+    links.cx = W / 2 - links.g / 2;
+    links.cy = H / 2;
+  } else if (p.type === 'peaucellier') {
+    // Center so the straight line is roughly in the middle of the canvas
+    // Line is at distance (l2²-l1²)/d below O
+    const lineDist = (links.l2 * links.l2 - links.l1 * links.l1) / links.d;
+    links.cx = W / 2 - links.d / 2;
+    links.cy = H / 2 - lineDist / 2;
+  } else if (p.type === 'slider') {
+    links.cx = W / 2;
+    links.cy = H / 2;
+  }
+}
+
+// ============================================================
+// FOUR-BAR SOLVER
+// ============================================================
+function solveFourbar(cfg, th) {
+  const { g, a, b, c, cx, cy } = cfg;
+  const O2x = cx, O2y = cy;
+  const O4x = cx + g, O4y = cy;
+
+  // Crank pin A
+  const Ax = O2x + a * Math.cos(th);
+  const Ay = O2y - a * Math.sin(th);
+
+  // Distance from A to O4
+  const dx = O4x - Ax, dy = O4y - Ay;
+  const diag = Math.sqrt(dx * dx + dy * dy);
+
+  // Check reachability (toggle condition)
+  if (diag > b + c - 0.01 || diag < Math.abs(b - c) + 0.01) {
+    return null;
+  }
+
+  // Angle from A toward O4
+  const phi = Math.atan2(dy, dx);
+
+  // Law of cosines: angle at A between diagonal and coupler
+  const cosBeta = (diag * diag + b * b - c * c) / (2 * diag * b);
+  const clampedCos = Math.max(-1, Math.min(1, cosBeta));
+  const beta = Math.acos(clampedCos);
+
+  // Open configuration (non-crossed)
+  const Bx = Ax + b * Math.cos(phi - beta);
+  const By = Ay + b * Math.sin(phi - beta);
+
+  // Coupler point
+  let Px, Py;
+  if (cfg.couplerFrac !== undefined) {
+    // Chebyshev: coupler point at fraction along coupler A→B
+    Px = Ax + cfg.couplerFrac * (Bx - Ax);
+    Py = Ay + cfg.couplerFrac * (By - Ay);
+  } else {
+    // Standard: midpoint of coupler A→B
+    Px = (Ax + Bx) / 2;
+    Py = (Ay + By) / 2;
+  }
+
+  const joints = [
+    { x: O2x, y: O2y, label: 'O₂', draggable: false },
+    { x: O4x, y: O4y, label: 'O₄', draggable: false },
+    { x: Ax, y: Ay, label: 'A', draggable: true },
+    { x: Bx, y: By, label: 'B', draggable: true },
+    { x: Px, y: Py, label: 'P', draggable: false }
+  ];
+
+  return {
+    joints,
+    coupler: 4,
+    movingLinks: [[0, 2], [2, 3], [3, 1]],  // crank, coupler, rocker
+    crankLink: 0,   // index into movingLinks
+    groundLink: [0, 1]
+  };
+}
+
+// ============================================================
+// PEAUCELLIER SOLVER
+// ============================================================
+function solvePeaucellier(cfg, th) {
+  const { d, r, l1, l2, cx, cy } = cfg;
+  const Ox = cx, Oy = cy;
+  const O4x = cx + d, O4y = cy;
+
+  // Crank pin A (rotates around O4)
+  const Ax = O4x + r * Math.cos(th);
+  const Ay = O4y - r * Math.sin(th);
+
+  // B and C are at intersection of:
+  //   circle centered at A with radius l1
+  //   circle centered at O with radius l2
+  const oax = Ax - Ox, oay = Ay - Oy;
+  const OA = Math.sqrt(oax * oax + oay * oay);
+
+  if (OA < 0.001 || OA > l2 + l1 || OA < Math.abs(l2 - l1)) {
+    return null;
+  }
+
+  const phi = Math.atan2(oay, oax);
+  const cosGamma = (OA * OA + l1 * l1 - l2 * l2) / (2 * OA * l1);
+  const clamped = Math.max(-1, Math.min(1, cosGamma));
+  const gamma = Math.acos(clamped);
+
+  // B and C
+  const Bx = Ax + l1 * Math.cos(phi + gamma);
+  const By = Ay + l1 * Math.sin(phi + gamma);
+  const Cx = Ax + l1 * Math.cos(phi - gamma);
+  const Cy = Ay + l1 * Math.sin(phi - gamma);
+
+  // P is the opposite vertex of rhombus A-B-P-C from A
+  // Since A-B-P-C is a rhombus (all sides = l1), P = B + C - A
+  const Px = Bx + Cx - Ax;
+  const Py = By + Cy - Ay;
+
+  const joints = [
+    { x: Ox, y: Oy, label: 'O', draggable: false },
+    { x: O4x, y: O4y, label: "O'", draggable: false },
+    { x: Ax, y: Ay, label: 'A', draggable: true },
+    { x: Bx, y: By, label: 'B', draggable: true },
+    { x: Cx, y: Cy, label: 'C', draggable: true },
+    { x: Px, y: Py, label: 'P', draggable: true }
+  ];
+
+  // Links: O-O' (ground), O'-A (crank), A-B, A-C, O-B, O-C, B-P, C-P = 7 links + ground
+  return {
+    joints,
+    coupler: 5,
+    movingLinks: [
+      [1, 2],   // O'-A (crank)
+      [2, 3],   // A-B
+      [2, 4],   // A-C
+      [0, 3],   // O-B
+      [0, 4],   // O-C
+      [3, 5],   // B-P
+      [4, 5]    // C-P
+    ],
+    crankLink: 0,
+    groundLink: [0, 1]
+  };
+}
+
+// ============================================================
+// CRANK-SLIDER SOLVER
+// ============================================================
+function solveSlider(cfg, th) {
+  const { a, b, cx, cy } = cfg;
+  const Ox = cx, Oy = cy;
+
+  // Crank pin A
+  const Ax = Ox + a * Math.cos(th);
+  const Ay = Oy - a * Math.sin(th);
+
+  // Slider on horizontal line y = Oy
+  const dy = Ay - Oy;
+  const disc = b * b - dy * dy;
+  if (disc < 0) return null;
+
+  const Sx = Ox + a * Math.cos(th) + Math.sqrt(Math.max(0, disc));
+
+  const joints = [
+    { x: Ox, y: Oy, label: 'O', draggable: false },
+    { x: Ax, y: Ay, label: 'A', draggable: true },
+    { x: Sx, y: Oy, label: 'S', draggable: true }
+  ];
+
+  return {
+    joints,
+    coupler: 2,
+    movingLinks: [[0, 1], [1, 2]],
+    crankLink: 0,
+    groundLink: null,
+    isSlider: true,
+    sliderJoint: 2,
+    sliderY: Oy
+  };
+}
+
+// ============================================================
+// SOLVE POSITIONS
+// ============================================================
+function solvePositions() {
+  const p = presets[currentPreset];
+  let result;
+  if (p.type === 'fourbar' || p.type === 'chebyshev') {
+    result = solveFourbar(links, theta);
+  } else if (p.type === 'peaucellier') {
+    result = solvePeaucellier(links, theta);
+  } else if (p.type === 'slider') {
+    result = solveSlider(links, theta);
+  }
+  if (result) {
+    jointPositions = result.joints;
+    couplerIndex = result.coupler;
+    toggleState = false;
+    drawInfo = result;
+  } else {
+    toggleState = true;
+  }
+}
+
+// ============================================================
+// GRASHOF CHECK
+// ============================================================
+function updateGrashof() {
+  const p = presets[currentPreset];
+  if (p.type === 'fourbar' || p.type === 'chebyshev') {
+    const { g, a, b, c } = links;
+    const lens = [g, a, b, c].sort((x, y) => x - y);
+    const s = lens[0], ll = lens[3], pp = lens[1], q = lens[2];
+    const sum = s + ll, pair = pp + q;
+    if (sum < pair) {
+      // Grashof
+      if (s === Math.min(a, c) && a <= c || s === c && c < a) {
+        grashofEl.textContent = 'Crank-Rocker ✓';
+      } else if (s === g) {
+        grashofEl.textContent = 'Double-Crank ✓';
+      } else {
+        grashofEl.textContent = 'Double-Rocker ✓';
+      }
+    } else if (sum > pair) {
+      grashofEl.textContent = 'Non-Grashof ✗';
+    } else {
+      grashofEl.textContent = 'Change Point ⚠';
+    }
+  } else if (p.type === 'peaucellier') {
+    grashofEl.textContent = '7-link Inversor';
+  } else {
+    grashofEl.textContent = 'Slider Mechanism';
+  }
+}
+
+// ============================================================
+// CANVAS RESIZE
+// ============================================================
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  W = rect.width;
+  H = rect.height;
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  recenter();
+  solvePositions();
+}
+
+// ============================================================
+// DRAWING
+// ============================================================
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Subtle grid
+  ctx.fillStyle = '#161b22';
+  for (let gx = 20; gx < W; gx += 30) {
+    for (let gy = 20; gy < H; gy += 30) {
+      ctx.fillRect(gx, gy, 1, 1);
+    }
+  }
+
+  if (!drawInfo || !jointPositions.length) return;
+  const joints = jointPositions;
+
+  // --- Traces ---
+  if (traceOn && traces.length > 1) {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (let i = 1; i < traces.length; i++) {
+      const alpha = 0.08 + 0.92 * (i / traces.length);
+      ctx.beginPath();
+      ctx.moveTo(traces[i - 1].x, traces[i - 1].y);
+      ctx.lineTo(traces[i].x, traces[i].y);
+      ctx.strokeStyle = `rgba(63,185,80,${alpha.toFixed(3)})`;
+      ctx.lineWidth = 1.5 + 0.8 * (i / traces.length);
+      ctx.stroke();
+    }
+  }
+
+  // --- Ground link ---
+  if (drawInfo.groundLink) {
+    const [i1, i2] = drawInfo.groundLink;
+    ctx.beginPath();
+    ctx.moveTo(joints[i1].x, joints[i1].y);
+    ctx.lineTo(joints[i2].x, joints[i2].y);
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    drawGroundHatch(joints[i1].x, joints[i1].y);
+    drawGroundHatch(joints[i2].x, joints[i2].y);
+  }
+
+  // --- Moving links ---
+  const ml = drawInfo.movingLinks;
+  for (let li = 0; li < ml.length; li++) {
+    const [i1, i2] = ml[li];
+    const isCrank = li === drawInfo.crankLink;
+    ctx.beginPath();
+    ctx.moveTo(joints[i1].x, joints[i1].y);
+    ctx.lineTo(joints[i2].x, joints[i2].y);
+    ctx.strokeStyle = isCrank ? '#f0883e' : '#58a6ff';
+    ctx.lineWidth = isCrank ? 4 : 3;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  // --- Chebyshev: dashed line from A to P (coupler point) ---
+  if (currentPreset === 'chebyshev' && joints.length >= 5) {
+    ctx.beginPath();
+    ctx.moveTo(joints[2].x, joints[2].y);
+    ctx.lineTo(joints[4].x, joints[4].y);
+    ctx.strokeStyle = 'rgba(63,185,80,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // --- Peaucellier: highlight the straight-line path ---
+  if (currentPreset === 'peaucellier' && joints.length >= 6) {
+    const lineY = joints[5].y; // P's y should be constant (straight line)
+    ctx.beginPath();
+    ctx.moveTo(joints[0].x - 20, lineY);
+    ctx.lineTo(joints[0].x + 200, lineY);
+    ctx.strokeStyle = 'rgba(63,185,80,0.12)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 6]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // --- Slider ---
+  if (drawInfo.isSlider) {
+    const sj = joints[drawInfo.sliderJoint];
+    const bw = 44, bh = 26;
+    // Rail
+    const railLeft = Math.max(10, sj.x - W * 0.4);
+    const railRight = Math.min(W - 10, sj.x + W * 0.4);
+    ctx.beginPath();
+    ctx.moveTo(railLeft, sj.y);
+    ctx.lineTo(railRight, sj.y);
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'butt';
+    ctx.stroke();
+    // Rail hatching
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 1;
+    for (let rx = railLeft; rx < railRight; rx += 12) {
+      ctx.beginPath();
+      ctx.moveTo(rx, sj.y + 4);
+      ctx.lineTo(rx + 6, sj.y + 12);
+      ctx.stroke();
+    }
+    // Block
+    ctx.fillStyle = '#8b949e';
+    const blockX = sj.x - bw / 2, blockY = sj.y - bh / 2;
+    ctx.beginPath();
+    ctx.roundRect(blockX, blockY, bw, bh, 3);
+    ctx.fill();
+    ctx.strokeStyle = '#58a6ff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // --- Joints ---
+  for (let i = 0; i < joints.length; i++) {
+    const j = joints[i];
+    const isCoupler = i === couplerIndex;
+    const r = j.draggable ? 7 : 5;
+    // Glow
+    ctx.beginPath();
+    ctx.arc(j.x, j.y, r + 5, 0, Math.PI * 2);
+    ctx.fillStyle = isCoupler ? 'rgba(63,185,80,0.18)' : 'rgba(198,144,38,0.12)';
+    ctx.fill();
+    // Circle
+    ctx.beginPath();
+    ctx.arc(j.x, j.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = isCoupler ? '#3fb950' : (j.draggable ? '#c69026' : '#8b949e');
+    ctx.fill();
+    ctx.strokeStyle = '#0d1117';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Label
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(j.label, j.x, j.y - r - 7);
+  }
+
+  // --- Velocity vectors ---
+  if (vectorsOn && prevJointPositions.length === jointPositions.length && playing) {
+    const dtEst = 1 / 60;
+    const scale = 0.12;
+    for (let i = 0; i < jointPositions.length; i++) {
+      if (!jointPositions[i].draggable) continue;
+      const vx = (jointPositions[i].x - prevJointPositions[i].x) / dtEst;
+      const vy = (jointPositions[i].y - prevJointPositions[i].y) / dtEst;
+      const speed = Math.sqrt(vx * vx + vy * vy);
+      if (speed < 5) continue;
+      drawArrow(jointPositions[i].x, jointPositions[i].y,
+                jointPositions[i].x + vx * scale,
+                jointPositions[i].y + vy * scale,
+                '#f0883e', 2);
+    }
+  }
+
+  // Toggle message overlay
+  if (toggleState) {
+    showToggleMsg('Toggle position — mechanism at limit');
+  }
+}
+
+function drawGroundHatch(x, y) {
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 1.5;
+  for (let i = -2; i <= 2; i++) {
+    ctx.beginPath();
+    ctx.moveTo(x + i * 6 - 3, y + 8);
+    ctx.lineTo(x + i * 6 + 3, y + 15);
+    ctx.stroke();
+  }
+}
+
+function drawArrow(x1, y1, x2, y2, color, width) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 3) return;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  const angle = Math.atan2(dy, dx);
+  const hl = 7;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - hl * Math.cos(angle - 0.45), y2 - hl * Math.sin(angle - 0.45));
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - hl * Math.cos(angle + 0.45), y2 - hl * Math.sin(angle + 0.45));
+  ctx.stroke();
+}
+
+let toggleMsgTimeout = null;
+function showToggleMsg(text) {
+  toggleMsg.textContent = text;
+  toggleMsg.classList.add('show');
+  clearTimeout(toggleMsgTimeout);
+  toggleMsgTimeout = setTimeout(() => toggleMsg.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// ANIMATION LOOP
+// ============================================================
+function animate(time) {
+  if (!lastTime) lastTime = time;
+  const dt = Math.min((time - lastTime) / 1000, 0.05);
+  lastTime = time;
+
+  if (playing && !dragging) {
+    prevJointPositions = jointPositions.map(j => ({...j}));
+    const omega = (rpm / 60) * 2 * Math.PI * toggleDir;
+    theta += omega * dt;
+
+    solvePositions();
+
+    if (toggleState) {
+      // At toggle: reverse and back off slightly
+      toggleDir *= -1;
+      theta -= omega * dt;
+      solvePositions();
+      if (toggleState) {
+        theta += toggleDir * 0.02;
+        solvePositions();
+      }
+    }
+
+    // Sample trace
+    if (traceOn && !toggleState && couplerIndex >= 0 && jointPositions[couplerIndex]) {
+      traces.push({ x: jointPositions[couplerIndex].x, y: jointPositions[couplerIndex].y });
+      if (traces.length > MAX_TRACE) traces.shift();
+    }
+  } else {
+    prevJointPositions = jointPositions.map(j => ({...j}));
+  }
+
+  draw();
+  requestAnimationFrame(animate);
+}
+
+// ============================================================
+// DRAG INTERACTION
+// ============================================================
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches ? e.touches[0] : e;
+  return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+}
+
+function findJoint(pos) {
+  let best = -1, bestDist = 25;
+  for (let i = 0; i < jointPositions.length; i++) {
+    if (!jointPositions[i].draggable) continue;
+    const dx = jointPositions[i].x - pos.x;
+    const dy = jointPositions[i].y - pos.y;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < bestDist) { bestDist = d; best = i; }
+  }
+  return best;
+}
+
+canvas.addEventListener('mousedown', e => {
+  const pos = getPos(e);
+  const j = findJoint(pos);
+  if (j >= 0) { dragging = j; canvas.style.cursor = 'grabbing'; }
+});
+
+canvas.addEventListener('mousemove', e => {
+  const pos = getPos(e);
+  if (dragging !== null) {
+    jointPositions[dragging].x = pos.x;
+    jointPositions[dragging].y = pos.y;
+    recalcLinksFromDrag(dragging, pos);
+  } else {
+    canvas.style.cursor = findJoint(pos) >= 0 ? 'grab' : 'crosshair';
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  if (dragging !== null) { dragging = null; canvas.style.cursor = 'crosshair'; updateGrashof(); }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  if (dragging !== null) { dragging = null; canvas.style.cursor = 'crosshair'; }
+});
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const pos = getPos(e);
+  const j = findJoint(pos);
+  if (j >= 0) dragging = j;
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (dragging !== null) {
+    const pos = getPos(e);
+    jointPositions[dragging].x = pos.x;
+    jointPositions[dragging].y = pos.y;
+    recalcLinksFromDrag(dragging, pos);
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (dragging !== null) { dragging = null; updateGrashof(); }
+}, { passive: false });
+
+function recalcLinksFromDrag(jointIdx, pos) {
+  const p = presets[currentPreset];
+  if (p.type === 'fourbar' || p.type === 'chebyshev') {
+    // Joints: 0=O2, 1=O4, 2=A, 3=B, 4=P
+    if (jointIdx === 2) {
+      const dx = pos.x - jointPositions[0].x;
+      const dy = pos.y - jointPositions[0].y;
+      links.a = Math.sqrt(dx * dx + dy * dy);
+      theta = Math.atan2(-dy, dx);
+    } else if (jointIdx === 3) {
+      const dxAB = pos.x - jointPositions[2].x;
+      const dyAB = pos.y - jointPositions[2].y;
+      links.b = Math.sqrt(dxAB * dxAB + dyAB * dyAB);
+      const dxBO4 = pos.x - jointPositions[1].x;
+      const dyBO4 = pos.y - jointPositions[1].y;
+      links.c = Math.sqrt(dxBO4 * dxBO4 + dyBO4 * dyBO4);
+    }
+    solvePositions();
+  } else if (p.type === 'slider') {
+    if (jointIdx === 1) {
+      const dx = pos.x - jointPositions[0].x;
+      const dy = pos.y - jointPositions[0].y;
+      links.a = Math.sqrt(dx * dx + dy * dy);
+      theta = Math.atan2(-dy, dx);
+    } else if (jointIdx === 2) {
+      const dx = pos.x - jointPositions[1].x;
+      const dy = pos.y - jointPositions[1].y;
+      links.b = Math.sqrt(dx * dx + dy * dy);
+    }
+    solvePositions();
+  }
+  // Peaucellier drag: just move displayed positions (complex to recalculate)
+}
+
+// ============================================================
+// UI WIRING
+// ============================================================
+document.querySelectorAll('.presets button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.presets button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadPreset(btn.dataset.preset);
+  });
+});
+
+const speedSlider = document.getElementById('speed');
+const speedVal = document.getElementById('speed-val');
+speedSlider.addEventListener('input', () => {
+  rpm = +speedSlider.value;
+  speedVal.textContent = rpm + ' RPM';
+});
+
+const playBtn = document.getElementById('play-btn');
+playBtn.addEventListener('click', () => {
+  playing = !playing;
+  playBtn.textContent = playing ? '⏸ Pause' : '▶ Play';
+  playBtn.classList.toggle('active', playing);
+});
+
+document.getElementById('trace-cb').addEventListener('change', e => { traceOn = e.target.checked; });
+document.getElementById('vectors-cb').addEventListener('change', e => { vectorsOn = e.target.checked; });
+document.getElementById('clear-btn').addEventListener('click', () => { traces = []; });
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('resize', resize);
+resize();
+loadPreset('crank-rocker');
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
