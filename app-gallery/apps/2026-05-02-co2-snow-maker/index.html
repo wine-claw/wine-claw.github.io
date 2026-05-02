@@ -31,7 +31,6 @@ canvas{display:block;width:100%;height:100%}
   <button id="btnRun">▶ Start</button>
   <button id="btnReset">↺ Reset</button>
   <button id="togPlume" class="on">Gas</button>
-  <button id="togPhase" class="on">Phase</button>
 </div>
 </div>
 <script>
@@ -40,33 +39,66 @@ const canvas=document.getElementById('c');
 const ctx=canvas.getContext('2d');
 let W,H,DPR=1;
 
-//  Physics
-const TP_T=-56.6, TP_PMPa=0.518;
-const CP_T=31.04, CP_PMPa=7.38;
-const TATM=-78.5;
-const H_VAP=571, H_SOL=0;
+// ── NIST CO₂ Thermodynamics ──
+// Triple point: -56.6°C, 0.518 MPa
+// Critical point: 31.04°C, 7.38 MPa
+// Sublimation at 1 atm: -78.5°C
+// Reference enthalpies (kJ/kg) at triple point:
+//   Solid: 0 (reference), Liquid: ~137, Vapor: 571
+// For Joule-Thomson expansion: h_in = h_out = h_solid*(1-x) + h_vapor*x at 1 atm
+// Solid fraction = (h_vapor - h_source)/(h_vapor - h_solid)
 
+const TP_T=-56.6, TP_P=0.518;
+const CP_T=31.04, CP_P=7.38;
+const T_SUB=-78.5; // sublimation at 1 atm
+const H_SOL=0, H_LIQ=137, H_VAP=571;
+
+// Source scenarios (T in °C, P in MPa, h in kJ/kg from NIST tables)
 const SCENARIOS=[
-  {name:'Vacuum-Insulated Bulk',TC:-20,PMPa:2.0,h:120},
-  {name:'High-Pressure Cylinder',TC:20,PMPa:6.0,h:240},
-  {name:'Low-Pressure Cylinder',TC:20,PMPa:3.5,h:255},
-  {name:'Refrigerated Tank',TC:-30,PMPa:1.5,h:95},
-  {name:'Ambient Bulk Tank',TC:15,PMPa:2.3,h:230}
+  {name:'Vacuum-Insulated Bulk',T:-20,P:2.0,h:120,desc:'Liquid at -20°C, 2 MPa'},
+  {name:'High-Pressure Cylinder',T:20,P:6.0,h:240,desc:'Supercritical at 20°C, 6 MPa'},
+  {name:'Low-Pressure Cylinder',T:20,P:3.5,h:255,desc:'Liquid at 20°C, 3.5 MPa'},
+  {name:'Refrigerated Tank',T:-30,P:1.5,h:95,desc:'Liquid at -30°C, 1.5 MPa'},
+  {name:'Ambient Bulk Tank',T:15,P:2.3,h:230,desc:'Liquid at 15°C, 2.3 MPa'}
 ];
 
 function calc(s){
+  // Solid fraction from energy balance:
+  // h_source = h_solid*(1-x) + h_vapor*x
+  // x = (h_source - h_solid)/(h_vapor - h_solid) = vapor fraction
+  // sf = 1 - x = (h_vapor - h_source)/(h_vapor - h_solid)
   const sf=Math.max(0,Math.min(1,(H_VAP-s.h)/(H_VAP-H_SOL)));
-  const mech=Math.min(0.88,Math.max(0.72,0.80-(s.TC+30)/200*0.08));
+  
+  // Mechanical capture efficiency:
+  // Colder source = denser solid, easier to capture
+  // Warmer source = more vapor, harder to capture
+  // Base 75%, +10% for very cold, -10% for warm
+  const mech=Math.min(0.90,Math.max(0.65,0.75+(T_SUB-s.T)/100*0.15));
+  
+  // Total efficiency
   const eff=sf*mech;
+  
+  // Waste ratio = (1-eff)/eff
   const wr=eff>0.001?(1-eff)/eff:999;
-  const ps=Math.max(15,Math.min(120,30+(20-s.TC)*1.5+(s.PMPa/6)*(-15)));
-  return {...s, sf, mech, eff, wr, ps};
+  
+  // Particle size (μm):
+  // Colder = faster nucleation = smaller particles
+  // Warmer = slower nucleation = larger particles
+  // Base 30μm, range 10-100μm
+  const ps=Math.max(10,Math.min(100,30+(s.T-T_SUB)*0.4+(s.P/CP_P)*(-10)));
+  
+  // Isenthalpic temperature after expansion to 1 atm
+  // Mixture at 1 atm: T_final = T_sub*(sf) + T_ambient*(1-sf) for vapor
+  // Actually just use sublimation temp for solid, and source temp for vapor portion
+  const tFinal=T_SUB*sf+s.T*(1-sf);
+  
+  return {...s, sf, mech, eff, wr, ps, tFinal};
 }
 
 let si=0, sc=calc(SCENARIOS[0]);
 let flow=25, running=false;
 let buckKg=0, wasteKg=0, t=0;
-let showGas=true, showPhase=true;
+let showGas=true;
 let snowP=[], gasP=[], liqP=[];
 
 function resize(){
@@ -78,21 +110,20 @@ function resize(){
   W=r.width; H=r.height;
 }
 
-// Spawn helpers
 function spawnLiq(){
-  liqP.push({x:W*.30+(Math.random()-.5)*8, y:H*.08, r:1+Math.random()*2, vy:35+Math.random()*25, life:1});
+  liqP.push({x:W*.30+(Math.random()-.5)*6, y:H*.08, r:1+Math.random()*2, vy:30+Math.random()*20, life:1});
 }
 function spawnSnow(){
   const cx=W*.30, hb=H*.42;
-  const a=(Math.random()-.5)*.6+Math.PI/2;
-  const sp=20+Math.random()*80;
-  snowP.push({x:cx+(Math.random()-.5)*8, y:hb, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:1+Math.random()*3, life:1, inB:false});
+  const a=(Math.random()-.5)*.5+Math.PI/2;
+  const sp=25+Math.random()*70;
+  snowP.push({x:cx+(Math.random()-.5)*6, y:hb, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:1+Math.random()*2.5, life:1, inB:false, settled:false});
 }
 function spawnGas(){
   if(!showGas)return;
-  const cx=W*.30, hb=H*.42, gy=hb+H*.05;
-  for(let k=0;k<4;k++){
-    gasP.push({x:cx+(Math.random()-.5)*140, y:gy+Math.random()*20, vx:(Math.random()-.5)*50, vy:-(80+Math.random()*160), r:20+Math.random()*40, life:1, ph:Math.random()*Math.PI*2});
+  const cx=W*.30, hb=H*.42, gy=hb+H*.06;
+  for(let k=0;k<5;k++){
+    gasP.push({x:cx+(Math.random()-.5)*120, y:gy+Math.random()*15, vx:(Math.random()-.5)*40, vy:-(60+Math.random()*140), r:18+Math.random()*35, life:1, ph:Math.random()*Math.PI*2});
   }
 }
 
@@ -103,57 +134,86 @@ function update(dt){
   wasteKg+=f*(1-sc.eff)*dt;
   t+=dt;
 
-  if(liqP.length<30) spawnLiq();
+  if(liqP.length<25) spawnLiq();
   
-  // Continuous snow spawn based on flow rate
-  const snowPerSec = flow * 0.5;
-  const toSpawn = Math.floor(snowPerSec * dt);
+  // Continuous snow spawn
+  const snowPerSec=flow*0.6;
+  const toSpawn=Math.floor(snowPerSec*dt);
   for(let i=0;i<toSpawn;i++) spawnSnow();
-  
-  // Always spawn at least some
   if(Math.random()<snowPerSec*dt-toSpawn) spawnSnow();
   
   // Continuous gas spawn
-  const gasPerSec = flow * 0.4;
-  const gasToSpawn = Math.floor(gasPerSec * dt);
+  const gasPerSec=flow*0.5;
+  const gasToSpawn=Math.floor(gasPerSec*dt);
   for(let i=0;i<gasToSpawn;i++) spawnGas();
   if(Math.random()<gasPerSec*dt-gasToSpawn) spawnGas();
 
-  // Liquid - fall through horn
+  // Liquid falls through horn
   for(let p of liqP){
     p.y+=p.vy*dt;
-    p.life-=dt*1.8;
+    p.life-=dt*2;
   }
   liqP=liqP.filter(p=>p.life>0&&p.y<H*.35);
 
-  // Bucket params matching draw
-  const bx=W*.08, bw=W*.30, by=H*.55, bh=H*.22;
+  // Bucket — centered under horn
+  const cx=W*.30;
+  const bw=W*.32;
+  const bx=cx-bw/2;  // CENTERED under horn
+  const by=H*.55;
+  const bh=H*.20;
   const bB=by+bh;
 
-  // Snow - gravity + bucket capture
+  // Snow physics
   for(let p of snowP){
+    if(p.settled) continue; // Skip settled particles
+    
     p.x+=p.vx*dt;
     p.y+=p.vy*dt;
-    p.vy+=45*dt;
-    // Tapered walls
+    p.vy+=50*dt;
+    
+    // Bucket walls (tapered)
     const fy=p.y-by;
-    const lx=bx+fy*.04;
-    const rx=bx+bw-fy*.04;
-    if(p.y>by&&p.x>lx&&p.x<rx&&p.y<bB){
-      if(!p.inB){p.inB=true;p.vx*=0.15;p.vy*=0.05;}
-      if(p.y>bB-6){p.y=bB-6;p.vy=0;p.vx*=0.3;}
-    } else if(p.y>bB){p.life=0;}
-    // Don't decay life for settled particles
-    if(!p.inB) p.life-=dt*.05;
+    const lx=bx+fy*.035;
+    const rx=bx+bw-fy*.035;
+    
+    if(p.y>by&&p.x>lx&&p.x<rx){
+      // Inside bucket
+      if(!p.inB){
+        p.inB=true;
+        p.vx*=0.1;
+        p.vy*=0.02;
+      }
+      if(p.y>=bB-4){
+        // Hit bottom — settle
+        p.y=bB-4;
+        p.vy=0;
+        p.vx=0;
+        p.settled=true;
+      }
+    } else if(p.y>bB){
+      // Missed bucket, fell past
+      p.life=0;
+    }
+    
+    if(!p.inB&&!p.settled) p.life-=dt*.04;
   }
-  snowP=snowP.filter(p=>p.life>0);
+  
+  // Remove dead particles but KEEP settled ones
+  snowP=snowP.filter(p=>p.life>0||p.settled);
+  
+  // Limit settled particles for performance
+  const settled=snowP.filter(p=>p.settled);
+  if(settled.length>500){
+    // Remove oldest settled particles
+    snowP=snowP.filter(p=>!p.settled).concat(settled.slice(-500));
+  }
 
-  // Gas - rise + waft
+  // Gas physics
   for(let p of gasP){
     p.y+=p.vy*dt;
-    p.x+=p.vx*dt+Math.sin(p.ph+t*4)*20*dt;
-    p.r+=dt*3;
-    p.life-=dt*.12;
+    p.x+=p.vx*dt+Math.sin(p.ph+t*3)*15*dt;
+    p.r+=dt*2.5;
+    p.life-=dt*.1;
   }
   gasP=gasP.filter(p=>p.life>0);
 }
@@ -162,32 +222,24 @@ function draw(){
   ctx.fillStyle='#0d1117';
   ctx.fillRect(0,0,W,H);
 
-  // Grid
-  ctx.strokeStyle='rgba(48,54,61,0.12)';
+  // Subtle grid
+  ctx.strokeStyle='rgba(48,54,61,0.08)';
   ctx.lineWidth=.5;
   for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
   for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
-  // Divider
+  // Layout
   const leftW=W*.58;
-  ctx.strokeStyle='rgba(48,54,61,0.3)';
+  ctx.strokeStyle='rgba(48,54,61,0.25)';
   ctx.beginPath();ctx.moveTo(leftW,0);ctx.lineTo(leftW,H);ctx.stroke();
 
-  // ── Layout coordinates ──
+  // ── HORN ──
   const cx=W*.30;
-  const nt=W*.04;      // horn top radius
-  const nb=W*.13;      // horn bottom radius (narrower than bucket)
-  const hy=H*.08;      // horn top Y
-  const hb=H*.42;      // horn bottom Y
-  const gap=H*.05;     // gap between horn and bucket
-  // Bucket
-  const bx=W*.08, bw=W*.30;
-  const by=hb+gap;
-  const bh=H*.22;
-  const bB=by+bh;
-
-  // ── EXPANSION HORN ──
-  // Body (trapezoid)
+  const nt=W*.04;      // top radius
+  const nb=W*.12;      // bottom radius (narrower than bucket)
+  const hy=H*.08;
+  const hb=H*.42;
+  
   const hGrad=ctx.createLinearGradient(cx,hy,cx,hb);
   hGrad.addColorStop(0,'#4a5568');
   hGrad.addColorStop(.5,'#2d3748');
@@ -199,35 +251,36 @@ function draw(){
   ctx.fillStyle=hGrad; ctx.fill();
   ctx.strokeStyle='#5a6a7e'; ctx.lineWidth=1.5; ctx.stroke();
 
-  // Top ellipse
   ctx.beginPath();
   ctx.ellipse(cx,hy,nt,3,0,0,Math.PI*2);
   ctx.fillStyle='#3d4a5c'; ctx.fill();
   ctx.strokeStyle='#6a7a8e'; ctx.stroke();
 
-  // Inner shadow
   ctx.beginPath();
   ctx.moveTo(cx-nt*.6,hy+3); ctx.lineTo(cx-nb*.7,hb-3);
   ctx.lineTo(cx+nb*.7,hb-3); ctx.lineTo(cx+nt*.6,hy+3);
   ctx.closePath();
   ctx.fillStyle='rgba(20,30,40,0.35)'; ctx.fill();
 
-  // Labels inside horn
   ctx.fillStyle='#8b949e'; ctx.font='9px monospace'; ctx.textAlign='center';
   ctx.fillText('1 atm',cx,(hy+hb)*.5);
   ctx.fillStyle='#6a7a8e'; ctx.font='8px monospace';
-  ctx.fillText(sc.PMPa.toFixed(1)+' MPa',cx,hy+12);
-
-  // External labels
+  ctx.fillText(sc.P.toFixed(1)+' MPa',cx,hy+12);
   ctx.fillStyle='#8b949e'; ctx.font='9px monospace';
   ctx.fillText('NOZZLE',cx,hy-8);
   ctx.fillText('EXPANSION HORN',cx,(hy+hb)*.55+8);
 
-  // ── BUCKET ──
+  // ── BUCKET (centered under horn) ──
+  const bw=W*.32;
+  const bx=cx-bw/2;  // CENTERED
+  const by=H*.55;
+  const bh=H*.20;
+  const bB=by+bh;
+  
   ctx.beginPath();
   ctx.moveTo(bx,by);
-  ctx.lineTo(bx+bw*.08,bB);
-  ctx.lineTo(bx+bw*.92,bB);
+  ctx.lineTo(bx+bw*.06,bB);
+  ctx.lineTo(bx+bw*.94,bB);
   ctx.lineTo(bx+bw,by);
   ctx.closePath();
   const bGrad=ctx.createLinearGradient(bx,by,bx,bB);
@@ -236,195 +289,123 @@ function draw(){
   ctx.fillStyle=bGrad; ctx.fill();
   ctx.strokeStyle='#6b7280'; ctx.lineWidth=1.5; ctx.stroke();
 
-  // Bucket rim
   ctx.beginPath();
   ctx.moveTo(bx-2,by); ctx.lineTo(bx+bw+2,by);
   ctx.strokeStyle='#9ca3af'; ctx.lineWidth=2.5; ctx.stroke();
 
-  // Bucket label
   ctx.fillStyle='#8b949e'; ctx.font='9px monospace'; ctx.textAlign='center';
-  ctx.fillText('COLLECTION BUCKET',bx+bw/2,by-10);
+  ctx.fillText('COLLECTION BUCKET',cx,by-10);
 
-  // ── SNOW PILE (solid fill from bottom up) ──
-  const maxFill=8;
-  const frac=Math.min(buckKg/maxFill,0.92);
-  if(frac>0.001){
-    const snowH=bh*.95*frac;
+  // ── SNOW PILE ──
+  const maxFill=5;
+  const frac=Math.min(buckKg/maxFill,0.88);
+  if(frac>0.005){
+    const snowH=bh*.9*frac;
     const snowY=bB-snowH;
 
     ctx.beginPath();
-    ctx.moveTo(bx+bw*.08,bB);
+    ctx.moveTo(bx+bw*.06,bB);
     for(let i=0;i<=20;i++){
       const tt=i/20;
-      const sx=bx+bw*.08+tt*bw*.84;
-      const sy=snowY-Math.sin(tt*Math.PI)*10*frac;
+      const sx=bx+bw*.06+tt*bw*.88;
+      const sy=snowY-Math.sin(tt*Math.PI)*8*frac;
       ctx.lineTo(sx,sy);
     }
-    ctx.lineTo(bx+bw*.92,bB);
+    ctx.lineTo(bx+bw*.94,bB);
     ctx.closePath();
-    ctx.fillStyle='#d4e8f7'; ctx.fill();
+    ctx.fillStyle='#c8dff2'; ctx.fill();
     ctx.strokeStyle='#8ab4c8'; ctx.lineWidth=1; ctx.stroke();
 
-    // Highlight curve
+    // Highlight
     ctx.beginPath();
     for(let i=0;i<=20;i++){
       const tt=i/20;
-      const sx=bx+bw*.08+tt*bw*.84;
-      const sy=snowY-Math.sin(tt*Math.PI)*10*frac;
+      const sx=bx+bw*.06+tt*bw*.88;
+      const sy=snowY-Math.sin(tt*Math.PI)*8*frac;
       if(i===0)ctx.moveTo(sx,sy); else ctx.lineTo(sx,sy);
     }
-    ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=2; ctx.stroke();
 
-    // Snow speckles
-    for(let i=0;i<80*frac;i++){
-      const sx=bx+bw*.1+Math.random()*bw*.78;
-      const sy=snowY+Math.random()*snowH*.92;
-      ctx.fillStyle='rgba(255,255,255,0.5)';
-      ctx.beginPath(); ctx.arc(sx,sy,1+Math.random()*2,0,Math.PI*2); ctx.fill();
+    // Texture
+    for(let i=0;i<60*frac;i++){
+      const sx=bx+bw*.1+Math.random()*bw*.8;
+      const sy=snowY+Math.random()*snowH*.9;
+      ctx.fillStyle='rgba(255,255,255,0.4)';
+      ctx.beginPath(); ctx.arc(sx,sy,1+Math.random()*1.5,0,Math.PI*2); ctx.fill();
     }
   }
 
   // ── LIQUID PARTICLES ──
   for(let p of liqP){
     ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(77,166,255,${p.life*.6})`; ctx.fill();
+    ctx.fillStyle=`rgba(77,166,255,${p.life*.5})`; ctx.fill();
   }
 
-  // ── SNOW PARTICLES (falling) ──
+  // ── FALLING SNOW ──
   for(let p of snowP){
-    if(!p.inB){
+    if(!p.inB&&!p.settled){
       ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(230,242,255,${p.life*.85})`; ctx.fill();
-      if(p.r>2){
-        ctx.beginPath(); ctx.arc(p.x-p.r*.3,p.y-p.r*.3,p.r*.35,0,Math.PI*2);
-        ctx.fillStyle=`rgba(255,255,255,${p.life*.5})`; ctx.fill();
+      ctx.fillStyle=`rgba(230,242,255,${p.life*.8})`; ctx.fill();
+      if(p.r>1.5){
+        ctx.beginPath(); ctx.arc(p.x-p.r*.25,p.y-p.r*.25,p.r*.3,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,255,255,${p.life*.4})`; ctx.fill();
       }
     }
   }
 
-  // ── GAS PLUMES (more transparent, continuous) ──
+  // ── SETTLED SNOW (drawn on pile) ──
+  const settled=snowP.filter(p=>p.settled);
+  for(let p of settled){
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.6,0,Math.PI*2);
+    ctx.fillStyle='rgba(220,235,255,0.6)'; ctx.fill();
+  }
+
+  // ── GAS PLUMES ──
   for(let p of gasP){
     const a=p.life;
-    // Large grey cloud - more transparent
     ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(180,190,205,${a*.25})`; ctx.fill();
-    // Lighter core
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.35,0,Math.PI*2);
-    ctx.fillStyle=`rgba(220,230,240,${a*.35})`; ctx.fill();
+    ctx.fillStyle=`rgba(170,185,200,${a*.2})`; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.3,0,Math.PI*2);
+    ctx.fillStyle=`rgba(210,220,235,${a*.3})`; ctx.fill();
   }
 
   // Nozzle flash
   if(running){
-    const fg=ctx.createRadialGradient(cx,hy+3,1,cx,hy+3,22);
-    fg.addColorStop(0,'rgba(200,230,255,0.4)');
+    const fg=ctx.createRadialGradient(cx,hy+3,1,cx,hy+3,20);
+    fg.addColorStop(0,'rgba(200,230,255,0.35)');
     fg.addColorStop(1,'rgba(200,230,255,0)');
-    ctx.beginPath(); ctx.arc(cx,hy+3,22,0,Math.PI*2); ctx.fillStyle=fg; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx,hy+3,20,0,Math.PI*2); ctx.fillStyle=fg; ctx.fill();
   }
 
   // Scenario label
   ctx.fillStyle='#c9d1d9'; ctx.font='11px monospace'; ctx.textAlign='left';
   ctx.fillText(sc.name,12,20);
   ctx.fillStyle='#8b949e'; ctx.font='9px monospace';
-  ctx.fillText(`${sc.TC}°C  ${sc.PMPa} MPa  |  h=${sc.h} kJ/kg`,12,34);
+  ctx.fillText(`${sc.T}°C  ${sc.P} MPa  |  h=${sc.h} kJ/kg`,12,34);
 
-  // ── PHASE DIAGRAM (bottom right) ──
-  if(showPhase){
-    const pdW=170, pdH=170, pdX=W-pdW-12, pdY=H-pdH-12;
-    ctx.fillStyle='rgba(13,17,23,0.95)'; ctx.strokeStyle='#30363d';
-    ctx.beginPath(); ctx.rect(pdX,pdY,pdW,pdH); ctx.fill(); ctx.stroke();
-    ctx.fillStyle='#8b949e'; ctx.font='9px monospace'; ctx.textAlign='center';
-    ctx.fillText('CO₂ Phase Diagram',pdX+pdW/2,pdY+12);
-
-    const pad=24, ax=pdX+pad, ay=pdY+pdH-pad+2, aw=pdW-pad*2, ah=pdH-pad*2-10;
-    ctx.strokeStyle='#484f58'; ctx.lineWidth=.7;
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax,ay-ah); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax+aw,ay); ctx.stroke();
-
-    const tX=v=>ax+((v+80)/110)*aw;
-    const pY=v=>ay-(Math.log10(v/.05)/Math.log10(10/.05))*ah;
-
-    // Sublimation line
-    ctx.strokeStyle='#58a6ff'; ctx.lineWidth=1.5; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(tX(TATM),pY(.1013)); ctx.lineTo(tX(TP_T),pY(TP_PMPa)); ctx.stroke();
-    // Melting
-    ctx.strokeStyle='#39d2c0';
-    ctx.beginPath(); ctx.moveTo(tX(TP_T),pY(TP_PMPa)); ctx.lineTo(tX(-10),pY(8)); ctx.stroke();
-    // Vaporisation
-    ctx.strokeStyle='#f0883e';
-    ctx.beginPath(); ctx.moveTo(tX(TP_T),pY(TP_PMPa)); ctx.lineTo(tX(CP_T),pY(CP_PMPa)); ctx.stroke();
-
-    ctx.fillStyle='#8b949e'; ctx.font='7px monospace'; ctx.textAlign='center';
-    ctx.fillText('SOLID',tX(-65),pY(.08));
-    ctx.fillText('LIQUID',tX(0),pY(4));
-    ctx.fillText('GAS',tX(15),pY(.25));
-
-    // TP marker
-    ctx.fillStyle='#d29922'; ctx.beginPath(); ctx.arc(tX(TP_T),pY(TP_PMPa),3,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#8b949e'; ctx.font='6px monospace'; ctx.fillText('TP',tX(TP_T)+5,pY(TP_PMPa)-5);
-    // CP marker
-    ctx.fillStyle='#f85149'; ctx.beginPath(); ctx.arc(tX(CP_T),pY(CP_PMPa),3,0,Math.PI*2); ctx.fill();
-    ctx.fillText('CP',tX(CP_T)+5,pY(CP_PMPa)-5);
-
-    // Source state
-    const sx=tX(sc.TC), sy=pY(sc.PMPa);
-    ctx.fillStyle='#3fb950'; ctx.beginPath(); ctx.arc(sx,sy,4,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='#3fb950'; ctx.stroke();
-
-    // Expansion path (dashed)
-    ctx.setLineDash([3,3]); ctx.strokeStyle='#3fb950'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(sx,pY(.1013)); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(sx,pY(.1013)); ctx.lineTo(tX(TATM),pY(.1013)); ctx.stroke();
-
-    // Animated expansion dot
-    const expT=t*2; // cycle time
-    const expPhase=(expT%1);
-    const ex=sx+(tX(TATM)-sx)*expPhase;
-    const ey=sy+(pY(.1013)-sy)*expPhase;
-    ctx.fillStyle='#3fb950';
-    ctx.beginPath(); ctx.arc(ex,ey,3+Math.sin(expT*Math.PI)*1.5,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='rgba(63,185,80,0.5)';
-    ctx.beginPath(); ctx.arc(ex,ey,6,0,Math.PI*2); ctx.stroke();
-
-    // Arrow
-    ctx.beginPath(); ctx.moveTo(tX(TATM),pY(.1013));
-    ctx.lineTo(tX(TATM)+5,pY(.1013)-3); ctx.lineTo(tX(TATM)+5,pY(.1013)+3);
-    ctx.closePath(); ctx.fillStyle='#3fb950'; ctx.fill();
-
-    // Axis labels
-    ctx.fillStyle='#6b7280'; ctx.font='8px monospace'; ctx.textAlign='center';
-    ctx.fillText('T °C',ax+aw/2,ay+11);
-    ctx.save(); ctx.translate(ax-8,ay-ah/2); ctx.rotate(-Math.PI/2); ctx.fillText('P (MPa)',0,0); ctx.restore();
-
-    // Tick marks
-    ctx.fillStyle='#484f58'; ctx.font='6px monospace';
-    for(let v=-60;v<=20;v+=20){ctx.fillText(v,tX(v),ay+4);}
-    ctx.textAlign='right';
-    for(let v=.1;v<=5;v*=2){ctx.fillText(v,ax-3,pY(v)+3);}
-  }
-
-  // ── METRICS (top right) ──
+  // ── METRICS (top right, taller) ──
   const mx=W-205, my=10, mw=195;
   ctx.fillStyle='rgba(13,17,23,0.92)'; ctx.strokeStyle='#30363d';
-  ctx.beginPath(); ctx.rect(mx,my,mw,230); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.rect(mx,my,mw,280); ctx.fill(); ctx.stroke();
 
   ctx.fillStyle='#8b949e'; ctx.font='10px monospace'; ctx.textAlign='left';
   ctx.fillText('📊 METRICS',mx+10,my+16);
 
   const rows=[
-    ['BUCKET FILL', buckKg.toFixed(2), 'kg', '#39d2c0'],
-    ['GAS WASTED', wasteKg.toFixed(2), 'kg', '#f0883e'],
+    ['BUCKET FILL', buckKg.toFixed(3), 'kg', '#39d2c0'],
+    ['GAS WASTED', wasteKg.toFixed(3), 'kg', '#f0883e'],
     ['EFFICIENCY', (sc.eff*100).toFixed(1), '%', '#3fb950'],
     ['SOLID FRAC.', (sc.sf*100).toFixed(1), '%', '#58a6ff'],
     ['WASTE RATIO', sc.wr.toFixed(2), 'kg/kg', '#f85149'],
     ['FLOW RATE', flow.toFixed(0), 'kg/h', '#a371f7'],
-    ['PARTICLE Ø', sc.ps.toFixed(0), 'μm', '#d29922'],
-    ['MECH CAPTURE', (sc.mech*100).toFixed(1), '%', '#8b949e']
+    ['PARTICLE Ø', sc.ps.toFixed(1), 'μm', '#d29922'],
+    ['MECH CAPTURE', (sc.mech*100).toFixed(1), '%', '#8b949e'],
+    ['FINAL TEMP', sc.tFinal.toFixed(1), '°C', '#f0883e']
   ];
   ctx.font='11px monospace';
   for(let r=0;r<rows.length;r++){
     const [l,v,u,c]=rows[r];
-    const y=my+32+r*25;
+    const y=my+32+r*28;
     ctx.fillStyle='#8b949e'; ctx.textAlign='left'; ctx.fillText(l,mx+10,y);
     ctx.fillStyle=c; ctx.textAlign='right'; ctx.fillText(v+' '+u,mx+mw-10,y);
   }
@@ -440,7 +421,7 @@ function loop(time){
   requestAnimationFrame(loop);
 }
 
-// UI binding
+// UI
 const sel=document.getElementById('scen');
 SCENARIOS.forEach((s,i)=>{
   const o=document.createElement('option');
@@ -466,13 +447,8 @@ document.getElementById('btnReset').addEventListener('click',()=>{
 document.getElementById('togPlume').addEventListener('click',function(){
   showGas=!showGas; this.classList.toggle('on',showGas);
 });
-document.getElementById('togPhase').addEventListener('click',function(){
-  showPhase=!showPhase; this.classList.toggle('on',showPhase);
-});
 
 window.addEventListener('resize',resize);
-
-// Start
 resize();
 requestAnimationFrame(loop);
 })();
