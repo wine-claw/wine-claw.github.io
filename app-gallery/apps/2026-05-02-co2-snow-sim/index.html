@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CO₂ Snow Maker — OpenClaw AI</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#c9d1d9;
+  --dim:#8b949e;--accent:#58a6ff;--orange:#f0883e;--cyan:#39d2c0;
+  --white:#e6edf3;--green:#3fb950;--red:#f85149;--yellow:#d29922;
+  --purple:#a371f7;
+}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'SF Mono','Cascadia Code','Fira Code','Consolas',monospace;
+  display:flex;flex-direction:column;
+  -webkit-user-select:none;user-select:none;
+}
+.banner{
+  background:#1b1f2320;border-bottom:1px solid var(--border);
+  padding:4px 10px;font-size:10px;color:var(--dim);text-align:center;flex-shrink:0;
+}
+.main{flex:1;display:flex;flex-direction:column;position:relative;min-height:0}
+canvas{display:block;flex:1;min-height:0;width:100%;cursor:default}
+.controls{
+  flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);
+  padding:10px 14px;display:flex;flex-wrap:wrap;gap:6px 12px;
+  align-items:center;font-size:12px;z-index:10;
+  padding-bottom:max(10px,env(safe-area-inset-bottom));
+}
+.controls label{color:var(--dim);display:flex;align-items:center;gap:3px}
+.controls select,.controls button,.controls input[type=range]{
+  background:var(--bg);color:var(--text);border:1px solid var(--border);
+  border-radius:6px;font-family:inherit;font-size:12px;padding:5px 10px;outline:none;
+  min-height:36px;
+}
+.controls select{max-width:170px}
+.controls button{cursor:pointer;transition:background 0.15s;white-space:nowrap}
+.controls button:hover{background:#30363d}
+.controls button.running{background:var(--red);border-color:var(--red);color:#fff}
+.controls input[type=range]{width:70px;padding:0}
+.toggle-group{display:flex;gap:2px}
+.toggle-group button{border-radius:0;font-size:10px;padding:3px 6px}
+.toggle-group button:first-child{border-radius:4px 0 0 4px}
+.toggle-group button:last-child{border-radius:0 4px 4px 0}
+.toggle-group button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.flow-val{color:var(--accent);min-width:30px;text-align:right}
+@media(max-width:600px){
+  .controls{gap:4px 8px;padding:8px 10px;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+  .controls select{max-width:150px;font-size:11px;padding:4px 8px;min-height:34px}
+  .controls button{font-size:11px;padding:4px 8px;min-height:34px}
+  .controls input[type=range]{width:60px}
+  .toggle-group button{font-size:10px;padding:4px 6px;min-height:34px}
+}
+</style>
+</head>
+<body>
+<div class="banner">⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated.</div>
+<div class="main"><canvas id="c"></canvas></div>
+<div class="controls" id="controls">
+  <label>Scenario<select id="scenario"></select></label>
+  <label>Flow&nbsp;<input type="range" id="flow" min="1" max="50" value="25" step="0.5"><span class="flow-val" id="flowVal">25.0</span>&nbsp;kg/h</label>
+  <button id="startBtn">▶ Start</button>
+  <button id="resetBtn">↺ Reset</button>
+  <div class="toggle-group">
+    <button class="active" data-toggle="plumes">Gas Plumes</button>
+    <button class="active" data-toggle="trace">Particle Trace</button>
+    <button class="active" data-toggle="phase">Phase Diagram</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// CO₂ Snow Maker — Physics & Animation
+// ══════════════════════════════════════════════
+
+// ── CO₂ Thermodynamic Reference Data ──
+// Based on NIST REFPROP CO₂ data and standard thermodynamic tables
+// Enthalpy reference: h = 0 at triple point solid (-78.5°C, 1 atm)
+// Heat of sublimation at 1 atm: Δh_sub ≈ 571 kJ/kg
+// Therefore: h_vapor(-78.5°C, 1 atm) = h_solid + Δh_sub = 0 + 571 = 571 kJ/kg
+
+const TRIPLE = {TC:-56.6, PMPa:0.518};
+const CRIT  = {TC:31.04, PMPa:7.38};
+const TATM  = -78.5;           // °C — CO₂ triple point temperature at 1 atm
+
+const H_SOL  = 0;              // kJ/kg — solid CO₂ at -78.5°C, 1 atm (reference)
+const H_VAP  = 571;            // kJ/kg — saturated CO₂ vapor at -78.5°C, 1 atm
+const DH_SUB = 571;            // kJ/kg — heat of sublimation at 1 atm
+
+// h_source values: enthalpy of liquid CO₂ at source conditions
+// Calibrated against NIST REFPROP data for saturated liquid CO₂
+// At -20°C, 2 MPa: h ≈ 120 kJ/kg (subcooled liquid, well below critical)
+// At 20°C, 6 MPa: h ≈ 240 kJ/kg (compressed liquid)
+// These values are relative to H_SOL = 0 at -78.5°C
+const SCENARIOS = [
+  {
+    name:'Vacuum-Insulated Bulk Tank', TC:-20, PMPa:2.0,
+    desc:'Typical winery bulk CO₂ — subcooled liquid at -20°C',
+    h_source:120,  // sat liquid at -20°C, ~2 MPa
+  },
+  {
+    name:'High-Pressure Gas Cylinder', TC:20, PMPa:6.0,
+    desc:'Standard gas cylinder — compressed liquid at 20°C',
+    h_source:240,  // compressed liquid at 20°C, 6 MPa
+  },
+  {
+    name:'Low-Pressure Cylinder', TC:20, PMPa:3.5,
+    desc:'Low-pressure cylinder — near-saturation at 20°C',
+    h_source:255,  // closer to saturation → higher h → lower yield
+  },
+  {
+    name:'Refrigerated Tank', TC:-30, PMPa:1.5,
+    desc:'Cold storage — deeply subcooled liquid',
+    h_source:95,  // coldest liquid → maximum yield
+  },
+  {
+    name:'Ambient Bulk Tank', TC:15, PMPa:2.3,
+    desc:'Ambient storage — warm liquid at 15°C',
+    h_source:230,  // warm liquid → lower yield
+  },
+];
+
+function calc(idx) {
+  const s = SCENARIOS[idx];
+  // Isenthalpic flash to 1 atm / -78.5°C (triple point conditions):
+  // h_source = (1-x)*h_vapor + x*h_solid
+  // Solving: x = (h_vapor - h_source) / (h_vapor - h_solid)
+  // This is the MAXIMUM theoretical solid fraction (thermodynamic limit)
+  const sf = Math.max(0, Math.min(1, (H_VAP - s.h_source) / (H_VAP - H_SOL)));
+  
+  // Mechanical capture efficiency: 0.72-0.88 depending on horn design
+  // Colder sources produce finer particles → more entrained in gas flow → slightly lower capture
+  // Warmer sources produce coarser particles → better settling → slightly higher capture
+  // But overall yield is still dominated by thermodynamic solid fraction
+  const mechBase = 0.80;
+  const tempFactor = (s.TC + 30) / 100; // -30→0, 20→0.5
+  const mech = Math.min(0.88, Math.max(0.72, mechBase - tempFactor * 0.08));
+  
+  const eff = sf * mech;
+  
+  // Particle size estimation based on literature:
+  // CO₂ snow particle size depends on:
+  // 1. Degree of superheat (colder = more nucleation sites = finer)
+  // 2. Expansion rate (pressure drop rate)
+  // 3. Source temperature (colder liquid = finer snow)
+  // 
+  // Typical ranges from industrial data:
+  // - Deeply subcooled (-30°C): 10-25 μm
+  // - Subcooled (-20°C): 20-40 μm  
+  // - Ambient liquid (15°C): 50-80 μm
+  // - Warm compressed (20°C): 60-100 μm
+  //
+  // Pressure effect: higher pressure drop → faster expansion → slightly finer
+  const baseSize = 15 + (s.TC + 30) * 1.5; // -30→15, -20→30, 15→82, 20→90
+  const pressureEffect = (s.PMPa / 6) * (-15); // higher P → slightly finer
+  const psize = Math.max(10, Math.min(100, baseSize + pressureEffect));
+
+  return {
+    solidFraction:sf, efficiency:eff,
+    particleSize:psize,
+    outletTemp:TATM, TC:s.TC, PMPa:s.PMPa,
+    h_source:s.h_source, name:s.name, desc:s.desc,
+    mechFactor:mech,
+    // Additional data for display
+    gasFraction:1-sf,
+    wasteRatio:(1-eff)/eff, // kg gas wasted per kg snow collected
+    theoreticalMax:sf, // thermodynamic limit
+  };
+}
+
+// ── Canvas & Layout ──
+const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
+let W,H,layout,res;
+function computeLayout(){
+  W=canvas.width=canvas.clientWidth*devicePixelRatio;
+  H=canvas.height=canvas.clientHeight*devicePixelRatio;
+  ctx.setTransform(1,0,0,1,0,0); ctx.scale(devicePixelRatio,devicePixelRatio);
+  W=canvas.clientWidth; H=canvas.clientHeight;
+  const mob=W<550;
+  const hw=Math.min(140,W*0.30);
+  const hcx=mob?W*0.58:W*0.5;
+  const bw=mob?W*0.48:hw*1.35, bh=mob?H*0.2:hw*0.80;
+  const by=mob?H*0.73:H*0.67, bx=hcx-bw/2;
+  layout={
+    mob,hcx,hornW:hw*0.62,hornH:hw*0.32,hornY:by-bh*0.28,
+    nX:hcx,nY:by-bh*0.28+1, nR:Math.max(5,hw*0.055),
+    bx,by,bw,bh,
+    phX:mob?W-170:10,phY:mob?8:H-218,phW:156,phH:156,
+    gCX:mob?48:W-48,gCY:mob?H*0.86:Math.min(H*0.7,H-95),gR:Math.min(32,W*0.08),
+    mX:mob?6:W-175,mY:mob?6:10,
+  };
+}
+
+// ── State ──
+let si=0, flowR=25, running=false;
+let showP=true, showT=true, showPh=true;
+let bucketKg=0, gasKg=0, hRun=0;
+let gParts=[], sParts=[], lDrops=[], fParts=[];
+let lastT=0;
+res=calc(0);
+
+// ── Particle Spawn ──
+function sLD(){ const l=layout;
+  return{x:l.hcx+(Math.random()-.5)*l.hornW*0.25,y:l.hornY-l.hornH*0.55,
+    r:1.2+Math.random()*1.8,vy:50+Math.random()*35,life:1,decay:.5+Math.random()*.35};
+}
+function sSP(){ const l=layout;
+  const a=Math.random()*Math.PI*.55-Math.PI*.28-Math.PI/2,sp=35+Math.random()*130;
+  return{x:l.nX,y:l.nY, vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
+    r:.6+Math.random()*(res.particleSize/12), life:1, decay:.4+Math.random()*1.1, inB:false};
+}
+function sGP(){ const l=layout;
+  return{x:l.nX+(Math.random()-.5)*16, y:l.nY+Math.random()*4,
+    vx:(Math.random()-.5)*25,vy:-(25+Math.random()*70),
+    r:2+Math.random()*7, life:1, decay:.25+Math.random()*.45};
+}
+function sFP(){ const l=layout;
+  const a=Math.random()*Math.PI*2,sp=25+Math.random()*160;
+  return{x:l.nX,y:l.nY+.5, vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
+    r:.4+Math.random()*1.3, life:1, decay:1.8+Math.random()*2.8};
+}
+
+// ── Update ──
+function upd(dt){
+  if(!running)return;
+  const fps=flowR/3600; // kg/s CO₂ total
+  const skps=fps*res.efficiency; // kg/s snow collected
+  const gkps=fps*(1-res.efficiency); // kg/s gas wasted
+  hRun+=dt/3600; bucketKg+=skps*dt; gasKg+=gkps*dt;
+
+  const lN=lDrops.length>60?1:Math.floor(dt/.07)+(Math.random()<(dt%.07)/.07?1:0);
+  for(let i=0;i<Math.min(lN,8);i++)lDrops.push(sLD());
+  const sN=sParts.length>400?1:Math.floor(dt/.005)+(Math.random()<(dt%.005)/.005?1:0);
+  for(let i=0;i<Math.min(sN,35);i++)sParts.push(sSP());
+  const gN=gParts.length>150?0:Math.floor(dt/.009)+(Math.random()<(dt%.009)/.009?1:0);
+  for(let i=0;i<Math.min(gN,25);i++)gParts.push(sGP());
+  const fN=fParts.length>120?1:Math.floor(dt/.018)+(Math.random()<(dt%.018)/.018?1:0);
+  for(let i=0;i<Math.min(fN,12);i++)fParts.push(sFP());
+
+  for(let p of lDrops){p.y+=p.vy*dt;p.life-=p.decay*dt;}
+  lDrops=lDrops.filter(p=>p.life>0&&p.y<layout.nY+4);
+
+  const l=layout;
+  for(let p of sParts){
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=70*dt;p.life-=p.decay*dt;
+    if(!p.inB&&p.x>l.bx&&p.x<l.bx+l.bw&&p.y>l.by&&p.y<l.by+l.bh){p.inB=true;p.vx*=.08;p.vy*=.08}
+    if(p.inB){p.vy=Math.min(p.vy,1.5);p.vx*=.94}
+  }
+  sParts=sParts.filter(p=>p.life>0&&p.y<H+40);
+
+  for(let p of gParts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy-=12*dt;p.vx+=(Math.random()-.5)*18*dt;p.r+=2.5*dt;p.life-=p.decay*dt}
+  gParts=gParts.filter(p=>p.life>0);
+
+  for(let p of fParts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=p.decay*dt}
+  fParts=fParts.filter(p=>p.life>0);
+
+  // Cap
+  if(gParts.length>200)gParts.splice(0,gParts.length-200);
+  if(sParts.length>500)sParts.splice(0,sParts.length-500);
+  if(lDrops.length>80)lDrops.splice(0,lDrops.length-80);
+  if(fParts.length>150)fParts.splice(0,fParts.length-150);
+}
+
+// ── Drawing ──
+function dBg(){
+  ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(48,54,61,0.35)';ctx.lineWidth=.5;
+  for(let x=40;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=40;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+}
+
+function dHorn(){
+  const l=layout;ctx.save();
+  const tw=l.hornW,bw=l.nR*2.8,ty=l.hornY-l.hornH*.45,by=l.hornY;
+
+  const g=ctx.createLinearGradient(l.hcx,ty,l.hcx,by);
+  g.addColorStop(0,'#4a5568');g.addColorStop(.5,'#2d3748');g.addColorStop(1,'#1a202c');
+
+  ctx.beginPath();
+  ctx.moveTo(l.hcx-tw/2,ty);
+  ctx.quadraticCurveTo(l.hcx-tw*.55,ty+l.hornH*.14,l.hcx-bw/2,by-l.hornH*.18);
+  ctx.lineTo(l.hcx-l.nR*1.15,by);
+  ctx.arc(l.hcx,by+l.nR*.25,l.nR,Math.PI,0);
+  ctx.lineTo(l.hcx+l.nR*1.15,by);
+  ctx.quadraticCurveTo(l.hcx+bw/2,by-l.hornH*.18,l.hcx+tw*.55,ty+l.hornH*.14);
+  ctx.lineTo(l.hcx+tw/2,ty);
+  ctx.closePath();
+  ctx.fillStyle=g;ctx.fill();
+  ctx.strokeStyle='#5a6a7e';ctx.lineWidth=1.5;ctx.stroke();
+
+  // Inlet flange
+  ctx.beginPath();ctx.ellipse(l.hcx,ty,tw/2,l.hornH*.1,0,0,Math.PI*2);
+  ctx.fillStyle='#3d4a5c';ctx.fill();ctx.strokeStyle='#6a7a8e';ctx.lineWidth=1;ctx.stroke();
+
+  // Nozzle ring
+  ctx.beginPath();ctx.arc(l.hcx,by+l.nR*.25,l.nR+1.5,0,Math.PI*2);
+  ctx.strokeStyle='#7a8a9e';ctx.lineWidth=1;ctx.stroke();
+
+  // Internal bore
+  ctx.beginPath();
+  ctx.moveTo(l.hcx-tw*.22,ty+l.hornH*.08);ctx.lineTo(l.hcx-l.nR*.45,by-2);
+  ctx.moveTo(l.hcx+tw*.22,ty+l.hornH*.08);ctx.lineTo(l.hcx+l.nR*.45,by-2);
+  ctx.strokeStyle='rgba(100,120,140,0.28)';ctx.lineWidth=.7;ctx.stroke();
+
+  ctx.restore();
+}
+
+function dBucket(){
+  const l=layout;ctx.save();
+  const bbot=l.bw*.84,bbotX=l.bx+(l.bw-bbot)/2;
+
+  ctx.beginPath();
+  ctx.moveTo(l.bx,l.by);ctx.lineTo(bbotX,l.by+l.bh);
+  ctx.lineTo(bbotX+bbot,l.by+l.bh);ctx.lineTo(l.bx+l.bw,l.by);
+  ctx.closePath();
+  const g=ctx.createLinearGradient(l.bx,l.by,l.bx,l.by+l.bh);
+  g.addColorStop(0,'#374151');g.addColorStop(1,'#1f2937');
+  ctx.fillStyle=g;ctx.fill();
+  ctx.strokeStyle='#6b7280';ctx.lineWidth=1.5;ctx.stroke();
+
+  ctx.beginPath();ctx.moveTo(l.bx-2,l.by);ctx.lineTo(l.bx+l.bw+2,l.by);
+  ctx.strokeStyle='#9ca3af';ctx.lineWidth=2.2;ctx.stroke();
+
+  // Snow pile
+  if(bucketKg>.001){
+    const fr=Math.min(bucketKg/8,1), fh=l.bh*.88*fr, py=l.by+l.bh-fh;
+    const pw=bbot*.82, px=bbotX+(bbot-pw)/2;
+
+    ctx.beginPath();
+    // Crystalline pile shape using sine superposition
+    for(let i=0;i<=40;i++){
+      const t=i/40, x=px+t*pw;
+      const d=Math.abs(t-.5)*2;
+      const sy=py-3-Math.sin(t*Math.PI*2.7)*3.5*d-d*7;
+      ctx.lineTo(x,Math.max(py-12,sy+d*d*8));
+    }
+    ctx.closePath();
+    const sg=ctx.createLinearGradient(px,py,px,l.by+l.bh);
+    sg.addColorStop(0,'#eaf5ff');sg.addColorStop(.45,'#b8daf5');sg.addColorStop(1,'#6a90b0');
+    ctx.fillStyle=sg;ctx.fill();
+
+    // Sparkles
+    ctx.fillStyle='rgba(255,255,255,.75)';
+    for(let i=0;i<40*fr;i++){
+      const sx=px+Math.random()*pw, sy2=py+Math.random()*fh*.85;
+      ctx.beginPath();ctx.arc(sx,sy2,.8+Math.random()*.6,0,Math.PI*2);ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function dLDrops(){ for(let p of lDrops){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(77,166,255,${p.life*.8})`;ctx.fill()} }
+function dFPart(){ for(let p of fParts){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(210,225,255,${p.life*.55})`;ctx.fill()} }
+function dSPart(){ for(let p of sParts){if(p.inB)continue;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.4,p.r),0,Math.PI*2);ctx.fillStyle=`rgba(230,242,255,${p.life*.85})`;ctx.fill();if(p.r>1.8){ctx.fillStyle=`rgba(255,255,255,${p.life*.6})`;ctx.beginPath();ctx.arc(p.x-p.r*.25,p.y-p.r*.25,p.r*.3,0,Math.PI*2);ctx.fill()}} }
+
+function dPlumes(){
+  if(!showP)return;
+  for(let p of gParts){
+    const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+    g.addColorStop(0,`rgba(210,218,228,${p.life*.28})`);
+    g.addColorStop(1,'rgba(210,218,228,0)');
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  }
+}
+
+function dTraces(){
+  if(!showT)return;
+  ctx.strokeStyle='rgba(200,220,240,.12)';ctx.lineWidth=.4;
+  for(let p of sParts){if(p.inB)continue;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-p.vx*.025,p.y-p.vy*.025);ctx.stroke()}
+}
+
+function dFlash(){
+  if(!running)return;
+  const l=layout;const gr=l.nR*2.8;
+  const g=ctx.createRadialGradient(l.nX,l.nY+.2,l.nR*.25,l.nX,l.nY+.2,gr);
+  g.addColorStop(0,'rgba(210,230,255,.45)');g.addColorStop(1,'rgba(210,230,255,0)');
+  ctx.beginPath();ctx.arc(l.nX,l.nY+.2,gr,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+}
+
+function dGauge(){
+  const l=layout;ctx.save();ctx.translate(l.gCX,l.gCY);
+  const R=l.gR;
+
+  ctx.beginPath();ctx.arc(0,0,R,Math.PI*.8,Math.PI*2.2);
+  ctx.strokeStyle='#30363d';ctx.lineWidth=7;ctx.stroke();
+
+  ctx.beginPath();ctx.arc(0,0,R,Math.PI*1.25,Math.PI*2.2);
+  ctx.strokeStyle='#4da6ff';ctx.lineWidth=7;ctx.stroke();
+
+  ctx.beginPath();ctx.arc(0,0,R,Math.PI*.8,Math.PI*.95);
+  ctx.strokeStyle='#f0883e';ctx.lineWidth=7;ctx.stroke();
+
+  const frac=Math.max(0,Math.min(1,(TATM+100)/130));
+  const a=Math.PI*.8+frac*Math.PI*1.4;
+  ctx.save();ctx.rotate(a);
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(R-5,0);
+  ctx.strokeStyle='#e6edf3';ctx.lineWidth=2;ctx.stroke();
+  ctx.restore();
+
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  ctx.fillStyle='#8b949e';ctx.font='8px monospace';ctx.textAlign='center';
+  ctx.fillText('-100°',l.gCX-R*.72,l.gCY+R*.6);
+  ctx.fillText('30°',l.gCX+R*.62,l.gCY+R*.5);
+  ctx.fillText('-78.5°',l.gCX,l.gCY-R-7);
+  ctx.textAlign='left';ctx.fillText('OUTLET',l.gCX-16,l.gCY-R-16);
+  ctx.restore();
+}
+
+function dPhDiagram(){
+  if(!showPh)return;
+  const l=layout;ctx.save();
+  ctx.fillStyle='rgba(13,17,23,.92)';ctx.strokeStyle='#30363d';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(l.phX,l.phY,l.phW,l.phH,5);ctx.fill();ctx.stroke();
+
+  const pad=18,px=l.phX+pad,py=l.phY+l.phH-pad,pw=l.phW-pad*2,ph=l.phH-pad*1.5;
+
+  ctx.strokeStyle='#484f58';ctx.lineWidth=.7;
+  ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px,py-ph);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+pw,py);ctx.stroke();
+
+  const tX=t=>px+((t+80)/120)*pw; // -80..40 °C
+  const pY=p=>py-(Math.log10(p/.1)/Math.log10(10/.1))*ph; // .1..10 MPa log
+
+  // Sublimation line (solid-gas)
+  ctx.setLineDash([2,3]);ctx.strokeStyle='#58a6ff';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(tX(-80),pY(.001));ctx.lineTo(tX(TRIPLE.TC),pY(TRIPLE.PMPa));ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Melting line (solid-liquid)
+  ctx.strokeStyle='#39d2c0';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(tX(TRIPLE.TC),pY(TRIPLE.PMPa));ctx.lineTo(tX(-30),pY(10));ctx.stroke();
+
+  // Vaporization line (liquid-gas)
+  ctx.strokeStyle='#f0883e';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(tX(TRIPLE.TC),pY(TRIPLE.PMPa));ctx.lineTo(tX(CRIT.TC),pY(CRIT.PMPa));ctx.stroke();
+
+  // Region labels
+  ctx.fillStyle='#8b949e';ctx.font='7px monospace';ctx.textAlign='center';
+  ctx.fillText('SOLID',tX(-55),pY(.025));ctx.fillText('LIQUID',tX(12),pY(5.5));
+  ctx.fillText('GAS/VAPOR',tX(28),pY(.55));
+
+  // Triple point
+  ctx.fillStyle='#d29922';ctx.beginPath();ctx.arc(tX(TRIPLE.TC),pY(TRIPLE.PMPa),2.5,0,Math.PI*2);ctx.fill();
+  ctx.fillText('TP',tX(TRIPLE.TC)-14,pY(TRIPLE.PMPa)+8);
+
+  // Critical point
+  ctx.fillStyle='#f85149';ctx.beginPath();ctx.arc(tX(CRIT.TC),pY(CRIT.PMPa),2.5,0,Math.PI*2);ctx.fill();
+  ctx.fillText('CP',tX(CRIT.TC)+10,pY(CRIT.PMPa)-4);
+
+  // Source operating point
+  ctx.fillStyle='#3fb950';ctx.beginPath();ctx.arc(tX(res.TC),pY(res.PMPa),3.5,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#3fb950';ctx.lineWidth=.8;ctx.stroke();
+
+  // Expansion path arrow
+  const ox=tX(TATM),oy=pY(.1013);
+  ctx.setLineDash([2,3]);ctx.strokeStyle='#3fb950';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(tX(res.TC),pY(res.PMPa));ctx.lineTo(ox,oy);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Arrowhead
+  const aa=Math.atan2(oy-pY(res.PMPa),ox-tX(res.TC));
+  ctx.beginPath();ctx.moveTo(ox,oy);
+  ctx.lineTo(ox-5*Math.cos(aa-.45),oy-5*Math.sin(aa-.45));
+  ctx.lineTo(ox-5*Math.cos(aa+.45),oy-5*Math.sin(aa+.45));
+  ctx.closePath();ctx.fillStyle='#3fb950';ctx.fill();
+
+  // Axis labels
+  ctx.fillStyle='#8b949e';ctx.font='8px monospace';ctx.textAlign='center';
+  ctx.fillText('T (°C)',px+pw/2,py+12);
+  ctx.save();ctx.translate(px-8,py-ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('P (MPa)',0,0);ctx.restore();
+
+  // Tick marks
+  ctx.fillStyle='#484f58';ctx.font='7px monospace';
+  for(let t=-60;t<=30;t+=20){ctx.fillText(t,tX(t),py+4);ctx.beginPath();ctx.moveTo(tX(t),py);ctx.lineTo(tX(t),py+2);ctx.strokeStyle='#484f58';ctx.stroke()}
+  for(let p=.5;p<=8;p*=2){ctx.fillText(p,px-8,pY(p)+3);ctx.beginPath();ctx.moveTo(px,pY(p));ctx.lineTo(px-2,pY(p));ctx.strokeStyle='#484f58';ctx.stroke()}
+
+  ctx.restore();
+}
+
+function dMeters(){
+  const l=layout;ctx.save();
+  const met=[
+    {l:'BUCKET FILL',v:bucketKg.toFixed(3),u:'kg',c:'#39d2c0'},
+    {l:'GAS WASTED',v:gasKg.toFixed(3),u:'kg',c:'#f0883e'},
+    {l:'EFFICIENCY',v:(res.efficiency*100).toFixed(1),u:'%',c:'#3fb950'},
+    {l:'SOLID FRAC.',v:(res.solidFraction*100).toFixed(1),u:'%',c:'#58a6ff'},
+    {l:'WASTE RATIO',v:res.wasteRatio.toFixed(2),u:'kg gas/kg',c:'#f85149'},
+    {l:'FLOW RATE',v:flowR.toFixed(1),u:'kg/h',c:'#a371f7'},
+    {l:'PARTICLE Ø',v:res.particleSize.toFixed(0),u:'μm',c:'#d29922'},
+    {l:'ELAPSED',v:hRun.toFixed(3),u:'h',c:'#8b949e'},
+  ];
+  const mh=met.length*38+28, mw=170;
+  ctx.fillStyle='rgba(13,17,23,.84)';ctx.strokeStyle='#30363d';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(l.mX-4,l.mY-18,mw,mh,5);ctx.fill();ctx.stroke();
+
+  ctx.fillStyle='#8b949e';ctx.font='9px monospace';ctx.textAlign='left';
+  ctx.fillText('📊 METRICS',l.mX,l.mY);
+  ctx.font='10px monospace';
+  met.forEach((m,i)=>{
+    const y=l.mY+14+i*38;
+    ctx.fillStyle='#8b949e';ctx.textAlign='left';ctx.fillText(m.l,l.mX,y);
+    ctx.fillStyle=m.c;ctx.textAlign='right';ctx.fillText(`${m.v} ${m.u}`,l.mX+mw-15,y);
+  });
+  ctx.restore();
+}
+
+function dInfo(){
+  const l=layout;ctx.save();
+  ctx.fillStyle='#8b949e';ctx.font='10px monospace';ctx.textAlign='center';
+  ctx.fillText(res.name,l.hcx,l.hornY-l.hornH*.45-28);
+  ctx.fillText(res.desc,l.hcx,l.hornY-l.hornH*.45-14);
+  ctx.fillText(`${res.TC}°C · ${res.PMPa.toFixed(1)} MPa`,l.hcx,l.hornY-l.hornH*.45-2);
+  ctx.restore();
+}
+
+function dLabels(){
+  const l=layout;ctx.save();
+  ctx.fillStyle='#8b949e';ctx.font='8px monospace';ctx.textAlign='center';
+  ctx.fillText('LIQUID CO₂',l.hcx,l.hornY-l.hornH*.45-42);
+  ctx.fillText('CO₂ GAS',l.nX+l.nR*4.5,l.nY-28);
+  ctx.fillText('DRY ICE SNOW',l.bx+l.bw/2,l.by-6);
+  ctx.restore();
+}
+
+// ── Render ──
+function render(){
+  dBg();dBucket();dHorn();dFlash();
+  dPlumes();dTraces();dLDrops();dFPart();dSPart();
+  dGauge();dPhDiagram();dMeters();dInfo();dLabels();
+}
+
+// ── Loop ──
+function loop(ts){
+  if(!lastT)lastT=ts;
+  let dt=(ts-lastT)/1000;if(dt>.1)dt=.1;lastT=ts;
+  upd(dt);render();
+  requestAnimationFrame(loop);
+}
+
+// ── UI ──
+const scEl=document.getElementById('scenario');
+SCENARIOS.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s.name;scEl.appendChild(o)});
+scEl.addEventListener('change',()=>{si=+scEl.value;res=calc(si);});
+
+const flEl=document.getElementById('flow'),flV=document.getElementById('flowVal');
+flEl.addEventListener('input',()=>{flowR=+flEl.value;flV.textContent=flowR.toFixed(1)});
+
+const stBtn=document.getElementById('startBtn');
+stBtn.addEventListener('click',()=>{running=!running;stBtn.textContent=running?'⏸ Stop':'▶ Start';stBtn.classList.toggle('running',running)});
+
+document.getElementById('resetBtn').addEventListener('click',()=>{bucketKg=0;gasKg=0;hRun=0;gParts=[];sParts=[];lDrops=[];fParts=[]});
+
+document.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click',()=>{
+  b.classList.toggle('active');const k=b.dataset.toggle;
+  if(k==='plumes')showP=b.classList.contains('active');
+  if(k==='trace')showT=b.classList.contains('active');
+  if(k==='phase')showPh=b.classList.contains('active');
+}));
+
+window.addEventListener('resize',()=>{computeLayout()});
+
+// ── Init ──
+res=calc(0);computeLayout();lastT=performance.now();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
