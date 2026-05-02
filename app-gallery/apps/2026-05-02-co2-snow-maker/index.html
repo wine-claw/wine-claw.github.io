@@ -90,9 +90,9 @@ function spawnSnow(){
 }
 function spawnGas(){
   if(!showGas)return;
-  const cx=W*.30, hb=H*.42, gy=hb+H*.03;
-  for(let k=0;k<10;k++){
-    gasP.push({x:cx+(Math.random()-.5)*140, y:gy+Math.random()*20, vx:(Math.random()-.5)*60, vy:-(100+Math.random()*200), r:25+Math.random()*50, life:1, ph:Math.random()*Math.PI*2});
+  const cx=W*.30, hb=H*.42, gy=hb+H*.05;
+  for(let k=0;k<4;k++){
+    gasP.push({x:cx+(Math.random()-.5)*140, y:gy+Math.random()*20, vx:(Math.random()-.5)*50, vy:-(80+Math.random()*160), r:20+Math.random()*40, life:1, ph:Math.random()*Math.PI*2});
   }
 }
 
@@ -104,8 +104,20 @@ function update(dt){
   t+=dt;
 
   if(liqP.length<30) spawnLiq();
-  if(snowP.length<250) for(let i=0;i<3;i++) spawnSnow();
-  if(gasP.length<400) spawnGas();
+  
+  // Continuous snow spawn based on flow rate
+  const snowPerSec = flow * 0.5;
+  const toSpawn = Math.floor(snowPerSec * dt);
+  for(let i=0;i<toSpawn;i++) spawnSnow();
+  
+  // Always spawn at least some
+  if(Math.random()<snowPerSec*dt-toSpawn) spawnSnow();
+  
+  // Continuous gas spawn
+  const gasPerSec = flow * 0.4;
+  const gasToSpawn = Math.floor(gasPerSec * dt);
+  for(let i=0;i<gasToSpawn;i++) spawnGas();
+  if(Math.random()<gasPerSec*dt-gasToSpawn) spawnGas();
 
   // Liquid - fall through horn
   for(let p of liqP){
@@ -115,7 +127,7 @@ function update(dt){
   liqP=liqP.filter(p=>p.life>0&&p.y<H*.35);
 
   // Bucket params matching draw
-  const bx=W*.08, bw=W*.30, by=H*.52, bh=H*.22;
+  const bx=W*.08, bw=W*.30, by=H*.55, bh=H*.22;
   const bB=by+bh;
 
   // Snow - gravity + bucket capture
@@ -131,7 +143,8 @@ function update(dt){
       if(!p.inB){p.inB=true;p.vx*=0.15;p.vy*=0.05;}
       if(p.y>bB-6){p.y=bB-6;p.vy=0;p.vx*=0.3;}
     } else if(p.y>bB){p.life=0;}
-    p.life-=dt*.08;
+    // Don't decay life for settled particles
+    if(!p.inB) p.life-=dt*.05;
   }
   snowP=snowP.filter(p=>p.life>0);
 
@@ -140,7 +153,7 @@ function update(dt){
     p.y+=p.vy*dt;
     p.x+=p.vx*dt+Math.sin(p.ph+t*4)*20*dt;
     p.r+=dt*3;
-    p.life-=dt*.15;
+    p.life-=dt*.12;
   }
   gasP=gasP.filter(p=>p.life>0);
 }
@@ -163,10 +176,10 @@ function draw(){
   // ── Layout coordinates ──
   const cx=W*.30;
   const nt=W*.04;      // horn top radius
-  const nb=W*.18;      // horn bottom radius
+  const nb=W*.13;      // horn bottom radius (narrower than bucket)
   const hy=H*.08;      // horn top Y
   const hb=H*.42;      // horn bottom Y
-  const gap=H*.03;
+  const gap=H*.05;     // gap between horn and bucket
   // Bucket
   const bx=W*.08, bw=W*.30;
   const by=hb+gap;
@@ -289,15 +302,15 @@ function draw(){
     }
   }
 
-  // ── GAS PLUMES ──
+  // ── GAS PLUMES (more transparent, continuous) ──
   for(let p of gasP){
     const a=p.life;
-    // Large grey cloud
+    // Large grey cloud - more transparent
     ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(200,210,220,${a*.5})`; ctx.fill();
+    ctx.fillStyle=`rgba(180,190,205,${a*.25})`; ctx.fill();
     // Lighter core
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.4,0,Math.PI*2);
-    ctx.fillStyle=`rgba(240,245,250,${a*.65})`; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.35,0,Math.PI*2);
+    ctx.fillStyle=`rgba(220,230,240,${a*.35})`; ctx.fill();
   }
 
   // Nozzle flash
@@ -362,6 +375,16 @@ function draw(){
     ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(sx,pY(.1013)); ctx.stroke();
     ctx.setLineDash([]);
     ctx.beginPath(); ctx.moveTo(sx,pY(.1013)); ctx.lineTo(tX(TATM),pY(.1013)); ctx.stroke();
+
+    // Animated expansion dot
+    const expT=t*2; // cycle time
+    const expPhase=(expT%1);
+    const ex=sx+(tX(TATM)-sx)*expPhase;
+    const ey=sy+(pY(.1013)-sy)*expPhase;
+    ctx.fillStyle='#3fb950';
+    ctx.beginPath(); ctx.arc(ex,ey,3+Math.sin(expT*Math.PI)*1.5,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(63,185,80,0.5)';
+    ctx.beginPath(); ctx.arc(ex,ey,6,0,Math.PI*2); ctx.stroke();
 
     // Arrow
     ctx.beginPath(); ctx.moveTo(tX(TATM),pY(.1013));
