@@ -2,23 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CO₂ Snow Maker</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;color:#c9d1d9;font-family:'SF Mono',monospace;font-size:13px}
-#warn{background:#2d1f1f;border-bottom:1px solid #5a3a3a;padding:3px 10px;font-size:10px;color:#f0883e;text-align:center}
-#app{display:flex;flex-direction:column;height:calc(100% - 22px)}
-#canvas-wrap{flex:1;position:relative;min-height:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;color:#c9d1d9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px}
+#warn{background:#2d1f1f;border-bottom:1px solid #5a3a3a;padding:3px 8px;font-size:10px;color:#f0883e;text-align:center;flex-shrink:0}
+#app{display:flex;flex-direction:column;height:100vh}
+#canvas-wrap{flex:1;position:relative;min-height:0;overflow:hidden}
 canvas{display:block;width:100%;height:100%}
-#controls{flex-shrink:0;background:#161b22;border-top:1px solid #30363d;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:12px}
-#controls label{color:#8b949e;display:flex;align-items:center;gap:4px}
-#controls select,#controls button,#controls input{background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;padding:4px 8px;font-family:inherit;font-size:11px;cursor:pointer}
+#controls{flex-shrink:0;background:#161b22;border-top:1px solid #30363d;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:11px}
+#controls label{color:#8b949e;display:flex;align-items:center;gap:3px;white-space:nowrap}
+#controls select,#controls button,#controls input{background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;padding:3px 6px;font-family:inherit;font-size:10px;cursor:pointer}
 #controls button:hover{background:#21262d}
 #controls button.on{background:#238636;border-color:#238636;color:#fff}
-#controls input[type=range]{width:60px;padding:0}
-#flowVal{color:#58a6ff;min-width:32px;text-align:right}
-@media(max-width:500px){#controls{font-size:10px;padding:5px}#controls select{max-width:130px}}
+#controls input[type=range]{width:50px;padding:0}
+#flowVal{color:#58a6ff;min-width:24px;text-align:right;font-size:10px}
+@media(max-width:500px){
+  #controls{font-size:9px;padding:4px}
+  #controls select{max-width:110px}
+}
 </style>
 </head>
 <body>
@@ -27,7 +30,7 @@ canvas{display:block;width:100%;height:100%}
 <div id="canvas-wrap"><canvas id="c"></canvas></div>
 <div id="controls">
   <label>Source<select id="scen"></select></label>
-  <label>Flow <input id="flow" type="range" min="5" max="60" value="25" step="1"><span id="flowVal">25</span> kg/h</label>
+  <label>Flow <input id="flow" type="range" min="5" max="60" value="25" step="1"><span id="flowVal">25</span></label>
   <button id="btnRun">▶ Start</button>
   <button id="btnReset">↺ Reset</button>
   <button id="togPlume" class="on">Gas</button>
@@ -37,14 +40,9 @@ canvas{display:block;width:100%;height:100%}
 (function(){
 const canvas=document.getElementById('c');
 const ctx=canvas.getContext('2d');
-let W,H,DPR=1;
+let W,H;
 
-// ── NIST CO₂ Thermodynamics ──
-const TP_T=-56.6, TP_P=0.518;
-const CP_T=31.04, CP_P=7.38;
-const T_SUB=-78.5;
-const H_SOL=0, H_LIQ=137, H_VAP=571;
-
+// ── CO₂ Thermodynamics (NIST) ──
 const SCENARIOS=[
   {name:'Vacuum-Insulated Bulk',T:-20,P:2.0,h:120},
   {name:'High-Pressure Cylinder',T:20,P:6.0,h:240},
@@ -54,45 +52,64 @@ const SCENARIOS=[
 ];
 
 function calc(s){
+  const H_VAP=571, H_SOL=0;
+  const T_SUB=-78.5, CP_P=7.38;
   const sf=Math.max(0,Math.min(1,(H_VAP-s.h)/(H_VAP-H_SOL)));
   const mech=Math.min(0.90,Math.max(0.65,0.75+(T_SUB-s.T)/100*0.15));
   const eff=sf*mech;
   const wr=eff>0.001?(1-eff)/eff:999;
   const ps=Math.max(10,Math.min(100,30+(s.T-T_SUB)*0.4+(s.P/CP_P)*(-10)));
-  const tFinal=T_SUB*sf+s.T*(1-sf);
-  return {...s, sf, mech, eff, wr, ps, tFinal};
+  return {...s, sf, mech, eff, wr, ps};
 }
 
 let si=0, sc=calc(SCENARIOS[0]);
 let flow=25, running=false;
 let buckKg=0, wasteKg=0, t=0;
 let showGas=true;
-let snowP=[], gasP=[], liqP=[];
+let snowP=[], gasP=[];
 
 function resize(){
-  DPR=Math.min(window.devicePixelRatio||1,2);
   const r=canvas.getBoundingClientRect();
-  W=canvas.width=Math.floor(r.width*DPR);
-  H=canvas.height=Math.floor(r.height*DPR);
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-  W=r.width; H=r.height;
+  W=canvas.width=r.width;
+  H=canvas.height=r.height;
 }
 
-function spawnLiq(){
-  const cx=W/2;
-  liqP.push({x:cx+(Math.random()-.5)*6, y:H*.12, r:1+Math.random()*2, vy:25+Math.random()*20, life:1});
-}
+// Spawn snow from the BOTTOM EDGE of the horn (where it widens), not from center
 function spawnSnow(){
-  const cx=W/2, hb=H*.38;
-  const a=(Math.random()-.5)*.4+Math.PI/2;
-  const sp=15+Math.random()*60;
-  snowP.push({x:cx+(Math.random()-.5)*6, y:hb, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:1+Math.random()*2.5, life:1, inB:false, settled:false});
+  const cx=W/2, hb=H*.35; // horn bottom Y
+  const nb=W*.11; // horn bottom half-width
+  // Spawn across the full width of the horn bottom, not a single point
+  const spawnX=cx+(Math.random()-.5)*nb*2;
+  const spawnY=hb;
+  // Fan out downward
+  const a=Math.PI/2+(Math.random()-.5)*0.8;
+  const sp=10+Math.random()*40;
+  snowP.push({
+    x:spawnX, y:spawnY,
+    vx:Math.cos(a)*sp, vy:Math.sin(a)*sp,
+    r:1+Math.random()*2,
+    life:1, inB:false, settled:false
+  });
 }
+
+// Spawn gas from the ENTIRE gap between horn bottom and bucket rim
 function spawnGas(){
   if(!showGas)return;
-  const cx=W/2, hb=H*.38, gy=hb+H*.04;
-  for(let k=0;k<3;k++){
-    gasP.push({x:cx+(Math.random()-.5)*100, y:gy+Math.random()*12, vx:(Math.random()-.5)*30, vy:-(50+Math.random()*100), r:15+Math.random()*25, life:1, ph:Math.random()*Math.PI*2});
+  const cx=W/2, hb=H*.35;
+  const gapTop=hb;
+  const gapBot=H*.52; // bucket rim
+  const gapH=gapBot-gapTop;
+  // Spread across full bucket width
+  const bw=W*.40;
+  for(let k=0;k<4;k++){
+    gasP.push({
+      x:cx+(Math.random()-.5)*bw,
+      y:gapTop+Math.random()*gapH,
+      vx:(Math.random()-.5)*25,
+      vy:-(40+Math.random()*80),
+      r:12+Math.random()*20,
+      life:1, ph:Math.random()*Math.PI*2
+    });
   }
 }
 
@@ -103,76 +120,67 @@ function update(dt){
   wasteKg+=f*(1-sc.eff)*dt;
   t+=dt;
 
-  if(liqP.length<20) spawnLiq();
-  
-  const snowPerSec=flow*0.5;
-  const toSpawn=Math.floor(snowPerSec*dt);
-  for(let i=0;i<toSpawn;i++) spawnSnow();
-  if(Math.random()<snowPerSec*dt-toSpawn) spawnSnow();
-  
-  const gasPerSec=flow*0.3;
-  const gasToSpawn=Math.floor(gasPerSec*dt);
-  for(let i=0;i<gasToSpawn;i++) spawnGas();
-  if(Math.random()<gasPerSec*dt-gasToSpawn) spawnGas();
+  // Continuous spawn
+  const snowRate=flow*0.8;
+  if(Math.random()<snowRate*dt) spawnSnow();
+  if(Math.random()<snowRate*0.6*dt) spawnGas();
 
-  // Liquid falls
-  for(let p of liqP){
-    p.y+=p.vy*dt;
-    p.life-=dt*2;
-  }
-  liqP=liqP.filter(p=>p.life>0&&p.y<H*.32);
-
-  // Bucket — centered
+  // Bucket geometry
   const cx=W/2;
-  const bw=Math.min(W*.45, 420);
+  const bw=W*.40; // bucket width at rim
   const bx=cx-bw/2;
-  const by=H*.58;
-  const bh=H*.18;
-  const bB=by+bh;
+  const by=H*.52; // rim Y
+  const bh=H*.22; // bucket height
+  const bB=by+bh; // bucket bottom
+  const wallSlope=(bw*.06)/bh; // taper amount
 
   // Snow physics
   for(let p of snowP){
     if(p.settled) continue;
-    
+
     p.x+=p.vx*dt;
     p.y+=p.vy*dt;
-    p.vy+=45*dt;
-    
-    const fy=Math.max(0, p.y-by);
-    const lx=bx+fy*.03;
-    const rx=bx+bw-fy*.03;
-    
-    if(p.y>by&&p.x>lx&&p.x<rx&&p.y<bB){
+    p.vy+=40*dt;
+
+    // Current bucket width at this Y
+    const dy=Math.max(0,p.y-by);
+    const innerL=bx+dy*wallSlope;
+    const innerR=bx+bw-dy*wallSlope;
+
+    if(p.y>=by && p.x>innerL && p.x<innerR){
+      // Inside bucket
       if(!p.inB){
         p.inB=true;
-        p.vx*=0.08;
+        p.vx*=0.05;
         p.vy*=0.02;
       }
-      if(p.y>=bB-5){
-        p.y=bB-5+Math.random()*2;
-        p.vy=0;
-        p.vx=0;
+      if(p.y>=bB-3){
+        // Hit bottom — settle with random offset within bucket width at bottom
+        const bottomW=bw*(1-0.06*2); // width at bottom after taper
+        p.y=bB-2;
+        p.vy=0; p.vx=0;
         p.settled=true;
       }
-    } else if(p.y>bB){
+    } else if(p.y>bB+5){
       p.life=0;
     }
-    
-    if(!p.inB&&!p.settled) p.life-=dt*.03;
+
+    if(!p.inB && !p.settled) p.life-=dt*.02;
   }
-  
+
+  // Keep settled, remove dead
   snowP=snowP.filter(p=>p.life>0||p.settled);
   const settled=snowP.filter(p=>p.settled);
-  if(settled.length>400){
-    snowP=snowP.filter(p=>!p.settled).concat(settled.slice(-400));
+  if(settled.length>300){
+    snowP=snowP.filter(p=>!p.settled).concat(settled.slice(-300));
   }
 
   // Gas physics
   for(let p of gasP){
     p.y+=p.vy*dt;
-    p.x+=p.vx*dt+Math.sin(p.ph+t*2.5)*12*dt;
-    p.r+=dt*2;
-    p.life-=dt*.08;
+    p.x+=p.vx*dt+Math.sin(p.ph+t*3)*10*dt;
+    p.r+=dt*1.5;
+    p.life-=dt*.06;
   }
   gasP=gasP.filter(p=>p.life>0);
 }
@@ -181,38 +189,13 @@ function draw(){
   ctx.fillStyle='#0d1117';
   ctx.fillRect(0,0,W,H);
 
-  // ── CENTERED VISUALIZATION ──
   const cx=W/2;
-  const visW=Math.min(W*.9, 600);
-  const visH=H*.7;
-  const vx=cx-visW/2;
-  const vy=H*.22;
-  
-  // Scaling factor for internal coords
-  const s=visW/400;
-  
-  // Horn
-  const nt=16*s, nb=48*s;
-  const hy=vy+20*s;
-  const hb=vy+visH*.45;
-  const gap=visH*.08;
-  
-  // Bucket
-  const bw=visW*.7;
-  const bx=cx-bw/2;
-  const by=hb+gap;
-  const bh=visH*.3;
-  const bB=by+bh;
-  
-  // Draw gas BEHIND everything (so snow is visible)
-  for(let p of gasP){
-    const a=p.life*.15;
-    const gg=ctx.createRadialGradient(p.x,p.y,p.r*.2,p.x,p.y,p.r);
-    gg.addColorStop(0,`rgba(180,195,210,${a})`);
-    gg.addColorStop(.6,`rgba(140,160,180,${a*.5})`);
-    gg.addColorStop(1,'rgba(100,120,140,0)');
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=gg; ctx.fill();
-  }
+
+  // ── HORN ──
+  const nt=W*.035; // top half-width
+  const nb=W*.11;  // bottom half-width (narrower than bucket)
+  const hy=H*.10;  // top Y
+  const hb=H*.35;  // bottom Y
 
   // Horn body
   const hGrad=ctx.createLinearGradient(cx,hy,cx,hb);
@@ -232,27 +215,36 @@ function draw(){
   ctx.fillStyle='#3d4a5c'; ctx.fill();
   ctx.strokeStyle='#6a7a8e'; ctx.stroke();
 
-  // Horn inner shadow
+  // Inner shadow
   ctx.beginPath();
-  ctx.moveTo(cx-nt*.6,hy+3); ctx.lineTo(cx-nb*.7,hb-3);
-  ctx.lineTo(cx+nb*.7,hb-3); ctx.lineTo(cx+nt*.6,hy+3);
+  ctx.moveTo(cx-nt*.5,hy+3); ctx.lineTo(cx-nb*.6,hb-3);
+  ctx.lineTo(cx+nb*.6,hb-3); ctx.lineTo(cx+nt*.5,hy+3);
   ctx.closePath();
-  ctx.fillStyle='rgba(20,30,40,0.35)'; ctx.fill();
+  ctx.fillStyle='rgba(20,30,40,0.3)'; ctx.fill();
 
   // Horn labels
   ctx.fillStyle='#8b949e'; ctx.font='10px monospace'; ctx.textAlign='center';
-  ctx.fillText('1 atm',cx,(hy+hb)*.5);
-  ctx.fillStyle='#6a7a8e'; ctx.font='9px monospace';
-  ctx.fillText(sc.P.toFixed(1)+' MPa',cx,hy+14);
-  ctx.fillStyle='#8b949e'; ctx.font='10px monospace';
   ctx.fillText('NOZZLE',cx,hy-10);
-  ctx.fillText('EXPANSION HORN',cx,hy+28);
+  ctx.fillStyle='#6a7a8e'; ctx.font='9px monospace';
+  ctx.fillText(sc.P.toFixed(1)+' MPa',cx,hy+12);
+  ctx.fillStyle='#8b949e'; ctx.font='10px monospace';
+  ctx.fillText('EXPANSION HORN',cx,(hy+hb)*.5+10);
+  ctx.fillStyle='#6a7a8e'; ctx.font='9px monospace';
+  ctx.fillText('1 atm',cx,hb-8);
 
-  // Bucket body
+  // ── BUCKET ──
+  const bw=W*.40;
+  const bx=cx-bw/2;
+  const by=H*.52;
+  const bh=H*.22;
+  const bB=by+bh;
+  const bBottomW=bw*.88; // narrower at bottom (tapered)
+
+  // Bucket body (trapezoid matching the taper)
   ctx.beginPath();
   ctx.moveTo(bx,by);
-  ctx.lineTo(bx+bw*.05,bB);
-  ctx.lineTo(bx+bw*.95,bB);
+  ctx.lineTo(cx-bBottomW/2,bB);
+  ctx.lineTo(cx+bBottomW/2,bB);
   ctx.lineTo(bx+bw,by);
   ctx.closePath();
   const bGrad=ctx.createLinearGradient(bx,by,bx,bB);
@@ -267,25 +259,28 @@ function draw(){
   ctx.strokeStyle='#9ca3af'; ctx.lineWidth=2.5; ctx.stroke();
 
   // Bucket label
-  ctx.fillStyle='#8b949e'; ctx.font='10px monospace';
+  ctx.fillStyle='#8b949e'; ctx.font='10px monospace'; ctx.textAlign='center';
   ctx.fillText('COLLECTION BUCKET',cx,by-10);
 
-  // Snow pile
-  const maxFill=4;
-  const frac=Math.min(buckKg/maxFill,0.85);
+  // ── SNOW PILE (matches bucket taper, not rectangle) ──
+  const maxFill=3;
+  const frac=Math.min(buckKg/maxFill,0.9);
   if(frac>0.005){
     const snowH=bh*.85*frac;
     const snowY=bB-snowH;
+    // Pile edges follow bucket taper, not vertical
+    const taperRatio=snowH/bh; // how far up
+    const pileTopW=bBottomW+(bw-bBottomW)*taperRatio;
 
     ctx.beginPath();
-    ctx.moveTo(bx+bw*.05,bB);
+    ctx.moveTo(cx-bBottomW/2,bB);
     for(let i=0;i<=20;i++){
       const tt=i/20;
-      const sx=bx+bw*.05+tt*bw*.9;
-      const sy=snowY-Math.sin(tt*Math.PI)*6*frac;
+      const sx=cx-bBottomW/2+tt*pileTopW;
+      const sy=snowY-Math.sin(tt*Math.PI)*5*frac;
       ctx.lineTo(sx,sy);
     }
-    ctx.lineTo(bx+bw*.95,bB);
+    ctx.lineTo(cx+bBottomW/2,bB);
     ctx.closePath();
     ctx.fillStyle='#c8dff2'; ctx.fill();
     ctx.strokeStyle='#8ab4c8'; ctx.lineWidth=1; ctx.stroke();
@@ -294,84 +289,85 @@ function draw(){
     ctx.beginPath();
     for(let i=0;i<=20;i++){
       const tt=i/20;
-      const sx=bx+bw*.05+tt*bw*.9;
-      const sy=snowY-Math.sin(tt*Math.PI)*6*frac;
+      const sx=cx-bBottomW/2+tt*pileTopW;
+      const sy=snowY-Math.sin(tt*Math.PI)*5*frac;
       if(i===0)ctx.moveTo(sx,sy); else ctx.lineTo(sx,sy);
     }
-    ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.5; ctx.stroke();
   }
 
-  // Liquid
-  for(let p of liqP){
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(77,166,255,${p.life*.5})`; ctx.fill();
+  // ── SETTLED SNOW (individual particles forming the pile) ──
+  const settled=snowP.filter(p=>p.settled);
+  for(let p of settled){
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.6,0,Math.PI*2);
+    ctx.fillStyle='rgba(220,235,255,0.5)'; ctx.fill();
   }
 
-  // Falling snow (visible through gas)
+  // ── FALLING SNOW (drawn AFTER bucket so visible through gas) ──
   for(let p of snowP){
-    if(!p.inB&&!p.settled){
+    if(!p.inB && !p.settled){
       ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(230,242,255,${p.life*.9})`; ctx.fill();
-      if(p.r>1.5){
-        ctx.beginPath(); ctx.arc(p.x-p.r*.2,p.y-p.r*.2,p.r*.25,0,Math.PI*2);
-        ctx.fillStyle=`rgba(255,255,255,${p.life*.5})`; ctx.fill();
-      }
+      ctx.fillStyle=`rgba(230,242,255,${p.life*.85})`; ctx.fill();
     }
   }
 
-  // Settled snow (drawn on pile)
-  const settled=snowP.filter(p=>p.settled);
-  for(let p of settled){
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.5,0,Math.PI*2);
-    ctx.fillStyle='rgba(220,235,255,0.5)'; ctx.fill();
+  // ── GAS (drawn last so it's on top but transparent) ──
+  for(let p of gasP){
+    const a=p.life;
+    const gg=ctx.createRadialGradient(p.x,p.y,p.r*.15,p.x,p.y,p.r);
+    gg.addColorStop(0,`rgba(200,215,230,${a*.12})`);
+    gg.addColorStop(.5,`rgba(160,180,200,${a*.06})`);
+    gg.addColorStop(1,'rgba(120,140,160,0)');
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=gg; ctx.fill();
   }
 
   // Nozzle flash
   if(running){
-    const fg=ctx.createRadialGradient(cx,hy+3,1,cx,hy+3,18);
-    fg.addColorStop(0,'rgba(200,230,255,0.3)');
+    const fg=ctx.createRadialGradient(cx,hy+2,1,cx,hy+2,16);
+    fg.addColorStop(0,'rgba(200,230,255,0.25)');
     fg.addColorStop(1,'rgba(200,230,255,0)');
-    ctx.beginPath(); ctx.arc(cx,hy+3,18,0,Math.PI*2); ctx.fillStyle=fg; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx,hy+2,16,0,Math.PI*2); ctx.fillStyle=fg; ctx.fill();
   }
 
-  // ── TOP STATS BAR ──
-  const barH=42;
-  ctx.fillStyle='rgba(13,17,23,0.9)';
+  // ── TOP STATS BAR (no overlap, clean separation) ──
+  const barH=38;
+  ctx.fillStyle='rgba(13,17,23,0.95)';
   ctx.fillRect(0,0,W,barH);
   ctx.strokeStyle='#30363d';
   ctx.beginPath(); ctx.moveTo(0,barH); ctx.lineTo(W,barH); ctx.stroke();
 
-  // Title
-  ctx.fillStyle='#c9d1d9'; ctx.font='bold 12px monospace'; ctx.textAlign='left';
-  ctx.fillText('CO₂ Snow Maker',12,18);
-  ctx.fillStyle='#8b949e'; ctx.font='10px monospace';
-  ctx.fillText(sc.name,12,32);
+  // Title on the left
+  ctx.fillStyle='#c9d1d9'; ctx.font='bold 11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('CO₂ Snow Maker',10,16);
+  ctx.fillStyle='#8b949e'; ctx.font='9px sans-serif';
+  ctx.fillText(sc.name,10,30);
 
-  // Stats row — centered
+  // Stats on the right
   const stats=[
     ['FILL', buckKg.toFixed(2)+' kg', '#39d2c0'],
     ['EFF', (sc.eff*100).toFixed(1)+'%', '#3fb950'],
     ['WASTE', wasteKg.toFixed(2)+' kg', '#f0883e'],
-    ['FLOW', flow+' kg/h', '#a371f7'],
-    ['PARTICLE', sc.ps.toFixed(1)+' μm', '#d29922']
+    ['FLOW', flow+' kg/h', '#a371f7']
   ];
-  
-  const startX=W/2-(stats.length*90)/2;
-  ctx.font='10px monospace';
-  for(let i=0;i<stats.length;i++){
+
+  let statX=W-10;
+  ctx.font='9px sans-serif';
+  for(let i=stats.length-1;i>=0;i--){
     const [l,v,c]=stats[i];
-    const x=startX+i*90;
-    ctx.fillStyle='#6b7280'; ctx.textAlign='left';
-    ctx.fillText(l,x,16);
-    ctx.fillStyle=c; ctx.textAlign='left';
-    ctx.fillText(v,x,30);
+    // Value
+    ctx.fillStyle=c; ctx.textAlign='right';
+    ctx.fillText(v,statX,28);
+    // Label
+    ctx.fillStyle='#6b7280'; ctx.textAlign='right';
+    ctx.fillText(l,statX,16);
+    statX-=Math.max(55, ctx.measureText(v).width+12);
   }
 }
 
 let lastT=0;
 function loop(time){
   if(!lastT)lastT=time;
-  const dt=Math.min((time-lastT)/1000, .05);
+  const dt=Math.min((time-lastT)/1000,.05);
   lastT=time;
   update(dt);
   draw();
@@ -398,7 +394,7 @@ document.getElementById('btnRun').addEventListener('click',function(){
 
 document.getElementById('btnReset').addEventListener('click',()=>{
   buckKg=0; wasteKg=0; t=0;
-  snowP=[]; gasP=[]; liqP=[];
+  snowP=[]; gasP=[];
 });
 
 document.getElementById('togPlume').addEventListener('click',function(){
