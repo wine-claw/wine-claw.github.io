@@ -2,15 +2,15 @@
   "name": "2am Mini-App Creation",
   "slug": "2am-mini-app-creation",
   "status": "active",
-  "summary": "Recurring 2:00 AM mini-app project. Apr 29: Ripple Lab \u2014 interactive wave interference sandbox. Tap to drop pebbles, drag to stir, place persistent sources, draw walls, and watch interference patterns form in real time. Dark physics toy with 5 interaction modes, 3 presets, and adjustable parameters.",
+  "summary": "May 02: Linkage Lab — interactive kinematic linkage sandbox. Drag joints to reshape planar linkages and watch coupler curves trace in real time. 5 presets, adjustable speed, trace toggle, velocity vectors, Grashof classification.",
   "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/README.md",
   "specPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/SPEC.md",
   "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/latest-summary.md",
-  "updatedAt": "2026-04-29T02:20:00+09:30",
-  "nextStep": "Apr 30: Choose a new mini-app concept; continue rotating domains and archetypes.",
+  "updatedAt": "2026-05-02T09:51:00+09:30",
+  "nextStep": "Choose a new mini-app concept for May 3; rotate domain and archetype.",
   "primaryLink": {
-    "label": "Ripple Lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/"
+    "label": "Linkage Lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-02-linkage-lab/"
   },
   "secondaryClosedLinks": [
     {
@@ -20,28 +20,50 @@
   ],
   "links": [],
   "latestRun": {
-    "date": "2026-04-29",
-    "title": "Ripple Lab",
+    "date": "2026-05-02",
+    "title": "Linkage Lab",
     "kind": "overnight",
-    "notes": "Interactive wave interference sandbox \u2014 tap to drop pebbles, drag to stir, place persistent wave sources, draw reflective walls, and watch interference patterns form in real time. 5 interaction modes, 3 presets (freeform, double slit, circular pool), adjustable speed/frequency/damping, water/sound color modes. Dark scientific responsive UI.",
-    "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab",
-    "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/index.html",
-    "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/summary.md",
-    "verification": "Playwright CLI screenshots captured (mobile 390x844, desktop 1280x800). Pixel sanity check passed: non-blank dark UI (~96-98% dark pixels) with visible wave crests. Static checks passed. Full interactive verification deferred to daytime (overnight policy).",
-    "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/",
+    "notes": "Interactive kinematic linkage sandbox. Drag joints to reshape planar linkages (crank-rocker, double-crank, Chebyshev lambda, Peaucellier straight-line, crank-slider) and watch coupler curves trace in real time. 5 presets, adjustable speed, trace toggle, velocity vectors, Grashof classification. Dark engineering theme.",
+    "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-05-02/linkage-lab",
+    "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-05-02/linkage-lab/index.html",
+    "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-05-02/linkage-lab/BUILD-SPEC.md",
+    "verification": "HTML parse OK, JS syntax OK. Gallery publishing deferred to daytime — published 2026-05-02 09:51 ACST after Simon noticed missing app. Build itself completed at 02:09 but packaging step (gallery copy, index.html update, git push, state.json update) was skipped.",
+    "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-05-02-linkage-lab/",
     "delegation": {
       "used": true,
-      "worker": "worker1 (Kimi K2.6 / glm-5.1)",
-      "workerHandled": "Full HTML/CSS/JS implementation, wave physics simulation, canvas rendering, responsive layout, mobile touch handling, presets, UI controls (~75%)",
-      "mainHandled": "Concept selection, domain research, requirements framing, code review, verification (screenshots), packaging, gallery publishing, state updates (~25%)",
+      "worker": "worker1 (Kimi K2.6)",
+      "workerHandled": "Concept selection, BUILD-SPEC.md, full HTML/CSS/JS implementation (~90% of code).",
+      "mainHandled": "Reviewed BUILD-SPEC.md, verified HTML/JS syntax, but packaging step (gallery copy, git push, state update) was missed until Simon flagged it.",
       "estimatedSplit": {
-        "workerPercent": 75,
-        "mainPercent": 25,
+        "workerPercent": 90,
+        "mainPercent": 10,
         "worker2Percent": 0
       }
     }
   },
   "extraRuns": [
+    {
+      "date": "2026-04-29",
+      "title": "Ripple Lab",
+      "kind": "overnight",
+      "notes": "Interactive wave interference sandbox \u2014 tap to drop pebbles, drag to stir, place persistent wave sources, draw reflective walls, and watch interference patterns form in real time. 5 interaction modes, 3 presets (freeform, double slit, circular pool), adjustable speed/frequency/damping, water/sound color modes. Dark scientific responsive UI.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab",
+      "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/index.html",
+      "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/summary.md",
+      "verification": "Playwright CLI screenshots captured (mobile 390x844, desktop 1280x800). Pixel sanity check passed: non-blank dark UI (~96-98% dark pixels) with visible wave crests. Static checks passed. Full interactive verification deferred to daytime (overnight policy).",
+      "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/",
+      "delegation": {
+        "used": true,
+        "worker": "worker1 (Kimi K2.6 / glm-5.1)",
+        "workerHandled": "Full HTML/CSS/JS implementation, wave physics simulation, canvas rendering, responsive layout, mobile touch handling, presets, UI controls (~75%)",
+        "mainHandled": "Concept selection, domain research, requirements framing, code review, verification (screenshots), packaging, gallery publishing, state updates (~25%)",
+        "estimatedSplit": {
+          "workerPercent": 75,
+          "mainPercent": 25,
+          "worker2Percent": 0
+        }
+      }
+    },
     {
       "date": "2026-04-28",
       "title": "Globe Projector",
@@ -71,6 +93,5 @@
       "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas/index.html",
       "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas/summary.md"
     }
-  ],
-  "blocker": "Stale: no meaningful update for 34.4h while active."
+  ]
 }
