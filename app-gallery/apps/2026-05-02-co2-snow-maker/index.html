@@ -8,7 +8,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;color:#c9d1d9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px}
 #warn{background:#2d1f1f;border-bottom:1px solid #5a3a3a;padding:3px 8px;font-size:10px;color:#f0883e;text-align:center;flex-shrink:0}
-#app{display:flex;flex-direction:column;height:100vh}
+#app{display:flex;flex-direction:column;height:calc(100vh - 22px)}
 #canvas-wrap{flex:1;position:relative;min-height:0;overflow:hidden}
 canvas{display:block;width:100%;height:100%}
 #controls{flex-shrink:0;background:#161b22;border-top:1px solid #30363d;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:11px}
@@ -70,11 +70,12 @@ let snowP=[], gasP=[];
 
 function resize(){
   const r=canvas.getBoundingClientRect();
-  W=canvas.width=r.width;
-  H=canvas.height=r.height;
+  const dpr=window.devicePixelRatio||1;
+  W=canvas.width=r.width*dpr;
+  H=canvas.height=r.height*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 
-  // Spawn snow from the BOTTOM EDGE of the horn
 function spawnSnow(){
   const cx=W/2, hb=H*.38;
   const nb=W*.13;
@@ -90,12 +91,12 @@ function spawnSnow(){
   });
 }
 
-// Spawn gas from the ENTIRE gap between horn bottom and bucket rim
 function spawnGas(){
-  if(!showGas)return;
+  if(!showGas) return;
   const cx=W/2, hb=H*.38;
   const gapTop=hb;
   const gapBot=H*.55;
+  const gapH=gapBot-gapTop;
   const bw=W*.44;
   for(let k=0;k<4;k++){
     gasP.push({
@@ -110,20 +111,18 @@ function spawnGas(){
 }
 
 function update(dt){
-  if(!running)return;
+  if(!running) return;
   const f=flow/3600;
   buckKg+=f*sc.eff*dt;
   wasteKg+=f*(1-sc.eff)*dt;
   t+=dt;
 
-  // Continuous spawn — MUCH higher rate
   const snowRate=flow*2.5;
   for(let i=0;i<3;i++){
     if(Math.random()<snowRate*dt) spawnSnow();
   }
   if(Math.random()<snowRate*0.8*dt) spawnGas();
 
-  // Bucket geometry
   const cx=W/2;
   const bw=W*.44;
   const bx=cx-bw/2;
@@ -132,7 +131,6 @@ function update(dt){
   const bB=by+bh;
   const wallSlope=(bw*.075)/bh;
 
-  // Snow physics
   for(let p of snowP){
     if(p.settled) continue;
 
@@ -140,21 +138,17 @@ function update(dt){
     p.y+=p.vy*dt;
     p.vy+=40*dt;
 
-    // Current bucket width at this Y
     const dy=Math.max(0,p.y-by);
     const innerL=bx+dy*wallSlope;
     const innerR=bx+bw-dy*wallSlope;
 
     if(p.y>=by && p.x>innerL && p.x<innerR){
-      // Inside bucket
       if(!p.inB){
         p.inB=true;
         p.vx*=0.05;
         p.vy*=0.02;
       }
       if(p.y>=bB-3){
-        // Hit bottom — settle with random offset within bucket width at bottom
-        const bottomW=bw*(1-0.06*2); // width at bottom after taper
         p.y=bB-2;
         p.vy=0; p.vx=0;
         p.settled=true;
@@ -166,14 +160,12 @@ function update(dt){
     if(!p.inB && !p.settled) p.life-=dt*.02;
   }
 
-  // Keep settled, remove dead
   snowP=snowP.filter(p=>p.life>0||p.settled);
   const settled=snowP.filter(p=>p.settled);
   if(settled.length>300){
     snowP=snowP.filter(p=>!p.settled).concat(settled.slice(-300));
   }
 
-  // Gas physics
   for(let p of gasP){
     p.y+=p.vy*dt;
     p.x+=p.vx*dt+Math.sin(p.ph+t*3)*10*dt;
@@ -184,18 +176,20 @@ function update(dt){
 }
 
 function draw(){
-  ctx.fillStyle='#0d1117';
-  ctx.fillRect(0,0,W,H);
+  const cssW=canvas.width/(window.devicePixelRatio||1);
+  const cssH=canvas.height/(window.devicePixelRatio||1);
 
-  const cx=W/2;
+  ctx.fillStyle='#0d1117';
+  ctx.fillRect(0,0,cssW,cssH);
+
+  const cx=cssW/2;
 
   // ── HORN ──
-  const nt=W*.04;  // top half-width
-  const nb=W*.13;  // bottom half-width
-  const hy=H*.08;  // top Y
-  const hb=H*.38;  // bottom Y
+  const nt=cssW*.04;
+  const nb=cssW*.13;
+  const hy=cssH*.08;
+  const hb=cssH*.38;
 
-  // Horn body
   const hGrad=ctx.createLinearGradient(cx,hy,cx,hb);
   hGrad.addColorStop(0,'#4a5568');
   hGrad.addColorStop(.5,'#2d3748');
@@ -207,38 +201,35 @@ function draw(){
   ctx.fillStyle=hGrad; ctx.fill();
   ctx.strokeStyle='#5a6a7e'; ctx.lineWidth=1.5; ctx.stroke();
 
-  // Horn top
   ctx.beginPath();
   ctx.ellipse(cx,hy,nt,3,0,0,Math.PI*2);
   ctx.fillStyle='#3d4a5c'; ctx.fill();
   ctx.strokeStyle='#6a7a8e'; ctx.stroke();
 
-  // Inner shadow
   ctx.beginPath();
   ctx.moveTo(cx-nt*.5,hy+3); ctx.lineTo(cx-nb*.6,hb-3);
   ctx.lineTo(cx+nb*.6,hb-3); ctx.lineTo(cx+nt*.5,hy+3);
   ctx.closePath();
   ctx.fillStyle='rgba(20,30,40,0.3)'; ctx.fill();
 
-  // Horn labels
-  ctx.fillStyle='#8b949e'; ctx.font='10px monospace'; ctx.textAlign='center';
+  // Horn labels - smooth text
+  ctx.fillStyle='#8b949e'; ctx.font='10px sans-serif'; ctx.textAlign='center';
   ctx.fillText('NOZZLE',cx,hy-10);
-  ctx.fillStyle='#6a7a8e'; ctx.font='9px monospace';
+  ctx.fillStyle='#6a7a8e'; ctx.font='9px sans-serif';
   ctx.fillText(sc.P.toFixed(1)+' MPa',cx,hy+12);
-  ctx.fillStyle='#8b949e'; ctx.font='10px monospace';
+  ctx.fillStyle='#8b949e'; ctx.font='10px sans-serif';
   ctx.fillText('EXPANSION HORN',cx,(hy+hb)*.5+10);
-  ctx.fillStyle='#6a7a8e'; ctx.font='9px monospace';
+  ctx.fillStyle='#6a7a8e'; ctx.font='9px sans-serif';
   ctx.fillText('1 atm',cx,hb-8);
 
   // ── BUCKET ──
-  const bw=W*.44;
+  const bw=cssW*.44;
   const bx=cx-bw/2;
-  const by=H*.55;
-  const bh=H*.25;
+  const by=cssH*.55;
+  const bh=cssH*.25;
   const bB=by+bh;
   const bBottomW=bw*.85;
 
-  // Bucket body (trapezoid matching the taper)
   ctx.beginPath();
   ctx.moveTo(bx,by);
   ctx.lineTo(cx-bBottomW/2,bB);
@@ -251,16 +242,14 @@ function draw(){
   ctx.fillStyle=bGrad; ctx.fill();
   ctx.strokeStyle='#6b7280'; ctx.lineWidth=1.5; ctx.stroke();
 
-  // Bucket rim
   ctx.beginPath();
   ctx.moveTo(bx-2,by); ctx.lineTo(bx+bw+2,by);
   ctx.strokeStyle='#9ca3af'; ctx.lineWidth=2.5; ctx.stroke();
 
-  // Bucket label
-  ctx.fillStyle='#8b949e'; ctx.font='10px monospace'; ctx.textAlign='center';
+  ctx.fillStyle='#8b949e'; ctx.font='10px sans-serif'; ctx.textAlign='center';
   ctx.fillText('COLLECTION BUCKET',cx,by-10);
 
-  // ── FALLING SNOW (before gas so visible through it) ──
+  // ── FALLING SNOW ──
   for(let p of snowP){
     if(!p.inB && !p.settled){
       ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
@@ -272,7 +261,7 @@ function draw(){
     }
   }
 
-  // ── GAS (semi-transparent, on top of snow) ──
+  // ── GAS ──
   for(let p of gasP){
     const a=p.life;
     const gg=ctx.createRadialGradient(p.x,p.y,p.r*.15,p.x,p.y,p.r);
@@ -282,7 +271,7 @@ function draw(){
     ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=gg; ctx.fill();
   }
 
-  // ── SNOW PILE (solid fill, after gas so it sits on top) ──
+  // ── SNOW PILE ──
   const maxFill=2;
   const frac=Math.min(buckKg/maxFill,0.95);
   if(frac>0.01){
@@ -304,7 +293,6 @@ function draw(){
     ctx.fillStyle='#b8d4e8'; ctx.fill();
     ctx.strokeStyle='#7aa4b8'; ctx.lineWidth=1; ctx.stroke();
 
-    // Highlight
     ctx.beginPath();
     for(let i=0;i<=20;i++){
       const tt=i/20;
@@ -314,7 +302,6 @@ function draw(){
     }
     ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
 
-    // Snow texture dots on pile
     for(let i=0;i<200*frac;i++){
       const tx=cx-bBottomW/2+Math.random()*bBottomW;
       const ty=snowY+Math.random()*snowH*.9;
@@ -323,11 +310,12 @@ function draw(){
     }
   }
 
-  // ── SETTLED SNOW PARTICLES (on top of pile, adding texture) ──
-  const settled=snowP.filter(p=>p.settled);
-  for(let p of settled){
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.5,0,Math.PI*2);
-    ctx.fillStyle='rgba(235,245,255,0.6)'; ctx.fill();
+  // ── SETTLED SNOW ──
+  for(let p of snowP){
+    if(p.settled){
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(235,245,255,0.6)'; ctx.fill();
+    }
   }
 
   // Nozzle flash
@@ -338,20 +326,18 @@ function draw(){
     ctx.beginPath(); ctx.arc(cx,hy+2,16,0,Math.PI*2); ctx.fillStyle=fg; ctx.fill();
   }
 
-  // ── TOP STATS BAR (no overlap, clean separation) ──
+  // ── TOP STATS BAR ──
   const barH=38;
   ctx.fillStyle='rgba(13,17,23,0.95)';
-  ctx.fillRect(0,0,W,barH);
+  ctx.fillRect(0,0,cssW,barH);
   ctx.strokeStyle='#30363d';
-  ctx.beginPath(); ctx.moveTo(0,barH); ctx.lineTo(W,barH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,barH); ctx.lineTo(cssW,barH); ctx.stroke();
 
-  // Title on the left
   ctx.fillStyle='#c9d1d9'; ctx.font='bold 11px sans-serif'; ctx.textAlign='left';
   ctx.fillText('CO₂ Snow Maker',10,16);
   ctx.fillStyle='#8b949e'; ctx.font='9px sans-serif';
   ctx.fillText(sc.name,10,30);
 
-  // Stats on the right
   const stats=[
     ['FILL', buckKg.toFixed(2)+' kg', '#39d2c0'],
     ['EFF', (sc.eff*100).toFixed(1)+'%', '#3fb950'],
@@ -359,14 +345,12 @@ function draw(){
     ['FLOW', flow+' kg/h', '#a371f7']
   ];
 
-  let statX=W-10;
+  let statX=cssW-10;
   ctx.font='9px sans-serif';
   for(let i=stats.length-1;i>=0;i--){
     const [l,v,c]=stats[i];
-    // Value
     ctx.fillStyle=c; ctx.textAlign='right';
     ctx.fillText(v,statX,28);
-    // Label
     ctx.fillStyle='#6b7280'; ctx.textAlign='right';
     ctx.fillText(l,statX,16);
     statX-=Math.max(55, ctx.measureText(v).width+12);
@@ -375,8 +359,8 @@ function draw(){
 
 let lastT=0;
 function loop(time){
-  if(!lastT)lastT=time;
-  const dt=Math.min((time-lastT)/1000,.05);
+  if(!lastT) lastT=time;
+  const dt=Math.min((time-lastT)/1000, .05);
   lastT=time;
   update(dt);
   draw();
@@ -404,6 +388,9 @@ document.getElementById('btnRun').addEventListener('click',function(){
 document.getElementById('btnReset').addEventListener('click',()=>{
   buckKg=0; wasteKg=0; t=0;
   snowP=[]; gasP=[];
+  running=false;
+  document.getElementById('btnRun').textContent='▶ Start';
+  document.getElementById('btnRun').classList.remove('on');
 });
 
 document.getElementById('togPlume').addEventListener('click',function(){
