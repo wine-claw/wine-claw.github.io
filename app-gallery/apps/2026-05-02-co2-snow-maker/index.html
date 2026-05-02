@@ -74,20 +74,18 @@ function resize(){
   H=canvas.height=r.height;
 }
 
-// Spawn snow from the BOTTOM EDGE of the horn (where it widens), not from center
+  // Spawn snow from the BOTTOM EDGE of the horn
 function spawnSnow(){
-  const cx=W/2, hb=H*.35; // horn bottom Y
-  const nb=W*.11; // horn bottom half-width
-  // Spawn across the full width of the horn bottom, not a single point
+  const cx=W/2, hb=H*.38;
+  const nb=W*.13;
   const spawnX=cx+(Math.random()-.5)*nb*2;
   const spawnY=hb;
-  // Fan out downward
-  const a=Math.PI/2+(Math.random()-.5)*0.8;
-  const sp=10+Math.random()*40;
+  const a=Math.PI/2+(Math.random()-.5)*0.6;
+  const sp=8+Math.random()*30;
   snowP.push({
     x:spawnX, y:spawnY,
     vx:Math.cos(a)*sp, vy:Math.sin(a)*sp,
-    r:1+Math.random()*2,
+    r:2+Math.random()*3,
     life:1, inB:false, settled:false
   });
 }
@@ -95,12 +93,10 @@ function spawnSnow(){
 // Spawn gas from the ENTIRE gap between horn bottom and bucket rim
 function spawnGas(){
   if(!showGas)return;
-  const cx=W/2, hb=H*.35;
+  const cx=W/2, hb=H*.38;
   const gapTop=hb;
-  const gapBot=H*.52; // bucket rim
-  const gapH=gapBot-gapTop;
-  // Spread across full bucket width
-  const bw=W*.40;
+  const gapBot=H*.55;
+  const bw=W*.44;
   for(let k=0;k<4;k++){
     gasP.push({
       x:cx+(Math.random()-.5)*bw,
@@ -120,19 +116,21 @@ function update(dt){
   wasteKg+=f*(1-sc.eff)*dt;
   t+=dt;
 
-  // Continuous spawn
-  const snowRate=flow*0.8;
-  if(Math.random()<snowRate*dt) spawnSnow();
-  if(Math.random()<snowRate*0.6*dt) spawnGas();
+  // Continuous spawn — MUCH higher rate
+  const snowRate=flow*2.5;
+  for(let i=0;i<3;i++){
+    if(Math.random()<snowRate*dt) spawnSnow();
+  }
+  if(Math.random()<snowRate*0.8*dt) spawnGas();
 
   // Bucket geometry
   const cx=W/2;
-  const bw=W*.40; // bucket width at rim
+  const bw=W*.44;
   const bx=cx-bw/2;
-  const by=H*.52; // rim Y
-  const bh=H*.22; // bucket height
-  const bB=by+bh; // bucket bottom
-  const wallSlope=(bw*.06)/bh; // taper amount
+  const by=H*.55;
+  const bh=H*.25;
+  const bB=by+bh;
+  const wallSlope=(bw*.075)/bh;
 
   // Snow physics
   for(let p of snowP){
@@ -192,10 +190,10 @@ function draw(){
   const cx=W/2;
 
   // ── HORN ──
-  const nt=W*.035; // top half-width
-  const nb=W*.11;  // bottom half-width (narrower than bucket)
-  const hy=H*.10;  // top Y
-  const hb=H*.35;  // bottom Y
+  const nt=W*.04;  // top half-width
+  const nb=W*.13;  // bottom half-width
+  const hy=H*.08;  // top Y
+  const hb=H*.38;  // bottom Y
 
   // Horn body
   const hGrad=ctx.createLinearGradient(cx,hy,cx,hb);
@@ -233,12 +231,12 @@ function draw(){
   ctx.fillText('1 atm',cx,hb-8);
 
   // ── BUCKET ──
-  const bw=W*.40;
+  const bw=W*.44;
   const bx=cx-bw/2;
-  const by=H*.52;
-  const bh=H*.22;
+  const by=H*.55;
+  const bh=H*.25;
   const bB=by+bh;
-  const bBottomW=bw*.88; // narrower at bottom (tapered)
+  const bBottomW=bw*.85;
 
   // Bucket body (trapezoid matching the taper)
   ctx.beginPath();
@@ -262,14 +260,35 @@ function draw(){
   ctx.fillStyle='#8b949e'; ctx.font='10px monospace'; ctx.textAlign='center';
   ctx.fillText('COLLECTION BUCKET',cx,by-10);
 
-  // ── SNOW PILE (matches bucket taper, not rectangle) ──
-  const maxFill=3;
-  const frac=Math.min(buckKg/maxFill,0.9);
-  if(frac>0.005){
-    const snowH=bh*.85*frac;
+  // ── FALLING SNOW (before gas so visible through it) ──
+  for(let p of snowP){
+    if(!p.inB && !p.settled){
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(230,242,255,${p.life*.9})`; ctx.fill();
+      if(p.r>1.5){
+        ctx.beginPath(); ctx.arc(p.x-p.r*.15,p.y-p.r*.15,p.r*.2,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,255,255,${p.life*.5})`; ctx.fill();
+      }
+    }
+  }
+
+  // ── GAS (semi-transparent, on top of snow) ──
+  for(let p of gasP){
+    const a=p.life;
+    const gg=ctx.createRadialGradient(p.x,p.y,p.r*.15,p.x,p.y,p.r);
+    gg.addColorStop(0,`rgba(200,215,230,${a*.1})`);
+    gg.addColorStop(.6,`rgba(160,180,200,${a*.05})`);
+    gg.addColorStop(1,'rgba(120,140,160,0)');
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=gg; ctx.fill();
+  }
+
+  // ── SNOW PILE (solid fill, after gas so it sits on top) ──
+  const maxFill=2;
+  const frac=Math.min(buckKg/maxFill,0.95);
+  if(frac>0.01){
+    const snowH=bh*.9*frac;
     const snowY=bB-snowH;
-    // Pile edges follow bucket taper, not vertical
-    const taperRatio=snowH/bh; // how far up
+    const taperRatio=snowH/bh;
     const pileTopW=bBottomW+(bw-bBottomW)*taperRatio;
 
     ctx.beginPath();
@@ -277,48 +296,38 @@ function draw(){
     for(let i=0;i<=20;i++){
       const tt=i/20;
       const sx=cx-bBottomW/2+tt*pileTopW;
-      const sy=snowY-Math.sin(tt*Math.PI)*5*frac;
+      const sy=snowY-Math.sin(tt*Math.PI)*4*frac;
       ctx.lineTo(sx,sy);
     }
     ctx.lineTo(cx+bBottomW/2,bB);
     ctx.closePath();
-    ctx.fillStyle='#c8dff2'; ctx.fill();
-    ctx.strokeStyle='#8ab4c8'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#b8d4e8'; ctx.fill();
+    ctx.strokeStyle='#7aa4b8'; ctx.lineWidth=1; ctx.stroke();
 
     // Highlight
     ctx.beginPath();
     for(let i=0;i<=20;i++){
       const tt=i/20;
       const sx=cx-bBottomW/2+tt*pileTopW;
-      const sy=snowY-Math.sin(tt*Math.PI)*5*frac;
+      const sy=snowY-Math.sin(tt*Math.PI)*4*frac;
       if(i===0)ctx.moveTo(sx,sy); else ctx.lineTo(sx,sy);
     }
-    ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.5; ctx.stroke();
-  }
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
 
-  // ── SETTLED SNOW (individual particles forming the pile) ──
-  const settled=snowP.filter(p=>p.settled);
-  for(let p of settled){
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.6,0,Math.PI*2);
-    ctx.fillStyle='rgba(220,235,255,0.5)'; ctx.fill();
-  }
-
-  // ── FALLING SNOW (drawn AFTER bucket so visible through gas) ──
-  for(let p of snowP){
-    if(!p.inB && !p.settled){
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(230,242,255,${p.life*.85})`; ctx.fill();
+    // Snow texture dots on pile
+    for(let i=0;i<200*frac;i++){
+      const tx=cx-bBottomW/2+Math.random()*bBottomW;
+      const ty=snowY+Math.random()*snowH*.9;
+      ctx.fillStyle='rgba(255,255,255,0.4)';
+      ctx.beginPath(); ctx.arc(tx,ty,1+Math.random()*1.5,0,Math.PI*2); ctx.fill();
     }
   }
 
-  // ── GAS (drawn last so it's on top but transparent) ──
-  for(let p of gasP){
-    const a=p.life;
-    const gg=ctx.createRadialGradient(p.x,p.y,p.r*.15,p.x,p.y,p.r);
-    gg.addColorStop(0,`rgba(200,215,230,${a*.12})`);
-    gg.addColorStop(.5,`rgba(160,180,200,${a*.06})`);
-    gg.addColorStop(1,'rgba(120,140,160,0)');
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=gg; ctx.fill();
+  // ── SETTLED SNOW PARTICLES (on top of pile, adding texture) ──
+  const settled=snowP.filter(p=>p.settled);
+  for(let p of settled){
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(235,245,255,0.6)'; ctx.fill();
   }
 
   // Nozzle flash
