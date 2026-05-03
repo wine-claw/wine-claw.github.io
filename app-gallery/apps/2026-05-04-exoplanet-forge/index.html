@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exoplanet Forge</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--surface:#111128;--cyan:#4fc3f7;--orange:#ff7043;--green:#66bb6a;--text:#e0e0e0;--muted:#9e9e9e;--border:#1a1a3a}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow-x:hidden;min-height:100vh}
+.banner{background:linear-gradient(90deg,#2a1a00,#3a2200);color:#ffb74d;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;letter-spacing:0.3px;border-bottom:1px solid #4a3000}
+.banner b{color:#ffcc80}
+.header{text-align:center;padding:16px 12px 8px}
+.header h1{font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--cyan),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px}
+.header p{color:var(--muted);font-size:13px;margin-top:4px}
+.app{display:flex;gap:12px;padding:8px 12px 12px;max-width:1440px;margin:0 auto;min-height:calc(100vh - 90px)}
+.panel{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:14px;overflow-y:auto}
+.left-panel{width:300px;flex-shrink:0}
+.center-panel{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center}
+.right-panel{width:270px;flex-shrink:0}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--cyan);margin:14px 0 8px;font-weight:600}
+.section-title:first-child{margin-top:0}
+.control-group{margin-bottom:10px}
+.control-group label{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text);margin-bottom:4px}
+.control-group .val{color:var(--cyan);font-weight:600;font-size:12px;font-family:monospace}
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:#1a1a3a;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--bg)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--bg)}
+select{width:100%;padding:8px 10px;background:#1a1a3a;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;outline:none}
+select:focus{border-color:var(--cyan)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.preset-btn{padding:6px 10px;background:#1a1a3a;border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.preset-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.preset-btn:active{background:var(--cyan);color:var(--bg)}
+#viewport{width:100%;flex:1;min-height:350px;border-radius:8px;display:block;cursor:pointer}
+.readout-card{background:#0d0d24;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.readout-card .rc-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px}
+.readout-card .rc-value{font-size:18px;font-weight:700;margin-top:2px;font-family:monospace}
+.readout-card .rc-note{font-size:10px;color:var(--muted);margin-top:2px}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:10px 0}
+.gauge-wrap svg{width:140px;height:140px}
+.gauge-label{font-size:12px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:1px}
+.gauge-score{font-size:13px;font-weight:700;margin-top:2px}
+.temp-bar-wrap{margin:10px 0}
+.temp-bar{height:12px;border-radius:6px;background:linear-gradient(90deg,#1565c0,#42a5f5,#66bb6a,#fdd835,#ff7043,#c62828);position:relative}
+.temp-marker{position:absolute;top:-4px;width:3px;height:20px;background:#fff;border-radius:2px;transition:left 0.3s}
+.temp-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:4px;font-family:monospace}
+.verdict{display:inline-block;padding:6px 14px;border-radius:20px;font-size:14px;font-weight:700;text-align:center;width:100%;margin-top:6px;letter-spacing:0.5px}
+.verdict.habitable{background:rgba(102,187,106,0.2);color:var(--green);border:1px solid var(--green)}
+.verdict.marginal{background:rgba(255,183,77,0.2);color:#ffb74d;border:1px solid #ffb74d}
+.verdict.hostile{background:rgba(255,112,67,0.2);color:var(--orange);border:1px solid var(--orange)}
+.verdict.extreme{background:rgba(229,57,53,0.2);color:#e53935;border:1px solid #e53935}
+@media(max-width:768px){
+.app{flex-direction:column;padding:6px}
+.left-panel,.right-panel{width:100%;max-height:none}
+.center-panel{min-height:50vh}
+.panel{padding:10px}
+.presets{gap:4px}
+.preset-btn{font-size:10px;padding:5px 7px}
+.header h1{font-size:22px}
+}
+</style>
+</head>
+<body>
+<div class="banner">⚠ <b>Experimental OpenClaw AI mini-app</b> — for exploration only, not validated for decisions.</div>
+<div class="header"><h1>Exoplanet Forge</h1><p>Design a world. See if it could host life.</p></div>
+<div class="app">
+<!-- LEFT PANEL -->
+<div class="panel left-panel" id="leftPanel">
+<div class="section-title">Star</div>
+<div class="control-group">
+<label>Stellar Type <span class="val" id="vStellar">G (Sun-like)</span></label>
+<select id="sStellar">
+<option value="M">M — Red Dwarf</option>
+<option value="K">K — Orange Dwarf</option>
+<option value="G" selected>G — Sun-like</option>
+<option value="F">F — White-Yellow</option>
+</select>
+</div>
+<div class="section-title">Orbit</div>
+<div class="control-group">
+<label>Distance (AU) <span class="val" id="vDist">1.00</span></label>
+<input type="range" id="sDist" min="0.1" max="5" step="0.01" value="1.0">
+</div>
+<div class="section-title">Planet</div>
+<div class="control-group">
+<label>Mass (M⊕) <span class="val" id="vMass">1.00</span></label>
+<input type="range" id="sMass" min="0.1" max="10" step="0.01" value="1.0">
+</div>
+<div class="control-group">
+<label>Albedo <span class="val" id="vAlbedo">0.30</span></label>
+<input type="range" id="sAlbedo" min="0" max="0.9" step="0.01" value="0.3">
+</div>
+<div class="control-group">
+<label>Water Content <span class="val" id="vWater">70%</span></label>
+<input type="range" id="sWater" min="0" max="100" step="1" value="70">
+</div>
+<div class="section-title">Atmosphere</div>
+<div class="control-group">
+<label>Density (bar rel.) <span class="val" id="vAtmo">1.00</span></label>
+<input type="range" id="sAtmo" min="0" max="5" step="0.01" value="1.0">
+</div>
+<div class="control-group">
+<label>Greenhouse Factor <span class="val" id="vGreen">1.0</span></label>
+<input type="range" id="sGreen" min="0" max="10" step="0.1" value="1.0">
+</div>
+<div class="section-title">Presets</div>
+<div class="presets">
+<button class="preset-btn" data-p="earth">Earth-like</button>
+<button class="preset-btn" data-p="hotjup">Hot Jupiter</button>
+<button class="preset-btn" data-p="frozen">Frozen Mini-Earth</button>
+<button class="preset-btn" data-p="tidal">Tidally Locked Hell</button>
+<button class="preset-btn" data-p="super">Super-Earth Ocean</button>
+</div>
+</div>
+<!-- CENTER PANEL -->
+<div class="panel center-panel">
+<canvas id="viewport"></canvas>
+</div>
+<!-- RIGHT PANEL -->
+<div class="panel right-panel" id="rightPanel">
+<div class="gauge-wrap">
+<svg viewBox="0 0 140 140" id="gaugeSvg">
+<circle cx="70" cy="70" r="58" fill="none" stroke="#1a1a3a" stroke-width="10"/>
+<circle cx="70" cy="70" r="58" fill="none" stroke="var(--cyan)" stroke-width="10" stroke-linecap="round" stroke-dasharray="364.42" stroke-dashoffset="364.42" transform="rotate(-90 70 70)" id="gaugeArc"/>
+<text x="70" y="66" text-anchor="middle" fill="var(--text)" font-size="28" font-weight="700" font-family="monospace" id="gaugeNum">0</text>
+<text x="70" y="84" text-anchor="middle" fill="var(--muted)" font-size="10" letter-spacing="1">HABITABILITY</text>
+</svg>
+<div class="gauge-label">Verdict</div>
+<div class="verdict habitable" id="verdictBadge">Habitable</div>
+</div>
+<div class="section-title">Surface</div>
+<div class="readout-card"><div class="rc-label">Surface Temp</div><div class="rc-value" id="rTemp">288 K (15 °C)</div></div>
+<div class="temp-bar-wrap"><div class="temp-bar"><div class="temp-marker" id="tempMarker"></div></div><div class="temp-labels"><span>50K</span><span>373K</span><span>800K</span></div></div>
+<div class="section-title">Orbit</div>
+<div class="readout-card"><div class="rc-label">Orbital Period</div><div class="rc-value" id="rPeriod">365 d</div></div>
+<div class="readout-card"><div class="rc-label">Habitable Zone</div><div class="rc-value" id="rHZ" style="font-size:13px">0.95 – 1.37 AU</div><div class="rc-note" id="rHZnote">Inside HZ</div></div>
+<div class="section-title">Planet</div>
+<div class="readout-card"><div class="rc-label">Gravity</div><div class="rc-value" id="rGrav">1.00 g</div></div>
+<div class="readout-card"><div class="rc-label">Density</div><div class="rc-value" id="rDens">5.51 g/cm³</div></div>
+<div class="readout-card"><div class="rc-label">Atmo Retention</div><div class="rc-value" id="rAtmoR" style="font-size:14px">Stable</div></div>
+<div class="readout-card"><div class="rc-label">Tidal Locking</div><div class="rc-value" id="rTidal" style="font-size:14px">Normal day/night</div></div>
+</div>
+</div>
+
+<script>
+// Stellar data
+const STARS={M:{mass:0.08,lum:0.001,temp:2400,color:'#e53935',glow:'#ff5252'},K:{mass:0.7,lum:0.2,temp:3800,color:'#fb8c00',glow:'#ffa726'},G:{mass:1.0,lum:1.0,temp:5778,color:'#fff176',glow:'#ffee58'},F:{mass:1.4,lum:3.5,temp:6500,color:'#e3f2fd',glow:'#bbdefb'}};
+
+// Presets
+const PRESETS={
+  earth:{stellar:'G',dist:1.0,mass:1.0,albedo:0.3,water:70,atmo:1.0,green:1.0},
+  hotjup:{stellar:'F',dist:0.15,mass:5.0,albedo:0.1,water:0,atmo:4.0,green:8.0},
+  frozen:{stellar:'M',dist:0.5,mass:0.3,albedo:0.6,water:20,atmo:0.3,green:0.2},
+  tidal:{stellar:'M',dist:0.08,mass:1.2,albedo:0.1,water:5,atmo:0.8,green:5.0},
+  super:{stellar:'K',dist:0.8,mass:4.0,albedo:0.25,water:90,atmo:1.5,green:1.5}
+};
+
+// DOM refs
+const $=id=>document.getElementById(id);
+const canvas=$('viewport');
+const ctx=canvas.getContext('2d');
+
+// State
+let state={stellar:'G',dist:1.0,mass:1.0,albedo:0.3,water:70,atmo:1.0,green:1.0};
+let animTime=0, paused=false, stars=[];
+
+// Generate starfield
+function genStars(){
+  stars=[];
+  for(let i=0;i<120;i++){
+    stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.2+0.3,a:Math.random()*0.6+0.2});
+  }
+}
+genStars();
+
+// Resize canvas
+function resize(){
+  const p=canvas.parentElement;
+  const r=p.getBoundingClientRect();
+  canvas.width=r.width*devicePixelRatio;
+  canvas.height=r.height*devicePixelRatio;
+  canvas.style.width=r.width+'px';
+  canvas.style.height=r.height+'px';
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+window.addEventListener('resize',resize);
+setTimeout(resize,50);
+
+// Compute physics
+function compute(s){
+  const st=STARS[s.stellar];
+  const Tstar=st.temp;
+  const L=st.lum;
+  const Rstar=Math.pow(st.mass,0.8); // rough radius in solar radii
+  const RsAU=Rstar*0.00465; // 1 R☉ ≈ 0.00465 AU
+  // Equilibrium temperature
+  const Teq=Tstar*Math.sqrt(RsAU/(2*s.dist))*Math.pow(1-s.albedo,0.25);
+  // Surface temperature with greenhouse
+  const Tsurf=Teq*(1+0.84*Math.log(1+s.green));
+  // Habitable zone bounds
+  const hzInner=Math.sqrt(L/1.1);
+  const hzOuter=Math.sqrt(L/0.53);
+  // Orbital period (Kepler's 3rd)
+  const period=Math.sqrt(Math.pow(s.dist,3)/st.mass)*365.25;
+  // Gravity (M/R²), R∝M^0.28
+  const R=Math.pow(s.mass,0.28);
+  const grav=s.mass/(R*R);
+  // Density: Earth=5.51 g/cm³, rough: ρ∝M/(R³)
+  const dens=5.51*s.mass/Math.pow(R,3);
+  // Atmospheric retention
+  let atmoRet='Stable';
+  if(s.mass<0.5&&(s.stellar==='M'||s.stellar==='F')&&Tsurf>400) atmoRet='Escaping';
+  else if(s.mass<0.5&&s.atmo<0.5) atmoRet='Thinning';
+  else if(s.mass<0.3) atmoRet='Escaping';
+  else if(s.mass>0.5&&s.atmo>0.3) atmoRet='Stable';
+  else if(s.atmo<0.2) atmoRet='Thinning';
+  // Tidal locking
+  let tidal='Normal day/night';
+  if(period<10&&s.stellar==='M') tidal='Likely locked';
+  else if(period<15&&s.dist<0.15) tidal='Probably slow rotation';
+  // Habitability score
+  let score=0;
+  // HZ component (0-40)
+  if(s.dist>=hzInner&&s.dist<=hzOuter){
+    const center=(hzInner+hzOuter)/2;
+    const halfW=(hzOuter-hzInner)/2;
+    const dFromC=Math.abs(s.dist-center);
+    score+=40*(1-dFromC/halfW);
+  }
+  // Temperature component (0-30)
+  if(Tsurf>=273&&Tsurf<=373) score+=30;
+  else if(Tsurf>=200&&Tsurf<273) score+=30*(1-(273-Tsurf)/73);
+  else if(Tsurf>373&&Tsurf<=500) score+=30*(1-(Tsurf-373)/127);
+  else if(Tsurf>500) score+=0;
+  else score+=0;
+  // Atmosphere component (0-15)
+  if(s.atmo>=0.5&&s.atmo<=2.0) score+=15;
+  else if(s.atmo>0&&s.atmo<0.5) score+=15*s.atmo/0.5;
+  else if(s.atmo>2) score+=Math.max(0,15-(s.atmo-2)*5);
+  // Water bonus (0-10)
+  if(s.water>=40&&s.water<=80) score+=10;
+  else if(s.water>0) score+=10*Math.min(s.water/40,1)*(s.water<40?1:Math.max(0,1-(s.water-80)/20));
+  // Penalties
+  if(tidal==='Likely locked') score-=15;
+  if(atmoRet==='Escaping') score-=20;
+  else if(atmoRet==='Thinning') score-=8;
+  if(Tsurf>500) score-=30;
+  else if(Tsurf<200) score-=25;
+  score=Math.max(0,Math.min(100,Math.round(score)));
+  // Verdict
+  let verdict='Extreme',vclass='extreme';
+  if(score>=70){verdict='Habitable';vclass='habitable';}
+  else if(score>=40){verdict='Marginal';vclass='marginal';}
+  else if(score>=15){verdict='Hostile';vclass='hostile';}
+  return{Tsurf,Teq,hzInner,hzOuter,period,grav,dens,atmoRet,tidal,score,verdict,vclass};
+}
+
+// Update UI
+function updateUI(){
+  const c=compute(state);
+  $('rTemp').textContent=Math.round(c.Tsurf)+' K ('+Math.round(c.Tsurf-273)+' °C)';
+  $('rPeriod').textContent=c.period<1?Math.round(c.period*24)+' hr':Math.round(c.period)+' d';
+  $('rHZ').textContent=c.hzInner.toFixed(2)+' – '+c.hzOuter.toFixed(2)+' AU';
+  const inHZ=state.dist>=c.hzInner&&state.dist<=c.hzOuter;
+  $('rHZnote').textContent=inHZ?'Inside HZ ✓':'Outside HZ ✗';
+  $('rHZnote').style.color=inHZ?'var(--green)':'var(--orange)';
+  $('rGrav').textContent=c.grav.toFixed(2)+' g';
+  $('rDens').textContent=c.dens.toFixed(2)+' g/cm³';
+  $('rAtmoR').textContent=c.atmoRet;
+  $('rAtmoR').style.color=c.atmoRet==='Stable'?'var(--green)':c.atmoRet==='Thinning'?'#ffb74d':'var(--orange)';
+  $('rTidal').textContent=c.tidal;
+  $('rTidal').style.color=c.tidal==='Normal day/night'?'var(--green)':c.tidal==='Probably slow rotation'?'#ffb74d':'var(--orange)';
+  // Gauge
+  const circ=2*Math.PI*58;
+  const offset=circ-(c.score/100)*circ;
+  const arc=$('gaugeArc');
+  arc.style.strokeDashoffset=offset;
+  const gcolor=c.score>=70?'var(--green)':c.score>=40?'#ffb74d':c.score>=15?'var(--orange)':'#e53935';
+  arc.style.stroke=gcolor;
+  $('gaugeNum').textContent=c.score;
+  $('gaugeNum').style.fill=gcolor;
+  // Verdict badge
+  const badge=$('verdictBadge');
+  badge.textContent=c.verdict;
+  badge.className='verdict '+c.vclass;
+  // Temp marker
+  const t=c.Tsurf;
+  let pct;
+  if(t<=50) pct=0;
+  else if(t<=373) pct=(t-50)/323*70;
+  else if(t<=800) pct=70+(t-373)/427*30;
+  else pct=100;
+  pct=Math.max(0,Math.min(100,pct));
+  $('tempMarker').style.left=pct+'%';
+}
+
+// Planet color from temperature
+function planetColor(T){
+  if(T<200) return{base:'#b3e5fc',land:'#e1f5fe',name:'ice'};
+  if(T<260) return{base:'#81d4fa',land:'#e0f2f1',name:'cold'};
+  if(T<290) return{base:'#4fc3f7',land:'#66bb6a',name:'temperate'};
+  if(T<320) return{base:'#29b6f6',land:'#aed581',name:'warm'};
+  if(T<373) return{base:'#26c6da',land:'#dce775',name:'hot'};
+  if(T<500) return{base:'#ef5350',land:'#ff8a65',name:'scorching'};
+  return{base:'#c62828',land:'#ff3d00',name:'lava'};
+}
+
+// Draw scene
+function draw(ts){
+  const w=canvas.width/devicePixelRatio;
+  const h=canvas.height/devicePixelRatio;
+  if(w<10||h<10){requestAnimationFrame(draw);return;}
+  ctx.clearRect(0,0,w,h);
+  // Background
+  ctx.fillStyle='#0a0a1a';
+  ctx.fillRect(0,0,w,h);
+  // Stars
+  stars.forEach(s=>{
+    ctx.beginPath();
+    ctx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,'+(s.a*(0.8+0.2*Math.sin(ts*0.001+s.x*10)))+')';
+    ctx.fill();
+  });
+  const st=STARS[state.stellar];
+  const c=compute(state);
+  // Star position
+  const sx=w*0.2, sy=h*0.18;
+  const starSize=Math.max(8,12+Math.log10(st.lum+0.001)*8);
+  const pulse=1+0.05*Math.sin(ts*0.003);
+  // Star glow
+  const g1=ctx.createRadialGradient(sx,sy,0,sx,sy,starSize*4*pulse);
+  g1.addColorStop(0,st.glow+'44');
+  g1.addColorStop(0.5,st.glow+'11');
+  g1.addColorStop(1,'transparent');
+  ctx.fillStyle=g1;
+  ctx.fillRect(sx-starSize*5,sy-starSize*5,starSize*10,starSize*10);
+  // Star core
+  const g2=ctx.createRadialGradient(sx,sy,0,sx,sy,starSize*pulse);
+  g2.addColorStop(0,'#ffffff');
+  g2.addColorStop(0.3,st.color);
+  g2.addColorStop(1,st.glow+'88');
+  ctx.beginPath();
+  ctx.arc(sx,sy,starSize*pulse,0,Math.PI*2);
+  ctx.fillStyle=g2;
+  ctx.fill();
+  // Orbit ring
+  const orbitRx=w*0.28, orbitRy=h*0.32;
+  const cx=w*0.5, cy=h*0.55;
+  ctx.beginPath();
+  ctx.ellipse(cx,cy,orbitRx,orbitRy,0,0,Math.PI*2);
+  ctx.strokeStyle='rgba(255,255,255,0.06)';
+  ctx.lineWidth=1;
+  ctx.stroke();
+  // Planet position on orbit
+  const angle=paused?planetAngle:ts*0.0003;
+  planetAngle=angle;
+  const px=cx+Math.cos(angle)*orbitRx;
+  const py=cy+Math.sin(angle)*orbitRy;
+  // Planet size
+  const pRadius=Math.max(8,14*Math.pow(state.mass,0.28));
+  const pc=planetColor(c.Tsurf);
+  // Atmosphere glow
+  if(state.atmo>0.5){
+    const atmoR=pRadius*(1+state.atmo*0.15);
+    const ga=ctx.createRadialGradient(px,py,pRadius*0.8,px,py,atmoR);
+    const atmoColor=c.Tsurf<350?'rgba(79,195,247,':'rgba(255,112,67,';
+    ga.addColorStop(0,atmoColor+(0.15*state.atmo)+')');
+    ga.addColorStop(1,atmoColor+'0)');
+    ctx.beginPath();
+    ctx.arc(px,py,atmoR,0,Math.PI*2);
+    ctx.fillStyle=ga;
+    ctx.fill();
+  }
+  // Planet body
+  const lightAngle=Math.atan2(sy-py,sx-px);
+  const lx=px+Math.cos(lightAngle)*pRadius*0.3;
+  const ly=py+Math.sin(lightAngle)*pRadius*0.3;
+  // Base sphere
+  const gp=ctx.createRadialGradient(lx,ly,pRadius*0.1,px,py,pRadius);
+  gp.addColorStop(0,pc.land);
+  gp.addColorStop(0.6,pc.base);
+  gp.addColorStop(1,'#0a0a2a');
+  ctx.beginPath();
+  ctx.arc(px,py,pRadius,0,Math.PI*2);
+  ctx.fillStyle=gp;
+  ctx.fill();
+  // Water overlay
+  if(state.water>20&&c.Tsurf<373){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(px,py,pRadius,0,Math.PI*2);
+    ctx.clip();
+    const waterAlpha=Math.min(0.5,state.water/150);
+    ctx.fillStyle='rgba(33,150,243,'+waterAlpha+')';
+    ctx.fillRect(px-pRadius,py-pRadius*0.3,pRadius*2,pRadius*0.8);
+    ctx.restore();
+  }
+  // Ice caps
+  if(c.Tsurf<260){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(px,py,pRadius,0,Math.PI*2);
+    ctx.clip();
+    const iceAlpha=Math.min(0.7,(260-c.Tsurf)/100);
+    ctx.fillStyle='rgba(255,255,255,'+iceAlpha+')';
+    ctx.beginPath();
+    ctx.ellipse(px,py-pRadius*0.7,pRadius*0.7,pRadius*0.25,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(px,py+pRadius*0.7,pRadius*0.6,pRadius*0.2,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  // Clouds
+  if(state.atmo>0.3&&state.water>20&&c.Tsurf<450){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(px,py,pRadius,0,Math.PI*2);
+    ctx.clip();
+    const cloudAlpha=Math.min(0.35,state.atmo*0.15);
+    const drift=ts*0.0001;
+    for(let i=0;i<3;i++){
+      const cy2=py-pRadius*0.5+i*pRadius*0.4;
+      const cx2=px+Math.sin(drift+i*2)*pRadius*0.3;
+      ctx.beginPath();
+      ctx.ellipse(cx2,cy2,pRadius*0.8,pRadius*0.15,0.1*i,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,'+cloudAlpha+')';
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  // Specular highlight
+  const gs=ctx.createRadialGradient(lx,ly,0,lx,ly,pRadius*0.5);
+  gs.addColorStop(0,'rgba(255,255,255,0.2)');
+  gs.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath();
+  ctx.arc(lx,ly,pRadius*0.5,0,Math.PI*2);
+  ctx.fillStyle=gs;
+  ctx.fill();
+  // Shadow crescent
+  const shx=px-Math.cos(lightAngle)*pRadius*0.3;
+  const shy=py-Math.sin(lightAngle)*pRadius*0.3;
+  const gsh=ctx.createRadialGradient(shx,shy,pRadius*0.2,shx,shy,pRadius*1.1);
+  gsh.addColorStop(0,'rgba(0,0,10,0.7)');
+  gsh.addColorStop(1,'rgba(0,0,10,0)');
+  ctx.beginPath();
+  ctx.arc(px,py,pRadius,0,Math.PI*2);
+  ctx.fillStyle=gsh;
+  ctx.fill();
+  // Small moon for massive planets
+  if(state.mass>2){
+    const moonAngle=ts*0.002;
+    const moonDist=pRadius*2.2;
+    const mx=px+Math.cos(moonAngle)*moonDist;
+    const my=py+Math.sin(moonAngle)*moonDist*0.4;
+    ctx.beginPath();
+    ctx.arc(mx,my,3,0,Math.PI*2);
+    ctx.fillStyle='#9e9e9e';
+    ctx.fill();
+  }
+  // HZ indicator on orbit
+  const hzInnerArc=Math.acos(Math.max(-1,Math.min(1,1-(c.hzInner-Math.sqrt(cx*cx+cy*cy))/orbitRx)));
+  // Just draw HZ zone as a faint arc highlight
+  // Skip complex arc math; draw a subtle ring
+  if(c.hzInner<5&&c.hzOuter>0){
+    const hzI=Math.min(orbitRx,c.hzInner/Math.sqrt((cx-sx)*(cx-sx)+(cy-sy)*(cy-sy))*orbitRx);
+    const hzO=Math.min(orbitRx*1.5,c.hzOuter/Math.sqrt((cx-sx)*(cx-sx)+(cy-sy)*(cy-sy))*orbitRx);
+  }
+  requestAnimationFrame(draw);
+}
+let planetAngle=0;
+
+// Wire up controls
+function wireSlider(sliderId, valId, key, fmt){
+  $(sliderId).addEventListener('input', function(){
+    state[key]=parseFloat(this.value);
+    $(valId).textContent=fmt(state[key]);
+    updateUI();
+  });
+}
+wireSlider('sDist','vDist','dist',v=>v.toFixed(2));
+wireSlider('sMass','vMass','mass',v=>v.toFixed(2));
+wireSlider('sAlbedo','vAlbedo','albedo',v=>v.toFixed(2));
+wireSlider('sWater','vWater','water',v=>Math.round(v)+'%');
+wireSlider('sAtmo','vAtmo','atmo',v=>v.toFixed(2));
+wireSlider('sGreen','vGreen','green',v=>v.toFixed(1));
+
+$('sStellar').addEventListener('change',()=>{
+  state.stellar=$('sStellar').value;
+  const names={M:'Red Dwarf',K:'Orange Dwarf',G:'Sun-like',F:'White-Yellow'};
+  $('vStellar').textContent=state.stellar+' ('+names[state.stellar]+')';
+  updateUI();
+});
+
+// Presets
+document.querySelectorAll('.preset-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const p=PRESETS[btn.dataset.p];
+    if(!p) return;
+    state.stellar=p.stellar;
+    state.dist=p.dist;
+    state.mass=p.mass;
+    state.albedo=p.albedo;
+    state.water=p.water;
+    state.atmo=p.atmo;
+    state.green=p.green;
+    $('sStellar').value=p.stellar;
+    $('sDist').value=p.dist;
+    $('sMass').value=p.mass;
+    $('sAlbedo').value=p.albedo;
+    $('sWater').value=p.water;
+    $('sAtmo').value=p.atmo;
+    $('sGreen').value=p.green;
+    const names={M:'Red Dwarf',K:'Orange Dwarf',G:'Sun-like',F:'White-Yellow'};
+    $('vStellar').textContent=p.stellar+' ('+names[p.stellar]+')';
+    $('vDist').textContent=p.dist.toFixed(2);
+    $('vMass').textContent=p.mass.toFixed(2);
+    $('vAlbedo').textContent=p.albedo.toFixed(2);
+    $('vWater').textContent=Math.round(p.water)+'%';
+    $('vAtmo').textContent=p.atmo.toFixed(2);
+    $('vGreen').textContent=p.green.toFixed(1);
+    updateUI();
+  });
+});
+
+// Tap to pause
+canvas.addEventListener('click',()=>{paused=!paused;});
+
+// Init
+updateUI();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

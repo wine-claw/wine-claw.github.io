@@ -2,16 +2,24 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-01",
-    "title": "Turing's Canvas",
-    "slug": "turing-canvas",
-    "publishedSlug": "2026-05-01-turing-canvas",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-01-turing-canvas/"
+    "date": "2026-05-04",
+    "title": "Exoplanet Forge",
+    "slug": "exoplanet-forge",
+    "publishedSlug": "2026-05-04-exoplanet-forge",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-04-exoplanet-forge/"
   },
   "apps": [
     {
+      "date": "2026-05-04",
+      "title": "Exoplanet Forge",
+      "slug": "exoplanet-forge",
+      "publishedSlug": "2026-05-04-exoplanet-forge",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-04-exoplanet-forge/",
+      "description": "Interactive exoplanet design sandbox. Tweak stellar type, orbital distance, mass, atmosphere, and water content to build a living planet in real time with habitability scoring.",
+      "category": "simulation"
+    },
+    {
       "date": "2026-05-01",
-      "slug": "turing-canvas",
       "title": "Turing's Canvas",
       "publishedSlug": "2026-05-01-turing-canvas",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-01-turing-canvas/",
