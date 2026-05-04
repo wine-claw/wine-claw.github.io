@@ -716,7 +716,7 @@ function renderCanvas() {
     layerRects.push({ y, h: layerH, i });
 
     // Base color from materials + decomposition shift
-    let r = 80, g = 60, b = 40;
+    let r = 120, g = 100, b = 70;
     if (layer.materials.length > 0) {
       let tr = 0, tg = 0, tb = 0, w = 0;
       for (const mat of layer.materials) {
@@ -750,8 +750,8 @@ function renderCanvas() {
     roundRect(ctx, margin, y, pileW, layerH, 8);
     ctx.fill();
 
-    // Border
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    // Border — brighter for empty layers so they remain visible
+    ctx.strokeStyle = layer.materials.length > 0 ? 'rgba(0,0,0,0.25)' : 'rgba(180,160,130,0.35)';
     ctx.lineWidth = 1.5;
     roundRect(ctx, margin, y, pileW, layerH, 8);
     ctx.stroke();
@@ -800,6 +800,12 @@ function renderCanvas() {
     ctx.arc(sx, sy, p.size, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Subtle outer bin outline so the pile area is always visible
+  ctx.strokeStyle = 'rgba(140,120,90,0.3)';
+  ctx.lineWidth = 2;
+  roundRect(ctx, margin - 2, margin - 2, pileW + 4, H - margin * 2 + 4, 12);
+  ctx.stroke();
 
   // Moisture droplets on wet layers
   for (let i = 0; i < LAYER_COUNT; i++) {
