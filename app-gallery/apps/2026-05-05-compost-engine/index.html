@@ -732,6 +732,8 @@ function addMaterial(layerIdx, feedId) {
   if (existing) existing.mass += 10;
   else layer.materials.push({ id: feedId, mass: 10 });
   computeLayerAggregate(layer);
+  renderCanvas();
+  updateUI();
   toast(`Added ${f.name} to layer ${layerIdx + 1}`, 'good');
 }
 
