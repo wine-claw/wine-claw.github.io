@@ -383,6 +383,18 @@ function resetPile() {
   state.turnAnim = 0;
   state.events = [];
   document.getElementById('winOverlay').classList.remove('show');
+  // Pre-seed with a starter pile so the canvas is alive from the start
+  const starter = [
+    { id: 'grass', mass: 40 },
+    { id: 'straw', mass: 50 },
+    { id: 'manure', mass: 30 },
+    { id: 'leaves', mass: 35 }
+  ];
+  // Distribute across layers for visual variety
+  for (const mat of starter) {
+    const layerIdx = Math.floor(Math.random() * LAYER_COUNT);
+    state.layers[layerIdx].materials.push({ ...mat });
+  }
   updateUI();
 }
 
