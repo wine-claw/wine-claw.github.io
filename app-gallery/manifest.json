@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-04",
-    "title": "Exoplanet Forge",
-    "slug": "exoplanet-forge",
-    "publishedSlug": "2026-05-04-exoplanet-forge",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-04-exoplanet-forge/"
+    "date": "2026-05-05",
+    "title": "Compost Engine",
+    "slug": "compost-engine",
+    "publishedSlug": "2026-05-05-compost-engine",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-05-compost-engine/"
   },
   "apps": [
+    {
+      "date": "2026-05-05",
+      "title": "Compost Engine",
+      "slug": "compost-engine",
+      "publishedSlug": "2026-05-05-compost-engine",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-05-compost-engine/",
+      "description": "Interactive compost-pile simulator. Drag feedstocks onto a pile and watch decomposition, temperature, and microbial activity unfold in real time."
+    },
     {
       "date": "2026-05-04",
       "title": "Exoplanet Forge",
@@ -102,7 +110,7 @@
     },
     {
       "date": "2026-04-23",
-      "title": "The Cornelius Keg \u2014 A History",
+      "title": "The Cornelius Keg — A History",
       "slug": "cornelius-keg-history",
       "publishedSlug": "2026-04-23-cornelius-keg-history",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-23-cornelius-keg-history/"
@@ -116,7 +124,7 @@
     },
     {
       "date": "2026-04-22",
-      "title": "O\u2082 Risk Map",
+      "title": "O₂ Risk Map",
       "slug": "o2-risk-map",
       "publishedSlug": "2026-04-22-o2-risk-map",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-22-o2-risk-map/"
@@ -291,7 +299,7 @@
     },
     {
       "date": "2026-03-25",
-      "title": "SO\u2082 Speciation Explorer",
+      "title": "SO₂ Speciation Explorer",
       "slug": "so2-speciation-explorer",
       "publishedSlug": "2026-03-25-so2-speciation-explorer",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-03-25-so2-speciation-explorer/"

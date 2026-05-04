@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compost Engine</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1209;
+    color: #f5e6c8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: #241a0e;
+    border-bottom: 1px solid #3a2e1f;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .top-bar h1 {
+    font-size: 1.3rem;
+    color: #7a9e3e;
+    letter-spacing: 1px;
+  }
+  .top-bar .day {
+    font-size: 1rem;
+    color: #e88c3c;
+    font-weight: 600;
+  }
+  .top-bar .controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .btn {
+    background: #3a2e1f;
+    border: 1px solid #5a4a35;
+    color: #f5e6c8;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.15s, transform 0.05s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .btn:hover { background: #4a3e2f; }
+  .btn:active { transform: scale(0.96); }
+  .btn.active { background: #7a9e3e; color: #1a1209; border-color: #7a9e3e; }
+  .main {
+    display: flex;
+    flex: 1;
+    gap: 16px;
+    padding: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .panel {
+    background: #241a0e;
+    border: 1px solid #3a2e1f;
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .palette {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 180px;
+    min-width: 160px;
+  }
+  .palette h3 {
+    font-size: 0.85rem;
+    color: #c4a97a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .feed-card {
+    background: #3a2e1f;
+    border: 1px solid #5a4a35;
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: grab;
+    transition: transform 0.1s, box-shadow 0.15s;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .feed-card:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+  .feed-card.dragging { opacity: 0.6; cursor: grabbing; }
+  .feed-card .icon { font-size: 1.3rem; margin-right: 6px; }
+  .feed-card .name { font-size: 0.85rem; font-weight: 600; display: block; }
+  .feed-card .stats { font-size: 0.68rem; color: #a89e8a; margin-top: 2px; }
+  .feed-card.tapped { border-color: #7a9e3e; box-shadow: 0 0 0 2px rgba(122,158,62,0.3); }
+  .canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 300px;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  canvas {
+    border-radius: 10px;
+    background: #120d06;
+    width: 100%;
+    max-width: 460px;
+    aspect-ratio: 1 / 1.2;
+    cursor: crosshair;
+  }
+  .layer-hint {
+    font-size: 0.75rem;
+    color: #8a7e6a;
+    margin-top: 6px;
+    text-align: center;
+  }
+  .gauges {
+    width: 220px;
+    min-width: 190px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .gauge {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .gauge-label {
+    font-size: 0.78rem;
+    color: #c4a97a;
+    display: flex;
+    justify-content: space-between;
+  }
+  .gauge-bar-bg {
+    background: #3a2e1f;
+    border-radius: 6px;
+    height: 18px;
+    overflow: hidden;
+    position: relative;
+  }
+  .gauge-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+    position: relative;
+  }
+  .gauge-bar-greenzone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgba(122,158,62,0.25);
+    pointer-events: none;
+  }
+  .gauge-value {
+    font-size: 0.75rem;
+    color: #a89e8a;
+    text-align: right;
+  }
+  .thermo-gauge .thermo-bar { background: linear-gradient(90deg, #7a9e3e, #e88c3c, #d94436); }
+  .bottom-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding: 10px 16px 18px;
+    flex-wrap: wrap;
+  }
+  .bottom-controls .btn { font-size: 0.95rem; padding: 8px 18px; }
+  .toast-container {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+  }
+  .toast {
+    background: #3a2e1f;
+    color: #f5e6c8;
+    border: 1px solid #5a4a35;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 0.88rem;
+    opacity: 0;
+    transform: translateY(-12px);
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    max-width: 320px;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.good { border-color: #7a9e3e; }
+  .toast.warn { border-color: #e88c3c; }
+  .toast.bad { border-color: #d94436; }
+
+  .win-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(18,13,6,0.92);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+  .win-overlay.show { display: flex; }
+  .win-overlay h2 {
+    font-size: 2rem;
+    color: #7a9e3e;
+    margin-bottom: 12px;
+  }
+  .win-overlay .score {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #e88c3c;
+    margin-bottom: 8px;
+  }
+  .win-overlay .desc {
+    font-size: 1rem;
+    color: #a89e8a;
+    max-width: 340px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 700px) {
+    .main { flex-direction: column; align-items: stretch; }
+    .palette { width: 100%; flex-direction: row; flex-wrap: wrap; }
+    .feed-card { width: calc(50% - 6px); }
+    .gauges { width: 100%; }
+    canvas { max-width: 100%; }
+  }
+  @media (max-width: 420px) {
+    .feed-card { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>🌱 Compost Engine</h1>
+  <div class="day">Day <span id="dayDisplay">0</span></div>
+  <div class="controls">
+    <button class="btn" id="btnPause">⏸ Pause</button>
+    <button class="btn" id="btnSpeed1" onclick="setSpeed(1)">1×</button>
+    <button class="btn active" id="btnSpeed5" onclick="setSpeed(5)">5×</button>
+    <button class="btn" id="btnSpeed20" onclick="setSpeed(20)">20×</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="panel palette">
+    <h3>Feedstocks</h3>
+    <div id="feedstockList"></div>
+  </div>
+
+  <div class="panel canvas-wrap">
+    <canvas id="pileCanvas" width="460" height="552"></canvas>
+    <div class="layer-hint" id="layerHint">Drag a feedstock here, or tap a card then tap a layer</div>
+  </div>
+
+  <div class="panel gauges">
+    <div class="gauge">
+      <div class="gauge-label"><span>C:N Ratio</span><span id="cnValue">—</span></div>
+      <div class="gauge-bar-bg">
+        <div class="gauge-bar-greenzone" style="left: 30%; width: 20%;"></div>
+        <div class="gauge-bar-fill" id="cnBar" style="width: 0%; background: #7a9e3e;"></div>
+      </div>
+      <div class="gauge-value">Optimal 25–30</div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-label"><span>Moisture</span><span id="moistureValue">—</span></div>
+      <div class="gauge-bar-bg">
+        <div class="gauge-bar-greenzone" style="left: 35%; width: 25%;"></div>
+        <div class="gauge-bar-fill" id="moistureBar" style="width: 0%; background: #4a90c4;"></div>
+      </div>
+      <div class="gauge-value">Optimal 40–60%</div>
+    </div>
+    <div class="gauge thermo-gauge">
+      <div class="gauge-label"><span>Temperature</span><span id="tempValue">—</span></div>
+      <div class="gauge-bar-bg">
+        <div class="gauge-bar-fill thermo-bar" id="tempBar" style="width: 0%;"></div>
+      </div>
+      <div class="gauge-value">Ambient <span id="ambientValue">20</span>°C</div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-label"><span>Oxygen</span><span id="oxygenValue">—</span></div>
+      <div class="gauge-bar-bg">
+        <div class="gauge-bar-fill" id="oxygenBar" style="width: 100%; background: #8ec4c4;"></div>
+      </div>
+      <div class="gauge-value">Turn pile to recharge</div>
+    </div>
+    <div class="gauge">
+      <div class="gauge-label"><span>Decomposition</span><span id="decompValue">0%</span></div>
+      <div class="gauge-bar-bg">
+        <div class="gauge-bar-fill" id="decompBar" style="width: 0%; background: #9e7a3e;"></div>
+      </div>
+      <div class="gauge-value">Target 90%</div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-controls">
+  <button class="btn" id="btnTurn">🔁 Turn Pile</button>
+  <button class="btn" id="btnWater">💧 Water</button>
+  <button class="btn" id="btnEmpty">🗑 Empty & Restart</button>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="win-overlay" id="winOverlay">
+  <h2>🎉 Compost Ready!</h2>
+  <div class="score" id="winScore">A</div>
+  <div class="desc" id="winDesc">Your pile stayed balanced and decomposed beautifully.</div>
+  <button class="btn" onclick="resetPile()">Start New Pile</button>
+</div>
+
+<script>
+/* ====== CONFIG ====== */
+const FEEDSTOCKS = [
+  { id: 'grass', name: 'Fresh Grass', icon: '🌿', nPct: 2.5, moisture: 75, cn: 15, density: 0.2, decomp: 0.90, color: '#4a8a3a' },
+  { id: 'straw', name: 'Dry Straw', icon: '🌾', nPct: 0.5, moisture: 10, cn: 80, density: 0.05, decomp: 0.40, color: '#c4a55a' },
+  { id: 'food', name: 'Food Scraps', icon: '🍎', nPct: 2.0, moisture: 70, cn: 20, density: 0.4, decomp: 0.95, color: '#c45a4a' },
+  { id: 'wood', name: 'Wood Chips', icon: '🪵', nPct: 0.1, moisture: 15, cn: 400, density: 0.15, decomp: 0.10, color: '#6a4a2a' },
+  { id: 'manure', name: 'Cow Manure', icon: '💩', nPct: 2.5, moisture: 60, cn: 20, density: 0.5, decomp: 0.80, color: '#5a4a2a' },
+  { id: 'coffee', name: 'Coffee Grounds', icon: '☕', nPct: 2.2, moisture: 50, cn: 20, density: 0.25, decomp: 0.85, color: '#3a2a1a' },
+  { id: 'leaves', name: 'Fall Leaves', icon: '🍂', nPct: 0.8, moisture: 20, cn: 60, density: 0.1, decomp: 0.50, color: '#8a5a1a' },
+  { id: 'cardboard', name: 'Cardboard', icon: '📦', nPct: 0.1, moisture: 5, cn: 150, density: 0.08, decomp: 0.15, color: '#9a8a6a' },
+];
+
+const LAYER_COUNT = 5;
+const AMBIENT_BASE = 20;
+const MAX_TEMP_RISE = 55;
+const TARGET_CN = 27.5;
+const CN_SIGMA = 8;
+const OPTIMAL_MOISTURE = 50;
+const WIN_DECOMP = 90;
+
+/* ====== STATE ====== */
+let state = {
+  layers: [],
+  day: 0,
+  paused: false,
+  speed: 5,
+  oxygen: 1.0,
+  ambient: AMBIENT_BASE,
+  won: false,
+  turnAnim: 0,
+  events: [],
+};
+
+function createLayer() {
+  return {
+    materials: [],
+    totalMass: 0,
+    totalC: 0,
+    totalN: 0,
+    moisture: 0,
+    decomposition: 0,
+    temperature: AMBIENT_BASE,
+  };
+}
+
+function resetPile() {
+  state.layers = Array.from({ length: LAYER_COUNT }, createLayer);
+  state.day = 0;
+  state.oxygen = 1.0;
+  state.ambient = AMBIENT_BASE;
+  state.won = false;
+  state.turnAnim = 0;
+  state.events = [];
+  document.getElementById('winOverlay').classList.remove('show');
+  updateUI();
+}
+
+/* ====== SCIENCE ====== */
+function gaussian(x, mu, sigma) {
+  return Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
+}
+
+function moistureFactor(m) {
+  if (m <= 20 || m >= 80) return 0;
+  if (m < 50) return (m - 20) / 30;
+  return (80 - m) / 30;
+}
+
+function computeLayerAggregate(layer) {
+  let mass = 0, c = 0, n = 0, moist = 0, decompSum = 0;
+  for (const mat of layer.materials) {
+    const f = FEEDSTOCKS.find(x => x.id === mat.id);
+    if (!f) continue;
+    mass += mat.mass;
+    const carbonMass = mat.mass * f.density * (1 - f.moisture / 100);
+    const nitrogenMass = mat.mass * f.density * (f.nPct / 100);
+    c += carbonMass;
+    n += nitrogenMass;
+    moist += mat.mass * f.moisture;
+    decompSum += mat.mass * f.decomp;
+  }
+  layer.totalMass = mass;
+  layer.totalC = c;
+  layer.totalN = n;
+  layer.moisture = mass > 0 ? moist / mass : 0;
+  layer.avgDecomp = mass > 0 ? decompSum / mass : 0;
+  layer.cn = n > 0 ? c / n : 0;
+}
+
+function computePileAggregates() {
+  let totalMass = 0, totalC = 0, totalN = 0, totalMoist = 0, totalDecomp = 0;
+  let maxTemp = AMBIENT_BASE;
+  let decompNumerator = 0, decompDenominator = 0;
+  for (const layer of state.layers) {
+    totalMass += layer.totalMass;
+    totalC += layer.totalC;
+    totalN += layer.totalN;
+    totalMoist += layer.totalMass * layer.moisture;
+    if (layer.temperature > maxTemp) maxTemp = layer.temperature;
+    decompNumerator += layer.decomposition * layer.totalMass;
+    decompDenominator += layer.totalMass;
+  }
+  const cn = totalN > 0 ? totalC / totalN : 0;
+  const moisture = totalMass > 0 ? totalMoist / totalMass : 0;
+  const decomp = decompDenominator > 0 ? decompNumerator / decompDenominator : 0;
+  return { cn, moisture, decomp, maxTemp, totalMass };
+}
+
+/* ====== SIMULATION TICK ====== */
+let lastTime = performance.now();
+let dayAccumulator = 0;
+let eventTimer = 0;
+
+function tick(now) {
+  const rawDt = (now - lastTime) / 1000;
+  lastTime = now;
+  const dt = state.paused ? 0 : rawDt * state.speed;
+  dayAccumulator += dt / 10;
+  if (dayAccumulator >= 1) {
+    state.day += Math.floor(dayAccumulator);
+    dayAccumulator -= Math.floor(dayAccumulator);
+    if (Math.random() < 0.08) triggerRandomEvent();
+  }
+  eventTimer += dt;
+
+  // Oxygen decay
+  state.oxygen = Math.max(0.25, state.oxygen - dt * 0.0008);
+
+  // Ambient drift
+  state.ambient = AMBIENT_BASE + Math.sin(state.day * 0.1) * 5 + (Math.random() - 0.5) * 0.2;
+
+  // Turn animation
+  if (state.turnAnim > 0) state.turnAnim -= dt * 3;
+  if (state.turnAnim < 0) state.turnAnim = 0;
+
+  // Layer simulation
+  for (let i = 0; i < LAYER_COUNT; i++) {
+    const layer = state.layers[i];
+    computeLayerAggregate(layer);
+    if (layer.totalMass <= 0) {
+      layer.temperature = state.ambient;
+      continue;
+    }
+
+    const fCN = gaussian(layer.cn, TARGET_CN, CN_SIGMA);
+    const fMoist = moistureFactor(layer.moisture);
+    const fOxy = 0.3 + 0.7 * state.oxygen;
+    const rate = layer.avgDecomp * fCN * fMoist * fOxy;
+
+    // Temperature
+    const targetTemp = state.ambient + rate * MAX_TEMP_RISE;
+    layer.temperature += (targetTemp - layer.temperature) * dt * 0.05;
+
+    // Decomposition
+    layer.decomposition = Math.min(100, layer.decomposition + rate * dt * 1.5);
+  }
+
+  // Mixing during turn animation
+  if (state.turnAnim > 0) {
+    for (let i = 0; i < LAYER_COUNT - 1; i++) {
+      const a = state.layers[i], b = state.layers[i + 1];
+      if (a.totalMass > 0 && b.totalMass > 0) {
+        const mixAmt = state.turnAnim * 0.02;
+        const t = a.temperature, d = a.decomposition;
+        a.temperature += (b.temperature - a.temperature) * mixAmt;
+        b.temperature += (t - b.temperature) * mixAmt;
+        a.decomposition += (b.decomposition - a.decomposition) * mixAmt;
+        b.decomposition += (d - b.decomposition) * mixAmt;
+      }
+    }
+  }
+
+  const agg = computePileAggregates();
+
+  // Win
+  if (!state.won && agg.decomp >= WIN_DECOMP && agg.totalMass > 0) {
+    state.won = true;
+    showWin(agg);
+  }
+
+  // Feedback toasts
+  if (eventTimer > 4 && agg.totalMass > 0) {
+    eventTimer = 0;
+    if (agg.moisture > 70) toast('Too wet — anaerobic risk! Add dry material.', 'warn');
+    else if (agg.moisture < 25) toast('Too dry — microbes need water.', 'warn');
+    else if (agg.cn > 45) toast('C:N too high — slow decomposition. Add greens.', 'warn');
+    else if (agg.cn < 15) toast('C:N too low — add browns (straw, leaves).', 'warn');
+    else if (state.oxygen < 0.4) toast('Pile cooling — turn for more oxygen!', 'warn');
+    else if (agg.cn >= 22 && agg.cn <= 33 && agg.moisture >= 40 && agg.moisture <= 60) {
+      toast('Perfect balance — microbes thriving!', 'good');
+    }
+  }
+
+  renderCanvas();
+  updateUI(agg);
+  requestAnimationFrame(tick);
+}
+
+function triggerRandomEvent() {
+  const roll = Math.random();
+  if (roll < 0.25) {
+    state.ambient += 8;
+    toast('🔥 Hot day! Ambient temperature spiked.', 'warn');
+  } else if (roll < 0.5) {
+    state.ambient -= 8;
+    toast('❄️ Cold snap — pile temperature may drop.', 'warn');
+  } else if (roll < 0.75) {
+    for (const l of state.layers) l.moisture = Math.min(100, l.moisture + 8);
+    toast('🌧 Light rain added moisture to the pile.', 'warn');
+  }
+}
+
+/* ====== UI ====== */
+function buildPalette() {
+  const el = document.getElementById('feedstockList');
+  el.innerHTML = '';
+  for (const f of FEEDSTOCKS) {
+    const card = document.createElement('div');
+    card.className = 'feed-card';
+    card.draggable = true;
+    card.dataset.id = f.id;
+    card.innerHTML = `
+      <span class="icon">${f.icon}</span><span class="name">${f.name}</span>
+      <div class="stats">C:N ${f.cn} · Moist ${f.moisture}% · ${f.nPct}% N</div>
+    `;
+    card.addEventListener('dragstart', e => {
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', f.id);
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.feed-card').forEach(c => c.classList.remove('tapped'));
+      if (selectedFeed === f.id) { selectedFeed = null; }
+      else { selectedFeed = f.id; card.classList.add('tapped'); }
+    });
+    el.appendChild(card);
+  }
+}
+
+let selectedFeed = null;
+
+const canvas = document.getElementById('pileCanvas');
+const ctx = canvas.getContext('2d');
+let layerRects = [];
+
+function getLayerAt(y) {
+  for (let i = 0; i < layerRects.length; i++) {
+    const r = layerRects[i];
+    if (y >= r.y && y <= r.y + r.h) return i;
+  }
+  return -1;
+}
+
+/* ====== DROP / TAP ====== */
+canvas.addEventListener('dragover', e => e.preventDefault());
+canvas.addEventListener('drop', e => {
+  e.preventDefault();
+  const id = e.dataTransfer.getData('text/plain');
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const ly = getLayerAt(y * scaleY);
+  if (ly >= 0) addMaterial(ly, id);
+});
+
+canvas.addEventListener('click', e => {
+  if (!selectedFeed) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const ly = getLayerAt((e.clientY - rect.top) * scaleY);
+  if (ly >= 0) { addMaterial(ly, selectedFeed); selectedFeed = null; document.querySelectorAll('.feed-card').forEach(c => c.classList.remove('tapped')); }
+});
+
+function addMaterial(layerIdx, feedId) {
+  const f = FEEDSTOCKS.find(x => x.id === feedId);
+  if (!f) return;
+  const layer = state.layers[layerIdx];
+  const existing = layer.materials.find(m => m.id === feedId);
+  if (existing) existing.mass += 10;
+  else layer.materials.push({ id: feedId, mass: 10 });
+  computeLayerAggregate(layer);
+  toast(`Added ${f.name} to layer ${layerIdx + 1}`, 'good');
+}
+
+/* ====== CONTROLS ====== */
+document.getElementById('btnPause').addEventListener('click', () => {
+  state.paused = !state.paused;
+  document.getElementById('btnPause').textContent = state.paused ? '▶ Play' : '⏸ Pause';
+});
+
+document.getElementById('btnTurn').addEventListener('click', () => {
+  state.oxygen = 1.0;
+  state.turnAnim = 1.0;
+  toast('Pile turned — oxygen recharged!', 'good');
+});
+
+document.getElementById('btnWater').addEventListener('click', () => {
+  for (const layer of state.layers) {
+    if (layer.totalMass > 0) layer.moisture = Math.min(100, layer.moisture + 10);
+  }
+  toast('Watered pile — moisture up 10%', 'good');
+});
+
+document.getElementById('btnEmpty').addEventListener('click', resetPile);
+
+function setSpeed(s) {
+  state.speed = s;
+  [1, 5, 20].forEach(n => document.getElementById('btnSpeed' + n).classList.toggle('active', n === s));
+}
+
+/* ====== TOASTS ====== */
+function toast(msg, type = '') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 350);
+  }, 3000);
+}
+
+/* ====== WIN ====== */
+function showWin(agg) {
+  const overlay = document.getElementById('winOverlay');
+  const scoreEl = document.getElementById('winScore');
+  const descEl = document.getElementById('winDesc');
+  const idealCN = (agg.cn >= 22 && agg.cn <= 33) ? 1 : (agg.cn >= 15 && agg.cn <= 45) ? 0.6 : 0.3;
+  const idealMoist = (agg.moisture >= 40 && agg.moisture <= 60) ? 1 : (agg.moisture >= 25 && agg.moisture <= 75) ? 0.6 : 0.3;
+  const gradeNum = Math.round((idealCN + idealMoist) * 2.5);
+  const grades = ['F', 'D', 'C', 'B', 'A'];
+  const grade = grades[Math.min(4, Math.max(0, gradeNum))];
+  scoreEl.textContent = grade;
+  let desc = '';
+  if (grade === 'A') desc = 'Outstanding! Your pile stayed in the sweet spot the whole time.';
+  else if (grade === 'B') desc = 'Great work — a little off-balance at times, but still excellent compost.';
+  else if (grade === 'C') desc = 'Decent compost. Next time aim for C:N 25–30 and moisture 40–60%.';
+  else if (grade === 'D') desc = 'It decomposed, but the journey was rough. Keep an eye on greens and browns.';
+  else desc = 'Something went wrong — too wet, too dry, or way off C:N. Try again!';
+  descEl.textContent = desc;
+  overlay.classList.add('show');
+}
+
+/* ====== RENDER ====== */
+const microbes = [];
+for (let i = 0; i < 300; i++) microbes.push({
+  x: Math.random(), y: Math.random(),
+  vx: (Math.random() - 0.5) * 0.004, vy: (Math.random() - 0.5) * 0.004,
+  life: Math.random(), layer: Math.floor(Math.random() * LAYER_COUNT),
+});
+
+const steamParticles = [];
+
+function spawnSteam(layerIdx, intensity) {
+  for (let i = 0; i < Math.ceil(intensity * 3); i++) {
+    steamParticles.push({
+      layer: layerIdx,
+      x: 0.2 + Math.random() * 0.6,
+      y: 0.5,
+      vy: -0.001 - Math.random() * 0.002,
+      life: 1.0,
+      size: 2 + Math.random() * 4,
+    });
+  }
+}
+
+function renderCanvas() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const margin = 20;
+  const pileW = W - margin * 2;
+  const layerH = (H - margin * 2 - (LAYER_COUNT - 1) * 4) / LAYER_COUNT;
+  layerRects = [];
+
+  for (let i = 0; i < LAYER_COUNT; i++) {
+    const layer = state.layers[i];
+    computeLayerAggregate(layer);
+    const y = margin + i * (layerH + 4);
+    layerRects.push({ y, h: layerH, i });
+
+    // Base color from materials + decomposition shift
+    let r = 80, g = 60, b = 40;
+    if (layer.materials.length > 0) {
+      let tr = 0, tg = 0, tb = 0, w = 0;
+      for (const mat of layer.materials) {
+        const f = FEEDSTOCKS.find(x => x.id === mat.id);
+        if (!f) continue;
+        const c = hexToRgb(f.color);
+        tr += c.r * mat.mass; tg += c.g * mat.mass; tb += c.b * mat.mass; w += mat.mass;
+      }
+      if (w > 0) { r = tr / w; g = tg / w; b = tb / w; }
+    }
+    const decomp = layer.decomposition / 100;
+    r = lerp(r, 50, decomp);
+    g = lerp(g, 40, decomp);
+    b = lerp(b, 25, decomp);
+
+    // Moisture blue tint
+    const m = layer.moisture / 100;
+    r = lerp(r, 60, m * 0.25);
+    g = lerp(g, 80, m * 0.25);
+    b = lerp(b, 120, m * 0.25);
+
+    // Temperature warm glow
+    const tempRise = Math.max(0, layer.temperature - state.ambient);
+    const heat = Math.min(1, tempRise / 40);
+    r = Math.min(255, r + heat * 80);
+    g = Math.min(255, g + heat * 30);
+    b = Math.min(255, b + heat * 10);
+
+    // Draw layer
+    ctx.fillStyle = `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+    roundRect(ctx, margin, y, pileW, layerH, 8);
+    ctx.fill();
+
+    // Border
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, margin, y, pileW, layerH, 8);
+    ctx.stroke();
+
+    // Microbes
+    const activity = decomp < 1 ? (heat > 0.1 ? 1 : 0.3) : 0;
+    for (const mbe of microbes) {
+      if (mbe.layer !== i) continue;
+      const mx = margin + mbe.x * pileW;
+      const my = y + mbe.y * layerH;
+      mbe.x += mbe.vx * (1 + heat * 2);
+      mbe.y += mbe.vy * (1 + heat * 2);
+      if (mbe.x < 0 || mbe.x > 1) mbe.vx *= -1;
+      if (mbe.y < 0 || mbe.y > 1) mbe.vy *= -1;
+      mbe.life -= 0.003;
+      if (mbe.life <= 0) {
+        mbe.life = 1;
+        mbe.x = Math.random();
+        mbe.y = Math.random();
+      }
+      if (Math.random() < activity * 0.5) {
+        ctx.fillStyle = heat > 0.3 ? 'rgba(200,255,100,0.6)' : 'rgba(180,220,120,0.35)';
+        ctx.beginPath();
+        ctx.arc(mx, my, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Steam
+    if (heat > 0.25 && decomp < 1) spawnSteam(i, heat);
+  }
+
+  // Draw steam particles
+  for (let s = steamParticles.length - 1; s >= 0; s--) {
+    const p = steamParticles[s];
+    const ly = layerRects[p.layer];
+    if (!ly) { steamParticles.splice(s, 1); continue; }
+    p.y += p.vy;
+    p.life -= 0.008;
+    p.x += Math.sin(p.life * 5) * 0.002;
+    const sx = margin + p.x * pileW;
+    const sy = ly.y + p.y * ly.h;
+    if (p.life <= 0 || sy < ly.y - 20) { steamParticles.splice(s, 1); continue; }
+    ctx.fillStyle = `rgba(255,255,255,${p.life * 0.25})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Moisture droplets on wet layers
+  for (let i = 0; i < LAYER_COUNT; i++) {
+    const layer = state.layers[i];
+    if (layer.moisture < 55) continue;
+    const ly = layerRects[i];
+    const droplets = Math.floor((layer.moisture - 55) / 5);
+    ctx.fillStyle = 'rgba(140,190,255,0.25)';
+    for (let d = 0; d < droplets; d++) {
+      const dx = margin + 20 + Math.random() * (pileW - 40);
+      const dy = ly.y + 10 + Math.random() * (ly.h - 20);
+      ctx.beginPath();
+      ctx.arc(dx, dy, 3 + Math.random() * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Turn animation wobble
+  if (state.turnAnim > 0) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(245,230,200,${state.turnAnim * 0.4})`;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 8]);
+    roundRect(ctx, margin - 4, margin - 4, pileW + 8, H - margin * 2 + 8, 12);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function hexToRgb(hex) {
+  const v = parseInt(hex.slice(1), 16);
+  return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 };
+}
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+/* ====== UI UPDATE ====== */
+function updateUI(agg) {
+  if (!agg) agg = computePileAggregates();
+  document.getElementById('dayDisplay').textContent = Math.floor(state.day);
+  document.getElementById('cnValue').textContent = agg.totalMass > 0 ? agg.cn.toFixed(1) : '—';
+  document.getElementById('moistureValue').textContent = agg.totalMass > 0 ? agg.moisture.toFixed(1) + '%' : '—';
+  document.getElementById('tempValue').textContent = agg.totalMass > 0 ? agg.maxTemp.toFixed(1) + '°C' : '—';
+  document.getElementById('ambientValue').textContent = state.ambient.toFixed(1);
+  document.getElementById('oxygenValue').textContent = (state.oxygen * 100).toFixed(0) + '%';
+  document.getElementById('decompValue').textContent = agg.decomp.toFixed(1) + '%';
+
+  // Bars
+  const cnW = Math.min(100, agg.totalMass > 0 ? (agg.cn / 80) * 100 : 0);
+  document.getElementById('cnBar').style.width = cnW + '%';
+  document.getElementById('cnBar').style.background = agg.cn >= 22 && agg.cn <= 33 ? '#7a9e3e' : '#e88c3c';
+
+  document.getElementById('moistureBar').style.width = (agg.totalMass > 0 ? agg.moisture : 0) + '%';
+  document.getElementById('moistureBar').style.background = agg.moisture >= 40 && agg.moisture <= 60 ? '#4a90c4' : '#c4904a';
+
+  const tempW = Math.min(100, agg.totalMass > 0 ? ((agg.maxTemp - AMBIENT_BASE) / MAX_TEMP_RISE) * 100 : 0);
+  document.getElementById('tempBar').style.width = tempW + '%';
+
+  document.getElementById('oxygenBar').style.width = (state.oxygen * 100) + '%';
+  document.getElementById('oxygenBar').style.background = state.oxygen > 0.5 ? '#8ec4c4' : '#c48e8e';
+
+  document.getElementById('decompBar').style.width = agg.decomp + '%';
+}
+
+/* ====== INIT ====== */
+buildPalette();
+resetPile();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
