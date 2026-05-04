@@ -34,6 +34,14 @@
       "description": "Interactive compost-pile simulator. Drag feedstocks onto a pile and watch decomposition, temperature, and microbial activity unfold in real time."
     },
     {
+      "date": "2026-05-05",
+      "title": "Compost Engine",
+      "slug": "compost-engine",
+      "publishedSlug": "2026-05-05-compost-engine",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-05-compost-engine/",
+      "description": "Interactive compost-pile simulator. Drag feedstocks onto a pile and watch decomposition, temperature, and microbial activity unfold in real time."
+    },
+    {
       "date": "2026-05-04",
       "title": "Exoplanet Forge",
       "slug": "exoplanet-forge",

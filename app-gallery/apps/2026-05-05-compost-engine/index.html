@@ -116,6 +116,21 @@
     max-width: 460px;
     aspect-ratio: 1 / 1.2;
     cursor: crosshair;
+    touch-action: none;
+  }
+  .ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.1);
+    background: #3a2e1f;
+    border: 2px solid #7a9e3e;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    color: #f5e6c8;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   }
   .layer-hint {
     font-size: 0.75rem;
@@ -594,7 +609,99 @@ function getLayerAt(y) {
   return -1;
 }
 
-/* ====== DROP / TAP ====== */
+/* ====== DROP / TAP / TOUCH ====== */
+let touchDragId = null;
+let ghostEl = null;
+
+function createGhost(id, x, y) {
+  if (ghostEl) ghostEl.remove();
+  const f = FEEDSTOCKS.find(x => x.id === id);
+  if (!f) return;
+  ghostEl = document.createElement('div');
+  ghostEl.className = 'ghost';
+  ghostEl.innerHTML = `<span>${f.icon}</span> ${f.name}`;
+  ghostEl.style.left = x + 'px';
+  ghostEl.style.top = y + 'px';
+  document.body.appendChild(ghostEl);
+}
+
+function removeGhost() {
+  if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+}
+
+function dropOntoCanvas(clientX, clientY, feedId) {
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  if (x < 0 || x > rect.width || y < 0 || y > rect.height) return false;
+  const scaleY = canvas.height / rect.height;
+  const ly = getLayerAt(y * scaleY);
+  if (ly >= 0) { addMaterial(ly, feedId); return true; }
+  return false;
+}
+
+// Feedstock card touch handlers
+document.getElementById('feedstockList').addEventListener('touchstart', e => {
+  const card = e.target.closest('.feed-card');
+  if (!card) return;
+  const id = card.dataset.id;
+  touchDragId = id;
+  const t = e.touches[0];
+  createGhost(id, t.clientX, t.clientY);
+}, { passive: false });
+
+document.getElementById('feedstockList').addEventListener('touchmove', e => {
+  if (!touchDragId || !ghostEl) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  ghostEl.style.left = t.clientX + 'px';
+  ghostEl.style.top = t.clientY + 'px';
+}, { passive: false });
+
+document.getElementById('feedstockList').addEventListener('touchend', e => {
+  if (!touchDragId) return;
+  const t = e.changedTouches[0];
+  const dropped = dropOntoCanvas(t.clientX, t.clientY, touchDragId);
+  if (!dropped) {
+    // If not dropped on canvas, try tap-select mode
+    const card = document.querySelector(`.feed-card[data-id="${touchDragId}"]`);
+    if (card) {
+      document.querySelectorAll('.feed-card').forEach(c => c.classList.remove('tapped'));
+      if (selectedFeed === touchDragId) { selectedFeed = null; }
+      else { selectedFeed = touchDragId; card.classList.add('tapped'); }
+    }
+  }
+  touchDragId = null;
+  removeGhost();
+});
+
+// Canvas tap handler (tap-tap flow + direct touch drop)
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) return;
+  // If dragging a feedstock, drop it
+  if (touchDragId) {
+    e.preventDefault();
+    const t = e.touches[0];
+    dropOntoCanvas(t.clientX, t.clientY, touchDragId);
+    touchDragId = null;
+    removeGhost();
+    return;
+  }
+  // Otherwise handle tap-select mode
+  if (!selectedFeed) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const scaleY = canvas.height / rect.height;
+  const ly = getLayerAt((t.clientY - rect.top) * scaleY);
+  if (ly >= 0) {
+    addMaterial(ly, selectedFeed);
+    selectedFeed = null;
+    document.querySelectorAll('.feed-card').forEach(c => c.classList.remove('tapped'));
+  }
+}, { passive: false });
+
+// Desktop DnD
 canvas.addEventListener('dragover', e => e.preventDefault());
 canvas.addEventListener('drop', e => {
   e.preventDefault();
