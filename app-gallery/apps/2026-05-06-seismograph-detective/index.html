@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Seismograph Detective</title>
+<style>
+  :root{
+    --bg:#0a0c10;
+    --bg2:#0f1117;
+    --panel:#13151c;
+    --border:#1e293b;
+    --text:#e2e8f0;
+    --muted:#94a3b8;
+    --cyan:#22d3ee;
+    --green:#4ade80;
+    --red:#f87171;
+    --orange:#fb923c;
+    --yellow:#facc15;
+    --station:#22d3ee;
+    --pwave:#60a5fa;
+    --swave:#f87171;
+    --font-mono:'SF Mono',Monaco,'Cascadia Code','Roboto Mono',monospace;
+    --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-sans);overflow:hidden;touch-action:manipulation}
+  #banner{background:#1e293b;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;color:var(--muted);text-align:center}
+  #banner a{color:var(--cyan)}
+  #app{height:calc(100% - 30px);display:flex;flex-direction:column}
+  /* Start Screen */
+  #startScreen{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+  #startScreen h1{font-family:var(--font-mono);font-size:clamp(1.8rem,5vw,3rem);color:var(--green);letter-spacing:2px;text-shadow:0 0 20px rgba(74,222,128,.3)}
+  #startScreen p.sub{color:var(--muted);margin:8px 0 28px;font-size:1.05rem}
+  .diff-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:28px}
+  .diff-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:14px 22px;border-radius:8px;cursor:pointer;font-family:var(--font-mono);font-size:.9rem;transition:.15s;min-width:130px}
+  .diff-btn:hover,.diff-btn.active{border-color:var(--green);background:#13211a}
+  .diff-btn .label{display:block;font-weight:600;margin-bottom:4px}
+  .diff-btn .hint{font-size:.75rem;color:var(--muted)}
+  #goBtn{background:var(--green);color:#052e16;border:none;padding:14px 40px;border-radius:8px;font-family:var(--font-mono);font-size:1.1rem;font-weight:700;cursor:pointer;transition:.15s}
+  #goBtn:hover{background:#22c55e;transform:translateY(-1px)}
+  #goBtn:disabled{opacity:.5;cursor:not-allowed}
+  /* HUD */
+  #hud{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:.82rem;flex-shrink:0}
+  #hud .left,#hud .right{display:flex;align-items:center;gap:14px}
+  #timer{font-size:1.05rem;color:var(--orange)}
+  #timer.urgent{color:var(--red);animation:pulse .6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+  .pill{background:var(--panel);border:1px solid var(--border);padding:3px 10px;border-radius:6px;color:var(--muted);font-size:.75rem}
+  /* Main */
+  #main{flex:1;display:flex;flex-direction:column;min-height:0}
+  #mapWrap{flex:1;position:relative;min-height:0;background:var(--bg)}
+  #mapCanvas{display:block;width:100%;height:100%}
+  #mapOverlay{position:absolute;inset:0;pointer-events:none}
+  #phaseLabel{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,12,16,.85);border:1px solid var(--border);padding:6px 16px;border-radius:6px;font-family:var(--font-mono);font-size:.85rem;color:var(--cyan);pointer-events:none;white-space:nowrap}
+  /* Seismograms */
+  #seismoPanel{display:flex;gap:6px;padding:6px 8px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;height:180px}
+  .drumWrap{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:hidden;position:relative}
+  .drumLabel{padding:4px 8px;font-family:var(--font-mono);font-size:.72rem;color:var(--muted);background:rgba(19,21,28,.7);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .drumLabel .sp{color:var(--green);font-weight:700;min-width:55px;text-align:right}
+  .drumCanvas{flex:1;display:block;width:100%;cursor:crosshair}
+  .drumCursor{position:absolute;bottom:2px;top:auto;left:0;width:1px;background:var(--yellow);pointer-events:none;display:none}
+  /* Controls */
+  #controls{display:flex;gap:8px;padding:8px 12px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;justify-content:center}
+  .btn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:6px;cursor:pointer;font-family:var(--font-mono);font-size:.82rem;transition:.15s}
+  .btn:hover{border-color:var(--muted)}
+  .btn.primary{border-color:var(--green);color:var(--green)}
+  .btn.primary:hover{background:#13211a}
+  .btn.danger{border-color:var(--red);color:var(--red)}
+  /* Help line */
+  #helpLine{padding:4px 12px;background:var(--bg2);border-top:1px solid var(--border);font-size:.75rem;color:var(--muted);text-align:center;font-family:var(--font-mono);flex-shrink:0}
+  /* Result overlay */
+  #resultOverlay{position:fixed;inset:0;background:rgba(10,12,16,.92);z-index:40;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+  #resultOverlay.show{display:flex}
+  #resultOverlay h2{font-family:var(--font-mono);font-size:1.6rem;margin-bottom:8px}
+  #resultOverlay .scoreBig{font-size:2.4rem;font-weight:700;font-family:var(--font-mono);margin:6px 0}
+  #resultOverlay .detail{color:var(--muted);font-size:.95rem;margin:4px 0;max-width:420px}
+  /* Mobile tweaks */
+  @media(max-width:600px){
+    #seismoPanel{height:140px}
+    .diff-btn{padding:10px 14px;min-width:100px}
+    #controls{padding:6px}
+    .btn{padding:6px 12px;font-size:.75rem}
+    #hud{font-size:.72rem}
+  }
+</style>
+</head>
+<body>
+<div id="banner">
+  ⚠️ Experimental AI mini-app — <a href="https://github.com/2am-industries" target="_blank" rel="noopener">2am industries</a>
+</div>
+
+<div id="app">
+  <div id="hud" style="display:none">
+    <div class="left">
+      <span id="timer">⏱ --</span>
+      <span class="pill" id="diffPill">--</span>
+      <span class="pill" id="roundPill">Round 1</span>
+    </div>
+    <div class="right">
+      <span class="pill" id="scorePill">Score: 0</span>
+      <span class="pill" id="streakPill">Streak: 0</span>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="mapWrap">
+      <canvas id="mapCanvas"></canvas>
+      <div id="mapOverlay">
+        <div id="phaseLabel">Select difficulty to start</div>
+      </div>
+    </div>
+
+    <div id="seismoPanel" style="display:none">
+      <div class="drumWrap" data-i="0">
+        <div class="drumLabel"><span>Station α</span><span class="sp" id="sp0">--</span></div>
+        <canvas class="drumCanvas" id="drum0"></canvas>
+        <div class="drumCursor" id="cur0"></div>
+      </div>
+      <div class="drumWrap" data-i="1">
+        <div class="drumLabel"><span>Station β</span><span class="sp" id="sp1">--</span></div>
+        <canvas class="drumCanvas" id="drum1"></canvas>
+        <div class="drumCursor" id="cur1"></div>
+      </div>
+      <div class="drumWrap" data-i="2">
+        <div class="drumLabel"><span>Station γ</span><span class="sp" id="sp2">--</span></div>
+        <canvas class="drumCanvas" id="drum2"></canvas>
+        <div class="drumCursor" id="cur2"></div>
+      </div>
+    </div>
+
+    <div id="controls" style="display:none">
+      <button class="btn" id="clearCircles">Clear Circles</button>
+      <button class="btn primary" id="lockIn">🔒 Lock In</button>
+    </div>
+    <div id="helpLine" style="display:none">Click a seismogram to set cursor. Click a station on map, then click map to set distance circle.</div>
+  </div>
+</div>
+
+<!-- Start Screen -->
+<div id="startScreen">
+  <h1>SEISMOGRAPH DETECTIVE</h1>
+  <p class="sub">Read the waves. Find the quake.</p>
+  <div class="diff-row">
+    <button class="diff-btn" data-diff="novice">
+      <span class="label">Novice</span>
+      <span class="hint">60s · slow waves · hints</span>
+    </button>
+    <button class="diff-btn" data-diff="operator">
+      <span class="label">Operator</span>
+      <span class="hint">45s · normal · no hints</span>
+    </button>
+    <button class="diff-btn" data-diff="seismologist">
+      <span class="label">Seismologist</span>
+      <span class="hint">30s · fast · noisy · none</span>
+    </button>
+  </div>
+  <button id="goBtn" disabled>Go On Duty</button>
+  <p style="margin-top:20px;color:var(--muted);font-size:.8rem;max-width:380px">
+    Measure S-P lag on each drum. Distance ≈ lag × 8 km/s. Draw circles. Triangulate. Lock in before time runs out.
+  </p>
+</div>
+
+<!-- Result Overlay -->
+<div id="resultOverlay">
+  <h2 id="resTitle">Event Resolved</h2>
+  <div class="scoreBig" id="resScore">0</div>
+  <div class="detail" id="resDetail"></div>
+  <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+    <button class="btn primary" id="nextRound">Next Quake</button>
+    <button class="btn" id="toMenu">Menu</button>
+  </div>
+</div>
+
+<script>
+/* ============================
+   SIMPLIFIED WORLD MAP (lat/lon polygons, major landmasses)
+   ============================ */
+const WORLD_MAP=[
+// North America (simplified)
+[[-168,72],[-141,60],[-140,55],[-130,55],[-123,49],[-123,45],[-124,42],[-122,37],[-117,32],[-105,29],[-100,26],[-97,26],[-97,30],[-90,30],[-81,30],[-80,25],[-80,24],[-82,23],[-97,26],[-105,29],[-117,32],[-125,48],[-130,55],[-140,55],[-141,60],[-155,59],[-168,72]],
+// South America
+[[-82,10],[-77,9],[-72,12],[-60,11],[-52,5],[-35,-5],[-35,-18],[-38,-20],[-48,-25],[-56,-30],[-65,-40],[-65,-48],[-74,-52],[-75,-42],[-71,-30],[-70,-18],[-75,-15],[-77,0],[-80,5],[-82,10]],
+// Europe
+[[-25,65],[-18,66],[-5,58],[5,62],[10,71],[30,71],[35,60],[40,48],[44,42],[40,40],[36,36],[30,36],[25,40],[20,52],[12,55],[8,54],[5,52],[0,51],[-5,50],[-10,52],[-25,58],[-25,65]],
+// Africa
+[[-18,28],[-5,36],[10,37],[12,33],[25,32],[35,30],[40,28],[44,12],[51,12],[51,0],[42,-12],[35,-20],[32,-29],[28,-34],[20,-35],[17,-29],[13,-18],[10,-5],[5,5],[-5,10],[-10,20],[-18,28]],
+// Asia (mainland)
+[[40,48],[45,42],[50,40],[55,45],[60,38],[65,42],[75,38],[80,30],[90,22],[100,20],[110,18],[120,25],[130,42],[140,48],[142,52],[140,55],[130,55],[120,55],[110,55],[100,55],[90,55],[80,55],[70,55],[60,55],[50,55],[45,60],[40,55],[40,48]],
+// India subcontinent
+[[68,24],[78,20],[85,22],[90,22],[92,25],[90,30],[85,25],[78,25],[72,28],[68,24]],
+// Australia
+[[113,-12],[130,-13],[140,-18],[145,-24],[150,-32],[145,-38],[140,-38],[130,-35],[120,-35],[115,-32],[113,-25],[113,-12]],
+// Indonesia / PNG
+[[120,-1],[130,-3],[140,-3],[145,-8],[150,-6],[150,-12],[140,-12],[130,-8],[120,-8],[120,-1]],
+// Japan
+[[130,32],[142,35],[146,43],[140,45],[135,38],[130,32]],
+// UK
+[[-11,51],[-2,51],[2,50],[2,56],[-2,58],[-6,58],[-11,51]],
+// Greenland
+[[-55,60],[-45,66],[-25,72],[-20,84],[-45,84],[-70,78],[-55,60]],
+// Madagascar
+[[43,-12],[51,-14],[51,-25],[44,-26],[43,-12]],
+// New Zealand
+[[166,-34],[179,-35],[179,-47],[166,-47],[166,-34]],
+// Antarctica (southern edge only, faint)
+[[-180,-70],[180,-70],[180,-78],[-180,-78],[-180,-70]]
+];
+
+/* ============================
+   CONFIG
+   ============================ */
+const DIFF={
+  novice:{time:60,speed:0.6,noise:0.4,hints:true,label:'Novice'},
+  operator:{time:45,speed:1.0,noise:0.7,hints:false,label:'Operator'},
+  seismologist:{time:30,speed:1.4,noise:1.2,hints:false,label:'Seismologist'}
+};
+const V_P=8; // km/s (game simplified)
+const V_S=4.5; // km/s
+const MULT=8; // km/s user multiplier (simplified from 10.3)
+const STATION_NAMES=['α','β','γ'];
+const COLORS={p:'#60a5fa',s:'#f87171',station:'#22d3ee',trace:'#4ade80',userCircle:'rgba(226,232,240,.55)',hint:'rgba(74,222,128,.25)'};
+
+/* ============================
+   STATE
+   ============================ */
+let state={
+  phase:'menu', // menu, countdown, wave, measure, reveal
+  diff:null,
+  round:1,
+  totalScore:0,
+  streak:0,
+  bestStreak:0,
+  stations:[],
+  epicenter:null,
+  magn:5.5,
+  startTime:0,
+  endTime:0,
+  pArrivals:[0,0,0],
+  sArrivals:[0,0,0],
+  trueDistances:[0,0,0],
+  spLags:[null,null,null],
+  userCircles:[null,null,null], // {lat,lon,rKm}
+  guessPoint:null,
+  selectedStation:-1,
+  mapW:0,mapH:0,
+  drumW:0,drumH:0,
+  elapsed:0,
+  wavesStarted:0,
+  mapOffsetX:0,mapOffsetY:0,mapScale:1,
+  hintCircles:[], // true distance circles for novice
+  animId:null
+};
+
+/* ============================
+   DOM REFS
+   ============================ */
+const $=id=>document.getElementById(id);
+const mapCv=$('mapCanvas'), mapCtx=mapCv.getContext('2d');
+const drums=[0,1,2].map(i=>{const c=$(`drum${i}`); return {c,ctx:c.getContext('2d'),cur:$(`cur${i}`),sp:$(`sp${i}`)};});
+
+/* ============================
+   MAP PROJECTION (Equirectangular)
+   ============================ */
+function proj(lat,lon,w,h){
+  const x=(lon+180)/360*w;
+  const y=(90-lat)/180*h;
+  return {x,y};
+}
+function unproj(x,y,w,h){
+  const lon=(x/w)*360-180;
+  const lat=90-(y/h)*180;
+  return {lat,lon};
+}
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371;
+  const dLat=(lat2-lat1)*Math.PI/180;
+  const dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function kmToDegLat(km){return km/111.32;}
+function kmToDegLon(km,lat){return km/(111.32*Math.cos(lat*Math.PI/180));}
+
+/* ============================
+   SEISMOGRAM GENERATION
+   ============================ */
+function makeNoise(length,amp,seed){let s=seed||1;const out=[];for(let i=0;i<length;i++){s=(s*16807+0)%2147483647;out.push((s/2147483647-.5)*2*amp);}return out;}
+function lowpass(arr,factor){if(!arr.length)return[];const out=[arr[0]];for(let i=1;i<arr.length;i++)out.push(out[i-1]+(arr[i]-out[i-1])*factor);return out;}
+function genTrace(stationIdx,diff){
+  const pxPerSec=40;
+  const totalSec=diff.time+20;
+  const len=Math.floor(totalSec*pxPerSec);
+  const noiseAmp=diff.noise*1.2;
+  const raw=makeNoise(len,noiseAmp,stationIdx*997+state.round*13);
+  const base=lowpass(raw,.15);
+  const pIdx=Math.floor(state.pArrivals[stationIdx]*pxPerSec);
+  const sIdx=Math.floor(state.sArrivals[stationIdx]*pxPerSec);
+  const magAmp=(state.magn-4)*3.5;
+  for(let i=0;i<len;i++){
+    if(i>=pIdx&&i<pIdx+8)base[i]+=Math.sin((i-pIdx)*.8)*magAmp*.35;
+    if(i>=sIdx&&i<sIdx+35)base[i]+=Math.sin((i-sIdx)*.5)*magAmp*(1-((i-sIdx)/35)*.7);
+  }
+  return {data:base,pxPerSec};
+}
+
+/* ============================
+   GAME SETUP
+   ============================ */
+function randRange(a,b){return a+Math.random()*(b-a);}
+function placeStations(){
+  const s=[];
+  const candidates=[
+    {lat:37.8,lon:-122.4},{lat:51.5,lon:-0.1},{lat:35.7,lon:139.7},
+    {lat:-33.9,lon:18.4},{lat:-34.6,lon:-58.4},{lat:64.1,lon:-21.9},
+    {lat:19.4,lon:-99.1},{lat:-1.3,lon:36.8},{lat:-27.1,lon:-109.3},
+    {lat:55.8,lon:37.6},{lat:28.6,lon:77.2},{lat:13.8,lon:100.5},
+    {lat:41.9,lon:12.5},{lat:47.6,lon:-122.3},{lat:43.7,lon:-79.4},
+    {lat:1.4,lon:104},{lat:-37.8,lon:145},{lat:39.9,lon:116.4}
+  ];
+  while(s.length<3){
+    const c=candidates[Math.floor(Math.random()*candidates.length)];
+    if(!s.some(x=>haversine(x.lat,x.lon,c.lat,c.lon)<1500))s.push({...c,name:STATION_NAMES[s.length]});
+  }
+  return s;
+}
+function pickEpicenter(stations){
+  // Pick a point roughly inside the triangle formed by stations, with some randomness
+  const lat=stations.reduce((a,s)=>a+s.lat,0)/3+randRange(-12,12);
+  const lon=stations.reduce((a,s)=>a+s.lon,0)/3+randRange(-18,18);
+  return {lat:Math.max(-60,Math.min(75,lat)),lon};
+}
+function computeArrivals(){
+  for(let i=0;i<3;i++){
+    const d=haversine(state.stations[i].lat,state.stations[i].lon,state.epicenter.lat,state.epicenter.lon);
+    state.trueDistances[i]=d;
+    state.pArrivals[i]=d/(V_P*state.diff.speed);
+    state.sArrivals[i]=d/(V_S*state.diff.speed);
+  }
+}
+
+/* ============================
+   RENDER MAP
+   ============================ */
+function resizeMap(){
+  const r=mapCv.getBoundingClientRect();
+  mapCv.width=r.width*window.devicePixelRatio;
+  mapCv.height=r.height*window.devicePixelRatio;
+  state.mapW=r.width;state.mapH=r.height;
+  mapCtx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
+}
+function drawMap(){
+  const w=state.mapW,h=state.mapH,ctx=mapCtx;
+  ctx.clearRect(0,0,w,h);
+  // Ocean background
+  ctx.fillStyle='#0a0c10';
+  ctx.fillRect(0,0,w,h);
+  // Grid
+  ctx.strokeStyle='#1a1f2e';
+  ctx.lineWidth=1;
+  for(let lon=-180;lon<=180;lon+=30){const {x}=proj(0,lon,w,h);ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let lat=-60;lat<=75;lat+=30){const {y}=proj(lat,0,w,h);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  // Continents
+  ctx.fillStyle='#131c2e';
+  ctx.strokeStyle='#1e293b';
+  ctx.lineWidth=1;
+  for(const poly of WORLD_MAP){
+    ctx.beginPath();
+    for(let i=0;i<poly.length;i++){
+      const p=proj(poly[i][1],poly[i][0],w,h);
+      if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);
+    }
+    ctx.closePath();ctx.fill();ctx.stroke();
+  }
+  // Epicenter rings (during wave phase)
+  if(state.phase==='wave'||state.phase==='measure'){
+    const now=state.elapsed;
+    const pR_km=now*V_P*state.diff.speed;
+    const sR_km=now*V_S*state.diff.speed;
+    const {x:ex,y:ey}=proj(state.epicenter.lat,state.epicenter.lon,w,h);
+    const pRx=kmToDegLon(pR_km,state.epicenter.lat)/360*w;
+    const pRy=kmToDegLat(pR_km)/180*h;
+    const sRx=kmToDegLon(sR_km,state.epicenter.lat)/360*w;
+    const sRy=kmToDegLat(sR_km)/180*h;
+    ctx.save();
+    ctx.translate(ex,ey);
+    ctx.beginPath();ctx.ellipse(0,0,Math.abs(pRx),Math.abs(pRy),0,0,Math.PI*2);ctx.strokeStyle='rgba(96,165,250,.18)';ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.ellipse(0,0,Math.abs(sRx),Math.abs(sRy),0,0,Math.PI*2);ctx.strokeStyle='rgba(248,113,113,.12)';ctx.lineWidth=2;ctx.stroke();
+    ctx.restore();
+  }
+  // Hint circles (novice)
+  if(state.diff&&state.diff.hints&&state.phase==='measure'){
+    for(let i=0;i<3;i++){
+      if(state.trueDistances[i]){
+        const {x,y}=proj(state.stations[i].lat,state.stations[i].lon,w,h);
+        const rPx=kmToDegLon(state.trueDistances[i],state.stations[i].lat)/360*w;
+        const rPy=kmToDegLat(state.trueDistances[i])/180*h;
+        ctx.save();ctx.translate(x,y);
+        ctx.beginPath();ctx.ellipse(0,0,Math.abs(rPx),Math.abs(rPy),0,0,Math.PI*2);ctx.strokeStyle=COLORS.hint;ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+      }
+    }
+  }
+  // User circles
+  for(let i=0;i<3;i++){
+    const c=state.userCircles[i];
+    if(c){
+      const {x,y}=proj(c.lat,c.lon,w,h);
+      const rPx=kmToDegLon(c.rKm,c.lat)/360*w;
+      const rPy=kmToDegLat(c.rKm)/180*h;
+      ctx.save();ctx.translate(x,y);
+      ctx.beginPath();ctx.ellipse(0,0,Math.abs(rPx),Math.abs(rPy),0,0,Math.PI*2);ctx.strokeStyle=COLORS.userCircle;ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+      // small label
+      ctx.fillStyle=COLORS.userCircle;ctx.font='11px monospace';
+      ctx.fillText(`${Math.round(c.rKm)}km`,x+Math.abs(rPx)+4,y);
+    }
+  }
+  // Stations
+  for(let i=0;i<3;i++){
+    const s=state.stations[i];
+    const {x,y}=proj(s.lat,s.lon,w,h);
+    const hitP=state.phase==='wave'&&state.elapsed>=state.pArrivals[i];
+    const hitS=state.phase==='wave'&&state.elapsed>=state.sArrivals[i];
+    const col=hitS?COLORS.s:hitP?COLORS.p:COLORS.station;
+    ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.strokeStyle=col;ctx.lineWidth=1;ctx.globalAlpha=.3;ctx.stroke();ctx.globalAlpha=1;
+    ctx.fillStyle=varText();ctx.font='12px monospace';ctx.fillText(s.name,x+10,y+4);
+    // selection ring
+    if(state.selectedStation===i){ctx.beginPath();ctx.arc(x,y,18,0,Math.PI*2);ctx.strokeStyle=COLORS.yellow||'#facc15';ctx.lineWidth=2;ctx.stroke();}
+  }
+  // Guess point
+  if(state.guessPoint){
+    const {x,y}=proj(state.guessPoint.lat,state.guessPoint.lon,w,h);
+    ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle=COLORS.yellow||'#facc15';ctx.fill();
+    ctx.beginPath();ctx.moveTo(x-8,y-8);ctx.lineTo(x+8,y+8);ctx.moveTo(x+8,y-8);ctx.lineTo(x-8,y+8);ctx.strokeStyle=COLORS.yellow||'#facc15';ctx.lineWidth=2;ctx.stroke();
+  }
+  // True epicenter (only after reveal)
+  if(state.phase==='reveal'){
+    const {x,y}=proj(state.epicenter.lat,state.epicenter.lon,w,h);
+    ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fillStyle=COLORS.s;ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,20,0,Math.PI*2);ctx.strokeStyle=COLORS.s;ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=COLORS.s;ctx.font='12px monospace';ctx.fillText('EPICENTER',x+12,y-8);
+  }
+}
+function varText(){return getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#e2e8f0';}
+
+/* ============================
+   RENDER DRUMS
+   ============================ */
+function resizeDrums(){
+  drums.forEach(d=>{
+    const r=d.c.getBoundingClientRect();
+    d.c.width=r.width*window.devicePixelRatio;
+    d.c.height=r.height*window.devicePixelRatio;
+    d.ctx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
+    state.drumW=r.width;state.drumH=r.height;
+  });
+}
+function drawDrums(){
+  drums.forEach((d,i)=>{
+    const w=state.drumW,h=state.drumH,ctx=d.ctx;
+    ctx.clearRect(0,0,w,h);
+    // bg
+    ctx.fillStyle='#0a0c10';ctx.fillRect(0,0,w,h);
+    // grid
+    ctx.strokeStyle='#162030';ctx.lineWidth=1;
+    for(let gx=0;gx<w;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,h);ctx.stroke();}
+    ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();
+    // trace
+    if(!state.traces)state.traces=state.stations.map((_,idx)=>genTrace(idx,state.diff));
+    const tr=state.traces[i];
+    if(!tr)return;
+    const arr=tr.data;
+    const mid=h/2;
+    const scale=h*.35;
+    const pxPerSec=tr.pxPerSec;
+    const maxScroll=arr.length-1;
+    const scrollPx=Math.min(Math.floor(state.elapsed*pxPerSec),maxScroll);
+    // draw visible portion (scrolls right to left: new data on right)
+    ctx.beginPath();ctx.strokeStyle=COLORS.trace;ctx.lineWidth=1.5;
+    for(let px=0;px<w;px++){
+      const idx=scrollPx-(w-px);
+      if(idx>=0&&idx<arr.length){
+        const y=mid-arr[idx]*scale;
+        if(px===0)ctx.moveTo(px,y);else ctx.lineTo(px,y);
+      }
+    }
+    ctx.stroke();
+    // arrival ticks
+    const pPx=Math.floor(state.pArrivals[i]*pxPerSec);
+    const sPx=Math.floor(state.sArrivals[i]*pxPerSec);
+    if(scrollPx>=pPx){const x=w-(scrollPx-pPx);if(x>=0&&x<=w){ctx.strokeStyle=COLORS.p;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,4);ctx.lineTo(x,h-4);ctx.stroke();ctx.fillStyle=COLORS.p;ctx.font='10px monospace';ctx.fillText('P',x+2,12);}}
+    if(scrollPx>=sPx){const x=w-(scrollPx-sPx);if(x>=0&&x<=w){ctx.strokeStyle=COLORS.s;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,4);ctx.lineTo(x,h-4);ctx.stroke();ctx.fillStyle=COLORS.s;ctx.font='10px monospace';ctx.fillText('S',x+2,h-6);}}
+    // cursor
+    const cpx=state.cursorX&&state.cursorX[i]!=null?state.cursorX[i]:null;
+    if(cpx!=null&&cpx>=0&&cpx<=w){
+      ctx.strokeStyle=COLORS.yellow||'#facc15';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cpx,0);ctx.lineTo(cpx,h);ctx.stroke();
+      const t=state.elapsed-(w-cpx)/pxPerSec;
+      ctx.fillStyle=COLORS.yellow||'#facc15';ctx.font='10px monospace';
+      ctx.fillText(t.toFixed(1)+'s',cpx+2,h-6);
+    }
+  });
+}
+
+/* ============================
+   INTERACTION
+   ============================ */
+function onMapClick(e){
+  if(state.phase!=='measure')return;
+  const r=mapCv.getBoundingClientRect();
+  const x=(e.clientX-r.left);
+  const y=(e.clientY-r.top);
+  const {lat,lon}=unproj(x,y,state.mapW,state.mapH);
+  if(state.selectedStation>=0){
+    const s=state.stations[state.selectedStation];
+    const d=haversine(s.lat,s.lon,lat,lon);
+    state.userCircles[state.selectedStation]={lat:s.lat,lon:s.lon,rKm:d};
+    state.selectedStation=-1;
+    updateSPLabels();
+    drawMap();
+  }else{
+    state.guessPoint={lat,lon};
+    drawMap();
+  }
+}
+function onMapStationClick(e){
+  if(state.phase!=='measure')return;
+  const r=mapCv.getBoundingClientRect();
+  const x=(e.clientX-r.left),y=(e.clientY-r.top);
+  for(let i=0;i<3;i++){
+    const s=state.stations[i];
+    const p=proj(s.lat,s.lon,state.mapW,state.mapH);
+    if(Math.hypot(x-p.x,y-p.y)<20){state.selectedStation=i;drawMap();return;}
+  }
+}
+function onDrumClick(e,i){
+  if(state.phase!=='measure')return;
+  const r=drums[i].c.getBoundingClientRect();
+  const x=(e.clientX-r.left);
+  state.cursorX=state.cursorX||[];state.cursorX[i]=x;
+  // show dom cursor
+  drums[i].cur.style.display='block';drums[i].cur.style.left=x+'px';
+  // Compute S-P if both ticks visible
+  const tr=state.traces[i];if(!tr)return;
+  const pxPerSec=tr.pxPerSec;
+  const scrollPx=Math.min(Math.floor(state.elapsed*pxPerSec),tr.data.length-1);
+  const pPx=Math.floor(state.pArrivals[i]*pxPerSec);
+  const sPx=Math.floor(state.sArrivals[i]*pxPerSec);
+  const pVisible=scrollPx>=pPx;
+  const sVisible=scrollPx>=sPx;
+  if(pVisible&&sVisible){
+    const pX=state.drumW-(scrollPx-pPx);
+    const sX=state.drumW-(scrollPx-sPx);
+    // if cursor is between P and S, compute lag
+    if(x>=Math.min(pX,sX)&&x<=Math.max(pX,sX)){
+      const lag=(sPx-pPx)/pxPerSec;
+      state.spLags[i]=lag;
+      updateSPLabels();
+      // auto-set circle from lag
+      const dist=lag*MULT;
+      const s=state.stations[i];
+      state.userCircles[i]={lat:s.lat,lon:s.lon,rKm:dist};
+      drawMap();
+    }
+  }
+}
+function updateSPLabels(){
+  for(let i=0;i<3;i++){
+    const lag=state.spLags[i];
+    drums[i].sp.textContent=lag!=null?lag.toFixed(1)+'s':'--';
+  }
+}
+
+/* ============================
+   GAME LOOP
+   ============================ */
+function startRound(){
+  state.phase='countdown';
+  state.stations=placeStations();
+  state.epicenter=pickEpicenter(state.stations);
+  state.magn=4.5+Math.random()*3;
+  state.elapsed=0;
+  state.wavesStarted=performance.now();
+  state.pArrivals=[0,0,0];state.sArrivals=[0,0,0];state.trueDistances=[0,0,0];
+  state.spLags=[null,null,null];state.userCircles=[null,null,null];state.guessPoint=null;state.selectedStation=-1;
+  state.traces=null;state.cursorX=[];
+  computeArrivals();
+  drums.forEach(d=>{d.cur.style.display='none';});
+  $('phaseLabel').textContent='Listening...';
+  $('phaseLabel').style.color='var(--cyan)';
+  resizeMap();resizeDrums();drawMap();
+  setTimeout(()=>{
+    state.phase='wave';
+    $('phaseLabel').textContent='WAVES PROPAGATING';
+    $('phaseLabel').style.color='var(--red)';
+  },2000);
+}
+function gameLoop(){
+  if(state.phase==='menu')return;
+  const now=performance.now();
+  if(state.phase==='wave'||state.phase==='measure'){
+    state.elapsed=(now-state.wavesStarted)/1000;
+    // auto transition to measure when all S have arrived
+    const allS=state.sArrivals.every((t,i)=>state.elapsed>=t);
+    if(allS&&state.phase==='wave'){
+      state.phase='measure';
+      $('phaseLabel').textContent='MEASURE & TRIANGULATE';
+      $('phaseLabel').style.color='var(--green)';
+    }
+    // check timer
+    const remain=Math.max(0,state.diff.time-(state.elapsed));
+    $('timer').textContent='⏱ '+remain.toFixed(1)+'s';
+    if(remain<10)$('timer').classList.add('urgent');else $('timer').classList.remove('urgent');
+    if(remain<=0&&state.phase!=='reveal'){lockIn(true);}
+  }
+  drawMap();drawDrums();
+  state.animId=requestAnimationFrame(gameLoop);
+}
+function lockIn(forced){
+  if(state.phase!=='measure'&&state.phase!=='wave')return;
+  state.phase='reveal';
+  state.endTime=performance.now();
+  // scoring
+  let guess=state.guessPoint;
+  if(!guess&&state.userCircles.every(c=>c)){
+    // triangulate from circles centroid of intersections approximation
+    guess=triangulateFromCircles();
+  }
+  if(!guess)guess=state.epicenter; // worst case
+  state.guessPoint=guess;
+  const err=haversine(guess.lat,guess.lon,state.epicenter.lat,state.epicenter.lon);
+  const timeUsed=(state.endTime-state.wavesStarted)/1000;
+  const timeBonus=Math.max(0,Math.round((state.diff.time-timeUsed)*10));
+  let score=Math.max(0,1000-Math.round(err));
+  if(err<200)score+=500;
+  if(err<100)score+=500;
+  if(err<50)score+=500;
+  const allClose=state.spLags.every((lag,i)=>{
+    if(lag==null)return false;
+    const trueLag=state.sArrivals[i]-state.pArrivals[i];
+    return Math.abs(lag-trueLag)/trueLag<.2;
+  });
+  if(allClose)score+=300;
+  score+=timeBonus;
+  state.totalScore+=score;
+  if(err<200){state.streak++;state.bestStreak=Math.max(state.bestStreak,state.streak);}
+  else{state.streak=0;}
+  // reveal
+  const grade=err<50?'S':err<100?'A':err<200?'B':err<400?'C':err<800?'D':'F';
+  const relDir=bearing(state.epicenter.lat,state.epicenter.lon,guess.lat,guess.lon);
+  $('resTitle').textContent=forced?'TIME UP':'EPICENTER REVEALED';
+  $('resScore').textContent=score+' pts';
+  let detail=`Error: ${Math.round(err)} km · Grade: ${grade}`;
+  if(state.epicenter&&guess)detail+=` · Epicenter was ${Math.round(err)} km ${relDir} of your guess.`;
+  detail+=` · Time bonus: +${timeBonus}`;
+  if(state.streak>1)detail+=` · Streak: ${state.streak} 🔥`;
+  $('resDetail').textContent=detail;
+  $('scorePill').textContent='Score: '+state.totalScore;
+  $('streakPill').textContent='Streak: '+state.streak;
+  $('resultOverlay').classList.add('show');
+  drawMap();drawDrums();
+}
+function bearing(lat1,lon1,lat2,lon2){
+  const dLon=(lon2-lon1)*Math.PI/180;
+  const y=Math.sin(dLon)*Math.cos(lat2*Math.PI/180);
+  const x=Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180)-Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos(dLon);
+  const brng=Math.atan2(y,x)*180/Math.PI;
+  const dirs=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  return dirs[Math.round(((brng+360)%360)/22.5)%16];
+}
+function triangulateFromCircles(){
+  // approximate centroid of pairwise circle intersections
+  const pts=[];
+  for(let i=0;i<3;i++){
+    for(let j=i+1;j<3;j++){
+      const c1=state.userCircles[i],c2=state.userCircles[j];
+      if(!c1||!c2)continue;
+      const intersections=circleIntersections(c1.lat,c1.lon,c1.rKm,c2.lat,c2.lon,c2.rKm);
+      intersections.forEach(p=>pts.push(p));
+    }
+  }
+  if(!pts.length)return null;
+  const avgLat=pts.reduce((a,p)=>a+p.lat,0)/pts.length;
+  const avgLon=pts.reduce((a,p)=>a+p.lon,0)/pts.length;
+  return {lat:avgLat,lon:avgLon};
+}
+function circleIntersections(lat1,lon1,r1,lat2,lon2,r2){
+  const d=haversine(lat1,lon1,lat2,lon2);
+  if(d>r1+r2||d<Math.abs(r1-r2)||d===0)return [];
+  const a=(r1*r1-r2*r2+d*d)/(2*d);
+  const h=Math.sqrt(Math.max(0,r1*r1-a*a));
+  const latMid=lat1+a*(lat2-lat1)/d;
+  const lonMid=lon1+a*(lon2-lon1)/d;
+  const dx=-(lat2-lat1)*(h/d);
+  const dy=(lon2-lon1)*(h/d);
+  // rough lat/lon offsets (approximate)
+  return [
+    {lat:latMid+dx*.009,lon:lonMid+dy*.009},
+    {lat:latMid-dx*.009,lon:lonMid-dy*.009}
+  ];
+}
+
+/* ============================
+   UI BINDINGS
+   ============================ */
+let selectedDiff=null;
+function setDiff(name){
+  selectedDiff=name;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.toggle('active',b.dataset.diff===name));
+  $('goBtn').disabled=false;
+}
+document.querySelectorAll('.diff-btn').forEach(b=>b.addEventListener('click',()=>setDiff(b.dataset.diff)));
+$('goBtn').addEventListener('click',()=>{
+  if(!selectedDiff)return;
+  state.diff=DIFF[selectedDiff];
+  state.round=1;state.totalScore=0;state.streak=0;state.bestStreak=0;
+  $('startScreen').style.display='none';
+  $('hud').style.display='flex';
+  $('seismoPanel').style.display='flex';
+  $('controls').style.display='flex';
+  $('helpLine').style.display='block';
+  $('diffPill').textContent=state.diff.label;
+  $('roundPill').textContent='Round 1';
+  $('scorePill').textContent='Score: 0';
+  $('streakPill').textContent='Streak: 0';
+  startRound();
+  gameLoop();
+});
+$('mapCanvas').addEventListener('click',e=>{onMapStationClick(e);onMapClick(e);});
+$('mapCanvas').addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];onMapStationClick({clientX:t.clientX,clientY:t.clientY});onMapClick({clientX:t.clientX,clientY:t.clientY});},{passive:false});
+drums.forEach((d,i)=>{
+  d.c.addEventListener('click',e=>onDrumClick(e,i));
+  d.c.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];onDrumClick({clientX:t.clientX,clientY:t.clientY},i);},{passive:false});
+});
+$('clearCircles').addEventListener('click',()=>{
+  state.userCircles=[null,null,null];state.spLags=[null,null,null];state.guessPoint=null;state.selectedStation=-1;
+  updateSPLabels();drawMap();
+});
+$('lockIn').addEventListener('click',()=>lockIn(false));
+$('nextRound').addEventListener('click',()=>{
+  $('resultOverlay').classList.remove('show');
+  state.round++;
+  $('roundPill').textContent='Round '+state.round;
+  startRound();
+});
+$('toMenu').addEventListener('click',()=>{
+  $('resultOverlay').classList.remove('show');
+  cancelAnimationFrame(state.animId);
+  state.phase='menu';
+  $('startScreen').style.display='flex';
+  $('hud').style.display='none';
+  $('seismoPanel').style.display='none';
+  $('controls').style.display='none';
+  $('helpLine').style.display='none';
+});
+window.addEventListener('resize',()=>{resizeMap();resizeDrums();drawMap();drawDrums();});
+// initial sizing
+resizeMap();resizeDrums();drawMap();
+</script>
+</body>
+</html>

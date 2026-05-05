@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-05",
-    "title": "Compost Engine",
-    "slug": "compost-engine",
-    "publishedSlug": "2026-05-05-compost-engine",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-05-compost-engine/"
+    "date": "2026-05-06",
+    "title": "Seismograph Detective",
+    "slug": "seismograph-detective",
+    "publishedSlug": "2026-05-06-seismograph-detective",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-06-seismograph-detective/"
   },
   "apps": [
+    {
+      "date": "2026-05-06",
+      "title": "Seismograph Detective",
+      "slug": "seismograph-detective",
+      "publishedSlug": "2026-05-06-seismograph-detective",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-06-seismograph-detective/",
+      "description": "Interactive seismology puzzle: read seismograms, measure S-P time lags, and triangulate earthquake epicenters before time runs out."
+    },
     {
       "date": "2026-05-05",
       "title": "Compost Engine",
