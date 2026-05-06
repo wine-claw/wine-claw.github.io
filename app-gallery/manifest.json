@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-06",
-    "title": "Seismograph Detective",
-    "slug": "seismograph-detective",
-    "publishedSlug": "2026-05-06-seismograph-detective",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-06-seismograph-detective/"
+    "date": "2026-05-07",
+    "title": "Sundial Architect",
+    "slug": "sundial-architect",
+    "publishedSlug": "2026-05-07-sundial-architect",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-07-sundial-architect/"
   },
   "apps": [
+    {
+      "date": "2026-05-07",
+      "title": "Sundial Architect",
+      "slug": "sundial-architect",
+      "publishedSlug": "2026-05-07-sundial-architect",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-07-sundial-architect/",
+      "description": "Design and test interactive sundials — adjust latitude, gnomon angle, and hour markers to see real-time shadow casting"
+    },
     {
       "date": "2026-05-06",
       "title": "Seismograph Detective",
@@ -57,7 +65,7 @@
       "title": "Ripple Lab",
       "publishedSlug": "2026-04-29-ripple-lab",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/",
-      "description": "Interactive wave interference sandbox \u2014 tap to drop pebbles, drag to stir, place persistent sources, draw walls, and watch interference patterns form in real time.",
+      "description": "Interactive wave interference sandbox — tap to drop pebbles, drag to stir, place persistent sources, draw walls, and watch interference patterns form in real time.",
       "category": "physics"
     },
     {
@@ -118,7 +126,7 @@
     },
     {
       "date": "2026-04-23",
-      "title": "The Cornelius Keg \u2014 A History",
+      "title": "The Cornelius Keg — A History",
       "slug": "cornelius-keg-history",
       "publishedSlug": "2026-04-23-cornelius-keg-history",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-23-cornelius-keg-history/"
@@ -132,7 +140,7 @@
     },
     {
       "date": "2026-04-22",
-      "title": "O\u2082 Risk Map",
+      "title": "O₂ Risk Map",
       "slug": "o2-risk-map",
       "publishedSlug": "2026-04-22-o2-risk-map",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-04-22-o2-risk-map/"
@@ -307,7 +315,7 @@
     },
     {
       "date": "2026-03-25",
-      "title": "SO\u2082 Speciation Explorer",
+      "title": "SO₂ Speciation Explorer",
       "slug": "so2-speciation-explorer",
       "publishedSlug": "2026-03-25-so2-speciation-explorer",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-03-25-so2-speciation-explorer/"

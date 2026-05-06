@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sundial Architect</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --fg: #c9d1d9;
+    --muted: #8b949e;
+    --accent: #b8860b;
+    --accent2: #cd7f32;
+    --dial: #e8dcc4;
+    --mark: #3d2b1f;
+    --shadow: rgba(0,0,0,0.35);
+    --danger: #da3633;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .warning {
+    background: #2d1a0a;
+    color: #f0883e;
+    border-bottom: 1px solid #5a2e0e;
+    padding: 8px 12px;
+    font-size: 12px;
+    text-align: center;
+  }
+  header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid #21262d;
+  }
+  h1 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .mode-toggle {
+    display: flex;
+    gap: 4px;
+  }
+  .mode-toggle button {
+    background: var(--bg2);
+    border: 1px solid #30363d;
+    color: var(--fg);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .mode-toggle button.active {
+    background: var(--accent);
+    color: #0d1117;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    gap: 12px;
+  }
+  .canvas-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    aspect-ratio: 1 / 1.15;
+    background: var(--bg2);
+    border-radius: 12px;
+    border: 1px solid #21262d;
+    overflow: hidden;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+  .controls {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  label {
+    font-size: 13px;
+    color: var(--muted);
+    min-width: 70px;
+    flex-shrink: 0;
+  }
+  input[type="range"] {
+    flex: 1;
+    min-width: 120px;
+    accent-color: var(--accent);
+  }
+  .value {
+    font-size: 13px;
+    min-width: 60px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .btn {
+    background: var(--bg2);
+    border: 1px solid #30363d;
+    color: var(--fg);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    touch-action: manipulation;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary {
+    background: var(--accent);
+    color: #0d1117;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .preset-chip {
+    background: #1f242c;
+    border: 1px solid #30363d;
+    color: var(--muted);
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .preset-chip:hover { border-color: var(--accent); color: var(--fg); }
+  .panel {
+    width: 100%;
+    max-width: 600px;
+    background: var(--bg2);
+    border: 1px solid #21262d;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .panel h3 {
+    margin: 0 0 8px;
+    color: var(--accent2);
+    font-size: 14px;
+    font-family: Georgia, serif;
+  }
+  .formula {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    color: #d2a8ff;
+    margin: 8px 0;
+    overflow-x: auto;
+  }
+  .challenge-hud {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .challenge-hud.active { display: flex; }
+  .stars {
+    font-size: 18px;
+    color: var(--accent);
+  }
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .playbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .speed-select {
+    display: flex;
+    gap: 4px;
+  }
+  .speed-select button {
+    background: transparent;
+    border: 1px solid #30363d;
+    color: var(--muted);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .speed-select button.active { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 420px) {
+    h1 { font-size: 16px; }
+    .value { min-width: 50px; font-size: 12px; }
+    .preset-chip { font-size: 11px; padding: 4px 8px; }
+    .btn { padding: 7px 10px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="warning">
+  ⚠️ Experimental OpenClaw AI mini-app. Generated for entertainment and education.
+</div>
+
+<header>
+  <h1>☀️ Sundial Architect</h1>
+  <div class="mode-toggle">
+    <button id="mode-sandbox" class="active">Sandbox</button>
+    <button id="mode-challenge">Challenge</button>
+  </div>
+</header>
+
+<main>
+  <div class="canvas-wrap">
+    <canvas id="sundial"></canvas>
+  </div>
+
+  <div class="controls">
+    <div class="challenge-hud" id="challenge-hud">
+      <div class="stars" id="stars"></div>
+      <span class="hint" id="challenge-hint">Drag the gnomon to match the shadow to the hour lines.</span>
+      <button class="btn primary" id="btn-next">Next challenge</button>
+    </div>
+
+    <div class="row" id="row-lat">
+      <label>Latitude</label>
+      <input type="range" id="lat-slider" min="-90" max="90" step="0.5" value="-34.9">
+      <span class="value" id="lat-val">-34.9°</span>
+    </div>
+
+    <div class="row" id="row-gnomon">
+      <label>Gnomon</label>
+      <input type="range" id="gnomon-slider" min="0" max="90" step="0.2" value="34.9">
+      <span class="value" id="gnomon-val">34.9°</span>
+    </div>
+
+    <div class="row">
+      <label>Time</label>
+      <input type="range" id="time-slider" min="0" max="24" step="0.01" value="12">
+      <span class="value" id="time-val">12:00</span>
+    </div>
+
+    <div class="playbar">
+      <button class="btn" id="btn-play">▶ Play</button>
+      <div class="speed-select" id="speed-select">
+        <button data-speed="1">1×</button>
+        <button data-speed="10" class="active">10×</button>
+        <button data-speed="60">60×</button>
+      </div>
+      <span class="hint">Speed</span>
+    </div>
+
+    <div class="row">
+      <label>Date</label>
+      <input type="range" id="date-slider" min="0" max="364" step="1" value="125">
+      <span class="value" id="date-val">May 7</span>
+    </div>
+
+    <div class="row">
+      <span class="hint" style="margin-left:78px;">Presets:</span>
+      <div class="presets" id="presets">
+        <span class="preset-chip" data-lat="-34.9">Adelaide</span>
+        <span class="preset-chip" data-lat="-33.9">Sydney</span>
+        <span class="preset-chip" data-lat="51.5">London</span>
+        <span class="preset-chip" data-lat="35.7">Tokyo</span>
+        <span class="preset-chip" data-lat="64.1">Reykjavik</span>
+        <span class="preset-chip" data-lat="0">Equator</span>
+        <span class="preset-chip" data-lat="-23.4">Tropic Capricorn</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>How it works</h3>
+    <p>A sundial tells time from the Sun. The <strong>gnomon</strong> is the raised pointer; its shadow falls on marked <strong>hour lines</strong>. For a horizontal sundial the gnomon must be parallel to Earth's axis — angled up from the ground by your latitude, pointing toward the celestial pole.</p>
+    <div class="formula">tan(β) = sin(φ) · tan(H)</div>
+    <p>Here β is the hour-line angle from noon, φ is latitude, and H is the hour angle (15° per hour from noon). The shadow sweeps clockwise in the northern hemisphere and counter-clockwise in the southern.</p>
+    <p>Because Earth's orbit is slightly elliptical, sundials can drift about ±15 minutes from clock time through the year — called the <strong>equation of time</strong>. This app uses mean solar time.</p>
+  </div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  const canvas = document.getElementById('sundial');
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  const $ = id => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const deg = r => r * 180 / Math.PI;
+  const rad = d => d * Math.PI / 180;
+
+  const state = {
+    latitude: -34.9,
+    gnomonAngle: 34.9, // degrees from horizontal, pointing toward celestial pole
+    time: 12.0, // hours 0..24
+    dayOfYear: 126, // 0..364
+    playing: false,
+    speed: 10,
+    mode: 'sandbox', // 'sandbox' | 'challenge'
+    challengeLat: null,
+    challengeScore: null,
+    dragGnomon: false,
+    lastFrame: 0,
+  };
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthDays = [31,28,31,30,31,30,31,31,30,31,30,31];
+  function dayToDate(d) {
+    let m = 0;
+    while (m < 12 && d >= monthDays[m]) { d -= monthDays[m]; m++; }
+    return monthNames[m] + ' ' + (d + 1);
+  }
+
+  function declination(doy) {
+    return 23.45 * Math.sin(rad(360 * (284 + doy) / 365));
+  }
+
+  function sunAltitude(lat, dec, hour) {
+    const H = rad((hour - 12) * 15);
+    const s = Math.sin(rad(lat)) * Math.sin(rad(dec)) + Math.cos(rad(lat)) * Math.cos(rad(dec)) * Math.cos(H);
+    return Math.asin(clamp(s, -1, 1));
+  }
+
+  function sunAzimuth(lat, dec, hour) {
+    const alt = sunAltitude(lat, dec, hour);
+    const H = rad((hour - 12) * 15);
+    const cA = (Math.sin(rad(dec)) - Math.sin(rad(lat)) * Math.sin(alt)) / (Math.cos(rad(lat)) * Math.cos(alt));
+    let A = Math.acos(clamp(cA, -1, 1));
+    if (H > 0) A = 2 * Math.PI - A; // afternoon
+    return A; // radians from north, clockwise
+  }
+
+  // For polar-pointing gnomon, shadow of tip on horizontal plane
+  function shadowPoint(lat, dec, hour, gnomonLen) {
+    const alt = sunAltitude(lat, dec, hour);
+    if (alt <= 0) return null; // sun below horizon
+    const az = sunAzimuth(lat, dec, hour);
+    // Gnomon direction points to celestial pole: south in southern hemisphere, north in northern
+    // Azimuth of pole: 180° for south, 0° for north
+    const poleAz = lat >= 0 ? 0 : Math.PI;
+    const gnomonAngleFromHorizontal = state.gnomonAngle; // user-adjustable (or correct latitude in sandbox)
+    // Tip position in 3D: x=east, y=north, z=up
+    const gx = Math.sin(poleAz) * Math.cos(rad(gnomonAngleFromHorizontal)) * gnomonLen;
+    const gy = Math.cos(poleAz) * Math.cos(rad(gnomonAngleFromHorizontal)) * gnomonLen;
+    const gz = Math.sin(rad(gnomonAngleFromHorizontal)) * gnomonLen;
+    // Sun direction vector (toward sun)
+    const sx = Math.sin(az) * Math.cos(alt);
+    const sy = Math.cos(az) * Math.cos(alt);
+    const sz = Math.sin(alt);
+    // Ray from tip: P = G + t * S. Ground is z=0, so t = -gz / sz
+    const t = -gz / sz;
+    if (t <= 0) return null; // shadow would be behind sun (shouldn't happen if alt>0 and gz>0)
+    return { x: gx + t * sx, y: gy + t * sy };
+  }
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const presets = {
+    'Adelaide': -34.9,
+    'Sydney': -33.9,
+    'London': 51.5,
+    'Tokyo': 35.7,
+    'Reykjavik': 64.1,
+    'Equator': 0,
+    'Tropic Capricorn': -23.4,
+  };
+
+  function fmtTime(h) {
+    const hr = Math.floor(h);
+    const mn = Math.floor((h - hr) * 60);
+    return String(hr).padStart(2,'0') + ':' + String(mn).padStart(2,'0');
+  }
+
+  function updateUI() {
+    $('lat-val').textContent = state.latitude.toFixed(1) + '°';
+    $('gnomon-val').textContent = state.gnomonAngle.toFixed(1) + '°';
+    $('time-val').textContent = fmtTime(state.time);
+    $('date-val').textContent = dayToDate(state.dayOfYear);
+    if (!state.dragGnomon) {
+      $('lat-slider').value = state.latitude;
+      $('gnomon-slider').value = state.gnomonAngle;
+    }
+    $('time-slider').value = state.time;
+    $('date-slider').value = state.dayOfYear;
+    $('btn-play').textContent = state.playing ? '⏸ Pause' : '▶ Play';
+
+    if (state.mode === 'challenge') {
+      $('challenge-hud').classList.add('active');
+      $('row-lat').style.display = 'none';
+      $('row-gnomon').style.display = 'flex';
+      $('presets').parentElement.style.display = 'none';
+      // scoring
+      if (state.challengeLat != null) {
+        const err = Math.abs(state.gnomonAngle - Math.abs(state.challengeLat));
+        let stars = '';
+        if (err < 1) stars = '⭐⭐⭐';
+        else if (err < 3) stars = '⭐⭐';
+        else if (err < 5) stars = '⭐';
+        else stars = '';
+        const msg = err < 5 ? `${stars}  Error: ${err.toFixed(1)}°` : `Error: ${err.toFixed(1)}° (keep adjusting)`;
+        $('stars').textContent = msg;
+      }
+    } else {
+      $('challenge-hud').classList.remove('active');
+      $('row-lat').style.display = 'flex';
+      $('row-gnomon').style.display = 'flex';
+      $('presets').parentElement.style.display = 'flex';
+    }
+  }
+
+  function hourLineAngle(lat, hourFromNoon) {
+    // tan(beta) = sin(lat) * tan(hourAngle)
+    const H = hourFromNoon * 15;
+    const t = Math.sin(rad(lat)) * Math.tan(rad(H));
+    return Math.atan(t); // radians from noon line, positive clockwise in N, counter-clockwise in S
+  }
+
+  function drawDial(cx, cy, R) {
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // Face background
+    ctx.beginPath();
+    ctx.arc(0, 0, R, 0, Math.PI * 2);
+    ctx.fillStyle = '#e8dcc4';
+    ctx.fill();
+    ctx.strokeStyle = '#b8a888';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Inner rings
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 0.85, 0, Math.PI * 2);
+    ctx.strokeStyle = '#d0c4a8';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 0.15, 0, Math.PI * 2);
+    ctx.fillStyle = '#d8ccb0';
+    ctx.fill();
+    ctx.stroke();
+
+    // Hour lines and labels
+    const romans = ['XII','I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+    const isSouth = state.latitude < 0;
+
+    for (let h = -6; h <= 6; h++) {
+      if (h === 0) continue;
+      const beta = hourLineAngle(state.latitude, h);
+      const dir = isSouth ? -1 : 1;
+      const angle = beta * dir; // flip for southern hemisphere
+      const inner = R * 0.18;
+      const outer = R * 0.82;
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(inner, 0);
+      ctx.lineTo(outer, 0);
+      ctx.strokeStyle = '#5a4a3a';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Noon line (thicker)
+    ctx.save();
+    ctx.rotate(0);
+    ctx.beginPath();
+    ctx.moveTo(R * 0.15, 0);
+    ctx.lineTo(R * 0.85, 0);
+    ctx.strokeStyle = '#3d2b1f';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Hour labels
+    for (let h = -6; h <= 6; h++) {
+      const displayHour = ((12 + h + 24) % 24);
+      if (displayHour < 6 || displayHour > 18) continue; // only daylight hours typically
+      const beta = hourLineAngle(state.latitude, h);
+      const dir = isSouth ? -1 : 1;
+      const angle = beta * dir;
+      const labelR = R * 0.92;
+      const lx = Math.cos(angle) * labelR;
+      const ly = Math.sin(angle) * labelR;
+      ctx.save();
+      ctx.translate(lx, ly);
+      ctx.rotate(angle + (isSouth ? Math.PI : 0));
+      ctx.fillStyle = '#3d2b1f';
+      ctx.font = `${R * 0.065}px Georgia, serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const romanIdx = ((12 + h) % 12);
+      ctx.fillText(romans[romanIdx], 0, 0);
+      ctx.restore();
+    }
+
+    // Cardinal directions
+    ctx.fillStyle = '#7a6a5a';
+    ctx.font = `bold ${R * 0.055}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const card = isSouth ? ['N','E','S','W'] : ['S','E','N','W'];
+    const cardPos = [[0,-R*0.97],[R*0.97,0],[0,R*0.97],[-R*0.97,0]];
+    card.forEach((c,i) => ctx.fillText(c, cardPos[i][0], cardPos[i][1]));
+
+    ctx.restore();
+  }
+
+  function drawGnomon(cx, cy, R) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    // Gnomon points toward celestial pole.
+    // In southern hemisphere, pole is south (down on canvas if north is up).
+    // Our dial: noon line points north (up) in N hemisphere, south (down) in S.
+    // Actually our noon line is vertical (0 angle). We need to orient labels properly.
+    // Let's use: angle 0 = toward north for N hemisphere, toward south for S hemisphere.
+    // Wait, our hour line angles are measured from noon line. Noon line is vertical in our drawing.
+    // In northern hemisphere, shadow moves clockwise from north = angle increases clockwise.
+    // In southern hemisphere, shadow moves counter-clockwise from south = angle increases counter-clockwise.
+    // We already handle that with the `dir` multiplier.
+    // The gnomon must point toward the pole: in N hemisphere, north (up, angle -90° or 270°).
+    // In S hemisphere, south (down, angle 90°).
+    // Actually our angle 0 is to the right (east). We need to rotate accordingly.
+
+    const isSouth = state.latitude < 0;
+    const poleDir = isSouth ? Math.PI / 2 : -Math.PI / 2; // south or north in our coordinate system
+    const gAngle = rad(state.gnomonAngle); // from horizontal
+    const len = R * 0.38;
+    const h = len * Math.sin(gAngle); // vertical
+    const proj = len * Math.cos(gAngle); // horizontal projection
+
+    // Draw as a triangular prism viewed from side
+    const tipX = Math.cos(poleDir) * proj;
+    const tipY = Math.sin(poleDir) * proj;
+    const baseWidth = R * 0.06;
+
+    // Shadow-facing side (darker)
+    // Simplified: draw a wedge from center pointing to pole, angled up
+    ctx.save();
+    ctx.translate(tipX, tipY);
+    ctx.rotate(poleDir + Math.PI/2);
+    // triangular cross-section drawn as a filled polygon
+    const w2 = baseWidth / 2;
+    const h2 = h * 0.6;
+    ctx.beginPath();
+    ctx.moveTo(-w2, h2);
+    ctx.lineTo(w2, h2);
+    ctx.lineTo(0, -h2);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(-w2, 0, w2, 0);
+    grad.addColorStop(0, '#8b5a2b');
+    grad.addColorStop(0.5, '#cd7f32');
+    grad.addColorStop(1, '#8b4513');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.strokeStyle = '#5a300d';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+
+    // Draw the base at centre
+    ctx.beginPath();
+    ctx.arc(0, 0, baseWidth * 0.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#a0522d';
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawShadow(cx, cy, R) {
+    const sp = shadowPoint(state.latitude, declination(state.dayOfYear), state.time, R * 0.38);
+    if (!sp) return;
+    const scale = R * 0.28; // scale shadow coordinates to canvas
+    const sx = cx + sp.x * scale;
+    const sy = cy + sp.y * scale;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(sx, sy);
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Shadow tip
+    ctx.beginPath();
+    ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSunArc(cx, cy, W, H) {
+    // Small inset: altitude vs time graph
+    const pad = 6;
+    const w = W - pad * 2;
+    const h = H - pad * 2;
+    const x0 = cx - W/2 + pad;
+    const y0 = cy - H/2 + pad;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(13,17,23,0.85)';
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(x0 - 4, y0 - 4, w + 8, h + 8, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    const dec = declination(state.dayOfYear);
+    ctx.beginPath();
+    for (let t = 0; t <= 24; t += 0.2) {
+      const alt = sunAltitude(state.latitude, dec, t);
+      const px = x0 + (t / 24) * w;
+      const py = y0 + h - ((alt + Math.PI/2) / Math.PI) * h; // map -90..90 to full height
+      if (t === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = '#f0883e';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Current time dot
+    const cAlt = sunAltitude(state.latitude, dec, state.time);
+    const cPx = x0 + (state.time / 24) * w;
+    const cPy = y0 + h - ((cAlt + Math.PI/2) / Math.PI) * h;
+    ctx.beginPath();
+    ctx.arc(cPx, cPy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffd700';
+    ctx.fill();
+
+    // Labels
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Sun arc', x0, y0 + 2);
+    ctx.restore();
+  }
+
+  function render() {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const cx = w / 2;
+    const dialCy = h * 0.42;
+    const R = Math.min(w, h) * 0.38;
+
+    drawDial(cx, dialCy, R);
+    drawShadow(cx, dialCy, R);
+    drawGnomon(cx, dialCy, R);
+
+    // Sun arc inset at bottom
+    drawSunArc(cx, h * 0.88, w * 0.7, h * 0.18);
+  }
+
+  function tick(ts) {
+    if (state.playing) {
+      const dt = (ts - state.lastFrame) / 1000;
+      const inc = dt * state.speed / 3600 * 24; // speed multiplier applied to day cycle
+      state.time += inc;
+      if (state.time >= 24) state.time -= 24;
+    }
+    state.lastFrame = ts;
+    updateUI();
+    render();
+    requestAnimationFrame(tick);
+  }
+
+  // Controls
+  $('lat-slider').addEventListener('input', e => {
+    state.latitude = parseFloat(e.target.value);
+    if (state.mode === 'sandbox') {
+      state.gnomonAngle = Math.abs(state.latitude);
+    }
+  });
+
+  $('gnomon-slider').addEventListener('input', e => {
+    state.gnomonAngle = parseFloat(e.target.value);
+    state.dragGnomon = true;
+  });
+  $('gnomon-slider').addEventListener('change', () => {
+    state.dragGnomon = false;
+  });
+
+  $('time-slider').addEventListener('input', e => {
+    state.time = parseFloat(e.target.value);
+    state.playing = false;
+  });
+
+  $('date-slider').addEventListener('input', e => {
+    state.dayOfYear = parseInt(e.target.value);
+  });
+
+  $('btn-play').addEventListener('click', () => {
+    state.playing = !state.playing;
+  });
+
+  document.querySelectorAll('#speed-select button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#speed-select button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      state.speed = parseInt(b.dataset.speed);
+    });
+  });
+
+  document.querySelectorAll('.preset-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      state.latitude = parseFloat(chip.dataset.lat);
+      state.gnomonAngle = Math.abs(state.latitude);
+    });
+  });
+
+  function startChallenge() {
+    // Random latitude excluding extremes
+    const lat = (Math.random() * 140 - 70).toFixed(1);
+    state.challengeLat = parseFloat(lat);
+    state.gnomonAngle = 45; // start in middle
+    state.time = 8 + Math.random() * 8; // mid-day range
+    state.playing = true;
+    state.mode = 'challenge';
+    $('mode-challenge').classList.add('active');
+    $('mode-sandbox').classList.remove('active');
+    updateUI();
+  }
+
+  $('mode-sandbox').addEventListener('click', () => {
+    state.mode = 'sandbox';
+    state.playing = false;
+    state.gnomonAngle = Math.abs(state.latitude);
+    $('mode-sandbox').classList.add('active');
+    $('mode-challenge').classList.remove('active');
+    updateUI();
+  });
+
+  $('mode-challenge').addEventListener('click', () => {
+    if (state.mode !== 'challenge') startChallenge();
+  });
+
+  $('btn-next').addEventListener('click', startChallenge);
+
+  // Touch/mouse drag on canvas for gnomon angle adjustment in challenge
+  function getCanvasPos(evt) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    return {
+      x: (clientX - rect.left) * dpr,
+      y: (clientY - rect.top) * dpr,
+    };
+  }
+
+  function handleDragStart(evt) {
+    if (state.mode !== 'challenge') return;
+    const pos = getCanvasPos(evt);
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const dialCy = h * 0.42;
+    const dist = Math.hypot(pos.x - cx, pos.y - dialCy);
+    if (dist < canvas.width * 0.08) {
+      state.dragGnomon = true;
+      evt.preventDefault();
+    }
+  }
+
+  function handleDragMove(evt) {
+    if (!state.dragGnomon) return;
+    const pos = getCanvasPos(evt);
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const dialCy = h * 0.42;
+    const angle = Math.atan2(pos.y - dialCy, pos.x - cx);
+    const isSouth = state.latitude < 0;
+    const poleDir = isSouth ? Math.PI / 2 : -Math.PI / 2;
+    let rel = Math.abs(angle - poleDir);
+    if (rel > Math.PI) rel = 2 * Math.PI - rel;
+    const fromHorizontal = 90 - deg(rel);
+    state.gnomonAngle = clamp(fromHorizontal, 0, 90);
+    evt.preventDefault();
+  }
+
+  function handleDragEnd() {
+    state.dragGnomon = false;
+  }
+
+  canvas.addEventListener('mousedown', handleDragStart);
+  canvas.addEventListener('mousemove', handleDragMove);
+  window.addEventListener('mouseup', handleDragEnd);
+  canvas.addEventListener('touchstart', handleDragStart, {passive: false});
+  canvas.addEventListener('touchmove', handleDragMove, {passive: false});
+  window.addEventListener('touchend', handleDragEnd);
+
+  // Init
+  updateUI();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
