@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Braitenberg Lab — Synthetic Psychology Simulator</title>
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --panel: #16162b;
+    --panel2: #1e1e3a;
+    --border: #2a2a50;
+    --text: #e0e0f0;
+    --text2: #a0a0c0;
+    --cyan: #00e5ff;
+    --magenta: #ff00a0;
+    --amber: #ffb300;
+    --red: #ff4444;
+    --green: #00ff88;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* AI Warning Banner */
+  .ai-banner {
+    background: linear-gradient(90deg, #2a1a00, #3d2200, #2a1a00);
+    border-bottom: 1px solid #5a3a00;
+    color: #ffcc66;
+    font-size: 12px;
+    text-align: center;
+    padding: 6px 12px;
+    flex-shrink: 0;
+  }
+
+  /* Top Bar */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .top-bar h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--cyan);
+    margin-right: auto;
+    white-space: nowrap;
+  }
+  .stimulus-palette {
+    display: flex;
+    gap: 6px;
+  }
+  .stimulus-btn {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .stimulus-btn:hover { background: #2a2a55; }
+  .stimulus-btn.active {
+    border-color: var(--amber);
+    background: #2a2000;
+    color: var(--amber);
+    box-shadow: 0 0 8px rgba(255,179,0,0.2);
+  }
+
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ctrl-group label {
+    font-size: 12px;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  input[type="range"] {
+    accent-color: var(--cyan);
+    width: 80px;
+  }
+  .top-bar button {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .top-bar button:hover { background: #2a2a55; }
+  .top-bar button.danger { border-color: var(--red); color: #ff8888; }
+  .top-bar button.danger:hover { background: #3a1010; }
+
+  /* Main Layout */
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    min-width: 200px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .sidebar h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text2);
+    padding: 12px 14px 6px;
+  }
+  .preset-list { padding: 0 10px 10px; }
+  .preset-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .preset-card:hover { border-color: #444470; background: #222244; }
+  .preset-card.active {
+    border-color: var(--cyan);
+    background: #0a1a2a;
+    box-shadow: 0 0 10px rgba(0,229,255,0.15);
+  }
+  .preset-card .emoji { font-size: 20px; margin-right: 6px; }
+  .preset-card .name { font-weight: 600; font-size: 13px; }
+  .preset-card .desc { font-size: 11px; color: var(--text2); margin-top: 2px; line-height: 1.3; }
+
+  /* Custom matrix */
+  .custom-panel {
+    padding: 0 14px 14px;
+    display: none;
+  }
+  .custom-panel.visible { display: block; }
+  .custom-panel h3 {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 8px;
+  }
+  .matrix {
+    display: grid;
+    grid-template-columns: auto repeat(2, 1fr);
+    gap: 4px;
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  .matrix input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .matrix .header { color: var(--text2); text-align: center; padding: 4px; }
+  .matrix .label { color: var(--text2); padding: 4px; text-align: right; }
+
+  .legend {
+    padding: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+  .legend strong { color: var(--cyan); }
+
+  /* Canvas Area */
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    background: #1a1a2e;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .canvas-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.6);
+    color: var(--text2);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* Bottom Info Bar */
+  .info-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 6px 16px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text2);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .info-bar .stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .info-bar .stat .value { color: var(--cyan); font-weight: 600; }
+  .info-bar .sep { color: #444; }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .sidebar { width: 180px; min-width: 180px; }
+    .top-bar h1 { font-size: 14px; }
+    .stimulus-btn { padding: 4px 8px; font-size: 12px; }
+  }
+  @media (max-width: 520px) {
+    .sidebar { display: none; }
+    .top-bar { gap: 6px; padding: 6px 8px; }
+    .top-bar h1 { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ai-banner">
+  ⚠️ Experimental OpenClaw AI mini-app — for entertainment only, not professionally validated.
+</div>
+
+<div class="top-bar">
+  <h1>🧠 Braitenberg Lab</h1>
+  <div class="stimulus-palette">
+    <button class="stimulus-btn active" data-type="light">💡 Light</button>
+    <button class="stimulus-btn" data-type="heat">🔥 Heat</button>
+    <button class="stimulus-btn" data-type="repeller">⛔ Repeller</button>
+  </div>
+  <div class="ctrl-group">
+    <label>Speed</label>
+    <input type="range" id="speedSlider" min="0.5" max="3" step="0.1" value="1">
+  </div>
+  <div class="ctrl-group">
+    <label><input type="checkbox" id="trailToggle" checked> Trails</label>
+  </div>
+  <button id="clearBtn" class="danger">Clear All</button>
+  <button id="resetBtn">Reset</button>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <h2>Presets</h2>
+    <div class="preset-list" id="presetList"></div>
+    <div class="custom-panel" id="customPanel">
+      <h3>Wiring Matrix</h3>
+      <div class="matrix">
+        <div></div>
+        <div class="header">L Motor</div>
+        <div class="header">R Motor</div>
+        <div class="label">L Sensor</div>
+        <input type="number" id="wLL" step="0.1" value="1">
+        <input type="number" id="wLR" step="0.1" value="0">
+        <div class="label">R Sensor</div>
+        <input type="number" id="wRL" step="0.1" value="0">
+        <input type="number" id="wRR" step="0.1" value="1">
+      </div>
+      <div class="matrix">
+        <div class="label">Bias L</div>
+        <input type="number" id="biasL" step="0.1" value="0">
+        <div class="label">Bias R</div>
+        <input type="number" id="biasR" step="0.1" value="0">
+      </div>
+    </div>
+    <div class="legend">
+      <strong>Braitenberg vehicles</strong> are simple agents whose "personality" emerges from how sensors are wired to motors. Change the wiring, and the same body appears to love, fear, explore, or attack. Inspired by Valentino Braitenberg's 1986 book <em>Vehicles</em>.
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="world"></canvas>
+    <div class="canvas-hint" id="hint">Click canvas to place stimulus • Select preset, then click to spawn vehicle</div>
+  </div>
+</div>
+
+<div class="info-bar" id="infoBar">
+  <div class="stat">Sensors: <span class="value" id="sensorL">0.00</span> / <span class="value" id="sensorR">0.00</span></div>
+  <span class="sep">|</span>
+  <div class="stat">Motors: <span class="value" id="motorL">0.00</span> / <span class="value" id="motorR">0.00</span></div>
+  <span class="sep">|</span>
+  <div class="stat">Vehicles: <span class="value" id="vCount">0</span></div>
+  <span class="sep">|</span>
+  <div class="stat">Stimuli: <span class="value" id="sCount">0</span></div>
+</div>
+
+<script>
+/* ================================================================
+   BRAITENBERG LAB — Single-file interactive simulator
+   ================================================================ */
+
+// --- Constants & Config ---
+const EPS = 0.001;
+const MAX_SENSOR = 2.0;
+const VEHICLE_SIZE = 14; // half-width
+const SENSOR_OFFSET = 12; // distance from center
+const WHEEL_OFFSET = 10; // distance from center
+const TRAIL_MAX = 120;
+const DT = 1 / 60;
+
+// --- Presets ---
+const PRESETS = [
+  { id: 'v1a', emoji: '🚗', name: 'Vehicle 1a — Approach', desc: 'One sensor wired positively to one motor. Moves toward stimulus.' },
+  { id: 'v1b', emoji: '🏃', name: 'Vehicle 1b — Avoid', desc: 'One sensor wired negatively. Fleeing behavior.' },
+  { id: 'v2a', emoji: '😱', name: 'Vehicle 2a — Fear', desc: 'Two sensors, direct wiring. Turns away and runs from source.' },
+  { id: 'v2b', emoji: '⚔️', name: 'Vehicle 2b — Aggression', desc: 'Two sensors, crossed wiring. Charges directly at source.' },
+  { id: 'v3', emoji: '💘', name: 'Vehicle 3 — Love', desc: 'Nonlinear sensors. Settles near source, circling gently.' },
+  { id: 'v4', emoji: '🔍', name: 'Vehicle 4 — Curiosity', desc: 'Threshold + persistence. Pauses, then moves on to explore.' },
+  { id: 'custom', emoji: '⚙️', name: 'Custom', desc: 'Edit the 2×2 wiring matrix yourself.' }
+];
+
+// Preset wiring configurations
+function getPresetConfig(id) {
+  switch (id) {
+    case 'v1a': return { w: [[1,0],[0,0]], bias: [0,0], singleSensor: true };
+    case 'v1b': return { w: [[-1,0],[0,0]], bias: [0,0], singleSensor: true };
+    case 'v2a': return { w: [[1,0],[0,1]], bias: [0,0], singleSensor: false }; // fear
+    case 'v2b': return { w: [[0,1],[1,0]], bias: [0,0], singleSensor: false }; // aggression
+    case 'v3': return { w: [[1,0],[0,1]], bias: [0,0], singleSensor: false, nonlinear: true };
+    case 'v4': return { w: [[1,0],[0,1]], bias: [0,0], singleSensor: false, threshold: 0.3, persistence: 0.98 };
+    case 'custom': return { w: [[1,0],[0,1]], bias: [0,0], singleSensor: false };
+    default: return { w: [[1,0],[0,1]], bias: [0,0], singleSensor: false };
+  }
+}
+
+// --- Classes ---
+
+class Stimulus {
+  constructor(x, y, type) {
+    this.x = x;
+    this.y = y;
+    this.type = type; // 'light', 'heat', 'repeller'
+    this.intensity = type === 'light' ? 1.0 : type === 'heat' ? 0.8 : -1.0;
+    this.pulse = Math.random() * Math.PI * 2;
+    this.id = Math.random().toString(36).slice(2, 9);
+  }
+
+  update(dt) {
+    this.pulse += dt * 2;
+  }
+
+  icon() {
+    return this.type === 'light' ? '💡' : this.type === 'heat' ? '🔥' : '⛔';
+  }
+
+  glowColor() {
+    return this.type === 'light' ? '255, 230, 100' : this.type === 'heat' ? '255, 100, 50' : '255, 50, 80';
+  }
+}
+
+class Vehicle {
+  constructor(x, y, angle, presetId) {
+    this.x = x;
+    this.y = y;
+    this.angle = angle; // radians, 0 = right
+    this.presetId = presetId;
+    this.cfg = getPresetConfig(presetId);
+    this.alive = true;
+    this.trail = [];
+    this.wheelRot = [0, 0]; // cumulative rotation for visual
+    this.sensorVal = [0, 0];
+    this.motorSpeed = [0, 0];
+    this.age = 0;
+
+    // For vehicle 4 (curiosity)
+    this.stateTimer = 0;
+    this.curState = 'move'; // 'move' | 'pause'
+    this.memoryMotor = [0, 0];
+  }
+
+  getWiring() {
+    if (this.presetId === 'custom') {
+      return {
+        w: [
+          [parseFloat(document.getElementById('wLL').value) || 0, parseFloat(document.getElementById('wLR').value) || 0],
+          [parseFloat(document.getElementById('wRL').value) || 0, parseFloat(document.getElementById('wRR').value) || 0]
+        ],
+        bias: [parseFloat(document.getElementById('biasL').value) || 0, parseFloat(document.getElementById('biasR').value) || 0]
+      };
+    }
+    return this.cfg;
+  }
+
+  sensorPositions() {
+    const s = SENSOR_OFFSET;
+    const a = this.angle;
+    // Left sensor
+    const la = a - 0.6;
+    const lx = this.x + Math.cos(la) * s;
+    const ly = this.y + Math.sin(la) * s;
+    // Right sensor
+    const ra = a + 0.6;
+    const rx = this.x + Math.cos(ra) * s;
+    const ry = this.y + Math.sin(ra) * s;
+    return [{x: lx, y: ly}, {x: rx, y: ry}];
+  }
+
+  computeSensors(stimuli) {
+    const spos = this.sensorPositions();
+    const vals = [0, 0];
+    for (let i = 0; i < 2; i++) {
+      let sum = 0;
+      for (const s of stimuli) {
+        const dx = spos[i].x - s.x;
+        const dy = spos[i].y - s.y;
+        const d2 = dx*dx + dy*dy + EPS;
+        let act = s.intensity / d2;
+        // Nonlinear for love vehicle: sensor saturates then drops slightly
+        if (this.cfg.nonlinear) {
+          act = Math.min(act, 1.5);
+          if (act > 0.8) act = 0.8 + (act - 0.8) * 0.3; // softening near source
+        }
+        sum += act;
+      }
+      vals[i] = Math.min(sum, MAX_SENSOR);
+    }
+    // Single-sensor vehicles: only left sensor active, right mirrors left
+    if (this.cfg.singleSensor) {
+      vals[1] = vals[0];
+    }
+    this.sensorVal = vals;
+    return vals;
+  }
+
+  update(stimuli, speedMult) {
+    this.age += DT;
+    const cfg = this.getWiring();
+    const sensors = this.computeSensors(stimuli);
+
+    let motors = [0, 0];
+
+    // Curiosity / threshold behavior
+    if (this.cfg.threshold !== undefined) {
+      const totalSens = sensors[0] + sensors[1];
+      this.stateTimer -= DT;
+
+      if (this.curState === 'move') {
+        if (totalSens > this.cfg.threshold) {
+          this.curState = 'pause';
+          this.stateTimer = 1.0 + Math.random() * 0.5;
+          this.memoryMotor = [sensors[0] * cfg.w[0][0] + sensors[1] * cfg.w[1][0] + cfg.bias[0],
+                              sensors[0] * cfg.w[0][1] + sensors[1] * cfg.w[1][1] + cfg.bias[1]];
+        }
+      }
+
+      if (this.curState === 'pause') {
+        if (this.stateTimer <= 0) {
+          this.curState = 'move';
+        } else {
+          // Gentle drift using memory
+          motors[0] = this.memoryMotor[0] * 0.15;
+          motors[1] = this.memoryMotor[1] * 0.15;
+        }
+      }
+    }
+
+    if (this.curState !== 'pause') {
+      motors[0] = sensors[0] * cfg.w[0][0] + sensors[1] * cfg.w[1][0] + cfg.bias[0];
+      motors[1] = sensors[0] * cfg.w[0][1] + sensors[1] * cfg.w[1][1] + cfg.bias[1];
+    }
+
+    // Damping / friction
+    motors[0] *= 0.95;
+    motors[1] *= 0.95;
+
+    // Base speed for idle movement so vehicles don't freeze when far away
+    const base = 0.3;
+    motors[0] += base;
+    motors[1] += base;
+
+    this.motorSpeed = motors;
+
+    // Differential drive kinematics
+    const v = (motors[0] + motors[1]) * 0.5 * speedMult * 40 * DT;
+    const omega = (motors[1] - motors[0]) * speedMult * 2.0 * DT;
+
+    this.angle += omega;
+    this.x += Math.cos(this.angle) * v;
+    this.y += Math.sin(this.angle) * v;
+
+    // Visual wheel rotation
+    this.wheelRot[0] += motors[0] * speedMult * DT * 5;
+    this.wheelRot[1] += motors[1] * speedMult * DT * 5;
+
+    // Trails
+    if (document.getElementById('trailToggle').checked) {
+      this.trail.push({x: this.x, y: this.y, age: 0});
+      if (this.trail.length > TRAIL_MAX) this.trail.shift();
+    } else if (this.trail.length) {
+      this.trail = [];
+    }
+    for (const t of this.trail) t.age += DT;
+
+    // Wrap world
+    const W = canvas.width, H = canvas.height;
+    if (this.x < -20) this.x = W + 20;
+    if (this.x > W + 20) this.x = -20;
+    if (this.y < -20) this.y = H + 20;
+    if (this.y > H + 20) this.y = -20;
+  }
+
+  draw(ctx) {
+    const spos = this.sensorPositions();
+
+    // Trail
+    if (this.trail.length > 1) {
+      ctx.save();
+      for (let i = 1; i < this.trail.length; i++) {
+        const t = this.trail[i];
+        const alpha = Math.max(0, 1 - t.age * 2);
+        if (alpha <= 0) continue;
+        ctx.strokeStyle = `rgba(0, 229, 255, ${alpha * 0.35})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(this.trail[i-1].x, this.trail[i-1].y);
+        ctx.lineTo(t.x, t.y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Sensors
+    for (let i = 0; i < 2; i++) {
+      const s = spos[i];
+      const glow = Math.min(this.sensorVal[i] * 0.8, 1);
+      ctx.save();
+      ctx.shadowColor = `rgba(0, 229, 255, ${0.4 + glow * 0.6})`;
+      ctx.shadowBlur = 8 + glow * 12;
+      ctx.fillStyle = `rgba(0, 229, 255, ${0.3 + glow * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 3 + glow * 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Wheels
+    const woff = 0.45; // angle offset for wheels
+    const wdist = WHEEL_OFFSET;
+    for (let i = 0; i < 2; i++) {
+      const sign = i === 0 ? -1 : 1;
+      const wa = this.angle + sign * woff;
+      const wx = this.x + Math.cos(wa) * wdist;
+      const wy = this.y + Math.sin(wa) * wdist;
+      ctx.save();
+      ctx.translate(wx, wy);
+      ctx.rotate(this.wheelRot[i] + this.angle);
+      ctx.fillStyle = '#ff00a0';
+      ctx.shadowColor = 'rgba(255, 0, 160, 0.5)';
+      ctx.shadowBlur = 6;
+      ctx.fillRect(-3, -5, 6, 10);
+      ctx.restore();
+    }
+
+    // Body
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+
+    // Glow under body
+    ctx.shadowColor = 'rgba(0, 229, 255, 0.25)';
+    ctx.shadowBlur = 14;
+
+    // Body shape
+    ctx.fillStyle = '#1a1a2e';
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(VEHICLE_SIZE + 4, 0);
+    ctx.lineTo(-VEHICLE_SIZE + 3, -VEHICLE_SIZE + 2);
+    ctx.lineTo(-VEHICLE_SIZE, 0);
+    ctx.lineTo(-VEHICLE_SIZE + 3, VEHICLE_SIZE - 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Direction indicator
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.6)';
+    ctx.beginPath();
+    ctx.arc(VEHICLE_SIZE - 2, 0, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
+// --- State ---
+const canvas = document.getElementById('world');
+const ctx = canvas.getContext('2d');
+let vehicles = [];
+let stimuli = [];
+let activePreset = 'v2a';
+let activeStimulus = 'light';
+let animId = null;
+let lastTime = 0;
+
+// --- UI Init ---
+const presetList = document.getElementById('presetList');
+function renderPresets() {
+  presetList.innerHTML = '';
+  for (const p of PRESETS) {
+    const el = document.createElement('div');
+    el.className = 'preset-card' + (p.id === activePreset ? ' active' : '');
+    el.innerHTML = `<span class="emoji">${p.emoji}</span><span class="name">${p.name}</span><div class="desc">${p.desc}</div>`;
+    el.addEventListener('click', () => {
+      activePreset = p.id;
+      renderPresets();
+      document.getElementById('customPanel').classList.toggle('visible', p.id === 'custom');
+    });
+    presetList.appendChild(el);
+  }
+}
+renderPresets();
+
+// Stimulus buttons
+for (const btn of document.querySelectorAll('.stimulus-btn')) {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.stimulus-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeStimulus = btn.dataset.type;
+  });
+}
+
+// Clear / Reset
+document.getElementById('clearBtn').addEventListener('click', () => {
+  vehicles = [];
+  stimuli = [];
+});
+document.getElementById('resetBtn').addEventListener('click', () => {
+  vehicles = [];
+  stimuli = [];
+  // Place a default light in center
+  stimuli.push(new Stimulus(canvas.width / 2, canvas.height / 2, 'light'));
+});
+
+// --- Canvas Resize ---
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Seed a starter stimulus
+stimuli.push(new Stimulus(canvas.width / 2, canvas.height / 2, 'light'));
+
+// --- Input Handling ---
+function getPointerPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+let dragStimulus = null;
+let dragOffset = {x:0, y:0};
+
+function onDown(e) {
+  const p = getPointerPos(e);
+  // Check if clicking on existing stimulus (to drag)
+  dragStimulus = null;
+  for (const s of stimuli) {
+    const dx = p.x - s.x, dy = p.y - s.y;
+    if (dx*dx + dy*dy < 400) {
+      dragStimulus = s;
+      dragOffset = {x: dx, y: dy};
+      return;
+    }
+  }
+  // Spawn vehicle if preset selected and not dragging
+  if (e.shiftKey || e.ctrlKey || (e.touches && e.touches.length > 1)) {
+    // Place stimulus instead
+    stimuli.push(new Stimulus(p.x, p.y, activeStimulus));
+  } else {
+    const angle = Math.random() * Math.PI * 2;
+    vehicles.push(new Vehicle(p.x, p.y, angle, activePreset));
+  }
+}
+
+function onMove(e) {
+  if (!dragStimulus) return;
+  const p = getPointerPos(e);
+  dragStimulus.x = p.x - dragOffset.x;
+  dragStimulus.y = p.y - dragOffset.y;
+}
+
+function onUp() {
+  dragStimulus = null;
+}
+
+// Right-click to place stimulus
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const p = getPointerPos(e);
+  stimuli.push(new Stimulus(p.x, p.y, activeStimulus));
+});
+
+canvas.addEventListener('mousedown', onDown);
+canvas.addEventListener('mousemove', onMove);
+window.addEventListener('mouseup', onUp);
+
+canvas.addEventListener('touchstart', onDown, {passive: false});
+canvas.addEventListener('touchmove', e => { e.preventDefault(); onMove(e); }, {passive: false});
+window.addEventListener('touchend', onUp);
+
+// --- Rendering ---
+function drawGrid() {
+  const W = canvas.width, H = canvas.height;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  const step = 40;
+  for (let x = 0; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawStimuli() {
+  for (const s of stimuli) {
+    const color = s.glowColor();
+    const pulse = 0.7 + Math.sin(s.pulse) * 0.3;
+    const radius = 30 + pulse * 15;
+
+    // Outer glow
+    ctx.save();
+    ctx.shadowColor = `rgba(${color}, ${0.2 * pulse})`;
+    ctx.shadowBlur = 40 * pulse;
+    const grad = ctx.createRadialGradient(s.x, s.y, 2, s.x, s.y, radius);
+    grad.addColorStop(0, `rgba(${color}, ${0.6 * pulse})`);
+    grad.addColorStop(1, `rgba(${color}, 0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Core
+    ctx.save();
+    ctx.fillStyle = `rgba(${color}, 0.9)`;
+    ctx.shadowColor = `rgba(${color}, 0.8)`;
+    ctx.shadowBlur = 12;
+    ctx.font = '16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(s.icon(), s.x, s.y);
+    ctx.restore();
+  }
+}
+
+function drawInfo() {
+  // Update info bar
+  let maxSens = [0, 0], maxMot = [0, 0];
+  for (const v of vehicles) {
+    maxSens[0] = Math.max(maxSens[0], v.sensorVal[0]);
+    maxSens[1] = Math.max(maxSens[1], v.sensorVal[1]);
+    maxMot[0] = Math.max(maxMot[0], v.motorSpeed[0]);
+    maxMot[1] = Math.max(maxMot[1], v.motorSpeed[1]);
+  }
+  document.getElementById('sensorL').textContent = maxSens[0].toFixed(2);
+  document.getElementById('sensorR').textContent = maxSens[1].toFixed(2);
+  document.getElementById('motorL').textContent = maxMot[0].toFixed(2);
+  document.getElementById('motorR').textContent = maxMot[1].toFixed(2);
+  document.getElementById('vCount').textContent = vehicles.length;
+  document.getElementById('sCount').textContent = stimuli.length;
+}
+
+function loop(timestamp) {
+  const speedMult = parseFloat(document.getElementById('speedSlider').value);
+  const dt = DT * speedMult;
+
+  // Clear
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  drawGrid();
+
+  // Update & draw stimuli
+  for (const s of stimuli) s.update(dt);
+  drawStimuli();
+
+  // Update & draw vehicles
+  for (const v of vehicles) v.update(stimuli, speedMult);
+  for (const v of vehicles) v.draw(ctx);
+
+  drawInfo();
+
+  animId = requestAnimationFrame(loop);
+}
+
+// Start
+animId = requestAnimationFrame(loop);
+
+// Hint update
+document.getElementById('hint').textContent =
+  'Click = spawn vehicle • Right-click / Shift+click = place stimulus • Drag existing stimulus to move';
+</script>
+</body>
+</html>
