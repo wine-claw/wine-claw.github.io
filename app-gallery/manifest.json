@@ -18,6 +18,14 @@
       "description": "Interactive concrete mix design and curing simulator — design a mix, pour it, and watch hydration, temperature, and strength evolve in real time."
     },
     {
+      "date": "2026-05-09",
+      "title": "Concrete Curing Lab",
+      "slug": "concrete-curing-lab",
+      "publishedSlug": "2026-05-09-concrete-curing-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-09-concrete-curing-lab/",
+      "description": "Interactive concrete mix design and curing simulator — design a mix, pour it, and watch hydration, temperature, and strength evolve in real time."
+    },
+    {
       "date": "2026-05-08",
       "title": "Braitenberg Lab",
       "slug": "braitenberg-lab",

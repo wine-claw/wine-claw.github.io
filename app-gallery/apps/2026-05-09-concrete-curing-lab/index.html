@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Concrete Curing Lab</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #181b21;
+    --panel-2: #22262e;
+    --text: #e6e8ec;
+    --text-dim: #8b919d;
+    --accent-teal: #2dd4bf;
+    --accent-orange: #f97316;
+    --accent-red: #ef4444;
+    --border: #2a2e38;
+    --slider-track: #2a2e38;
+    --slider-thumb: #2dd4bf;
+    --chart-bg: #13161b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #app {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px;
+  }
+  header h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--accent-teal);
+  }
+  .time-display {
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    background: var(--panel);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  main {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  @media (min-width: 768px) {
+    main {
+      grid-template-columns: 320px 1fr;
+      grid-template-rows: 1fr;
+    }
+  }
+
+  /* Mix Panel */
+  .mix-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    min-height: 0;
+  }
+  .mix-panel h2 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .slider-group {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    align-items: center;
+  }
+  .slider-group label {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+  .slider-group .value {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+    min-width: 50px;
+  }
+  input[type="range"] {
+    grid-column: 1 / -1;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--slider-track);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--slider-thumb);
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 6px rgba(45,212,191,0.4);
+    transition: transform .15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--slider-thumb);
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 6px rgba(45,212,191,0.4);
+  }
+
+  .readouts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .readout {
+    background: var(--panel-2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .readout .label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+  .readout .num {
+    font-size: 1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .readout.strength .num { color: var(--accent-teal); }
+  .readout.danger .num { color: var(--accent-red); }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .1s, opacity .2s;
+    color: #fff;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-pour {
+    background: linear-gradient(135deg, #2dd4bf, #0ea5e9);
+    box-shadow: 0 4px 14px rgba(45,212,191,0.25);
+  }
+  .btn-reset {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .speed-buttons {
+    display: flex;
+    gap: 4px;
+  }
+  .speed-btn {
+    flex: 1;
+    padding: 6px;
+    font-size: 0.75rem;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 6px;
+  }
+  .speed-btn.active {
+    background: var(--accent-teal);
+    color: #0f1115;
+    border-color: var(--accent-teal);
+  }
+
+  /* Visual Area */
+  .visual-area {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 10px;
+    min-height: 0;
+  }
+  .canvas-wrap {
+    position: relative;
+    background: var(--chart-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .canvas-label {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    pointer-events: none;
+    z-index: 2;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .chart-wrap { flex: 1; min-height: 140px; }
+  .cross-wrap { flex: 1.2; min-height: 180px; }
+
+  .status-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    display: inline-block;
+  }
+  .status-dot.pouring { background: var(--accent-teal); animation: pulse 1s infinite; }
+  .status-dot.curing { background: var(--accent-orange); }
+  .status-dot.cured { background: #22c55e; }
+  @keyframes pulse {
+    0%,100% { opacity:1; }
+    50% { opacity:.4; }
+  }
+
+  .crack-risk {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .risk-bar {
+    width: 60px;
+    height: 6px;
+    background: var(--slider-track);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .risk-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-red);
+    border-radius: 3px;
+    transition: width .3s;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🧱 Concrete Curing Lab</h1>
+    <div class="time-display" id="timeDisplay">Day 0, 00:00</div>
+  </header>
+
+  <main>
+    <aside class="mix-panel">
+      <h2>Mix Design</h2>
+
+      <div class="slider-group">
+        <label>Cement</label><span class="value" id="v-cement">350 kg/m³</span>
+        <input type="range" id="cement" min="250" max="450" value="350" step="5">
+      </div>
+      <div class="slider-group">
+        <label>Water</label><span class="value" id="v-water">180 L/m³</span>
+        <input type="range" id="water" min="120" max="220" value="180" step="5">
+      </div>
+      <div class="slider-group">
+        <label>Sand</label><span class="value" id="v-sand">700 kg/m³</span>
+        <input type="range" id="sand" min="500" max="900" value="700" step="10">
+      </div>
+      <div class="slider-group">
+        <label>Gravel</label><span class="value" id="v-gravel">1000 kg/m³</span>
+        <input type="range" id="gravel" min="800" max="1200" value="1000" step="10">
+      </div>
+      <div class="slider-group">
+        <label>Plasticizer</label><span class="value" id="v-plasticizer">0.0%</span>
+        <input type="range" id="plasticizer" min="0" max="2.5" value="0" step="0.1">
+      </div>
+      <div class="slider-group">
+        <label>Admixture</label><span class="value" id="v-admixture">None</span>
+        <input type="range" id="admixture" min="0" max="2" value="0" step="1">
+      </div>
+
+      <div class="readouts">
+        <div class="readout">
+          <div class="label">w/c Ratio</div>
+          <div class="num" id="r-wc">0.51</div>
+        </div>
+        <div class="readout">
+          <div class="label">Density</div>
+          <div class="num" id="r-density">2300</div>
+        </div>
+        <div class="readout strength">
+          <div class="label">Est. 28d Strength</div>
+          <div class="num" id="r-strength">35 MPa</div>
+        </div>
+        <div class="readout">
+          <div class="label">Workability</div>
+          <div class="num" id="r-work">Medium</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn-pour" id="btnPour">Pour &amp; Cure</button>
+        <button class="btn-reset" id="btnReset">Reset</button>
+      </div>
+      <div class="speed-buttons">
+        <button class="speed-btn active" data-speed="1">1×</button>
+        <button class="speed-btn" data-speed="10">10×</button>
+        <button class="speed-btn" data-speed="100">100×</button>
+        <button class="speed-btn" data-speed="1000">1000×</button>
+      </div>
+    </aside>
+
+    <section class="visual-area">
+      <div class="canvas-wrap cross-wrap">
+        <span class="canvas-label">Cross-Section</span>
+        <canvas id="crossCanvas"></canvas>
+        <div class="status-bar">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">Ready to pour</span>
+          <div class="crack-risk">
+            <span>Crack Risk</span>
+            <div class="risk-bar"><div class="risk-fill" id="riskFill"></div></div>
+            <span id="riskValue">0%</span>
+          </div>
+        </div>
+      </div>
+      <div class="canvas-wrap chart-wrap">
+        <span class="canvas-label">Strength &amp; Temperature</span>
+        <canvas id="chartCanvas"></canvas>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // DOM refs
+  const els = {
+    cement: document.getElementById('cement'),
+    water: document.getElementById('water'),
+    sand: document.getElementById('sand'),
+    gravel: document.getElementById('gravel'),
+    plasticizer: document.getElementById('plasticizer'),
+    admixture: document.getElementById('admixture'),
+    vCement: document.getElementById('v-cement'),
+    vWater: document.getElementById('v-water'),
+    vSand: document.getElementById('v-sand'),
+    vGravel: document.getElementById('v-gravel'),
+    vPlasticizer: document.getElementById('v-plasticizer'),
+    vAdmixture: document.getElementById('v-admixture'),
+    rWc: document.getElementById('r-wc'),
+    rDensity: document.getElementById('r-density'),
+    rStrength: document.getElementById('r-strength'),
+    rWork: document.getElementById('r-work'),
+    timeDisplay: document.getElementById('timeDisplay'),
+    btnPour: document.getElementById('btnPour'),
+    btnReset: document.getElementById('btnReset'),
+    statusDot: document.getElementById('statusDot'),
+    statusText: document.getElementById('statusText'),
+    riskFill: document.getElementById('riskFill'),
+    riskValue: document.getElementById('riskValue'),
+    crossCanvas: document.getElementById('crossCanvas'),
+    chartCanvas: document.getElementById('chartCanvas'),
+  };
+
+  const admixLabels = ['None', 'Accelerator', 'Retarder'];
+
+  // State
+  let state = {
+    cement: 350, water: 180, sand: 700, gravel: 1000,
+    plasticizer: 0, admixture: 0,
+    simTime: 0, // hours
+    isRunning: false,
+    isPoured: false,
+    speed: 1,
+    strength: 0,
+    temperature: 20,
+    hydration: 0,
+    particles: [],
+    history: [], // {t, strength, temp}
+    lastFrame: 0,
+    pourProgress: 0,
+  };
+
+  // Canvas contexts
+  const crossCtx = els.crossCanvas.getContext('2d');
+  const chartCtx = els.chartCanvas.getContext('2d');
+
+  function resizeCanvases() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    for (const canvas of [els.crossCanvas, els.chartCanvas]) {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+  window.addEventListener('resize', resizeCanvases);
+  resizeCanvases();
+
+  // Utils
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function rand(min, max) { return Math.random() * (max - min) + min; }
+  function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+
+  // Mix calculations
+  function updateReadouts() {
+    const wc = state.water / state.cement;
+    const density = Math.round(state.cement + state.water + state.sand + state.gravel + 10);
+    // Simplified strength model: lower w/c = higher strength, plasticizer helps slightly
+    let baseStrength = 70 * Math.pow(0.45 / wc, 0.7);
+    baseStrength += state.plasticizer * 2;
+    baseStrength = clamp(baseStrength, 10, 80);
+    // Workability: higher water/plasticizer = more workable, but too much water = segregation risk
+    let work = 'Low';
+    const slump = (state.water - 130) + state.plasticizer * 40;
+    if (slump > 80) work = 'High';
+    else if (slump > 40) work = 'Medium';
+    els.rWc.textContent = wc.toFixed(2);
+    els.rDensity.textContent = density;
+    els.rStrength.textContent = Math.round(baseStrength) + ' MPa';
+    els.rWork.textContent = work;
+    state.estStrength = baseStrength;
+  }
+
+  function onSlider() {
+    state.cement = +els.cement.value;
+    state.water = +els.water.value;
+    state.sand = +els.sand.value;
+    state.gravel = +els.gravel.value;
+    state.plasticizer = +els.plasticizer.value;
+    state.admixture = +els.admixture.value;
+    els.vCement.textContent = state.cement + ' kg/m³';
+    els.vWater.textContent = state.water + ' L/m³';
+    els.vSand.textContent = state.sand + ' kg/m³';
+    els.vGravel.textContent = state.gravel + ' kg/m³';
+    els.vPlasticizer.textContent = state.plasticizer.toFixed(1) + '%';
+    els.vAdmixture.textContent = admixLabels[state.admixture];
+    updateReadouts();
+    if (!state.isPoured) drawCrossSection();
+  }
+
+  for (const id of ['cement','water','sand','gravel','plasticizer','admixture']) {
+    els[id].addEventListener('input', onSlider);
+  }
+
+  // Particles for cross-section
+  function initParticles() {
+    state.particles = [];
+    const count = 600;
+    for (let i = 0; i < count; i++) {
+      state.particles.push({
+        x: rand(0, 1),
+        y: rand(0, 1),
+        size: rand(2, 5),
+        type: Math.random() < 0.15 ? 'cement' : (Math.random() < 0.35 ? 'gravel' : 'sand'),
+        vx: rand(-0.3, 0.3),
+        vy: rand(-0.3, 0.3),
+        wobble: rand(0, Math.PI * 2),
+        wobbleSpeed: rand(0.5, 2),
+      });
+    }
+  }
+
+  // Cross-section rendering
+  function drawCrossSection() {
+    const w = els.crossCanvas.width / (window.devicePixelRatio || 1);
+    const h = els.crossCanvas.height / (window.devicePixelRatio || 1);
+    const ctx = crossCtx;
+    ctx.clearRect(0, 0, w, h);
+
+    // Background
+    ctx.fillStyle = '#13161b';
+    ctx.fillRect(0, 0, w, h);
+
+    if (!state.isPoured && state.pourProgress <= 0) {
+      // Formwork empty look
+      ctx.strokeStyle = '#2a2e38';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, w - 20, h - 20);
+      ctx.fillStyle = '#1a1d24';
+      ctx.fillRect(13, 13, w - 26, h - 26);
+      ctx.fillStyle = '#3a3f4a';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Empty Formwork', w / 2, h / 2);
+      return;
+    }
+
+    // Concrete area
+    const pad = 12;
+    const cw = w - pad * 2;
+    const ch = h - pad * 2;
+
+    // Determine colors based on hydration
+    const hyd = state.hydration; // 0-1
+    const wetGray = {r: 100, g: 105, b: 110};
+    const curingGray = {r: 130, g: 135, b: 140};
+    const curedGray = {r: 160, g: 165, b: 170};
+
+    let bgR, bgG, bgB;
+    if (hyd < 0.5) {
+      const t = hyd / 0.5;
+      bgR = lerp(wetGray.r, curingGray.r, t);
+      bgG = lerp(wetGray.g, curingGray.g, t);
+      bgB = lerp(wetGray.b, curingGray.b, t);
+    } else {
+      const t = (hyd - 0.5) / 0.5;
+      bgR = lerp(curingGray.r, curedGray.r, t);
+      bgG = lerp(curingGray.g, curedGray.g, t);
+      bgB = lerp(curingGray.b, curedGray.b, t);
+    }
+
+    // Temperature glow
+    const tempFactor = clamp((state.temperature - 20) / 40, 0, 1);
+    const glowR = 249, glowG = 115, glowB = 22;
+    bgR = lerp(bgR, glowR, tempFactor * 0.25);
+    bgG = lerp(bgG, glowG, tempFactor * 0.15);
+    bgB = lerp(bgB, glowB, tempFactor * 0.05);
+
+    // Fill background with slight noise texture
+    ctx.fillStyle = `rgb(${Math.round(bgR)},${Math.round(bgG)},${Math.round(bgB)})`;
+    ctx.fillRect(pad, pad, cw, ch);
+
+    // Subtle moisture overlay
+    if (hyd < 0.8) {
+      ctx.fillStyle = `rgba(60,100,140,${0.12 * (1 - hyd)})`;
+      ctx.fillRect(pad, pad, cw, ch);
+    }
+
+    // Particles
+    for (const p of state.particles) {
+      const px = pad + p.x * cw;
+      const py = pad + p.y * ch;
+
+      let pr = 160, pg = 160, pb = 160;
+      let alpha = 0.6;
+      if (p.type === 'cement') { pr = 190; pg = 190; pb = 185; alpha = 0.4; }
+      else if (p.type === 'gravel') { pr = 100; pg = 105; pb = 110; alpha = 0.85; }
+
+      // Color shift with hydration
+      const shift = hyd * 20;
+      pr += shift; pg += shift; pb += shift;
+
+      ctx.beginPath();
+      const jitter = Math.sin(state.simTime * p.wobbleSpeed + p.wobble) * 1.5 * (1 - hyd);
+      ctx.arc(px + jitter, py + jitter, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${Math.round(pr)},${Math.round(pg)},${Math.round(pb)},${alpha})`;
+      ctx.fill();
+    }
+
+    // Hydration bubbles / activity
+    if (state.isRunning && hyd < 1) {
+      const bubbleCount = Math.floor((1 - hyd) * 20);
+      for (let i = 0; i < bubbleCount; i++) {
+        const bx = pad + rand(0, cw);
+        const by = pad + rand(0, ch);
+        const br = rand(1, 3);
+        const bo = rand(0.1, 0.3) * (1 - hyd);
+        ctx.beginPath();
+        ctx.arc(bx, by, br, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(45,212,191,${bo})`;
+        ctx.fill();
+      }
+    }
+
+    // Formwork outline
+    ctx.strokeStyle = '#3a3f4a';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(pad, pad, cw, ch);
+
+    // Pour animation
+    if (state.pourProgress < 1) {
+      const fillH = ch * state.pourProgress;
+      ctx.fillStyle = `rgba(45,212,191,${0.08 * (1 - state.pourProgress)})`;
+      ctx.fillRect(pad, pad + ch - fillH, cw, fillH);
+    }
+
+    // Thermal overlay visualization
+    if (tempFactor > 0.05) {
+      const grad = ctx.createRadialGradient(
+        pad + cw * 0.5, pad + ch * 0.5, 0,
+        pad + cw * 0.5, pad + ch * 0.5, Math.max(cw, ch) * 0.6
+      );
+      grad.addColorStop(0, `rgba(249,115,22,${tempFactor * 0.2})`);
+      grad.addColorStop(1, 'rgba(249,115,22,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(pad, pad, cw, ch);
+    }
+
+    // Crack visualization (if risk high)
+    const risk = getCrackRisk();
+    if (risk > 0.6 && hyd > 0.3) {
+      ctx.strokeStyle = `rgba(239,68,68,${(risk - 0.6) * 0.6})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      const cx = pad + cw * 0.3;
+      const cy = pad + ch * 0.4;
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + cw * 0.15, cy + ch * 0.08);
+      ctx.lineTo(cx + cw * 0.22, cy + ch * 0.06);
+      ctx.lineTo(cx + cw * 0.28, cy + ch * 0.12);
+      ctx.stroke();
+    }
+  }
+
+  function getCrackRisk() {
+    // High w/c + accelerator + high temp differential = crack risk
+    const wc = state.water / state.cement;
+    let risk = 0;
+    if (wc > 0.6) risk += 0.4;
+    else if (wc > 0.55) risk += 0.25;
+    else if (wc > 0.5) risk += 0.1;
+    if (state.admixture === 1) risk += 0.25; // accelerator
+    if (state.temperature > 55) risk += 0.3;
+    else if (state.temperature > 45) risk += 0.15;
+    return clamp(risk, 0, 1);
+  }
+
+  // Chart rendering
+  function drawChart() {
+    const w = els.chartCanvas.width / (window.devicePixelRatio || 1);
+    const h = els.chartCanvas.height / (window.devicePixelRatio || 1);
+    const ctx = chartCtx;
+    ctx.clearRect(0, 0, w, h);
+
+    const padL = 44, padR = 16, padT = 20, padB = 28;
+    const gw = w - padL - padR;
+    const gh = h - padT - padB;
+
+    // Background
+    ctx.fillStyle = '#13161b';
+    ctx.fillRect(0, 0, w, h);
+
+    // Grid
+    ctx.strokeStyle = '#1e222a';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + gh * (i / 4);
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(padL + gw, y);
+      ctx.stroke();
+    }
+    for (let i = 0; i <= 5; i++) {
+      const x = padL + gw * (i / 5);
+      ctx.beginPath();
+      ctx.moveTo(x, padT);
+      ctx.lineTo(x, padT + gh);
+      ctx.stroke();
+    }
+
+    if (state.history.length < 2) {
+      ctx.fillStyle = '#3a3f4a';
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Start pouring to see curing data', w / 2, h / 2 + 5);
+      drawAxes(ctx, w, h, padL, padR, padT, padB, gw, gh);
+      return;
+    }
+
+    const maxDays = Math.max(1, Math.ceil(state.history[state.history.length - 1].t / 24));
+    const maxStrength = Math.max(10, state.estStrength * 1.1);
+    const maxTemp = Math.max(40, Math.ceil(state.history.reduce((m, d) => Math.max(m, d.temp), 0) / 10) * 10);
+
+    // Strength line (teal)
+    ctx.beginPath();
+    ctx.strokeStyle = '#2dd4bf';
+    ctx.lineWidth = 2.5;
+    for (let i = 0; i < state.history.length; i++) {
+      const d = state.history[i];
+      const x = padL + (d.t / (maxDays * 24)) * gw;
+      const y = padT + gh - (d.strength / maxStrength) * gh;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Strength fill
+    ctx.beginPath();
+    const last = state.history[state.history.length - 1];
+    ctx.moveTo(padL, padT + gh);
+    for (let i = 0; i < state.history.length; i++) {
+      const d = state.history[i];
+      const x = padL + (d.t / (maxDays * 24)) * gw;
+      const y = padT + gh - (d.strength / maxStrength) * gh;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(padL + (last.t / (maxDays * 24)) * gw, padT + gh);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(45,212,191,0.08)';
+    ctx.fill();
+
+    // Temperature line (orange)
+    ctx.beginPath();
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < state.history.length; i++) {
+      const d = state.history[i];
+      const x = padL + (d.t / (maxDays * 24)) * gw;
+      const y = padT + gh - ((d.temp - 15) / (maxTemp - 15)) * gh;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Head dot
+    const hx = padL + (last.t / (maxDays * 24)) * gw;
+    const hy = padT + gh - (last.strength / maxStrength) * gh;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#2dd4bf';
+    ctx.fill();
+
+    drawAxes(ctx, w, h, padL, padR, padT, padB, gw, gh, maxDays, maxStrength, maxTemp);
+  }
+
+  function drawAxes(ctx, w, h, padL, padR, padT, padB, gw, gh, maxDays, maxStrength, maxTemp) {
+    ctx.fillStyle = '#5a6070';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
+    // Y left: strength
+    if (maxStrength) {
+      for (let i = 0; i <= 4; i++) {
+        const val = Math.round((maxStrength * i / 4));
+        const y = padT + gh * (1 - i / 4);
+        ctx.fillText(val + ' MPa', padL - 6, y);
+      }
+    } else {
+      for (let i = 0; i <= 4; i++) {
+        const val = Math.round(80 * i / 4);
+        const y = padT + gh * (1 - i / 4);
+        ctx.fillText(val + ' MPa', padL - 6, y);
+      }
+    }
+
+    // Y right: temp
+    ctx.textAlign = 'left';
+    if (maxTemp) {
+      for (let i = 0; i <= 4; i++) {
+        const val = Math.round(15 + (maxTemp - 15) * i / 4);
+        const y = padT + gh * (1 - i / 4);
+        ctx.fillText(val + '°C', padL + gw + 6, y);
+      }
+    } else {
+      for (let i = 0; i <= 4; i++) {
+        const val = Math.round(15 + 55 * i / 4);
+        const y = padT + gh * (1 - i / 4);
+        ctx.fillText(val + '°C', padL + gw + 6, y);
+      }
+    }
+
+    // X: days
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const md = maxDays || 28;
+    for (let i = 0; i <= 5; i++) {
+      const day = Math.round(md * i / 5);
+      const x = padL + gw * (i / 5);
+      ctx.fillText(day + 'd', x, padT + gh + 6);
+    }
+
+    // Labels
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#2dd4bf';
+    ctx.fillText('● Strength', padL, padT - 6);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#f97316';
+    ctx.fillText('● Temperature', padL + gw, padT - 6);
+  }
+
+  // Simulation
+  function simulate(dt) {
+    const hours = dt * state.speed;
+    state.simTime += hours;
+
+    // Hydration model
+    let rate = 0.015; // base hydration per simulated hour
+    if (state.admixture === 1) rate *= 1.8; // accelerator
+    if (state.admixture === 2) rate *= 0.5; // retarder
+    if (state.water / state.cement > 0.6) rate *= 0.7; // excess water dilutes
+    if (state.water / state.cement < 0.35) rate *= 0.8; // insufficient water
+
+    state.hydration = clamp(state.hydration + rate * hours, 0, 1);
+
+    // Temperature model (hydration heat)
+    const ambient = 20;
+    const heatGen = state.cement * 0.3 * (1 - state.hydration) * rate * hours; // simplified
+    const cooling = (state.temperature - ambient) * 0.02 * hours;
+    state.temperature = clamp(state.temperature + heatGen - cooling, ambient, 80);
+
+    // Strength development (logistic-ish)
+    const wc = state.water / state.cement;
+    const maxStr = state.estStrength;
+    const k = state.admixture === 1 ? 0.08 : (state.admixture === 2 ? 0.03 : 0.05);
+    const targetStrength = maxStr / (1 + Math.exp(-k * (state.simTime - 48)));
+    state.strength = targetStrength;
+
+    // Crack risk UI
+    const risk = getCrackRisk();
+    els.riskFill.style.width = (risk * 100) + '%';
+    els.riskValue.textContent = Math.round(risk * 100) + '%';
+    els.riskValue.style.color = risk > 0.6 ? '#ef4444' : (risk > 0.3 ? '#f97316' : '#8b919d');
+
+    // Time display
+    const days = Math.floor(state.simTime / 24);
+    const hrs = Math.floor(state.simTime % 24);
+    const mins = Math.floor((state.simTime % 1) * 60);
+    els.timeDisplay.textContent = `Day ${days}, ${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}`;
+
+    // Status
+    if (state.pourProgress < 1) {
+      els.statusDot.className = 'status-dot pouring';
+      els.statusText.textContent = 'Pouring...';
+    } else if (state.hydration < 1) {
+      els.statusDot.className = 'status-dot curing';
+      els.statusText.textContent = 'Curing (' + Math.round(state.hydration * 100) + '% hydrated)';
+    } else {
+      els.statusDot.className = 'status-dot cured';
+      els.statusText.textContent = 'Fully Cured';
+    }
+
+    // Record history every simulated hour (or more frequently at low speed)
+    const last = state.history[state.history.length - 1];
+    if (!last || state.simTime - last.t >= 0.5) {
+      state.history.push({ t: state.simTime, strength: state.strength, temp: state.temperature });
+      // prune old if too many
+      if (state.history.length > 2000) state.history = state.history.filter((_, i) => i % 2 === 0);
+    }
+
+    // Pour progress animation
+    if (state.pourProgress < 1) {
+      state.pourProgress = clamp(state.pourProgress + 0.008 * state.speed, 0, 1);
+    }
+  }
+
+  function reset() {
+    state.simTime = 0;
+    state.isRunning = false;
+    state.isPoured = false;
+    state.hydration = 0;
+    state.strength = 0;
+    state.temperature = 20;
+    state.pourProgress = 0;
+    state.history = [];
+    els.statusDot.className = 'status-dot';
+    els.statusText.textContent = 'Ready to pour';
+    els.timeDisplay.textContent = 'Day 0, 00:00';
+    els.btnPour.textContent = 'Pour & Cure';
+    els.btnPour.disabled = false;
+    updateReadouts();
+    drawCrossSection();
+    drawChart();
+  }
+
+  els.btnPour.addEventListener('click', () => {
+    if (state.isPoured) return;
+    state.isPoured = true;
+    state.isRunning = true;
+    state.pourProgress = 0;
+    initParticles();
+    els.btnPour.textContent = 'Curing...';
+    els.btnPour.disabled = true;
+  });
+
+  els.btnReset.addEventListener('click', reset);
+
+  document.querySelectorAll('.speed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.speed = +btn.dataset.speed;
+    });
+  });
+
+  // Animation loop
+  let running = true;
+  function loop(ts) {
+    if (!running) return;
+    const dt = (ts - state.lastFrame) / 1000;
+    state.lastFrame = ts;
+
+    if (state.isRunning && state.isPoured) {
+      simulate(Math.min(dt, 0.1)); // cap dt to avoid spikes
+    }
+
+    drawCrossSection();
+    drawChart();
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // Initial draw
+  onSlider();
+  reset();
+
+  // Keyboard shortcut: space to pour
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space' && !state.isPoured) {
+      e.preventDefault();
+      els.btnPour.click();
+    }
+    if (e.code === 'KeyR') {
+      els.btnReset.click();
+    }
+  });
+})();
+</script>
+</body>
+</html>
