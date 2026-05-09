@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-09",
-    "title": "Concrete Curing Lab",
-    "slug": "concrete-curing-lab",
-    "publishedSlug": "2026-05-09-concrete-curing-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-09-concrete-curing-lab/"
+    "date": "2026-05-10",
+    "title": "Irrigation Rush",
+    "slug": "irrigation-rush",
+    "publishedSlug": "2026-05-10-irrigation-rush",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-10-irrigation-rush/"
   },
   "apps": [
+    {
+      "date": "2026-05-10",
+      "title": "Irrigation Rush",
+      "slug": "irrigation-rush",
+      "publishedSlug": "2026-05-10-irrigation-rush",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-10-irrigation-rush/",
+      "description": "Border-check irrigation management mini-game — open gates, fill bays, master soil infiltration"
+    },
     {
       "date": "2026-05-09",
       "title": "Concrete Curing Lab",

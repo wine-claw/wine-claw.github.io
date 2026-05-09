@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Irrigation Rush</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #21262d;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #238636;
+    --warn: #d29922;
+    --danger: #f85149;
+    --water: #58a6ff;
+    --sand: #c2b280;
+    --loam: #8b7355;
+    --clay: #6b5b4f;
+    --sandy-loam: #a89870;
+    --clay-loam: #7a6a5f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    background: #2d1a00;
+    color: #ffcc66;
+    font-size: 11px;
+    text-align: center;
+    padding: 6px 8px;
+    border-bottom: 1px solid #5a3a00;
+    flex-shrink: 0;
+  }
+
+  /* Screens */
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    padding: 12px;
+    gap: 12px;
+  }
+  .screen.active { display: flex; }
+
+  /* Title screen */
+  .title-screen {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+  }
+  .title-screen h1 {
+    font-size: 2.2rem;
+    color: var(--water);
+    text-shadow: 0 0 20px rgba(88,166,255,0.3);
+  }
+  .title-screen .subtitle {
+    color: var(--text-dim);
+    font-size: 1rem;
+    max-width: 300px;
+    line-height: 1.5;
+  }
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 14px 36px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: #79b8ff; }
+  .btn:active { transform: scale(0.97); }
+  .btn-secondary {
+    background: var(--panel2);
+    color: var(--text);
+    padding: 10px 24px;
+    font-size: 0.95rem;
+  }
+
+  /* Game screen */
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+  }
+  .game-header .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .game-header .stat-label {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .game-header .stat-value {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .game-header .water-remaining { color: var(--water); }
+  .game-header .efficiency { color: var(--accent2); }
+  .game-header .score { color: var(--warn); }
+
+  #gameCanvas {
+    flex: 1;
+    background: var(--panel);
+    border-radius: 10px;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .gate-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .gate-btn {
+    background: var(--panel2);
+    border: 2px solid var(--panel2);
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 80px;
+    text-align: center;
+    user-select: none;
+  }
+  .gate-btn.open {
+    border-color: var(--water);
+    background: rgba(88,166,255,0.15);
+    color: var(--water);
+  }
+  .gate-btn:active { transform: scale(0.95); }
+
+  .level-info {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+  }
+
+  /* Results screen */
+  .results-screen {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+  .results-screen h2 {
+    font-size: 1.8rem;
+    color: var(--water);
+  }
+  .star-rating {
+    font-size: 2rem;
+    letter-spacing: 4px;
+  }
+  .results-stats {
+    background: var(--panel);
+    padding: 16px 24px;
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+    text-align: left;
+    min-width: 260px;
+  }
+  .results-stats .label {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+  .results-stats .value {
+    font-weight: 700;
+    text-align: right;
+  }
+
+  /* Level select */
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .level-card {
+    background: var(--panel);
+    border: 2px solid var(--panel2);
+    border-radius: 10px;
+    padding: 16px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .level-card:hover { border-color: var(--accent); }
+  .level-card.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .level-card .level-num {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .level-card .level-desc {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .level-card .stars {
+    font-size: 1rem;
+    margin-top: 6px;
+  }
+
+  /* How to play */
+  .howto {
+    background: var(--panel);
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    max-width: 320px;
+    text-align: left;
+  }
+  .howto h3 {
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+  }
+  .soil-legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .soil-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--panel2);
+  }
+  .soil-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">
+  Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+
+<div id="app">
+
+  <!-- TITLE SCREEN -->
+  <div class="screen title-screen active" id="titleScreen">
+    <h1>💧 Irrigation Rush</h1>
+    <p class="subtitle">Border-check irrigation management mini-game. Open gates, fill bays, don't waste water.</p>
+    <div class="howto">
+      <h3>How to Play</h3>
+      <p>Tap a gate button to open water flow into that bay. Water advances across the field while soaking into the soil.</p>
+      <p style="margin-top:8px"><strong>Close the gate</strong> before water runs off the end or too much infiltrates deep into the ground.</p>
+      <p style="margin-top:8px">Fill each bay to the <strong>target depth</strong> (green zone) for maximum score.</p>
+      <div class="soil-legend">
+        <div class="soil-chip"><div class="soil-dot" style="background:var(--sand)"></div> Sand (fast drain)</div>
+        <div class="soil-chip"><div class="soil-dot" style="background:var(--sandy-loam)"></div> Sandy Loam</div>
+        <div class="soil-chip"><div class="soil-dot" style="background:var(--loam)"></div> Loam</div>
+        <div class="soil-chip"><div class="soil-dot" style="background:var(--clay-loam)"></div> Clay Loam</div>
+        <div class="soil-chip"><div class="soil-dot" style="background:var(--clay)"></div> Clay (slow drain)</div>
+      </div>
+    </div>
+    <button class="btn" onclick="showScreen('levelScreen')">Play</button>
+  </div>
+
+  <!-- LEVEL SELECT -->
+  <div class="screen" id="levelScreen">
+    <h2 style="text-align:center;color:var(--water)">Select Level</h2>
+    <div class="level-grid" id="levelGrid"></div>
+    <button class="btn btn-secondary" onclick="showScreen('titleScreen')" style="margin:0 auto">Back</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="gameScreen">
+    <div class="game-header">
+      <div class="stat">
+        <span class="stat-label">Level</span>
+        <span class="stat-value" id="levelDisplay">1</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Water</span>
+        <span class="stat-value water-remaining" id="waterDisplay">5000L</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Efficiency</span>
+        <span class="stat-value efficiency" id="effDisplay">0%</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Score</span>
+        <span class="stat-value score" id="scoreDisplay">0</span>
+      </div>
+    </div>
+    <div class="level-info" id="levelInfo">Fill all bays to target depth</div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="gate-controls" id="gateControls"></div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div class="screen results-screen" id="resultsScreen">
+    <h2>Level Complete!</h2>
+    <div class="star-rating" id="starRating"></div>
+    <div class="results-stats">
+      <div class="label">Depth Score</div>
+      <div class="value" id="resDepth">0</div>
+      <div class="label">Efficiency Bonus</div>
+      <div class="value" id="resEff">0</div>
+      <div class="label">Time Bonus</div>
+      <div class="value" id="resTime">0</div>
+      <div class="label">Total Score</div>
+      <div class="value" id="resTotal" style="color:var(--warn)">0</div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn" onclick="nextLevel()">Next Level</button>
+      <button class="btn btn-secondary" onclick="showScreen('levelScreen')">Menu</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== GAME CONFIG ====================
+const SOILS = {
+  sand:      { name: 'Sand',       color: '#c2b280', infiltration: 2.5, drainFast: true },
+  sandyLoam: { name: 'Sandy Loam', color: '#a89870', infiltration: 1.8, drainFast: true },
+  loam:      { name: 'Loam',       color: '#8b7355', infiltration: 0.8, drainFast: false },
+  clayLoam:  { name: 'Clay Loam',  color: '#7a6a5f', infiltration: 0.4, drainFast: false },
+  clay:      { name: 'Clay',       color: '#6b5b4f', infiltration: 0.15, drainFast: false }
+};
+
+const LEVELS = [
+  {
+    name: 'Easy Start',
+    bays: [{ soil: 'loam', length: 1, targetMin: 60, targetMax: 90, tolerance: 20 }],
+    water: 3000,
+    timeLimit: 60
+  },
+  {
+    name: 'Mixed Soils',
+    bays: [
+      { soil: 'loam', length: 1, targetMin: 60, targetMax: 90, tolerance: 15 },
+      { soil: 'sandyLoam', length: 1, targetMin: 60, targetMax: 90, tolerance: 15 }
+    ],
+    water: 5000,
+    timeLimit: 90
+  },
+  {
+    name: 'Extremes',
+    bays: [
+      { soil: 'clay', length: 1, targetMin: 60, targetMax: 90, tolerance: 12 },
+      { soil: 'sand', length: 1, targetMin: 60, targetMax: 90, tolerance: 12 }
+    ],
+    water: 6000,
+    timeLimit: 90
+  },
+  {
+    name: 'Triple Threat',
+    bays: [
+      { soil: 'sand', length: 0.8, targetMin: 55, targetMax: 85, tolerance: 10 },
+      { soil: 'loam', length: 1, targetMin: 55, targetMax: 85, tolerance: 10 },
+      { soil: 'clay', length: 1.2, targetMin: 55, targetMax: 85, tolerance: 10 }
+    ],
+    water: 7000,
+    timeLimit: 120
+  },
+  {
+    name: 'Master Irrigator',
+    bays: [
+      { soil: 'sandyLoam', length: 0.8, targetMin: 50, targetMax: 80, tolerance: 8 },
+      { soil: 'clayLoam', length: 1, targetMin: 50, targetMax: 80, tolerance: 8 },
+      { soil: 'loam', length: 1.1, targetMin: 50, targetMax: 80, tolerance: 8 },
+      { soil: 'sand', length: 0.7, targetMin: 50, targetMax: 80, tolerance: 8 }
+    ],
+    water: 8000,
+    timeLimit: 150
+  }
+];
+
+// ==================== STATE ====================
+let currentLevel = 0;
+let gameState = null;
+let levelStars = [0, 0, 0, 0, 0];
+let animFrame = null;
+
+// ==================== SCREEN MANAGEMENT ====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'levelScreen') renderLevelSelect();
+}
+
+function renderLevelSelect() {
+  const grid = document.getElementById('levelGrid');
+  grid.innerHTML = '';
+  LEVELS.forEach((lvl, i) => {
+    const unlocked = i === 0 || levelStars[i-1] > 0;
+    const stars = levelStars[i];
+    const card = document.createElement('div');
+    card.className = 'level-card' + (unlocked ? '' : ' locked');
+    card.innerHTML = `
+      <div class="level-num">${i+1}</div>
+      <div class="level-desc">${lvl.name}</div>
+      <div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+    `;
+    if (unlocked) card.onclick = () => startLevel(i);
+    grid.appendChild(card);
+  });
+}
+
+// ==================== GAME INIT ====================
+function startLevel(idx) {
+  currentLevel = idx;
+  const lvl = LEVELS[idx];
+  gameState = {
+    level: idx,
+    waterRemaining: lvl.water,
+    waterUsed: 0,
+    waterWasted: 0,
+    waterStored: 0,
+    timeElapsed: 0,
+    timeLimit: lvl.timeLimit,
+    score: 0,
+    running: true,
+    finished: false,
+    bays: lvl.bays.map((b, i) => ({
+      ...b,
+      id: i,
+      gateOpen: false,
+      waterDepth: 0,
+      waterFront: 0,
+      waterReceding: false,
+      complete: false,
+      runoff: 0,
+      deepPerc: 0,
+      soil: SOILS[b.soil]
+    })),
+    particles: []
+  };
+
+  document.getElementById('levelDisplay').textContent = idx + 1;
+  document.getElementById('levelInfo').textContent = `Level ${idx+1}: ${lvl.name} — Fill all bays to the green zone`;
+  showScreen('gameScreen');
+
+  setupGateControls();
+  resizeCanvas();
+  startGameLoop();
+}
+
+function setupGateControls() {
+  const container = document.getElementById('gateControls');
+  container.innerHTML = '';
+  gameState.bays.forEach((bay, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'gate-btn';
+    btn.textContent = `Gate ${i+1}: ${bay.soil.name}`;
+    btn.id = `gateBtn${i}`;
+    btn.onclick = () => toggleGate(i);
+    container.appendChild(btn);
+  });
+}
+
+function toggleGate(i) {
+  if (!gameState.running || gameState.finished) return;
+  const bay = gameState.bays[i];
+  if (bay.complete) return;
+  bay.gateOpen = !bay.gateOpen;
+  updateGateButtons();
+}
+
+function updateGateButtons() {
+  gameState.bays.forEach((bay, i) => {
+    const btn = document.getElementById(`gateBtn${i}`);
+    if (!btn) return;
+    if (bay.complete) {
+      btn.className = 'gate-btn';
+      btn.textContent = `Gate ${i+1}: Done ✓`;
+      btn.style.opacity = '0.5';
+    } else if (bay.gateOpen) {
+      btn.className = 'gate-btn open';
+      btn.textContent = `Gate ${i+1}: OPEN`;
+      btn.style.opacity = '1';
+    } else {
+      btn.className = 'gate-btn';
+      btn.textContent = `Gate ${i+1}: ${bay.soil.name}`;
+      btn.style.opacity = '1';
+    }
+  });
+}
+
+// ==================== CANVAS & RENDERING ====================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * window.devicePixelRatio;
+  canvas.height = rect.height * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+}
+
+window.addEventListener('resize', () => { if (gameState) resizeCanvas(); });
+
+function render() {
+  if (!gameState) return;
+  const w = canvas.width / window.devicePixelRatio;
+  const h = canvas.height / window.devicePixelRatio;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const padding = 20;
+  const bayWidth = (w - padding * 2) / gameState.bays.length;
+  const bayHeight = h - padding * 2 - 60;
+  const bayTop = padding + 50;
+
+  // Draw channel at top
+  ctx.fillStyle = '#1a2332';
+  ctx.fillRect(padding, padding, w - padding * 2, 40);
+  ctx.strokeStyle = '#303d50';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(padding, padding, w - padding * 2, 40);
+  ctx.fillStyle = '#58a6ff';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('SUPPLY CHANNEL', w / 2, padding + 24);
+
+  gameState.bays.forEach((bay, i) => {
+    const x = padding + i * bayWidth + 4;
+    const y = bayTop;
+    const bw = bayWidth - 8;
+    const bh = bayHeight;
+
+    // Soil background
+    ctx.fillStyle = bay.soil.color;
+    ctx.fillRect(x, y, bw, bh);
+
+    // Texture dots
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    for (let dx = 4; dx < bw; dx += 12) {
+      for (let dy = 4; dy < bh; dy += 12) {
+        ctx.beginPath();
+        ctx.arc(x + dx + (i*3)%8, y + dy + (dx*2)%8, 1.5, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    // Water
+    if (bay.waterDepth > 0) {
+      const waterH = Math.min(bay.waterDepth / 150 * bh, bh);
+      const grad = ctx.createLinearGradient(x, y + bh - waterH, x, y + bh);
+      grad.addColorStop(0, 'rgba(88,166,255,0.3)');
+      grad.addColorStop(1, 'rgba(88,166,255,0.6)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y + bh - waterH, bw, waterH);
+
+      // Water surface line
+      ctx.strokeStyle = 'rgba(120,190,255,0.8)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y + bh - waterH);
+      ctx.lineTo(x + bw, y + bh - waterH);
+      ctx.stroke();
+
+      // Ripples
+      const rippleOffset = (Date.now() / 500) % 20;
+      ctx.strokeStyle = 'rgba(140,200,255,0.3)';
+      ctx.lineWidth = 1;
+      for (let r = 0; r < 3; r++) {
+        const ry = y + bh - waterH + rippleOffset + r * 8;
+        if (ry < y + bh) {
+          ctx.beginPath();
+          ctx.moveTo(x + 4, ry);
+          for (let rx = 4; rx < bw; rx += 10) {
+            ctx.lineTo(x + rx, ry + Math.sin((rx + Date.now()/200)/10)*3);
+          }
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Target zone indicator
+    const targetBottom = y + bh - (bay.targetMin / 150 * bh);
+    const targetTop = y + bh - (bay.targetMax / 150 * bh);
+    ctx.fillStyle = 'rgba(35,134,54,0.15)';
+    ctx.fillRect(x + 2, targetTop, bw - 4, targetBottom - targetTop);
+    ctx.strokeStyle = 'rgba(35,134,54,0.4)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x + 2, targetTop);
+    ctx.lineTo(x + bw - 2, targetTop);
+    ctx.moveTo(x + 2, targetBottom);
+    ctx.lineTo(x + bw - 2, targetBottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Depth marker
+    const depthY = y + bh - (bay.waterDepth / 150 * bh);
+    ctx.strokeStyle = '#58a6ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + bw - 20, depthY);
+    ctx.lineTo(x + bw - 5, depthY);
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${Math.round(bay.waterDepth)}mm`, x + bw - 24, depthY + 4);
+
+    // Gate
+    const gateY = y - 4;
+    ctx.fillStyle = bay.gateOpen ? '#1a2332' : '#8b949e';
+    ctx.fillRect(x + bw/2 - 15, gateY, 30, 8);
+    ctx.strokeStyle = bay.gateOpen ? '#58a6ff' : '#555';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + bw/2 - 15, gateY, 30, 8);
+
+    // Gate water flow
+    if (bay.gateOpen) {
+      ctx.strokeStyle = 'rgba(88,166,255,0.7)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + bw/2, gateY + 8);
+      ctx.lineTo(x + bw/2, y + 20);
+      ctx.stroke();
+
+      // Flow particles
+      for (let p = 0; p < 3; p++) {
+        const py = y + 5 + ((Date.now()/100 + p*7) % 25);
+        ctx.fillStyle = 'rgba(140,200,255,0.8)';
+        ctx.beginPath();
+        ctx.arc(x + bw/2 + Math.sin(Date.now()/300 + p)*3, py, 2, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    // Gate label
+    ctx.fillStyle = bay.gateOpen ? '#58a6ff' : '#8b949e';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(bay.gateOpen ? 'OPEN' : 'CLOSED', x + bw/2, gateY - 4);
+
+    // Bay label
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Bay ${i+1}`, x + bw/2, y + bh + 18);
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(bay.soil.name, x + bw/2, y + bh + 32);
+
+    // Completion checkmark
+    if (bay.complete) {
+      ctx.fillStyle = 'rgba(35,134,54,0.8)';
+      ctx.beginPath();
+      ctx.arc(x + bw/2, y + bh/2, 20, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✓', x + bw/2, y + bh/2);
+      ctx.textBaseline = 'alphabetic';
+    }
+  });
+}
+
+// ==================== GAME LOOP ====================
+let lastTime = 0;
+
+function startGameLoop() {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  lastTime = performance.now();
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+function gameLoop(timestamp) {
+  if (!gameState) return;
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+  lastTime = timestamp;
+
+  if (gameState.running && !gameState.finished) {
+    updatePhysics(dt);
+    gameState.timeElapsed += dt;
+    updateUI();
+    render();
+
+    if (gameState.timeElapsed >= gameState.timeLimit) {
+      endLevel(false);
+    } else if (gameState.bays.every(b => b.complete)) {
+      endLevel(true);
+    }
+  }
+
+  if (!gameState.finished || gameState.running) {
+    animFrame = requestAnimationFrame(gameLoop);
+  }
+}
+
+function updatePhysics(dt) {
+  const FLOW_RATE = 800; // L/s when gate open
+  const MAX_DEPTH = 150; // mm max displayable
+
+  gameState.bays.forEach(bay => {
+    if (bay.complete) return;
+
+    if (bay.gateOpen && gameState.waterRemaining > 0) {
+      const flow = FLOW_RATE * dt;
+      const actualFlow = Math.min(flow, gameState.waterRemaining);
+      gameState.waterRemaining -= actualFlow;
+      gameState.waterUsed += actualFlow;
+
+      // Water fills bay
+      const bayArea = 1000; // m2 (simplified)
+      const depthIncrease = (actualFlow / bayArea) * 1000; // mm
+      bay.waterDepth += depthIncrease;
+
+      // Infiltration happens simultaneously
+      const infiltrationDepth = bay.soil.infiltration * 25.4 * dt; // mm (in/hr -> mm/s approx)
+      const infiltrated = Math.min(infiltrationDepth, bay.waterDepth);
+      bay.waterDepth -= infiltrated;
+      gameState.waterStored += infiltrated * bayArea / 1000; // L
+      bay.deepPerc += infiltrated;
+
+      // Runoff check
+      if (bay.waterDepth > MAX_DEPTH) {
+        const runoff = bay.waterDepth - MAX_DEPTH;
+        bay.waterDepth = MAX_DEPTH;
+        gameState.waterWasted += runoff * bayArea / 1000;
+        bay.runoff += runoff;
+      }
+    } else if (!bay.gateOpen && bay.waterDepth > 0) {
+      // Infiltration continues even after gate closed
+      const infiltrationDepth = bay.soil.infiltration * 25.4 * dt;
+      const infiltrated = Math.min(infiltrationDepth, bay.waterDepth);
+      bay.waterDepth -= infiltrated;
+      gameState.waterStored += infiltrated * 1000 / 1000;
+      bay.deepPerc += infiltrated;
+    }
+
+    // Check if bay is "complete" (in target zone and stable)
+    if (!bay.gateOpen && bay.waterDepth >= bay.targetMin && bay.waterDepth <= bay.targetMax) {
+      // Must be stable for 0.5s
+      if (!bay.stableSince) bay.stableSince = gameState.timeElapsed;
+      if (gameState.timeElapsed - bay.stableSince > 0.5) {
+        bay.complete = true;
+      }
+    } else {
+      bay.stableSince = null;
+    }
+  });
+}
+
+function updateUI() {
+  document.getElementById('waterDisplay').textContent = `${Math.round(gameState.waterRemaining)}L`;
+  const eff = gameState.waterUsed > 0 ? Math.round((gameState.waterStored / gameState.waterUsed) * 100) : 0;
+  document.getElementById('effDisplay').textContent = `${eff}%`;
+  document.getElementById('scoreDisplay').textContent = calculateScore().total;
+  updateGateButtons();
+}
+
+function calculateScore() {
+  let depthScore = 0;
+  let maxDepthScore = 0;
+  gameState.bays.forEach(bay => {
+    const targetCenter = (bay.targetMin + bay.targetMax) / 2;
+    const diff = Math.abs(bay.waterDepth - targetCenter);
+    const maxDiff = bay.tolerance;
+    const bayScore = Math.max(0, 100 - (diff / maxDiff) * 100);
+    depthScore += Math.round(bayScore);
+    maxDepthScore += 100;
+  });
+
+  const eff = gameState.waterUsed > 0 ? (gameState.waterStored / gameState.waterUsed) : 0;
+  const effBonus = Math.round(eff * 500);
+
+  const timeBonus = Math.max(0, Math.round((gameState.timeLimit - gameState.timeElapsed) * 10));
+
+  const allPerfect = gameState.bays.every(b => {
+    const targetCenter = (b.targetMin + b.targetMax) / 2;
+    return Math.abs(b.waterDepth - targetCenter) < b.tolerance / 2;
+  });
+  const comboBonus = allPerfect ? 1000 : 0;
+
+  const total = depthScore + effBonus + timeBonus + comboBonus;
+  return { depthScore, effBonus, timeBonus, comboBonus, total };
+}
+
+function endLevel(completed) {
+  gameState.finished = true;
+  gameState.running = false;
+  cancelAnimationFrame(animFrame);
+
+  const scores = calculateScore();
+  const stars = scores.total >= 2000 ? 3 : scores.total >= 1200 ? 2 : scores.total >= 600 ? 1 : 0;
+  levelStars[currentLevel] = Math.max(levelStars[currentLevel], stars);
+
+  document.getElementById('starRating').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+  document.getElementById('resDepth').textContent = scores.depthScore;
+  document.getElementById('resEff').textContent = scores.effBonus;
+  document.getElementById('resTime').textContent = scores.timeBonus;
+  document.getElementById('resTotal').textContent = scores.total;
+
+  const nextBtn = document.querySelector('#resultsScreen .btn');
+  if (currentLevel >= LEVELS.length - 1) {
+    nextBtn.textContent = 'All Levels Complete!';
+    nextBtn.disabled = true;
+    nextBtn.style.opacity = '0.5';
+  } else {
+    nextBtn.textContent = 'Next Level';
+    nextBtn.disabled = false;
+    nextBtn.style.opacity = '1';
+  }
+
+  showScreen('resultsScreen');
+}
+
+function nextLevel() {
+  if (currentLevel < LEVELS.length - 1) {
+    startLevel(currentLevel + 1);
+  }
+}
+
+// ==================== TOUCH / CLICK ON CANVAS ====================
+canvas.addEventListener('click', (e) => {
+  if (!gameState || !gameState.running) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (canvas.width / window.devicePixelRatio / rect.width);
+  const w = canvas.width / window.devicePixelRatio;
+  const padding = 20;
+  const bayWidth = (w - padding * 2) / gameState.bays.length;
+
+  const bayIdx = Math.floor((x - padding) / bayWidth);
+  if (bayIdx >= 0 && bayIdx < gameState.bays.length) {
+    toggleGate(bayIdx);
+  }
+});
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  if (!gameState || !gameState.running) return;
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  const x = (touch.clientX - rect.left) * (canvas.width / window.devicePixelRatio / rect.width);
+  const w = canvas.width / window.devicePixelRatio;
+  const padding = 20;
+  const bayWidth = (w - padding * 2) / gameState.bays.length;
+
+  const bayIdx = Math.floor((x - padding) / bayWidth);
+  if (bayIdx >= 0 && bayIdx < gameState.bays.length) {
+    toggleGate(bayIdx);
+  }
+}, { passive: false });
+
+// ==================== KEYBOARD ====================
+document.addEventListener('keydown', (e) => {
+  if (!gameState || !gameState.running) return;
+  const key = parseInt(e.key);
+  if (key >= 1 && key <= gameState.bays.length) {
+    toggleGate(key - 1);
+  }
+});
+
+// ==================== INIT ====================
+renderLevelSelect();
+</script>
+
+</body>
+</html>
