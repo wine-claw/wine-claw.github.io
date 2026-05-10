@@ -46,6 +46,8 @@
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 1;
     cursor: crosshair;
+    touch-action: none;
+    pointer-events: auto;
   }
 
   /* Overlay controls */
@@ -290,13 +292,12 @@
     currentStroke = null;
   }
 
-  canvas.addEventListener('mousedown', startStroke);
-  canvas.addEventListener('mousemove', moveStroke);
-  canvas.addEventListener('mouseup', endStroke);
-  canvas.addEventListener('mouseleave', endStroke);
-  canvas.addEventListener('touchstart', startStroke, { passive: false });
-  canvas.addEventListener('touchmove', moveStroke, { passive: false });
-  canvas.addEventListener('touchend', endStroke);
+  // Pointer events (unified mouse + touch)
+  canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); startStroke(e); });
+  canvas.addEventListener('pointermove', (e) => { if (currentStroke) { e.preventDefault(); moveStroke(e); } });
+  canvas.addEventListener('pointerup', endStroke);
+  canvas.addEventListener('pointercancel', endStroke);
+  canvas.addEventListener('pointerleave', endStroke);
 
   // Symmetry engine
   function drawFrame() {
