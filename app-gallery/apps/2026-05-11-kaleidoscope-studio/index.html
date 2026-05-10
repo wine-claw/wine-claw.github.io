@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Kaleidoscope Studio</title>
+<style>
+  :root {
+    --bg: #0b0b10;
+    --panel: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.10);
+    --text: #e8e8f0;
+    --muted: #8b8b9e;
+    --accent: #ff6b9d;
+    --accent2: #00d4aa;
+    --accent3: #ffd166;
+    --danger: #ef476f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+  #app { position: relative; width: 100%; height: 100%; }
+
+  /* Disclaimer */
+  .disclaimer {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    background: rgba(239,71,111,0.15);
+    border-bottom: 1px solid rgba(239,71,111,0.3);
+    color: #ffb3c1;
+    font-size: 11px;
+    padding: 6px 12px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+    line-height: 1.4;
+  }
+
+  /* Canvas */
+  #canvas {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1;
+    cursor: crosshair;
+  }
+
+  /* Overlay controls */
+  .controls {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px 14px;
+    background: linear-gradient(to top, rgba(11,11,16,0.95), rgba(11,11,16,0.4));
+    backdrop-filter: blur(10px);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .controls::-webkit-scrollbar { display: none; }
+
+  .group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .group + .group { border-left: 1px solid var(--border); padding-left: 10px; }
+
+  .btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 4px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:hover { background: rgba(255,255,255,0.12); }
+  .btn:active { transform: scale(0.97); }
+  .btn.active { border-color: var(--accent); color: var(--accent); background: rgba(255,107,157,0.12); }
+  .btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+  .swatch {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer; transition: transform .1s;
+    flex-shrink: 0;
+  }
+  .swatch:hover { transform: scale(1.15); }
+  .swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.2); }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 80px; height: 5px; border-radius: 3px;
+    background: var(--border);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--text); cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--text); cursor: pointer; border: none;
+  }
+
+  .label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+  /* Info panel */
+  .info {
+    position: fixed; top: 38px; right: 10px; z-index: 10;
+    max-width: 260px;
+    background: rgba(11,11,16,0.85);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+    backdrop-filter: blur(10px);
+    opacity: 0; transform: translateY(-6px);
+    transition: opacity .25s, transform .25s;
+    pointer-events: none;
+  }
+  .info.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .info h3 { color: var(--text); font-size: 13px; margin-bottom: 6px; }
+  .info p { margin-bottom: 8px; }
+  .info .close {
+    position: absolute; top: 8px; right: 10px;
+    background: none; border: none; color: var(--muted);
+    font-size: 16px; cursor: pointer;
+  }
+
+  /* Hint */
+  .hint {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 5;
+    color: rgba(255,255,255,0.25);
+    font-size: 18px;
+    pointer-events: none;
+    text-align: center;
+    transition: opacity .6s;
+  }
+  .hint.fade { opacity: 0; }
+
+  /* Mobile tweaks */
+  @media (max-width: 640px) {
+    .controls { padding: 8px 10px 12px; gap: 6px; }
+    .btn { padding: 7px 9px; font-size: 12px; }
+    .info { max-width: 200px; font-size: 11px; padding: 10px; top: 34px; }
+    .disclaimer { font-size: 10px; padding: 4px 8px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="disclaimer">
+    Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="hint" id="hint">Draw anywhere — watch symmetry bloom</div>
+
+  <div class="info" id="infoPanel">
+    <button class="close" onclick="toggleInfo()">&times;</button>
+    <h3>Kaleidoscope Studio</h3>
+    <p>Draw freehand strokes and see them mirrored and rotated in real time. The patterns you create are related to <strong>symmetry groups</strong> — the same mathematics that describes snowflakes, crystal lattices, flowers, and Islamic tilework.</p>
+    <p><strong>Modes:</strong></p>
+    <p><strong>Mirror:</strong> 2-fold reflection symmetry (like butterfly wings)</p>
+    <p><strong>Triad:</strong> 3-fold rotational symmetry (like a trillium flower)</p>
+    <p><strong>Quad:</strong> 4-fold symmetry (like a snowflake or window pane)</p>
+    <p><strong>Hex:</strong> 6-fold symmetry (like a honeycomb or benzene ring)</p>
+    <p><strong>Mandala:</strong> 8-fold radial + mirror symmetry</p>
+    <p style="margin-bottom:0"><em>Tip: try slow curves for mandalas, fast scribbles for chaotic blooms.</em></p>
+  </div>
+
+  <div class="controls">
+    <div class="group">
+      <button class="btn" id="btnUndo" title="Undo last stroke">
+        <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05 1-6.9 2.6L2 7v9h9l-3.62-3.62A7.95 7.95 0 0 1 20 12h-1.5A6.48 6.48 0 0 0 12.5 8z"/></svg>
+      </button>
+      <button class="btn" id="btnClear" title="Clear canvas" style="color:var(--danger)">
+        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      </button>
+      <button class="btn" id="btnSave" title="Save PNG">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      </button>
+    </div>
+
+    <div class="group">
+      <button class="btn active" data-mode="mirror" onclick="setMode('mirror')">Mirror</button>
+      <button class="btn" data-mode="triad" onclick="setMode('triad')">Triad</button>
+      <button class="btn" data-mode="quad" onclick="setMode('quad')">Quad</button>
+      <button class="btn" data-mode="hex" onclick="setMode('hex')">Hex</button>
+      <button class="btn" data-mode="mandala" onclick="setMode('mandala')">Mandala</button>
+    </div>
+
+    <div class="group">
+      <div class="swatch active" style="background:#ff6b9d" data-c="#ff6b9d" onclick="pickColor(this)"></div>
+      <div class="swatch" style="background:#00d4aa" data-c="#00d4aa" onclick="pickColor(this)"></div>
+      <div class="swatch" style="background:#ffd166" data-c="#ffd166" onclick="pickColor(this)"></div>
+      <div class="swatch" style="background:#118ab2" data-c="#118ab2" onclick="pickColor(this)"></div>
+      <div class="swatch" style="background:#ffffff" data-c="#ffffff" onclick="pickColor(this)"></div>
+      <div class="swatch" style="background:linear-gradient(45deg,#ff6b9d,#ffd166,#00d4aa);" data-c="rainbow" onclick="pickColor(this)"></div>
+    </div>
+
+    <div class="group">
+      <span class="label">Size</span>
+      <input type="range" id="brushSize" min="1" max="30" value="6">
+    </div>
+
+    <div class="group">
+      <button class="btn" id="btnBg" onclick="cycleBg()">Bg</button>
+      <button class="btn" id="btnInfo" onclick="toggleInfo()">?</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  let W, H, cx, cy;
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * window.devicePixelRatio;
+    canvas.height = H * window.devicePixelRatio;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+    cx = W / 2;
+    cy = H / 2;
+    redrawAll();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // State
+  const strokes = [];
+  let currentStroke = null;
+  let mode = 'mirror';
+  let brushColor = '#ff6b9d';
+  let brushSize = 6;
+  let bgIndex = 0;
+  const bgs = ['#0b0b10', '#1a1025', '#0d1f1a', '#1f1208', '#101820'];
+  let hue = 0;
+
+  // Input helpers
+  function getPos(e) {
+    if (e.touches && e.touches.length) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  // Drawing
+  function startStroke(e) {
+    e.preventDefault();
+    const p = getPos(e);
+    currentStroke = {
+      points: [{ x: p.x, y: p.y, t: Date.now() }],
+      color: brushColor,
+      size: brushSize,
+      mode: mode,
+      bg: bgs[bgIndex]
+    };
+    hintFade();
+  }
+
+  function moveStroke(e) {
+    if (!currentStroke) return;
+    e.preventDefault();
+    const p = getPos(e);
+    currentStroke.points.push({ x: p.x, y: p.y, t: Date.now() });
+    drawFrame();
+  }
+
+  function endStroke() {
+    if (!currentStroke) return;
+    if (currentStroke.points.length > 1) {
+      strokes.push(currentStroke);
+    }
+    currentStroke = null;
+  }
+
+  canvas.addEventListener('mousedown', startStroke);
+  canvas.addEventListener('mousemove', moveStroke);
+  canvas.addEventListener('mouseup', endStroke);
+  canvas.addEventListener('mouseleave', endStroke);
+  canvas.addEventListener('touchstart', startStroke, { passive: false });
+  canvas.addEventListener('touchmove', moveStroke, { passive: false });
+  canvas.addEventListener('touchend', endStroke);
+
+  // Symmetry engine
+  function drawFrame() {
+    fillBg();
+    for (const s of strokes) drawStrokeSym(s);
+    if (currentStroke) drawStrokeSym(currentStroke);
+  }
+
+  function fillBg() {
+    ctx.fillStyle = bgs[bgIndex];
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawStrokeSym(stroke) {
+    const pts = stroke.points;
+    if (pts.length < 2) return;
+
+    const cfg = getSymConfig(stroke.mode);
+    for (let i = 0; i < cfg.count; i++) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(cfg.angles[i]);
+      if (cfg.mirror && i % 2 === 1) ctx.scale(-1, 1);
+      ctx.translate(-cx, -cy);
+      drawRawStroke(pts, stroke.color, stroke.size);
+      ctx.restore();
+    }
+  }
+
+  function getSymConfig(m) {
+    switch (m) {
+      case 'mirror': return { count: 2, angles: [0, 0], mirror: true };
+      case 'triad': return { count: 3, angles: [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3], mirror: false };
+      case 'quad': return { count: 4, angles: [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2], mirror: false };
+      case 'hex': return { count: 6, angles: [0, Math.PI / 3, (2 * Math.PI) / 3, Math.PI, (4 * Math.PI) / 3, (5 * Math.PI) / 3], mirror: false };
+      case 'mandala': return { count: 16, angles: generateAngles(16), mirror: true };
+      default: return { count: 1, angles: [0], mirror: false };
+    }
+  }
+
+  function generateAngles(n) {
+    const a = [];
+    for (let i = 0; i < n; i++) a.push((2 * Math.PI * i) / n);
+    return a;
+  }
+
+  function drawRawStroke(pts, color, size) {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      const p0 = pts[i - 1], p1 = pts[i];
+      const mx = (p0.x + p1.x) / 2;
+      const my = (p0.y + p1.y) / 2;
+      ctx.quadraticCurveTo(p0.x, p0.y, mx, my);
+    }
+    const last = pts[pts.length - 1];
+    ctx.lineTo(last.x, last.y);
+
+    if (color === 'rainbow') {
+      const grad = ctx.createLinearGradient(pts[0].x, pts[0].y, last.x, last.y);
+      hue = (hue + 2) % 360;
+      grad.addColorStop(0, hsla(hue, 80, 60, 0.9));
+      grad.addColorStop(0.5, hsla((hue + 120) % 360, 80, 60, 0.9));
+      grad.addColorStop(1, hsla((hue + 240) % 360, 80, 60, 0.9));
+      ctx.strokeStyle = grad;
+    } else {
+      ctx.strokeStyle = color;
+    }
+    ctx.lineWidth = size;
+    ctx.shadowBlur = size * 1.2;
+    ctx.shadowColor = ctx.strokeStyle;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  function hsla(h, s, l, a) {
+    return `hsla(${h},${s}%,${l}%,${a})`;
+  }
+
+  function redrawAll() {
+    fillBg();
+    for (const s of strokes) drawStrokeSym(s);
+  }
+
+  // UI bindings
+  window.setMode = (m) => {
+    mode = m;
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  };
+
+  window.pickColor = (el) => {
+    brushColor = el.dataset.c;
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+  };
+
+  document.getElementById('brushSize').addEventListener('input', (e) => {
+    brushSize = parseInt(e.target.value, 10);
+  });
+
+  window.cycleBg = () => {
+    bgIndex = (bgIndex + 1) % bgs.length;
+    redrawAll();
+  };
+
+  document.getElementById('btnUndo').addEventListener('click', () => {
+    strokes.pop();
+    drawFrame();
+  });
+
+  document.getElementById('btnClear').addEventListener('click', () => {
+    strokes.length = 0;
+    drawFrame();
+  });
+
+  document.getElementById('btnSave').addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'kaleidoscope-' + new Date().toISOString().slice(0, 10) + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  window.toggleInfo = () => {
+    document.getElementById('infoPanel').classList.toggle('show');
+  };
+
+  function hintFade() {
+    document.getElementById('hint').classList.add('fade');
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault(); strokes.pop(); drawFrame();
+    }
+    if (e.key === '1') setMode('mirror');
+    if (e.key === '2') setMode('triad');
+    if (e.key === '3') setMode('quad');
+    if (e.key === '4') setMode('hex');
+    if (e.key === '5') setMode('mandala');
+  });
+
+  // Init
+  drawFrame();
+
+  // Auto-show hint briefly then fade
+  setTimeout(hintFade, 4000);
+})();
+</script>
+</body>
+</html>
