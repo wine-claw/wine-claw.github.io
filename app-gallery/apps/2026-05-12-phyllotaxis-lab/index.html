@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Phyllotaxis Pattern Lab — The Mathematics of Plant Spirals</title>
+  <title>Phyllotaxis Pattern Lab</title>
   <style>
     :root {
       --bg: #0f1115;
@@ -21,7 +20,7 @@
       margin: 0; padding: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       height: 100vh;
       overflow: hidden;
       display: flex;
@@ -30,38 +29,17 @@
     header {
       padding: 14px 24px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       flex-shrink: 0;
     }
-    header h1 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-      letter-spacing: -0.3px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    header h1 .leaf {
-      font-size: 1.4rem;
-    }
-    .subtitle {
-      font-size: 0.78rem;
-      color: var(--muted);
-      font-weight: 400;
-      margin-top: 2px;
-    }
-    .main {
-      display: flex;
-      flex: 1;
-      min-height: 0;
-    }
+    h1 { margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 10px; }
+    .subtitle { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .main { display: flex; flex: 1; min-height: 0; }
     canvas {
       flex: 1;
       background: #0a0c10;
       cursor: crosshair;
+      width: 100%;
+      height: 100%;
     }
     .sidebar {
       width: 320px;
@@ -76,7 +54,6 @@
       padding: 18px 20px;
       border-bottom: 1px solid var(--border);
     }
-    .panel-section:last-child { border-bottom: none; }
     .panel-title {
       font-size: 0.72rem;
       text-transform: uppercase;
@@ -85,46 +62,17 @@
       margin-bottom: 12px;
       font-weight: 600;
     }
-    .control {
-      margin-bottom: 14px;
-    }
-    .control:last-child { margin-bottom: 0; }
+    .control { margin-bottom: 14px; }
     .control label {
       display: flex;
       justify-content: space-between;
       font-size: 0.82rem;
       margin-bottom: 6px;
-      color: var(--text);
     }
-    .control label span.value {
-      color: var(--accent);
-      font-variant-numeric: tabular-nums;
-    }
-    input[type="range"] {
-      width: 100%;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 6px;
-      border-radius: 3px;
-      background: var(--border);
-      outline: none;
-      cursor: pointer;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      background: var(--accent);
-      border: 2px solid var(--bg);
-      cursor: pointer;
-    }
-    .presets {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .preset-btn {
+    .control label span { color: var(--accent); font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; cursor: pointer; }
+    .presets { display: flex; gap: 8px; flex-wrap: wrap; }
+    .preset-btn, .mode-btn {
       background: var(--input-bg);
       border: 1px solid var(--border);
       color: var(--text);
@@ -132,44 +80,12 @@
       border-radius: 6px;
       font-size: 0.78rem;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
     }
-    .preset-btn:hover {
-      background: #1f2230;
-      border-color: var(--accent);
-    }
-    .preset-btn.active {
-      border-color: var(--accent);
-      background: rgba(245,197,66,0.12);
-      color: var(--accent);
-    }
-    .color-modes {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .mode-btn {
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 8px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-    }
-    .mode-btn:hover { border-color: var(--accent2); }
-    .mode-btn.active {
-      border-color: var(--accent2);
-      background: rgba(91,192,190,0.12);
-      color: var(--accent2);
-    }
-    .action-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+    .preset-btn:hover, .mode-btn:hover { border-color: var(--accent); }
+    .preset-btn.active { border-color: var(--accent); background: rgba(245,197,66,0.12); color: var(--accent); }
+    .mode-btn.active { border-color: var(--accent2); background: rgba(91,192,190,0.12); color: var(--accent2); }
+    .color-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .action-row { display: flex; gap: 8px; }
     .toggle-btn {
       flex: 1;
       background: var(--input-bg);
@@ -179,26 +95,9 @@
       border-radius: 8px;
       font-size: 0.85rem;
       cursor: pointer;
-      transition: all 0.15s;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
     }
-    .toggle-btn:hover { background: #1f2230; }
-    .toggle-btn.on {
-      border-color: #4ade80;
-      background: rgba(74,222,128,0.12);
-      color: #4ade80;
-    }
-    .info p {
-      font-size: 0.82rem;
-      line-height: 1.55;
-      color: var(--muted);
-      margin: 0 0 10px;
-    }
-    .info strong { color: var(--text); }
+    .toggle-btn.on { border-color: #4ade80; background: rgba(74,222,128,0.12); color: #4ade80; }
+    .info p { font-size: 0.82rem; line-height: 1.55; color: var(--muted); margin: 0 0 10px; }
     .fib-note {
       background: rgba(245,197,66,0.08);
       border-left: 3px solid var(--accent);
@@ -206,9 +105,7 @@
       border-radius: 0 6px 6px 0;
       font-size: 0.78rem;
       color: var(--muted);
-      margin-top: 10px;
     }
-    .fib-note strong { color: var(--accent); }
     .disclaimer {
       padding: 10px 20px;
       font-size: 0.7rem;
@@ -218,14 +115,14 @@
     }
     @media (max-width: 780px) {
       .main { flex-direction: column; }
-      .sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border); max-height: 45vh; }
+      .sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border); }
     }
   </style>
 </head>
 <body>
   <header>
     <div>
-      <h1><span class="leaf">🌻</span> Phyllotaxis Pattern Lab</h1>
+      <h1>🌻 Phyllotaxis Pattern Lab</h1>
       <div class="subtitle">The mathematics of spiral arrangements in plants</div>
     </div>
   </header>
@@ -241,74 +138,57 @@
           <button class="preset-btn" data-preset="experiment">🔬 Experiment</button>
         </div>
       </div>
-
       <div class="panel-section">
         <div class="panel-title">Parameters</div>
         <div class="control">
-          <label>Angle of rotation <span class="value" id="angleVal">137.508°</span></label>
+          <label>Angle <span id="angleVal">137.508°</span></label>
           <input type="range" id="angle" min="130" max="145" step="0.001" value="137.508">
         </div>
         <div class="control">
-          <label>Number of dots <span class="value" id="dotsVal">800</span></label>
+          <label>Dots <span id="dotsVal">800</span></label>
           <input type="range" id="dots" min="50" max="2000" step="10" value="800">
         </div>
         <div class="control">
-          <label>Dot size <span class="value" id="sizeVal">3.5</span></label>
+          <label>Size <span id="sizeVal">3.5</span></label>
           <input type="range" id="size" min="1" max="12" step="0.1" value="3.5">
         </div>
         <div class="control">
-          <label>Spread factor <span class="value" id="spreadVal">1.0</span></label>
+          <label>Spread <span id="spreadVal">1.0</span></label>
           <input type="range" id="spread" min="0.3" max="2.5" step="0.05" value="1.0">
         </div>
       </div>
-
       <div class="panel-section">
         <div class="panel-title">Colour Mode</div>
         <div class="color-modes">
-          <button class="mode-btn active" data-mode="golden">Golden Spirals</button>
+          <button class="mode-btn active" data-mode="golden">Golden</button>
           <button class="mode-btn" data-mode="rainbow">Rainbow</button>
-          <button class="mode-btn" data-mode="age">Age Gradient</button>
+          <button class="mode-btn" data-mode="age">Age</button>
           <button class="mode-btn" data-mode="solid">Solid</button>
         </div>
       </div>
-
       <div class="panel-section">
         <div class="panel-title">Actions</div>
         <div class="action-row">
-          <button class="toggle-btn" id="animateBtn">▶ Animate Angle</button>
-          <button class="toggle-btn" id="downloadBtn">💾 Save Image</button>
+          <button class="toggle-btn" id="animateBtn">▶ Animate</button>
+          <button class="toggle-btn" id="downloadBtn">💾 Save</button>
         </div>
       </div>
-
       <div class="panel-section info">
-        <div class="panel-title">About Phyllotaxis</div>
-        <p><strong>Phyllotaxis</strong> is the study of how leaves, seeds, and petals arrange themselves in spirals on plants.</p>
-        <p>Most plants use an angle of about <strong>137.5°</strong> — the <em>golden angle</em> — derived from the golden ratio φ. This creates the Fibonacci spiral patterns you see in sunflowers, pinecones, and artichokes.</p>
-        <p>Try nudging the angle slightly away from 137.5° and watch the pattern break down. Then nudge it back and see the spirals re-emerge.</p>
-        <div class="fib-note">
-          <strong>Why 137.5°?</strong><br>
-          It's 360° ÷ φ², where φ ≈ 1.618. This irrational angle ensures seeds are packed with maximum efficiency and no two seeds align radially.
-        </div>
+        <div class="panel-title">About</div>
+        <p><strong>Phyllotaxis</strong> is the study of how leaves, seeds, and petals arrange themselves in spirals.</p>
+        <p>Most plants use about <strong>137.5°</strong> — the <em>golden angle</em> — creating Fibonacci spiral patterns in sunflowers, pinecones, and artichokes.</p>
+        <div class="fib-note"><strong>Why 137.5°?</strong> It's 360° ÷ φ², where φ ≈ 1.618. This ensures maximum packing efficiency.</div>
       </div>
     </div>
   </div>
-  <div class="disclaimer">
-    Disclaimer: This is a toy/educational simulation for exploration. Not a scientific instrument.
-  </div>
+  <div class="disclaimer">Disclaimer: Toy/educational simulation. Not a scientific instrument.</div>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
 
-    let params = {
-      angle: 137.508,
-      dots: 800,
-      size: 3.5,
-      spread: 1.0,
-      mode: 'golden',
-      animating: false,
-      animDirection: 1
-    };
+    let params = { angle: 137.508, dots: 800, size: 3.5, spread: 1.0, mode: 'golden', animating: false };
 
     const presets = {
       sunflower: { angle: 137.508, dots: 800, size: 3.5, spread: 1.0, mode: 'golden' },
@@ -319,35 +199,29 @@
 
     function resize() {
       const rect = canvas.parentElement.getBoundingClientRect();
-      const w = Math.max(1, Math.round(rect.width));
-      const h = Math.max(1, Math.round(rect.height));
-      canvas.width = w * window.devicePixelRatio;
-      canvas.height = h * window.devicePixelRatio;
+      const w = Math.max(1, Math.floor(rect.width));
+      const h = Math.max(1, Math.floor(rect.height));
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
       canvas.style.width = w + 'px';
       canvas.style.height = h + 'px';
-      ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { w, h };
     }
-    window.addEventListener('resize', () => { resize(); draw(); });
-    // Defer initial sizing until flex layout has settled
-    requestAnimationFrame(() => { resize(); draw(); });
 
-    function getFibonacciSpiralColor(n) {
-      // Assign colors based on which Fibonacci spiral a point belongs to
+    function getColor(n) {
       const fibs = [1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597];
       let best = 1, bestDiff = Infinity;
       for (let f of fibs) {
         const d = Math.abs((n / f) - Math.round(n / f));
         if (d < bestDiff) { bestDiff = d; best = f; }
       }
-      const hue = (best * 37) % 360;
-      return `hsl(${hue}, 72%, 60%)`;
+      return `hsl(${(best * 37) % 360}, 72%, 60%)`;
     }
 
     function draw() {
-      const w = canvas.width / window.devicePixelRatio;
-      const h = canvas.height / window.devicePixelRatio;
-      const cx = w / 2;
-      const cy = h / 2;
+      const { w, h } = resize();
+      const cx = w / 2, cy = h / 2;
       const maxR = Math.min(w, h) / 2 - 30;
 
       ctx.fillStyle = '#0a0c10';
@@ -363,41 +237,17 @@
         const y = cy + r * Math.sin(theta);
 
         let color;
-        if (params.mode === 'golden') {
-          color = getFibonacciSpiralColor(n);
-        } else if (params.mode === 'rainbow') {
-          color = `hsl(${(n * 0.8) % 360}, 75%, 60%)`;
-        } else if (params.mode === 'age') {
+        if (params.mode === 'golden') color = getColor(n);
+        else if (params.mode === 'rainbow') color = `hsl(${(n * 0.8) % 360}, 75%, 60%)`;
+        else if (params.mode === 'age') {
           const t = n / params.dots;
           color = `hsl(${40 + t * 60}, ${60 + t * 30}%, ${40 + t * 35}%)`;
-        } else {
-          color = '#e8cfa8';
-        }
+        } else color = '#e8cfa8';
 
         ctx.beginPath();
         ctx.arc(x, y, params.size, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
-      }
-
-      // Draw faint spiral guides for golden mode
-      if (params.mode === 'golden') {
-        ctx.strokeStyle = 'rgba(245,197,66,0.06)';
-        ctx.lineWidth = 1;
-        const fibs = [13,21,34,55,89];
-        for (let f of fibs) {
-          ctx.beginPath();
-          for (let n = 0; n < params.dots; n += f) {
-            const theta = n * params.angle * (Math.PI / 180);
-            const r = c * Math.sqrt(n);
-            if (r > maxR) continue;
-            const x = cx + r * Math.cos(theta);
-            const y = cy + r * Math.sin(theta);
-            if (n === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          ctx.stroke();
-        }
       }
     }
 
@@ -413,79 +263,57 @@
 
       document.querySelectorAll('.preset-btn').forEach(btn => {
         const p = presets[btn.dataset.preset];
-        const active = p &&
-          Math.abs(p.angle - params.angle) < 0.01 &&
-          p.dots === params.dots &&
-          Math.abs(p.size - params.size) < 0.1 &&
-          Math.abs(p.spread - params.spread) < 0.05 &&
-          p.mode === params.mode;
+        const active = p && Math.abs(p.angle - params.angle) < 0.01 && p.dots === params.dots &&
+          Math.abs(p.size - params.size) < 0.1 && Math.abs(p.spread - params.spread) < 0.05 && p.mode === params.mode;
         btn.classList.toggle('active', active);
       });
-
       document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.mode === params.mode);
       });
     }
 
-    document.getElementById('angle').addEventListener('input', e => {
-      params.angle = parseFloat(e.target.value);
-      updateUI(); draw();
-    });
-    document.getElementById('dots').addEventListener('input', e => {
-      params.dots = parseInt(e.target.value);
-      updateUI(); draw();
-    });
-    document.getElementById('size').addEventListener('input', e => {
-      params.size = parseFloat(e.target.value);
-      updateUI(); draw();
-    });
-    document.getElementById('spread').addEventListener('input', e => {
-      params.spread = parseFloat(e.target.value);
-      updateUI(); draw();
-    });
+    // Event listeners
+    document.getElementById('angle').addEventListener('input', e => { params.angle = parseFloat(e.target.value); updateUI(); draw(); });
+    document.getElementById('dots').addEventListener('input', e => { params.dots = parseInt(e.target.value); updateUI(); draw(); });
+    document.getElementById('size').addEventListener('input', e => { params.size = parseFloat(e.target.value); updateUI(); draw(); });
+    document.getElementById('spread').addEventListener('input', e => { params.spread = parseFloat(e.target.value); updateUI(); draw(); });
 
     document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const p = presets[btn.dataset.preset];
-        if (!p) return;
-        Object.assign(params, p);
-        updateUI(); draw();
-      });
+      btn.addEventListener('click', () => { Object.assign(params, presets[btn.dataset.preset]); updateUI(); draw(); });
     });
-
     document.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        params.mode = btn.dataset.mode;
-        updateUI(); draw();
-      });
+      btn.addEventListener('click', () => { params.mode = btn.dataset.mode; updateUI(); draw(); });
     });
 
     const animateBtn = document.getElementById('animateBtn');
     animateBtn.addEventListener('click', () => {
       params.animating = !params.animating;
       animateBtn.classList.toggle('on', params.animating);
-      animateBtn.textContent = params.animating ? '⏸ Pause' : '▶ Animate Angle';
+      animateBtn.textContent = params.animating ? '⏸ Pause' : '▶ Animate';
     });
-
     document.getElementById('downloadBtn').addEventListener('click', () => {
       const link = document.createElement('a');
-      link.download = 'phyllotaxis-pattern.png';
+      link.download = 'phyllotaxis.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
     });
 
-    function animate() {
+    // Animation loop
+    function loop() {
       if (params.animating) {
-        params.angle += 0.005 * params.animDirection;
-        if (params.angle > 138.0) params.animDirection = -1;
-        if (params.angle < 136.0) params.animDirection = 1;
+        params.angle += 0.005;
+        if (params.angle > 138.0 || params.angle < 136.0) params.angle = 137.508;
         updateUI(); draw();
       }
-      requestAnimationFrame(animate);
+      requestAnimationFrame(loop);
     }
-    animate();
 
-    updateUI(); draw();
+    window.addEventListener('resize', draw);
+
+    // Initialize
+    updateUI();
+    setTimeout(draw, 0);  // Ensure layout is settled
+    loop();
   </script>
 </body>
 </html>
