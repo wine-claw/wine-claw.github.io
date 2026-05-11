@@ -319,14 +319,17 @@
 
     function resize() {
       const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
+      const w = Math.max(1, Math.round(rect.width));
+      const h = Math.max(1, Math.round(rect.height));
+      canvas.width = w * window.devicePixelRatio;
+      canvas.height = h * window.devicePixelRatio;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
       ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
     }
     window.addEventListener('resize', () => { resize(); draw(); });
-    resize();
+    // Defer initial sizing until flex layout has settled
+    requestAnimationFrame(() => { resize(); draw(); });
 
     function getFibonacciSpiralColor(n) {
       // Assign colors based on which Fibonacci spiral a point belongs to
