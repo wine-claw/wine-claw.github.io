@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Ant Colony Sandbox</title>
+<style>
+  :root {
+    --bg: #1a1410;
+    --panel: #251e18;
+    --border: #3d3025;
+    --text: #e8dcc8;
+    --muted: #a09080;
+    --accent: #c9a84c;
+    --food: #4caf50;
+    --danger: #c94c4c;
+    --nest: #e8a040;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    background: #3d1f1f;
+    color: #e8b0b0;
+    font-size: 12px;
+    padding: 6px 12px;
+    text-align: center;
+    border-bottom: 1px solid #5a2a2a;
+    line-height: 1.4;
+  }
+
+  /* Layout */
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .topbar h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+  .stats {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .stats span strong {
+    color: var(--text);
+  }
+
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Canvas */
+  canvas {
+    flex: 1;
+    background: #211a14;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  /* Controls panel */
+  .controls {
+    width: 260px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    padding: 14px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  .controls h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 6px;
+  }
+  button {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #322820;
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button:hover { background: #3e3228; }
+  button.active {
+    background: var(--accent);
+    color: #1a1410;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  button.danger {
+    background: #3d1f1f;
+    border-color: #5a2a2a;
+    color: #e8b0b0;
+  }
+  button.danger:hover { background: #4a2525; }
+
+  .slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .slider-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .slider-group label span { color: var(--text); }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  .tool-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+    padding: 8px;
+    background: #1e1812;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  /* Mobile */
+  @media (max-width: 720px) {
+    .main { flex-direction: column; }
+    .controls {
+      width: 100%;
+      border-left: none;
+      border-top: 1px solid var(--border);
+      max-height: 45vh;
+      padding: 10px 12px;
+      gap: 10px;
+    }
+    .topbar h1 { font-size: 14px; }
+    .stats { gap: 10px; font-size: 11px; }
+    .tool-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="disclaimer">
+  Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+
+<div class="app">
+  <div class="topbar">
+    <h1>🐜 Ant Colony Sandbox</h1>
+    <div class="stats">
+      <span>Food: <strong id="food-stat">0</strong></span>
+      <span>Delivered: <strong id="delivered-stat">0</strong></span>
+      <span>Ants: <strong id="ants-stat">0</strong></span>
+      <span>FPS: <strong id="fps-stat">--</strong></span>
+    </div>
+  </div>
+
+  <div class="main">
+    <canvas id="world"></canvas>
+    <div class="controls">
+      <div>
+        <h2>Simulation</h2>
+        <div class="btn-row">
+          <button id="btn-run" class="active">Running</button>
+          <button id="btn-reset">Reset</button>
+        </div>
+      </div>
+
+      <div>
+        <h2>Paint Tool</h2>
+        <div class="tool-grid">
+          <button class="tool-btn active" data-tool="food">🌿 Food</button>
+          <button class="tool-btn" data-tool="obstacle">🧱 Wall</button>
+          <button class="tool-btn" data-tool="nest">🏠 Nest</button>
+          <button class="tool-btn" data-tool="erase">❌ Erase</button>
+        </div>
+      </div>
+
+      <div>
+        <h2>Overlays</h2>
+        <div class="btn-row">
+          <button id="btn-pheromone">Pheromone</button>
+          <button id="btn-foodmap">Food Map</button>
+        </div>
+      </div>
+
+      <div>
+        <h2>Ant Settings</h2>
+        <div class="slider-group">
+          <label>Count <span id="val-count">300</span></label>
+          <input type="range" id="count" min="50" max="1200" value="300">
+        </div>
+        <div class="slider-group">
+          <label>Speed <span id="val-speed">2.0</span></label>
+          <input type="range" id="speed" min="0.5" max="5" step="0.1" value="2">
+        </div>
+        <div class="slider-group">
+          <label>Turn Rate <span id="val-turn">0.4</span></label>
+          <input type="range" id="turn" min="0.05" max="1" step="0.05" value="0.4">
+        </div>
+        <div class="slider-group">
+          <label>Sensor Angle <span id="val-angle">45°</span></label>
+          <input type="range" id="angle" min="10" max="90" value="45">
+        </div>
+        <div class="slider-group">
+          <label>Sensor Dist <span id="val-sens">20</span></label>
+          <input type="range" id="sens" min="5" max="50" value="20">
+        </div>
+      </div>
+
+      <div>
+        <h2>Pheromone</h2>
+        <div class="slider-group">
+          <label>Deposit Rate <span id="val-deposit">1.0</span></label>
+          <input type="range" id="deposit" min="0.1" max="3" step="0.1" value="1">
+        </div>
+        <div class="slider-group">
+          <label>Evaporation <span id="val-evap">0.98</span></label>
+          <input type="range" id="evap" min="0.90" max="0.999" step="0.001" value="0.98">
+        </div>
+        <div class="slider-group">
+          <label>Diffusion <span id="val-diff">0.1</span></label>
+          <input type="range" id="diff" min="0" max="0.5" step="0.01" value="0.1">
+        </div>
+      </div>
+
+      <div class="hint">
+        <strong>Tip:</strong> Drag on the canvas to paint food or walls. Press <strong>Running</strong> to pause/play. Ants leave trails to find food and return home. Watch emergent highways form!
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const canvas = document.getElementById('world');
+  const ctx = canvas.getContext('2d');
+
+  // Settings
+  let W, H, GRID_W, GRID_H;
+  const CELL = 4; // world cell size in px
+  let running = true;
+  let tool = 'food';
+  let showPheromone = false;
+  let showFoodMap = false;
+
+  // Parameters
+  let ANT_COUNT = 300;
+  let ANT_SPEED = 2;
+  let TURN_RATE = 0.4;
+  let SENSOR_ANGLE = Math.PI / 4;
+  let SENSOR_DIST = 20;
+  let DEPOSIT_RATE = 1.0;
+  let EVAPORATION = 0.98;
+  let DIFFUSION = 0.1;
+
+  // World state: 0=empty, 1=obstacle, 2=food
+  let world = [];
+  // Pheromone grids
+  let homePher = [];
+  let foodPher = [];
+  // For diffusion buffer
+  let homePher2 = [];
+  let foodPher2 = [];
+
+  let nest = { x: 0, y: 0, gx: 0, gy: 0 };
+  let ants = [];
+  let foodDelivered = 0;
+  let antsCarrying = 0;
+
+  // Painting
+  let painting = false;
+  let brushSize = 3; // cells radius
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    W = canvas.width;
+    H = canvas.height;
+    GRID_W = Math.ceil(W / CELL);
+    GRID_H = Math.ceil(H / CELL);
+    initWorld();
+  }
+
+  function initWorld() {
+    const size = GRID_W * GRID_H;
+    world = new Uint8Array(size);
+    homePher = new Float32Array(size);
+    foodPher = new Float32Array(size);
+    homePher2 = new Float32Array(size);
+    foodPher2 = new Float32Array(size);
+    nest.gx = Math.floor(GRID_W / 2);
+    nest.gy = Math.floor(GRID_H / 2);
+    nest.x = nest.gx * CELL + CELL / 2;
+    nest.y = nest.gy * CELL + CELL / 2;
+  }
+
+  function idx(gx, gy) {
+    return gy * GRID_W + gx;
+  }
+
+  function rand(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  function wrap(v, max) {
+    return ((v % max) + max) % max;
+  }
+
+  function resetAnts() {
+    ants = [];
+    for (let i = 0; i < ANT_COUNT; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      ants.push({
+        x: nest.x + Math.cos(angle) * rand(0, 30),
+        y: nest.y + Math.sin(angle) * rand(0, 30),
+        angle: angle,
+        carrying: false,
+        wander: Math.random() * Math.PI * 2,
+      });
+    }
+    foodDelivered = 0;
+    antsCarrying = 0;
+  }
+
+  function resetAll() {
+    initWorld();
+    resetAnts();
+  }
+
+  // Painting
+  function paintAt(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const px = clientX - rect.left;
+    const py = clientY - rect.top;
+    const gx0 = Math.floor(px / CELL);
+    const gy0 = Math.floor(py / CELL);
+    const r = brushSize;
+
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (dx * dx + dy * dy > r * r) continue;
+        const gx = wrap(gx0 + dx, GRID_W);
+        const gy = wrap(gy0 + dy, GRID_H);
+        const i = idx(gx, gy);
+        if (tool === 'food') {
+          world[i] = 2;
+          foodPher[i] = 0;
+          homePher[i] = 0;
+        } else if (tool === 'obstacle') {
+          world[i] = 1;
+          foodPher[i] = 0;
+          homePher[i] = 0;
+        } else if (tool === 'erase') {
+          world[i] = 0;
+          foodPher[i] = 0;
+          homePher[i] = 0;
+        } else if (tool === 'nest') {
+          world[i] = 0;
+          nest.gx = gx;
+          nest.gy = gy;
+          nest.x = gx * CELL + CELL / 2;
+          nest.y = gy * CELL + CELL / 2;
+          foodPher[i] = 0;
+          homePher[i] = 0;
+        }
+      }
+    }
+  }
+
+  canvas.addEventListener('pointerdown', e => {
+    painting = true;
+    paintAt(e.clientX, e.clientY);
+  });
+  window.addEventListener('pointermove', e => {
+    if (painting) paintAt(e.clientX, e.clientY);
+  });
+  window.addEventListener('pointerup', () => { painting = false; });
+
+  // Update ants
+  function updateAnts() {
+    antsCarrying = 0;
+    for (let a of ants) {
+      const speed = ANT_SPEED;
+      const gx = Math.floor(a.x / CELL);
+      const gy = Math.floor(a.y / CELL);
+
+      // Sense pheromone ahead, left, right
+      const sa = SENSOR_ANGLE;
+      const sd = SENSOR_DIST;
+
+      function sensePher(gx, gy, pherArray) {
+        const i = idx(wrap(gx, GRID_W), wrap(gy, GRID_H));
+        return world[i] === 1 ? -1000 : pherArray[i];
+      }
+
+      function sample(dir) {
+        const sx = a.x + Math.cos(dir) * sd;
+        const sy = a.y + Math.sin(dir) * sd;
+        const sgx = Math.floor(sx / CELL);
+        const sgy = Math.floor(sy / CELL);
+        if (a.carrying) {
+          // Seeking home: follow home pheromone, but we want to GO HOME so
+          // actually home pheromone guides others TO food. We want to go TO nest.
+          // So we sense home pheromone as our target signal.
+          return sensePher(sgx, sgy, homePher);
+        } else {
+          return sensePher(sgx, sgy, foodPher);
+        }
+      }
+
+      const ahead = sample(a.angle);
+      const left = sample(a.angle + sa);
+      const right = sample(a.angle - sa);
+
+      // Steering
+      let steer = 0;
+      if (ahead < left && ahead < right) {
+        steer = (Math.random() < 0.5 ? 1 : -1) * TURN_RATE;
+      } else if (left > right) {
+        steer = TURN_RATE;
+      } else if (right > left) {
+        steer = -TURN_RATE;
+      } else {
+        steer = rand(-0.1, 0.1);
+      }
+
+      // Add wander noise
+      a.wander += rand(-0.2, 0.2);
+      steer += Math.sin(a.wander) * 0.1;
+
+      a.angle += steer;
+
+      // Move
+      let nx = a.x + Math.cos(a.angle) * speed;
+      let ny = a.y + Math.sin(a.angle) * speed;
+      let ngx = Math.floor(nx / CELL);
+      let ngy = Math.floor(ny / CELL);
+      let ni = idx(wrap(ngx, GRID_W), wrap(ngy, GRID_H));
+
+      // Bounce off obstacles
+      if (world[ni] === 1) {
+        a.angle += Math.PI + rand(-0.5, 0.5);
+        nx = a.x + Math.cos(a.angle) * speed;
+        ny = a.y + Math.sin(a.angle) * speed;
+        ngx = Math.floor(nx / CELL);
+        ngy = Math.floor(ny / CELL);
+        ni = idx(wrap(ngx, GRID_W), wrap(ngy, GRID_H));
+        if (world[ni] === 1) {
+          a.angle += rand(-1, 1);
+          continue;
+        }
+      }
+
+      a.x = wrap(nx, W);
+      a.y = wrap(ny, H);
+
+      // Deposit pheromone
+      const ci = idx(wrap(Math.floor(a.x / CELL), GRID_W), wrap(Math.floor(a.y / CELL), GRID_H));
+      if (a.carrying) {
+        foodPher[ci] = Math.min(255, foodPher[ci] + DEPOSIT_RATE * 3);
+      } else {
+        homePher[ci] = Math.min(255, homePher[ci] + DEPOSIT_RATE * 3);
+      }
+
+      // Check for nest (if carrying food)
+      if (a.carrying) {
+        const ndx = a.x - nest.x;
+        const ndy = a.y - nest.y;
+        if (ndx * ndx + ndy * ndy < 400) {
+          a.carrying = false;
+          a.angle += Math.PI + rand(-0.5, 0.5);
+          foodDelivered++;
+        }
+      }
+
+      // Check for food (if not carrying)
+      if (!a.carrying) {
+        if (world[ci] === 2) {
+          world[ci] = 0; // eat the food
+          a.carrying = true;
+          a.angle += Math.PI + rand(-0.5, 0.5);
+        }
+      }
+
+      if (a.carrying) antsCarrying++;
+    }
+  }
+
+  // Diffuse and evaporate pheromones
+  function updatePheromones() {
+    const size = GRID_W * GRID_H;
+    for (let i = 0; i < size; i++) {
+      const gx = i % GRID_W;
+      const gy = Math.floor(i / GRID_W);
+      if (world[i] === 1) {
+        homePher2[i] = 0;
+        foodPher2[i] = 0;
+        continue;
+      }
+      let hsum = homePher[i];
+      let fsum = foodPher[i];
+      let count = 1;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = wrap(gx + dx, GRID_W);
+          const ny = wrap(gy + dy, GRID_H);
+          const ni = idx(nx, ny);
+          if (world[ni] !== 1) {
+            hsum += homePher[ni];
+            fsum += foodPher[ni];
+            count++;
+          }
+        }
+      }
+      homePher2[i] = Math.min(255, (hsum / count) * DIFFUSION + homePher[i] * (1 - DIFFUSION)) * EVAPORATION;
+      foodPher2[i] = Math.min(255, (fsum / count) * DIFFUSION + foodPher[i] * (1 - DIFFUSION)) * EVAPORATION;
+    }
+    // Swap
+    [homePher, homePher2] = [homePher2, homePher];
+    [foodPher, foodPher2] = [foodPher2, foodPher];
+  }
+
+  // Render
+  function draw() {
+    // Background
+    ctx.fillStyle = '#211a14';
+    ctx.fillRect(0, 0, W, H);
+
+    // Pheromone overlay
+    if (showPheromone) {
+      const imgData = ctx.getImageData(0, 0, W, H);
+      const data = imgData.data;
+      // Draw pheromone heatmap at cell resolution
+      for (let gy = 0; gy < GRID_H; gy++) {
+        for (let gx = 0; gx < GRID_W; gx++) {
+          const i = idx(gx, gy);
+          const h = homePher[i];
+          const f = foodPher[i];
+          if (h < 1 && f < 1) continue;
+          const px = gx * CELL;
+          const py = gy * CELL;
+          const r = Math.min(255, Math.max(0, f * 1.5));
+          const b = Math.min(255, Math.max(0, h * 1.5));
+          const g = Math.min(255, Math.max(0, (h + f) * 0.3));
+          for (let dy = 0; dy < CELL; dy++) {
+            for (let dx = 0; dx < CELL; dx++) {
+              const pi = ((py + dy) * W + (px + dx)) * 4;
+              if (pi >= 0 && pi < data.length - 3) {
+                data[pi] = Math.max(data[pi], r);
+                data[pi + 1] = Math.max(data[pi + 1], g);
+                data[pi + 2] = Math.max(data[pi + 2], b);
+              }
+            }
+          }
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    // Food map overlay (subtle)
+    if (showFoodMap) {
+      for (let gy = 0; gy < GRID_H; gy++) {
+        for (let gx = 0; gx < GRID_W; gx++) {
+          const i = idx(gx, gy);
+          if (world[i] === 2) {
+            ctx.fillStyle = 'rgba(76,175,80,0.35)';
+            ctx.fillRect(gx * CELL, gy * CELL, CELL, CELL);
+          }
+        }
+      }
+    }
+
+    // Obstacles
+    ctx.fillStyle = '#4a3b2f';
+    for (let gy = 0; gy < GRID_H; gy++) {
+      for (let gx = 0; gx < GRID_W; gx++) {
+        if (world[idx(gx, gy)] === 1) {
+          ctx.fillRect(gx * CELL, gy * CELL, CELL, CELL);
+        }
+      }
+    }
+
+    // Food
+    ctx.fillStyle = '#5cb85c';
+    for (let gy = 0; gy < GRID_H; gy++) {
+      for (let gx = 0; gx < GRID_W; gx++) {
+        if (world[idx(gx, gy)] === 2) {
+          const cx = gx * CELL + CELL / 2;
+          const cy = gy * CELL + CELL / 2;
+          ctx.beginPath();
+          ctx.arc(cx, cy, Math.max(1.5, CELL * 0.6), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    // Nest glow
+    ctx.save();
+    const nestR = 18;
+    const grad = ctx.createRadialGradient(nest.x, nest.y, 2, nest.x, nest.y, nestR);
+    grad.addColorStop(0, 'rgba(232,160,64,0.6)');
+    grad.addColorStop(1, 'rgba(232,160,64,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(nest.x, nest.y, nestR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#e8a040';
+    ctx.beginPath();
+    ctx.arc(nest.x, nest.y, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Ants
+    for (let a of ants) {
+      const size = a.carrying ? 3 : 2.2;
+      ctx.save();
+      ctx.translate(a.x, a.y);
+      ctx.rotate(a.angle);
+      ctx.fillStyle = a.carrying ? '#8bc34a' : '#d0c0a0';
+      // Triangle pointing forward
+      ctx.beginPath();
+      ctx.moveTo(size * 1.8, 0);
+      ctx.lineTo(-size, -size);
+      ctx.lineTo(-size * 0.5, 0);
+      ctx.lineTo(-size, size);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // Animation loop
+  let lastTime = 0;
+  let frameCount = 0;
+  let fpsTime = 0;
+  let fps = 0;
+
+  function loop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const dt = timestamp - lastTime;
+    lastTime = timestamp;
+
+    if (running) {
+      updateAnts();
+      updatePheromones();
+    }
+    draw();
+
+    frameCount++;
+    fpsTime += dt;
+    if (fpsTime >= 500) {
+      fps = Math.round(frameCount / (fpsTime / 1000));
+      frameCount = 0;
+      fpsTime = 0;
+    }
+
+    // Stats
+    let foodCount = 0;
+    for (let v of world) if (v === 2) foodCount++;
+    document.getElementById('food-stat').textContent = foodCount;
+    document.getElementById('delivered-stat').textContent = foodDelivered;
+    document.getElementById('ants-stat').textContent = antsCarrying + '/' + ants.length;
+    document.getElementById('fps-stat').textContent = fps;
+
+    requestAnimationFrame(loop);
+  }
+
+  // UI bindings
+  document.getElementById('btn-run').addEventListener('click', function() {
+    running = !running;
+    this.textContent = running ? 'Running' : 'Paused';
+    this.classList.toggle('active', running);
+  });
+  document.getElementById('btn-reset').addEventListener('click', function() {
+    resetAll();
+  });
+
+  document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      tool = this.dataset.tool;
+    });
+  });
+
+  document.getElementById('btn-pheromone').addEventListener('click', function() {
+    showPheromone = !showPheromone;
+    this.classList.toggle('active', showPheromone);
+  });
+  document.getElementById('btn-foodmap').addEventListener('click', function() {
+    showFoodMap = !showFoodMap;
+    this.classList.toggle('active', showFoodMap);
+  });
+
+  function bindSlider(id, param, labelId, scale=1, fmt=v=>v) {
+    const el = document.getElementById(id);
+    const lbl = document.getElementById(labelId);
+    el.addEventListener('input', function() {
+      const val = parseFloat(this.value);
+      window[param] = val;
+      lbl.textContent = fmt(val);
+      if (param === 'ANT_COUNT') {
+        resetAnts();
+      }
+    });
+  }
+
+  bindSlider('count', 'ANT_COUNT', 'val-count', 1, v => Math.round(v));
+  bindSlider('speed', 'ANT_SPEED', 'val-speed');
+  bindSlider('turn', 'TURN_RATE', 'val-turn');
+  bindSlider('angle', 'SENSOR_ANGLE', 'val-angle', 1, v => Math.round(v) + '°');
+  bindSlider('sens', 'SENSOR_DIST', 'val-sens', 1, v => Math.round(v));
+  bindSlider('deposit', 'DEPOSIT_RATE', 'val-deposit');
+  bindSlider('evap', 'EVAPORATION', 'val-evap');
+  bindSlider('diff', 'DIFFUSION', 'val-diff');
+
+  // Convert angle to radians in the ant update
+  const origUpdate = updateAnts;
+  updateAnts = function() {
+    SENSOR_ANGLE = document.getElementById('angle').value * Math.PI / 180;
+    origUpdate();
+  };
+
+  // Init
+  window.addEventListener('resize', resize);
+  resize();
+  resetAnts();
+
+  // Seed some food and obstacles
+  function seedWorld() {
+    // Food clusters
+    for (let c = 0; c < 5; c++) {
+      const cx = Math.floor(rand(GRID_W * 0.1, GRID_W * 0.9));
+      const cy = Math.floor(rand(GRID_H * 0.1, GRID_H * 0.9));
+      const r = rand(3, 6);
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (dx * dx + dy * dy <= r * r) {
+            const gx = wrap(cx + dx, GRID_W);
+            const gy = wrap(cy + dy, GRID_H);
+            world[idx(gx, gy)] = 2;
+          }
+        }
+      }
+    }
+    // A few walls
+    for (let w = 0; w < 3; w++) {
+      const cx = Math.floor(rand(GRID_W * 0.2, GRID_W * 0.8));
+      const cy = Math.floor(rand(GRID_H * 0.2, GRID_H * 0.8));
+      const len = Math.floor(rand(8, 20));
+      const dir = Math.random() < 0.5 ? 0 : 1;
+      for (let i = 0; i < len; i++) {
+        const gx = wrap(cx + (dir ? i : 0), GRID_W);
+        const gy = wrap(cy + (dir ? 0 : i), GRID_H);
+        world[idx(gx, gy)] = 1;
+      }
+    }
+  }
+  seedWorld();
+
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

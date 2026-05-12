@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-12",
-    "title": "Phyllotaxis Pattern Lab",
-    "slug": "phyllotaxis-lab",
-    "publishedSlug": "2026-05-12-phyllotaxis-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-12-phyllotaxis-lab/"
+    "date": "2026-05-13",
+    "title": "Ant Colony Sandbox",
+    "slug": "ant-colony-sandbox",
+    "publishedSlug": "2026-05-13-ant-colony-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-13-ant-colony-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-05-13",
+      "title": "Ant Colony Sandbox",
+      "slug": "ant-colony-sandbox",
+      "publishedSlug": "2026-05-13-ant-colony-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-13-ant-colony-sandbox/",
+      "description": "Emergent pheromone trail simulation — paint food and walls, then watch ants self-organise into highways"
+    },
     {
       "date": "2026-05-12",
       "title": "Phyllotaxis Pattern Lab",
