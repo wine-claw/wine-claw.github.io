@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-13",
-    "title": "Ant Colony Sandbox",
-    "slug": "ant-colony-sandbox",
-    "publishedSlug": "2026-05-13-ant-colony-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-13-ant-colony-sandbox/"
+    "date": "2026-05-14",
+    "title": "Reaction-Diffusion Laboratory",
+    "slug": "reaction-diffusion-lab",
+    "publishedSlug": "2026-05-14-reaction-diffusion-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-14-reaction-diffusion-lab/"
   },
   "apps": [
+    {
+      "date": "2026-05-14",
+      "title": "Reaction-Diffusion Laboratory",
+      "slug": "reaction-diffusion-lab",
+      "publishedSlug": "2026-05-14-reaction-diffusion-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-14-reaction-diffusion-lab/",
+      "description": "Interactive Gray-Scott reaction-diffusion simulator with 7 pattern presets, live parameter tweaking, and tap-to-seed canvas."
+    },
     {
       "date": "2026-05-13",
       "title": "Ant Colony Sandbox",

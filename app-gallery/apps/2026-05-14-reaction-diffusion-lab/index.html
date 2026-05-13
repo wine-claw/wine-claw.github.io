@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Reaction-Diffusion Laboratory</title>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --panel: #161a22;
+    --panel-light: #1e2330;
+    --border: #2a3040;
+    --text: #dce1ec;
+    --muted: #8892a8;
+    --accent: #00c6ff;
+    --accent2: #ff6b35;
+    --success: #34d399;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    overflow: hidden;
+    touch-action: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: rgba(0,0,0,0.7);
+    color: #b0b8c8;
+    font-size: 11px;
+    padding: 6px 14px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    line-height: 1.3;
+    user-select: none;
+  }
+
+  /* Layout */
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-top: 34px;
+  }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px 6px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .title-block {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  h1 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .controls-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  button {
+    background: var(--panel-light);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  button:hover { background: #2a3040; }
+  button:active { transform: scale(0.97); }
+  button.accent { border-color: var(--accent); color: var(--accent); }
+  button.accent2 { border-color: var(--accent2); color: var(--accent2); }
+  button.active { background: rgba(0,198,255,0.12); }
+  .icon { font-size: 14px; line-height: 1; }
+
+  /* Main content */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .canvas-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: radial-gradient(ellipse at center, #121620 0%, #0a0c12 70%);
+    overflow: hidden;
+  }
+  canvas#display {
+    image-rendering: pixelated;
+    max-width: 92vw;
+    max-height: 72vh;
+    border-radius: 10px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .canvas-label {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0.6;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 300px;
+    min-width: 280px;
+    max-width: 90vw;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 14px;
+    gap: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: -6px;
+  }
+
+  /* Presets */
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .preset-btn {
+    padding: 7px 8px;
+    font-size: 12px;
+    text-align: left;
+  }
+  .preset-btn .swatch {
+    display: inline-block;
+    width: 10px; height: 10px; border-radius: 50%;
+    margin-right: 6px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  /* Sliders */
+  .slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .slider-label .val { color: var(--text); font-variant-numeric: tabular-nums; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    margin: 4px 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--panel);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--panel);
+    cursor: pointer;
+  }
+
+  /* Info panel */
+  .info-box {
+    background: var(--panel-light);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .info-box strong { color: var(--text); }
+
+  /* Responsive */
+  @media (max-width: 720px) {
+    .main { flex-direction: column; }
+    .sidebar { width: 100%; max-width: none; border-left: none; border-top: 1px solid var(--border); max-height: 42vh; }
+    canvas#display { max-height: 50vh; }
+    h1 { font-size: 14px; }
+    .subtitle { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">
+  Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+
+<div class="app">
+  <div class="top-bar">
+    <div class="title-block">
+      <h1>Reaction-Diffusion Lab</h1>
+      <span class="subtitle">Gray-Scott Model &middot; Tap canvas to seed</span>
+    </div>
+    <div class="controls-group">
+      <button id="btn-play" class="accent"><span class="icon">⏸</span> Pause</button>
+      <button id="btn-export"><span class="icon">📷</span> Save</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="canvas-area">
+      <canvas id="display" width="512" height="512"></canvas>
+      <div class="canvas-label">Click or drag to inject activator &middot; 256×256 simulation</div>
+    </div>
+
+    <div class="sidebar">
+      <div>
+        <div class="section-title">Pattern Presets</div>
+        <div class="preset-grid" id="presets"></div>
+      </div>
+
+      <div>
+        <div class="section-title">Parameters</div>
+        <div class="slider-group">
+          <div class="slider-label"><span>Feed rate (f)</span><span class="val" id="feed-val">0.0545</span></div>
+          <input type="range" id="feed" min="0.01" max="0.1" step="0.0005" value="0.0545">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span>Kill rate (k)</span><span class="val" id="kill-val">0.062</span></div>
+          <input type="range" id="kill" min="0.02" max="0.08" step="0.0005" value="0.062">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span>Diffusion A</span><span class="val" id="da-val">1.00</span></div>
+          <input type="range" id="da" min="0.1" max="2.0" step="0.05" value="1.0">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span>Diffusion B</span><span class="val" id="db-val">0.50</span></div>
+          <input type="range" id="db" min="0.1" max="1.0" step="0.02" value="0.5">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span>Time step (dt)</span><span class="val" id="dt-val">1.0</span></div>
+          <input type="range" id="dt" min="0.2" max="2.0" step="0.1" value="1.0">
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Actions</div>
+        <div class="preset-grid">
+          <button id="btn-reset" class="accent2"><span class="icon">↺</span> Reset preset</button>
+          <button id="btn-clear"><span class="icon">🗑</span> Clear all</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">About</div>
+        <div class="info-box">
+          <strong>Gray-Scott</strong> is a reaction-diffusion system: two chemicals spread across a surface while reacting. Tiny parameter changes produce radically different natural-looking patterns — from coral reefs to zebra stripes to bacterial colonies. Discovered by scientists Gray and Scott in 1983, popularised by Pearson’s 1993 classification of pattern types α through μ.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // === Simulation parameters ===
+  const W = 256, H = 256; // sim resolution
+  const displayW = 512, displayH = 512;
+
+  let feed = 0.0545, kill = 0.062;
+  let Da = 1.0, Db = 0.5;
+  let dt = 1.0;
+  let running = true;
+  let brushSize = 10;
+  let currentPreset = 'coral';
+
+  // Buffers: Float32Arrays for A and B concentrations
+  let a = new Float32Array(W * H);
+  let b = new Float32Array(W * H);
+  let a2 = new Float32Array(W * H);
+  let b2 = new Float32Array(W * H);
+
+  // Canvas
+  const display = document.getElementById('display');
+  const ctx = display.getContext('2d', { willReadFrequently: true });
+  const imgData = ctx.createImageData(displayW, displayH);
+
+  // Offscreen sim canvases for ping-pong
+  const simCanvasA = document.createElement('canvas');
+  simCanvasA.width = W; simCanvasA.height = H;
+  const simCtxA = simCanvasA.getContext('2d', { willReadFrequently: true });
+
+  const simCanvasB = document.createElement('canvas');
+  simCanvasB.width = W; simCanvasB.height = H;
+  const simCtxB = simCanvasB.getContext('2d', { willReadFrequently: true });
+
+  // === Presets (Pearson pattern classification) ===
+  const PRESETS = {
+    coral: { name: 'Coral', feed: 0.0545, kill: 0.062, da: 1.0, db: 0.5, color: '#ff6b35' },
+    fingerprint: { name: 'Fingerprint', feed: 0.0367, kill: 0.0649, da: 1.0, db: 0.5, color: '#ffd166' },
+    spots: { name: 'Spots', feed: 0.035, kill: 0.065, da: 1.0, db: 0.5, color: '#06d6a0' },
+    waves: { name: 'Waves', feed: 0.025, kill: 0.06, da: 1.0, db: 0.5, color: '#118ab2' },
+    bacteria: { name: 'Bacteria', feed: 0.046, kill: 0.058, da: 1.0, db: 0.5, color: '#ef476f' },
+    spirals: { name: 'Spirals', feed: 0.018, kill: 0.051, da: 1.0, db: 0.5, color: '#9b5de5' },
+    chaos: { name: 'Chaos', feed: 0.026, kill: 0.053, da: 1.0, db: 0.5, color: '#f15bb5' }
+  };
+
+  // === Helpers ===
+  function idx(x, y) {
+    x = (x + W) % W;
+    y = (y + H) % H;
+    return y * W + x;
+  }
+
+  function clearAll() {
+    for (let i = 0; i < W * H; i++) { a[i] = 1; b[i] = 0; }
+  }
+
+  function seedRandom() {
+    clearAll();
+    const cx = Math.floor(W / 2);
+    const cy = Math.floor(H / 2);
+    const r = 15;
+    for (let y = cy - r; y <= cy + r; y++) {
+      for (let x = cx - r; x <= cx + r; x++) {
+        if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r) {
+          a[idx(x, y)] = 0.5;
+          b[idx(x, y)] = 0.25;
+        }
+      }
+    }
+    // sprinkle a few tiny seeds
+    for (let k = 0; k < 6; k++) {
+      const sx = Math.floor(Math.random() * (W - 20) + 10);
+      const sy = Math.floor(Math.random() * (H - 20) + 10);
+      for (let dy = -3; dy <= 3; dy++) {
+        for (let dx = -3; dx <= 3; dx++) {
+          a[idx(sx + dx, sy + dy)] = 0.5;
+          b[idx(sx + dx, sy + dy)] = 0.25;
+        }
+      }
+    }
+  }
+
+  function seedAt(nx, ny) {
+    const r = brushSize;
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const x = Math.floor(nx + dx);
+        const y = Math.floor(ny + dy);
+        if (x >= 0 && x < W && y >= 0 && y < H) {
+          if (dx * dx + dy * dy <= r * r) {
+            a[idx(x, y)] = 0.5;
+            b[idx(x, y)] = 0.25;
+          }
+        }
+      }
+    }
+  }
+
+  function laplacian(arr, x, y) {
+    // 9-point stencil with weights
+    return (
+      -1.0 * arr[idx(x, y)] +
+       0.2 * arr[idx(x - 1, y)] +
+       0.2 * arr[idx(x + 1, y)] +
+       0.2 * arr[idx(x, y - 1)] +
+       0.2 * arr[idx(x, y + 1)] +
+       0.05 * arr[idx(x - 1, y - 1)] +
+       0.05 * arr[idx(x + 1, y - 1)] +
+       0.05 * arr[idx(x - 1, y + 1)] +
+       0.05 * arr[idx(x + 1, y + 1)]
+    );
+  }
+
+  function simulate() {
+    if (!running) return;
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const i = idx(x, y);
+        const ai = a[i];
+        const bi = b[i];
+        const reaction = ai * bi * bi;
+        const lapA = laplacian(a, x, y);
+        const lapB = laplacian(b, x, y);
+        a2[i] = ai + (Da * lapA - reaction + feed * (1 - ai)) * dt;
+        b2[i] = bi + (Db * lapB + reaction - (kill + feed) * bi) * dt;
+        // Clamp small negatives to zero to avoid drift
+        if (a2[i] < 0) a2[i] = 0;
+        if (b2[i] < 0) b2[i] = 0;
+        if (a2[i] > 1) a2[i] = 1;
+        if (b2[i] > 1) b2[i] = 1;
+      }
+    }
+    // Swap
+    let tmp = a; a = a2; a2 = tmp;
+    tmp = b; b = b2; b2 = tmp;
+  }
+
+  // === Rendering: map b concentration to HSL palette ===
+  function renderDisplay() {
+    const scaleX = displayW / W;
+    const scaleY = displayH / H;
+    const data = imgData.data;
+
+    // For each display pixel, sample nearest sim pixel
+    for (let py = 0; py < displayH; py++) {
+      const sy = Math.min(H - 1, Math.floor(py / scaleY));
+      for (let px = 0; px < displayW; px++) {
+        const sx = Math.min(W - 1, Math.floor(px / scaleX));
+        const bi = b[sy * W + sx];
+        // Map 0..1 → deep blue → cyan → green → yellow → orange → red
+        // Using HSL: hue from 240° (blue) down to 0° (red)
+        const hue = (1 - Math.min(1, Math.max(0, bi))) * 260;
+        const sat = 80 + bi * 20;
+        const lit = 10 + bi * 55;
+        const rgb = hslToRgb(hue / 360, sat / 100, lit / 100);
+        const idx4 = (py * displayW + px) * 4;
+        data[idx4] = rgb[0];
+        data[idx4 + 1] = rgb[1];
+        data[idx4 + 2] = rgb[2];
+        data[idx4 + 3] = 255;
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+
+  function hslToRgb(h, s, l) {
+    let r, g, b;
+    if (s === 0) { r = g = b = l; }
+    else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  }
+
+  // === UI wiring ===
+  function updateSlider(id, valId, value) {
+    document.getElementById(id).value = value;
+    document.getElementById(valId).textContent = parseFloat(value).toFixed(id === 'dt' ? 1 : (id === 'feed' || id === 'kill' ? 4 : 2));
+  }
+
+  function loadPreset(key) {
+    const p = PRESETS[key];
+    if (!p) return;
+    currentPreset = key;
+    feed = p.feed; kill = p.kill; Da = p.da; Db = p.db;
+    updateSlider('feed', 'feed-val', feed);
+    updateSlider('kill', 'kill-val', kill);
+    updateSlider('da', 'da-val', Da);
+    updateSlider('db', 'db-val', Db);
+    // Highlight active preset
+    document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+    const btn = document.querySelector('[data-preset="' + key + '"]');
+    if (btn) btn.classList.add('active');
+    seedRandom();
+  }
+
+  const presetGrid = document.getElementById('presets');
+  Object.keys(PRESETS).forEach(key => {
+    const p = PRESETS[key];
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.dataset.preset = key;
+    btn.innerHTML = '<span class="swatch" style="background:' + p.color + '"></span>' + p.name;
+    btn.addEventListener('click', () => loadPreset(key));
+    presetGrid.appendChild(btn);
+  });
+
+  // Sliders
+  ['feed','kill','da','db','dt'].forEach(id => {
+    document.getElementById(id).addEventListener('input', e => {
+      const val = parseFloat(e.target.value);
+      if (id === 'feed') feed = val;
+      else if (id === 'kill') kill = val;
+      else if (id === 'da') Da = val;
+      else if (id === 'db') Db = val;
+      else if (id === 'dt') dt = val;
+      document.getElementById(id + '-val').textContent = val.toFixed(id === 'dt' ? 1 : (id === 'feed' || id === 'kill' ? 4 : 2));
+      // If user manually tweaks, they leave the preset zone
+      document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+    });
+  });
+
+  // Play/pause
+  const btnPlay = document.getElementById('btn-play');
+  btnPlay.addEventListener('click', () => {
+    running = !running;
+    btnPlay.innerHTML = running ? '<span class="icon">⏸</span> Pause' : '<span class="icon">▶</span> Play';
+    btnPlay.classList.toggle('accent', running);
+  });
+
+  // Reset
+  document.getElementById('btn-reset').addEventListener('click', () => loadPreset(currentPreset));
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    clearAll();
+    document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+  });
+
+  // Export
+  document.getElementById('btn-export').addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'reaction-diffusion-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.png';
+    link.href = display.toDataURL('image/png');
+    link.click();
+  });
+
+  // === Interaction: seed by click/drag ===
+  let isDrawing = false;
+  function getSimCoords(e) {
+    const rect = display.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = ((clientX - rect.left) / rect.width) * W;
+    const y = ((clientY - rect.top) / rect.height) * H;
+    return { x, y };
+  }
+  function onDown(e) { isDrawing = true; const c = getSimCoords(e); seedAt(c.x, c.y); }
+  function onMove(e) { if (!isDrawing) return; e.preventDefault(); const c = getSimCoords(e); seedAt(c.x, c.y); }
+  function onUp() { isDrawing = false; }
+
+  display.addEventListener('mousedown', onDown);
+  display.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  display.addEventListener('touchstart', onDown, { passive: false });
+  display.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('touchend', onUp);
+
+  // === Main loop ===
+  let stepsPerFrame = 4;
+  function tick() {
+    for (let i = 0; i < stepsPerFrame; i++) simulate();
+    renderDisplay();
+    requestAnimationFrame(tick);
+  }
+
+  // Init
+  loadPreset('coral');
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
