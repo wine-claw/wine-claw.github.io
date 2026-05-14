@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Music Box Composer</title>
+<style>
+  :root {
+    --wood-dark: #2a1a0f;
+    --wood-mid: #4a2e1a;
+    --wood-light: #6b4226;
+    --brass: #c5a059;
+    --brass-light: #e6c87a;
+    --gold: #ffd700;
+    --steel: #b0b0b0;
+    --steel-light: #d8d8d8;
+    --text: #f0e6d2;
+    --text-dim: #b8a88a;
+    --accent: #ff8c42;
+    --accent-dark: #d4652a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--wood-dark);
+    color: var(--text);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Wood grain background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 8px),
+      repeating-linear-gradient(0deg, rgba(60,30,10,0.4) 0px, rgba(40,20,5,0.6) 2px, rgba(60,30,10,0.4) 4px);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(180, 40, 40, 0.85);
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.4;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  header {
+    text-align: center;
+    padding: 18px 12px 6px;
+  }
+  header h1 {
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    color: var(--brass-light);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  header p {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .app-wrap {
+    width: 100%;
+    max-width: 520px;
+    padding: 0 12px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Canvas container */
+  .box-area {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1.15;
+    background: radial-gradient(ellipse at center, var(--wood-mid) 0%, var(--wood-dark) 70%);
+    border-radius: 16px;
+    border: 3px solid var(--brass);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.4);
+    overflow: hidden;
+    touch-action: none;
+  }
+  canvas#boxCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+  }
+
+  /* Comb glow overlay */
+  .comb-glow {
+    position: absolute;
+    bottom: 6%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 14%;
+    pointer-events: none;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.15s;
+    background: radial-gradient(ellipse at center, rgba(255,200,100,0.25) 0%, transparent 70%);
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.25);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(197,160,89,0.2);
+  }
+
+  .btn {
+    appearance: none;
+    border: none;
+    background: var(--brass);
+    color: var(--wood-dark);
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 var(--wood-light), 0 4px 8px rgba(0,0,0,0.3);
+    transition: transform 0.05s, box-shadow 0.05s;
+    user-select: none;
+  }
+  .btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 var(--wood-light), 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.secondary { background: var(--wood-light); color: var(--text); }
+  .btn.small { padding: 6px 12px; font-size: 0.8rem; }
+
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .slider-group input[type="range"] {
+    width: 120px;
+    accent-color: var(--brass);
+  }
+
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .legend {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    border: 1px solid rgba(197,160,89,0.15);
+  }
+  .legend strong { color: var(--brass-light); }
+
+  .status {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    min-height: 18px;
+  }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">
+  Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+
+<header>
+  <h1>🎵 Music Box Composer</h1>
+  <p>Place pins on the cylinder. Wind the key. Hear the tines sing.</p>
+</header>
+
+<div class="app-wrap">
+  <div class="box-area">
+    <canvas id="boxCanvas" width="520" height="600"></canvas>
+    <div class="comb-glow" id="combGlow"></div>
+  </div>
+
+  <div class="status" id="status">Tap the cylinder to add or remove pins</div>
+
+  <div class="controls">
+    <button class="btn primary" id="playBtn">▶ Play</button>
+    <button class="btn secondary" id="clearBtn">Clear</button>
+    <div class="slider-group">
+      <label for="tempo">Tempo</label>
+      <input type="range" id="tempo" min="30" max="180" value="80">
+      <span id="bpmVal">80</span>
+    </div>
+  </div>
+
+  <div class="presets">
+    <button class="btn small secondary" data-preset="twinkle">Twinkle</button>
+    <button class="btn small secondary" data-preset="happy">Happy Birthday</button>
+    <button class="btn small secondary" data-preset="ode">Ode to Joy</button>
+    <button class="btn small secondary" data-preset="fur">Für Elise</button>
+    <button class="btn small secondary" data-preset="scale">Scale</button>
+  </div>
+
+  <div class="legend">
+    <strong>How it works:</strong> A real music box has a rotating brass cylinder with tiny pins. As the cylinder turns, each pin plucks a steel tine on the comb, producing a note. The position of the pin around the cylinder determines <em>when</em> the note plays; the ring it sits on determines <em>which</em> note. Click anywhere on the cylinder to place a pin. Click again to remove.
+  </div>
+</div>
+
+<script>
+/* ========== CONFIGURATION ========== */
+const NOTES = [
+  { name: 'C4',  freq: 261.63 },
+  { name: 'D4',  freq: 293.66 },
+  { name: 'E4',  freq: 329.63 },
+  { name: 'F4',  freq: 349.23 },
+  { name: 'G4',  freq: 392.00 },
+  { name: 'A4',  freq: 440.00 },
+  { name: 'B4',  freq: 493.88 },
+  { name: 'C5',  freq: 523.25 },
+];
+const STEPS = 32;          // divisions around the cylinder
+const RING_INNER = 70;     // inner radius of note rings (px)
+const RING_OUTER = 230;    // outer radius of note rings (px)
+const CENTER_Y = 260;      // cylinder center Y
+const COMB_Y = 540;        // where the comb sits
+const COMB_HEIGHT = 55;    // visual height of comb
+const PLUCK_Y = CENTER_Y + RING_OUTER + 8; // pluck point just below outer ring
+
+/* ========== STATE ========== */
+let pins = new Set();          // "step,note" strings
+let playing = false;
+let bpm = 80;
+let rotation = 0;            // current rotation in radians
+let audioCtx = null;
+let lastStep = -1;
+let tineGlow = new Array(NOTES.length).fill(0); // per-tine animation intensity 0..1
+let isDragging = false;
+let dragValue = null;          // true = add, false = remove
+
+const canvas = document.getElementById('boxCanvas');
+const ctx = canvas.getContext('2d');
+const playBtn = document.getElementById('playBtn');
+const clearBtn = document.getElementById('clearBtn');
+const tempoSlider = document.getElementById('tempo');
+const bpmVal = document.getElementById('bpmVal');
+const status = document.getElementById('status');
+
+/* ========== AUDIO ========== */
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playNote(freq, velocity = 1) {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  // Tine timbre: triangle with lowpass for warmth
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq, now);
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(3000, now);
+  filter.Q.setValueAtTime(0.5, now);
+
+  // Pluck envelope
+  const atk = 0.005;
+  const decay = 0.35 + (1 / freq) * 80; // lower notes ring longer
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(velocity * 0.35, now + atk);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + atk + decay);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start(now);
+  osc.stop(now + atk + decay + 0.05);
+}
+
+/* ========== PRESETS ========== */
+const PRESETS = {
+  twinkle: [
+    [0,0],[2,0],[4,0],[6,2],
+    [8,2],[8,0],[10,0],[10,2],[12,2],[12,0],
+    [14,0],[14,2],[16,2],[16,0],[18,0],[18,2],
+    [20,2],[20,4],[22,4],[24,4],[26,4],
+    [28,2],[28,0],[30,0],[30,2]
+  ],
+  happy: [
+    [0,2],[2,2],[4,3],[4,2],[4,0],
+    [8,2],[8,3],[8,4],[12,2],[12,0],
+    [16,2],[16,3],[16,4],[20,2],
+    [22,2],[24,2],[26,3],[28,2],[30,0]
+  ],
+  ode: [
+    [0,3],[2,3],[4,4],[6,5],
+    [8,5],[8,4],[10,3],[12,2],
+    [14,2],[14,3],[16,4],[18,4],
+    [20,3],[22,3],[24,2],[26,2]
+  ],
+  fur: [
+    [2,5],[3,4],[4,5],[5,4],[6,5],[8,2],[10,5],[12,4],
+    [14,2],[16,5],[18,4],[20,2],[22,4],[24,3],[26,3],[28,2]
+  ],
+  scale: (() => {
+    const arr = [];
+    for (let i = 0; i < STEPS && i < NOTES.length; i++) arr.push([i, i]);
+    return arr;
+  })()
+};
+
+function loadPreset(name) {
+  pins.clear();
+  const data = PRESETS[name];
+  if (!data) return;
+  for (const [step, note] of data) {
+    if (step >= 0 && step < STEPS && note >= 0 && note < NOTES.length) {
+      pins.add(`${step},${note}`);
+    }
+  }
+  status.textContent = `Loaded "${name.replace(/-/g, ' ')}" — ${pins.size} pins`;
+  draw();
+}
+
+/* ========== INTERACTION ========== */
+function getPinAt(x, y) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const cx = canvas.width / 2;
+  const dx = (x - rect.left) * scaleX - cx;
+  const dy = (y - rect.top) * scaleY - CENTER_Y;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+
+  // Determine which ring
+  if (dist < RING_INNER - 12 || dist > RING_OUTER + 12) return null;
+  const ringSpacing = (RING_OUTER - RING_INNER) / NOTES.length;
+  const noteIdx = Math.floor((dist - RING_INNER) / ringSpacing);
+  if (noteIdx < 0 || noteIdx >= NOTES.length) return null;
+
+  // Determine which step
+  let angle = Math.atan2(dy, dx) - rotation;
+  while (angle < 0) angle += Math.PI * 2;
+  while (angle >= Math.PI * 2) angle -= Math.PI * 2;
+  const step = Math.round(angle / (Math.PI * 2) * STEPS) % STEPS;
+
+  return { step, note: noteIdx };
+}
+
+function togglePin(x, y, forceValue) {
+  const pin = getPinAt(x, y);
+  if (!pin) return null;
+  const key = `${pin.step},${pin.note}`;
+  const exists = pins.has(key);
+  let add;
+  if (forceValue !== undefined) add = forceValue;
+  else add = !exists;
+
+  if (add) pins.add(key);
+  else pins.delete(key);
+  status.textContent = `${NOTES[pin.note].name} at step ${pin.step + 1}` + (add ? ' — placed' : ' — removed');
+  draw();
+  return pin;
+}
+
+let _dragAction = null;
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const pin = getPinAt(e.clientX, e.clientY);
+  if (!pin) return;
+  const key = `${pin.step},${pin.note}`;
+  _dragAction = pins.has(key) ? 'remove' : 'add';
+  togglePin(e.clientX, e.clientY);
+  canvas.setPointerCapture(e.pointerId);
+});
+
+canvas.addEventListener('pointermove', e => {
+  if (!_dragAction) return;
+  e.preventDefault();
+  const pin = getPinAt(e.clientX, e.clientY);
+  if (!pin) return;
+  const key = `${pin.step},${pin.note}`;
+  if (_dragAction === 'add' && !pins.has(key)) { pins.add(key); draw(); }
+  if (_dragAction === 'remove' && pins.has(key)) { pins.delete(key); draw(); }
+});
+
+canvas.addEventListener('pointerup', e => { _dragAction = null; });
+canvas.addEventListener('pointercancel', e => { _dragAction = null; });
+
+/* Prevent scrolling while interacting with canvas */
+canvas.addEventListener('touchstart', e => { if (e.touches.length === 1) e.preventDefault(); }, { passive: false });
+
+/* ========== DRAWING ========== */
+function drawCylinder() {
+  const cx = canvas.width / 2;
+  const cy = CENTER_Y;
+
+  // Outer brass rim
+  ctx.beginPath();
+  ctx.arc(cx, cy, RING_OUTER + 14, 0, Math.PI * 2);
+  ctx.fillStyle = '#8a6e3e';
+  ctx.fill();
+  ctx.strokeStyle = 'var(--brass)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Cylinder body (wooden barrel)
+  ctx.beginPath();
+  ctx.arc(cx, cy, RING_OUTER + 10, 0, Math.PI * 2);
+  const barrelGrad = ctx.createRadialGradient(cx - 40, cy - 40, 20, cx, cy, RING_OUTER + 10);
+  barrelGrad.addColorStop(0, '#6b4226');
+  barrelGrad.addColorStop(1, '#2a1a0f');
+  ctx.fillStyle = barrelGrad;
+  ctx.fill();
+
+  // Decorative spokes / radial lines on barrel
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = 2;
+  for (let i = 0; i < STEPS; i++) {
+    const a = (i / STEPS) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * (RING_INNER - 5), Math.sin(a) * (RING_INNER - 5));
+    ctx.lineTo(Math.cos(a) * (RING_OUTER + 10), Math.sin(a) * (RING_OUTER + 10));
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Note rings
+  const spacing = (RING_OUTER - RING_INNER) / NOTES.length;
+  for (let n = 0; n < NOTES.length; n++) {
+    const r = RING_INNER + n * spacing + spacing / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(197,160,89,0.18)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Step tick marks
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+  for (let s = 0; s < STEPS; s++) {
+    const a = (s / STEPS) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * (RING_INNER - 6), Math.sin(a) * (RING_INNER - 6));
+    ctx.lineTo(Math.cos(a) * (RING_INNER - 2), Math.sin(a) * (RING_INNER - 2));
+    ctx.strokeStyle = 'rgba(197,160,89,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Pins
+  for (const key of pins) {
+    const [step, note] = key.split(',').map(Number);
+    const r = RING_INNER + note * spacing + spacing / 2;
+    const a = (step / STEPS) * Math.PI * 2 + rotation;
+    const px = cx + Math.cos(a) * r;
+    const py = cy + Math.sin(a) * r;
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#e6c87a';
+    ctx.shadowColor = 'rgba(255,200,100,0.6)';
+    ctx.shadowBlur = 6;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // tiny pin head
+    ctx.beginPath();
+    ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff8dc';
+    ctx.fill();
+  }
+
+  // Center axle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+  ctx.fillStyle = 'var(--brass)';
+  ctx.fill();
+  ctx.strokeStyle = '#8a6e3e';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawComb() {
+  const cx = canvas.width / 2;
+  const tineW = 24;
+  const gap = 4;
+  const totalW = NOTES.length * tineW + (NOTES.length - 1) * gap;
+  const startX = cx - totalW / 2;
+
+  // Comb base
+  ctx.fillStyle = '#8a8a8a';
+  ctx.fillRect(startX - 6, COMB_Y - 6, totalW + 12, 14);
+  ctx.strokeStyle = '#666';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(startX - 6, COMB_Y - 6, totalW + 12, 14);
+
+  // Tines
+  for (let n = 0; n < NOTES.length; n++) {
+    const x = startX + n * (tineW + gap);
+    const glow = tineGlow[n];
+
+    // Tine body
+    const grad = ctx.createLinearGradient(x, COMB_Y, x, COMB_Y + COMB_HEIGHT);
+    grad.addColorStop(0, glow > 0.1 ? '#fff0c0' : '#c0c0c0');
+    grad.addColorStop(1, glow > 0.1 ? '#e8d090' : '#a0a0a0');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x + 2, COMB_Y + 8, tineW - 4, COMB_HEIGHT - 8);
+
+    // Tine tip (rounded)
+    ctx.beginPath();
+    ctx.arc(x + tineW / 2, COMB_Y + COMB_HEIGHT - 2, (tineW - 4) / 2, 0, Math.PI, false);
+    ctx.fillStyle = glow > 0.1 ? '#fff8dc' : '#b0b0b0';
+    ctx.fill();
+
+    // Note labels
+    ctx.fillStyle = glow > 0.2 ? '#fff' : 'rgba(240,230,210,0.5)';
+    ctx.font = '11px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText(NOTES[n].name, x + tineW / 2, COMB_Y + COMB_HEIGHT + 14);
+
+    // Glow overlay on canvas
+    if (glow > 0.01) {
+      ctx.save();
+      ctx.globalAlpha = glow * 0.4;
+      ctx.fillStyle = '#ffcc66';
+      ctx.fillRect(x, COMB_Y + 4, tineW, COMB_HEIGHT + 4);
+      ctx.restore();
+    }
+  }
+}
+
+function drawPluckLine() {
+  const cx = canvas.width / 2;
+  const cy = CENTER_Y;
+  // Visual line where pins pluck
+  const a = Math.PI / 2; // bottom
+  const r1 = RING_INNER - 10;
+  const r2 = RING_OUTER + 18;
+  const x1 = cx + Math.cos(a) * r1;
+  const y1 = cy + Math.sin(a) * r1;
+  const x2 = cx + Math.cos(a) * r2;
+  const y2 = cy + Math.sin(a) * r2;
+
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = 'rgba(255,140,66,0.35)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Pluck point marker
+  ctx.beginPath();
+  ctx.arc(cx, cy + RING_OUTER + 14, 6, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,140,66,0.4)';
+  ctx.fill();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawCylinder();
+  drawPluckLine();
+  drawComb();
+}
+
+/* ========== ANIMATION & PLAYBACK ========== */
+let lastTime = 0;
+function step(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+  const dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  // Advance rotation based on BPM
+  if (playing) {
+    const revPerSec = bpm / 60; // revolutions per second
+    rotation += revPerSec * Math.PI * 2 * dt;
+
+    // Determine which step is at the pluck line (bottom = PI/2)
+    // Step s is at angle (s/STEPS)*2PI + rotation
+    // We want the step whose angle mod 2PI is closest to PI/2
+    const pluckAngle = Math.PI / 2;
+    let bestStep = -1;
+    let bestDiff = Infinity;
+    for (let s = 0; s < STEPS; s++) {
+      let a = (s / STEPS) * Math.PI * 2 + rotation;
+      a = ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      const diff = Math.abs(a - pluckAngle);
+      if (diff < bestDiff) { bestDiff = diff; bestStep = s; }
+    }
+
+    // Trigger if we just entered a new step's window (narrow hysteresis)
+    const stepAngleWidth = (Math.PI * 2) / STEPS;
+    if (bestStep !== lastStep && bestDiff < stepAngleWidth * 0.45) {
+      lastStep = bestStep;
+      for (let n = 0; n < NOTES.length; n++) {
+        if (pins.has(`${bestStep},${n}`)) {
+          playNote(NOTES[n].freq);
+          tineGlow[n] = 1;
+        }
+      }
+    }
+  }
+
+  // Decay tine glow
+  for (let i = 0; i < tineGlow.length; i++) {
+    tineGlow[i] *= 0.85;
+    if (tineGlow[i] < 0.01) tineGlow[i] = 0;
+  }
+
+  draw();
+  requestAnimationFrame(step);
+}
+
+/* ========== CONTROLS ========== */
+playBtn.addEventListener('click', () => {
+  ensureAudio();
+  playing = !playing;
+  playBtn.textContent = playing ? '⏸ Pause' : '▶ Play';
+  playBtn.classList.toggle('primary', !playing);
+  playBtn.classList.toggle('secondary', playing);
+  status.textContent = playing ? 'Playing… tap the cylinder to add pins while it turns' : 'Paused';
+  lastStep = -1;
+});
+
+clearBtn.addEventListener('click', () => {
+  pins.clear();
+  status.textContent = 'Cleared all pins';
+  draw();
+});
+
+tempoSlider.addEventListener('input', e => {
+  bpm = parseInt(e.target.value);
+  bpmVal.textContent = bpm;
+});
+
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', () => loadPreset(btn.dataset.preset));
+});
+
+/* ========== INIT ========== */
+draw();
+requestAnimationFrame(step);
+
+</script>
+</body>
+</html>
