@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Locksmith Debug</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #1a1f2e; color: #fff; font-family: sans-serif; overflow: hidden; }
+  #app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; }
+  .disclaimer { background: #2d1f1f; color: #e57373; font-size: 11px; padding: 6px; text-align: center; flex-shrink: 0; }
+  header { padding: 8px 14px; background: #242b3d; flex-shrink: 0; }
+  .canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .debug { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.7); padding: 4px 8px; font-size: 10px; font-family: monospace; color: #4fc3f7; z-index: 20; }
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; background: #242b3d; flex-shrink: 0; }
+  button { padding: 12px; border-radius: 8px; border: none; background: #3e4a5e; color: #fff; font-size: 13px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="disclaimer">DEBUG VERSION</div>
+  <header><h1>Locksmith Debug</h1></header>
+  <div class="canvas-wrap" id="wrap">
+    <canvas id="c"></canvas>
+    <div class="debug" id="dbg">Loading...</div>
+  </div>
+  <div class="controls">
+    <button onclick="init()">Start</button>
+    <button onclick="toggleSluice()">Toggle Upper Sluice</button>
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const dbg = document.getElementById('dbg');
+let W, H, state = null;
+
+function resize() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  W = rect.width;
+  H = rect.height;
+  canvas.width = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+  dbg.innerText = `CSS: ${W.toFixed(0)}x${H.toFixed(0)} | Canvas: ${canvas.width}x${canvas.height} | DPR: ${window.devicePixelRatio} | State: ${state ? 'yes' : 'no'}`;
+}
+
+window.addEventListener('resize', resize);
+requestAnimationFrame(() => { resize(); setTimeout(resize, 100); });
+
+function draw() {
+  if (!W || !H) return;
+  ctx.fillStyle = '#1a1f2e';
+  ctx.fillRect(0, 0, W, H);
+  
+  const groundY = H * 0.88;
+  ctx.fillStyle = '#3e4a5e';
+  ctx.fillRect(0, groundY, W, H - groundY);
+  
+  const wallX1 = W * 0.30;
+  const wallX2 = W * 0.70;
+  ctx.fillStyle = '#5c6b7f';
+  ctx.fillRect(wallX1 - 5, H*0.12, 10, groundY - H*0.12);
+  ctx.fillRect(wallX2 - 5, H*0.12, 10, groundY - H*0.12);
+  
+  // Water in chamber
+  const waterY = groundY - (groundY - H*0.15) * (state ? state.chamberLevel : 0.3);
+  ctx.fillStyle = 'rgba(79,195,247,0.4)';
+  ctx.fillRect(wallX1, waterY, wallX2 - wallX1, groundY - waterY);
+  
+  // Boat
+  if (state) {
+    const bx = W * 0.5;
+    const by = waterY - 10;
+    ctx.fillStyle = '#ffb74d';
+    ctx.beginPath();
+    ctx.ellipse(bx, by, 18, 7, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function init() {
+  state = { chamberLevel: 0.2, upperSluice: false };
+  resize();
+  draw();
+}
+
+function toggleSluice() {
+  if (!state) return;
+  state.upperSluice = !state.upperSluice;
+  state.chamberLevel = Math.min(0.7, state.chamberLevel + 0.1);
+  draw();
+}
+
+// Draw preview immediately
+setTimeout(() => { resize(); draw(); }, 100);
+</script>
+</body>
+</html>
