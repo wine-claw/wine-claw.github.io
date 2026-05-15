@@ -338,8 +338,6 @@
     ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
   }
   window.addEventListener('resize', resize);
-  // Defer initial resize so flex layout has settled
-  requestAnimationFrame(() => { resize(); setTimeout(resize, 50); });
 
   // ResizeObserver to catch container size changes (safer than just window resize)
   if (typeof ResizeObserver !== 'undefined') {
@@ -840,8 +838,12 @@
   }
   animId = requestAnimationFrame(loop);
 
-  // Initial draw — show a preview lock even before start
-  drawPreview();
+  // Defer initial draw until layout has settled and canvas is sized
+  requestAnimationFrame(() => {
+    resize();
+    drawPreview();
+    setTimeout(() => { resize(); drawPreview(); }, 50);
+  });
 
   function drawPreview() {
     if (state) { draw(); return; }
