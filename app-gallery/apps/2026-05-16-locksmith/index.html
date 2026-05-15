@@ -338,7 +338,13 @@
     ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
   }
   window.addEventListener('resize', resize);
-  resize();
+  // Defer initial resize so flex layout has settled
+  requestAnimationFrame(() => { resize(); setTimeout(resize, 50); });
+
+  // ResizeObserver to catch container size changes (safer than just window resize)
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => resize()).observe(canvas.parentElement);
+  }
 
   // --- Level init ---
   function initLevel(idx) {
@@ -803,6 +809,7 @@
 
   document.getElementById('startBtn').addEventListener('click', () => {
     document.getElementById('startOverlay').classList.remove('show');
+    resize(); // ensure canvas has correct size after overlay hides
     initLevel(currentLevel);
   });
 
@@ -833,8 +840,37 @@
   }
   animId = requestAnimationFrame(loop);
 
-  // Initial draw (blank lock)
-  draw();
+  // Initial draw — show a preview lock even before start
+  drawPreview();
+
+  function drawPreview() {
+    if (state) { draw(); return; }
+    ctx.clearRect(0, 0, W, H);
+    // Draw empty lock structure so the canvas isn't blank
+    const stone = '#5c6b7f';
+    const stoneDark = '#3e4a5e';
+    const groundY = H * 0.88;
+    ctx.fillStyle = '#1a1f2e';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = stoneDark;
+    ctx.fillRect(0, groundY, W, H - groundY);
+    const wallX1 = W * 0.30;
+    const wallX2 = W * 0.70;
+    const wallW = 10;
+    ctx.fillStyle = stone;
+    ctx.fillRect(wallX1 - wallW/2, H*0.12, wallW, groundY - H*0.12);
+    ctx.fillRect(wallX2 - wallW/2, H*0.12, wallW, groundY - H*0.12);
+    ctx.fillStyle = '#74849a';
+    ctx.fillRect(wallX1 - wallW/2 - 2, H*0.12, wallW + 4, 6);
+    ctx.fillRect(wallX2 - wallW/2 - 2, H*0.12, wallW + 4, 6);
+    // Water hint
+    const waterY = groundY - (groundY - H*0.15) * 0.45;
+    const grad = ctx.createLinearGradient(0, waterY, 0, groundY);
+    grad.addColorStop(0, 'rgba(79,195,247,0.25)');
+    grad.addColorStop(1, 'rgba(41,182,246,0.4)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(wallX1, waterY, wallX2 - wallX1, groundY - waterY);
+  }
 
 })();
 </script>
