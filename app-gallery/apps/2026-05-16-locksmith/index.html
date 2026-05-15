@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+  <title>Locksmith — Canal Lock Puzzle</title>
+  <style>
+    :root {
+      --bg: #1a1f2e;
+      --panel: #242b3d;
+      --accent: #4fc3f7;
+      --accent2: #81c784;
+      --warn: #ffb74d;
+      --danger: #e57373;
+      --text: #e0e6f0;
+      --text2: #9aa3b2;
+      --water: rgba(79, 195, 247, 0.35);
+      --water-deep: rgba(41, 182, 246, 0.55);
+      --stone: #5c6b7f;
+      --stone-dark: #3e4a5e;
+      --wood: #8d6e63;
+      --wood-dark: #6d4c41;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+    /* Disclaimer banner */
+    .disclaimer {
+      background: #2d1f1f;
+      color: #e57373;
+      font-size: 11px;
+      padding: 6px 10px;
+      text-align: center;
+      line-height: 1.3;
+      border-bottom: 1px solid #3e2a2a;
+      flex-shrink: 0;
+    }
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background: var(--panel);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    header h1 {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    header h1 span {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .score-strip {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .score-strip strong {
+      color: var(--accent2);
+    }
+    /* Canvas container */
+    .canvas-wrap {
+      flex: 1;
+      position: relative;
+      background: linear-gradient(180deg, #1a1f2e 0%, #16202e 100%);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    /* Overlay messages */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 14, 22, 0.85);
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .overlay-box {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 22px 24px;
+      max-width: 340px;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+    .overlay-box h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+    .overlay-box p {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 22px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+      background: var(--accent);
+      transition: transform 0.1s, opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn.secondary {
+      background: var(--stone-dark);
+      margin-left: 8px;
+    }
+    .btn.warn { background: var(--warn); color: #1a1f2e; }
+    .stars {
+      font-size: 26px;
+      margin: 6px 0 12px;
+      letter-spacing: 4px;
+    }
+    /* Controls */
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--panel);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .ctrl-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ctrl-group h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text2);
+      margin-bottom: 2px;
+    }
+    .ctrl-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--stone-dark);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    .ctrl-btn:active { transform: scale(0.97); }
+    .ctrl-btn.open {
+      background: rgba(129, 199, 132, 0.18);
+      border-color: rgba(129, 199, 132, 0.4);
+      color: var(--accent2);
+    }
+    .ctrl-btn .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 4px var(--danger);
+      transition: all 0.3s;
+    }
+    .ctrl-btn.open .dot {
+      background: var(--accent2);
+      box-shadow: 0 0 6px var(--accent2);
+    }
+    .ctrl-btn .label-small {
+      font-size: 10px;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+    /* Hint bar */
+    .hint-bar {
+      padding: 6px 12px;
+      font-size: 12px;
+      color: var(--text2);
+      background: rgba(0,0,0,0.25);
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .hint-bar strong { color: var(--accent); }
+    /* Level selector */
+    .level-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .level-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--stone);
+      transition: all 0.2s;
+    }
+    .level-dot.active { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .level-dot.locked { opacity: 0.3; }
+    .level-dot.done { background: var(--accent2); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="disclaimer">
+      Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+    </div>
+    <header>
+      <h1><span>Lock</span>smith</h1>
+      <div class="score-strip">
+        <span>Moves: <strong id="moveCount">0</strong></span>
+        <span>Water: <strong id="waterUsed">0</strong>%</span>
+      </div>
+    </header>
+    <div class="canvas-wrap">
+      <canvas id="lockCanvas"></canvas>
+      <div class="overlay" id="startOverlay">
+        <div class="overlay-box">
+          <h2>Locksmith</h2>
+          <p>Operate a canal lock to move boats between different water levels.<br><br>
+          Open <strong>sluices</strong> to fill or drain the chamber. Open <strong>gates</strong> to move boats through — but only when water levels are equal on both sides.<br><br>
+          Conserve water. Minimise moves. Get every boat through.</p>
+          <button class="btn" id="startBtn">Start Level 1</button>
+          <div class="level-dots" id="levelDots"></div>
+        </div>
+      </div>
+      <div class="overlay" id="winOverlay">
+        <div class="overlay-box">
+          <h2>Level Complete!</h2>
+          <div class="stars" id="winStars">⭐⭐⭐</div>
+          <p id="winMsg">Great work, lock keeper.</p>
+          <button class="btn" id="nextLevelBtn">Next Level</button>
+          <button class="btn secondary" id="retryBtn">Retry</button>
+        </div>
+      </div>
+    </div>
+    <div class="hint-bar" id="hintBar">Tap sluices to fill or drain the chamber</div>
+    <div class="controls">
+      <div class="ctrl-group">
+        <h3>Upper sluice</h3>
+        <button class="ctrl-btn" id="btnUpperSluice">
+          <span class="dot"></span>
+          <span id="lblUpperSluice">Closed</span>
+        </button>
+        <h3 style="margin-top:4px">Upper gate</h3>
+        <button class="ctrl-btn" id="btnUpperGate">
+          <span class="dot"></span>
+          <span id="lblUpperGate">Closed</span>
+        </button>
+      </div>
+      <div class="ctrl-group">
+        <h3>Lower sluice</h3>
+        <button class="ctrl-btn" id="btnLowerSluice">
+          <span class="dot"></span>
+          <span id="lblLowerSluice">Closed</span>
+        </button>
+        <h3 style="margin-top:4px">Lower gate</h3>
+        <button class="ctrl-btn" id="btnLowerGate">
+          <span class="dot"></span>
+          <span id="lblLowerGate">Closed</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function() {
+  'use strict';
+
+  // --- Game State ---
+  const LEVELS = [
+    { name: "The Basics", upperLevel: 0.7, lowerLevel: 0.2, boatStart: 'lower', goal: 'upper', desc: "Move the boat to the upper canal." },
+    { name: "The Return", upperLevel: 0.7, lowerLevel: 0.2, boatStart: 'upper', goal: 'lower', desc: "Now bring it back down." },
+    { name: "Dry Run", upperLevel: 0.7, lowerLevel: 0.2, boatStart: 'chamber', goal: 'upper', chamberDry: true, desc: "The chamber is empty. Fill it carefully." },
+    { name: "Two-Way Traffic", upperLevel: 0.6, lowerLevel: 0.2, boatStart: 'lower', goal: 'upper', extraBoat: 'upper', desc: "Two boats, one lock. Get yours through." },
+    { name: "The Deep Lock", upperLevel: 0.85, lowerLevel: 0.15, boatStart: 'lower', goal: 'upper', desc: "A bigger lift. Watch your water." },
+    { name: "Staircase", upperLevel: 0.7, lowerLevel: 0.3, boatStart: 'lower', goal: 'upper', desc: "The levels are closer — precision matters." }
+  ];
+
+  let currentLevel = 0;
+  let state = null;
+  let animId = null;
+  let lastTime = 0;
+  let particles = [];
+  let unlockedLevel = 0;
+
+  // --- Canvas Setup ---
+  const canvas = document.getElementById('lockCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * window.devicePixelRatio;
+    canvas.height = H * window.devicePixelRatio;
+    ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // --- Level init ---
+  function initLevel(idx) {
+    const spec = LEVELS[idx];
+    state = {
+      level: idx,
+      upperLevel: spec.upperLevel,
+      lowerLevel: spec.lowerLevel,
+      chamberLevel: spec.chamberDry ? 0.05 : spec.lowerLevel,
+      upperSluice: false,
+      lowerSluice: false,
+      upperGate: false,
+      lowerGate: false,
+      boat: {
+        section: spec.boatStart, // 'upper', 'chamber', 'lower'
+        y: 0, // computed each frame
+        x: 0
+      },
+      extraBoat: spec.extraBoat ? {
+        section: spec.extraBoat,
+        y: 0, x: 0
+      } : null,
+      moves: 0,
+      waterUsed: 0, // cumulative water moved through sluices
+      maxWater: 0, // for scoring
+      goal: spec.goal,
+      won: false,
+      wonAt: 0,
+      time: 0
+    };
+    // Precompute max possible water for scoring baseline
+    state.maxWater = Math.abs(state.upperLevel - state.lowerLevel) * 1.5;
+    updateUI();
+    document.getElementById('hintBar').textContent = spec.desc;
+    document.getElementById('winOverlay').classList.remove('show');
+  }
+
+  // --- Physics ---
+  function updatePhysics(dt) {
+    if (!state || state.won) return;
+    const flowRate = 0.35; // chamber level change per second when sluice open
+    let flow = 0;
+    if (state.upperSluice && state.chamberLevel < state.upperLevel) {
+      flow += flowRate * dt;
+    }
+    if (state.lowerSluice && state.chamberLevel > state.lowerLevel) {
+      flow -= flowRate * dt;
+    }
+    const prevLevel = state.chamberLevel;
+    state.chamberLevel += flow;
+    state.chamberLevel = Math.max(state.lowerLevel, Math.min(state.upperLevel, state.chamberLevel));
+    state.waterUsed += Math.abs(state.chamberLevel - prevLevel);
+
+    // Water particles from sluices
+    if (state.upperSluice && state.chamberLevel < state.upperLevel && Math.random() < 0.3) {
+      spawnParticles('upper-sluice');
+    }
+    if (state.lowerSluice && state.chamberLevel > state.lowerLevel && Math.random() < 0.3) {
+      spawnParticles('lower-sluice');
+    }
+
+    // Boat physics
+    updateBoat(state.boat, dt);
+    if (state.extraBoat) updateBoat(state.extraBoat, dt);
+
+    // Win condition
+    if (!state.won && state.boat.section === state.goal) {
+      state.won = true;
+      state.wonAt = state.time;
+      if (currentLevel >= unlockedLevel) unlockedLevel = currentLevel + 1;
+      setTimeout(showWin, 600);
+    }
+
+    state.time += dt;
+  }
+
+  function updateBoat(boat, dt) {
+    const section = boat.section;
+    let targetY;
+    if (section === 'upper') targetY = state.upperLevel;
+    else if (section === 'chamber') targetY = state.chamberLevel;
+    else targetY = state.lowerLevel;
+    // Smooth float
+    boat.y += (targetY - boat.y) * 3 * dt;
+
+    // Target X positions
+    let targetX;
+    if (section === 'upper') targetX = 0.18;
+    else if (section === 'chamber') targetX = 0.5;
+    else targetX = 0.82;
+    boat.x += (targetX - boat.x) * 2 * dt;
+  }
+
+  function spawnParticles(type) {
+    const count = type === 'upper-sluice' ? 2 : 2;
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: type === 'upper-sluice' ? 0.35 + (Math.random()-0.5)*0.02 : 0.65 + (Math.random()-0.5)*0.02,
+        y: type === 'upper-sluice' ? state.upperLevel - 0.02 : state.lowerLevel + 0.02,
+        vx: (Math.random()-0.5)*0.01,
+        vy: type === 'upper-sluice' ? 0.02 + Math.random()*0.03 : -0.02 - Math.random()*0.03,
+        life: 0.8 + Math.random()*0.6,
+        maxLife: 1.4,
+        size: 1.5 + Math.random()*2
+      });
+    }
+  }
+
+  // --- Drawing ---
+  function draw() {
+    if (!state) return;
+    ctx.clearRect(0, 0, W, H);
+    const stone = '#5c6b7f';
+    const stoneDark = '#3e4a5e';
+    const stoneLight = '#74849a';
+    const water = 'rgba(79,195,247,0.35)';
+    const waterDeep = 'rgba(41,182,246,0.55)';
+    const wood = '#8d6e63';
+    const woodDark = '#5d4037';
+
+    const groundY = H * 0.88;
+    const waterBase = groundY;
+
+    // Background sky
+    ctx.fillStyle = '#1a1f2e';
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw ground/stone bed
+    ctx.fillStyle = stoneDark;
+    ctx.fillRect(0, groundY, W, H - groundY);
+    // Stone texture lines
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < W; i += 30) {
+      ctx.beginPath();
+      ctx.moveTo(i, groundY);
+      ctx.lineTo(i + 15, H);
+      ctx.stroke();
+    }
+
+    // Canal walls
+    const wallX1 = W * 0.30;
+    const wallX2 = W * 0.70;
+    const wallW = 10;
+
+    // Draw water in sections
+    function drawWater(level, left, right) {
+      const waterY = waterBase - (waterBase - H*0.15) * level;
+      const h = waterBase - waterY;
+      if (h <= 0) return;
+      // Gradient
+      const grad = ctx.createLinearGradient(0, waterY, 0, waterBase);
+      grad.addColorStop(0, water);
+      grad.addColorStop(1, waterDeep);
+      ctx.fillStyle = grad;
+      ctx.fillRect(left, waterY, right - left, h);
+      // Surface line
+      ctx.strokeStyle = 'rgba(79,195,247,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(left, waterY);
+      for (let x = left; x <= right; x += 8) {
+        ctx.lineTo(x, waterY + Math.sin(x*0.05 + state.time*3)*1.5);
+      }
+      ctx.stroke();
+    }
+
+    drawWater(state.upperLevel, 0, wallX1);
+    drawWater(state.chamberLevel, wallX1, wallX2);
+    drawWater(state.lowerLevel, wallX2, W);
+
+    // Stone walls
+    ctx.fillStyle = stone;
+    ctx.fillRect(wallX1 - wallW/2, H*0.12, wallW, groundY - H*0.12);
+    ctx.fillRect(wallX2 - wallW/2, H*0.12, wallW, groundY - H*0.12);
+    // Wall tops
+    ctx.fillStyle = stoneLight;
+    ctx.fillRect(wallX1 - wallW/2 - 2, H*0.12, wallW + 4, 6);
+    ctx.fillRect(wallX2 - wallW/2 - 2, H*0.12, wallW + 4, 6);
+
+    // Upper gate (between upper canal and chamber)
+    drawGate(wallX1, state.upperGate, state.upperLevel, state.chamberLevel, 'upper');
+    // Lower gate (between chamber and lower canal)
+    drawGate(wallX2, state.lowerGate, state.chamberLevel, state.lowerLevel, 'lower');
+
+    // Boats
+    drawBoat(state.boat, '#ffb74d');
+    if (state.extraBoat) drawBoat(state.extraBoat, '#ce93d8');
+
+    // Sluice water streams
+    if (state.upperSluice && state.chamberLevel < state.upperLevel) {
+      drawSluiceStream(wallX1, state.upperLevel, state.chamberLevel, true);
+    }
+    if (state.lowerSluice && state.chamberLevel > state.lowerLevel) {
+      drawSluiceStream(wallX2, state.chamberLevel, state.lowerLevel, false);
+    }
+
+    // Particles
+    updateAndDrawParticles();
+
+    // Level label
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.font = 'bold 48px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText((state.level+1).toString(), W/2, H*0.25);
+  }
+
+  function drawGate(x, open, levelA, levelB, side) {
+    const stoneDark = '#3e4a5e';
+    const wood = '#8d6e63';
+    const woodDark = '#5d4037';
+    const groundY = H * 0.88;
+    const gateW = 14;
+    const gateMaxH = groundY - H*0.15;
+    const minLevel = Math.min(levelA, levelB);
+    const waterY = groundY - (groundY - H*0.15) * minLevel;
+
+    // Gate frame
+    ctx.fillStyle = stoneDark;
+    ctx.fillRect(x - gateW/2 - 2, H*0.15, gateW + 4, groundY - H*0.15);
+
+    // Gate leaf (drawn as a set of planks)
+    const openOffset = open ? gateMaxH * 0.7 : 0;
+    const plankCount = 6;
+    const plankH = (waterY - H*0.15 - openOffset) / plankCount;
+    for (let i = 0; i < plankCount; i++) {
+      const py = H*0.15 + openOffset + i * plankH;
+      if (py >= waterY - 2) break;
+      ctx.fillStyle = i % 2 === 0 ? wood : woodDark;
+      ctx.fillRect(x - gateW/2 + 1, py, gateW - 2, plankH - 1);
+    }
+
+    // Water gap indicator when open and levels differ
+    if (open && Math.abs(levelA - levelB) > 0.02) {
+      const midY = (groundY - (groundY - H*0.15)*levelA + groundY - (groundY - H*0.15)*levelB) / 2;
+      ctx.fillStyle = 'rgba(229,115,115,0.6)';
+      ctx.beginPath();
+      ctx.moveTo(x - 18, midY - 8);
+      ctx.lineTo(x - 8, midY);
+      ctx.lineTo(x - 18, midY + 8);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x + 18, midY - 8);
+      ctx.lineTo(x + 8, midY);
+      ctx.lineTo(x + 18, midY + 8);
+      ctx.fill();
+    }
+  }
+
+  function drawBoat(boat, color) {
+    const groundY = H * 0.88;
+    const bx = W * boat.x;
+    const by = groundY - (groundY - H*0.15) * boat.y - 6;
+    const bw = 36;
+    const bh = 14;
+
+    // Hull
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(bx - bw/2, by);
+    ctx.quadraticCurveTo(bx - bw/3, by + bh, bx, by + bh);
+    ctx.quadraticCurveTo(bx + bw/3, by + bh, bx + bw/2, by);
+    ctx.lineTo(bx + bw/2 - 4, by - 2);
+    ctx.lineTo(bx - bw/2 + 4, by - 2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cabin
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(bx - 8, by - 8, 16, 6);
+
+    // Flag
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bx + 6, by - 8);
+    ctx.lineTo(bx + 6, by - 16);
+    ctx.stroke();
+    ctx.fillStyle = '#e57373';
+    ctx.beginPath();
+    ctx.moveTo(bx + 6, by - 16);
+    ctx.lineTo(bx + 14, by - 13);
+    ctx.lineTo(bx + 6, by - 10);
+    ctx.fill();
+
+    // Little wake dots
+    if (Math.abs(boat.y - (boat.section==='upper'?state.upperLevel:boat.section==='chamber'?state.chamberLevel:state.lowerLevel)) > 0.01) {
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      for (let i = 0; i < 3; i++) {
+        const wx = bx + (Math.random()-0.5)*20;
+        const wy = by + bh + Math.random()*4;
+        ctx.beginPath();
+        ctx.arc(wx, wy, 1, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function drawSluiceStream(x, highLevel, lowLevel, fromUpper) {
+    const groundY = H * 0.88;
+    const highY = groundY - (groundY - H*0.15) * highLevel;
+    const lowY = groundY - (groundY - H*0.15) * lowLevel;
+    const grad = ctx.createLinearGradient(x - 6, highY, x + 6, lowY);
+    grad.addColorStop(0, 'rgba(79,195,247,0.5)');
+    grad.addColorStop(1, 'rgba(41,182,246,0.2)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(x - 3, highY);
+    ctx.lineTo(x + 3, highY);
+    ctx.lineTo(x + 5, lowY);
+    ctx.lineTo(x - 5, lowY);
+    ctx.closePath();
+    ctx.fill();
+    // Bubbles
+    for (let i = 0; i < 4; i++) {
+      const t = (state.time * 2 + i * 0.7) % 1;
+      const bx = x + (Math.sin(t * 10 + i)*3);
+      const by = highY + (lowY - highY) * t;
+      ctx.fillStyle = `rgba(255,255,255,${0.4*(1-t)})`;
+      ctx.beginPath();
+      ctx.arc(bx, by, 1.2, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function updateAndDrawParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.008; // gravity
+      p.life -= 0.016;
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+      const alpha = p.life / p.maxLife;
+      const px = W * p.x;
+      const py = H * 0.88 - (H*0.88 - H*0.15) * p.y;
+      ctx.fillStyle = `rgba(179,229,252,${alpha * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(px, py, p.size * alpha, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  // --- Interaction ---
+  function toggleUpperSluice() {
+    if (!state || state.won) return;
+    state.upperSluice = !state.upperSluice;
+    state.moves++;
+    updateUI();
+  }
+  function toggleLowerSluice() {
+    if (!state || state.won) return;
+    state.lowerSluice = !state.lowerSluice;
+    state.moves++;
+    updateUI();
+  }
+  function toggleUpperGate() {
+    if (!state || state.won) return;
+    if (Math.abs(state.upperLevel - state.chamberLevel) > 0.03) {
+      flashHint("Water levels must be equal!");
+      return;
+    }
+    state.upperGate = !state.upperGate;
+    state.moves++;
+    updateUI();
+    // Move boat if in gate zone
+    tryMoveBoat('upper');
+  }
+  function toggleLowerGate() {
+    if (!state || state.won) return;
+    if (Math.abs(state.lowerLevel - state.chamberLevel) > 0.03) {
+      flashHint("Water levels must be equal!");
+      return;
+    }
+    state.lowerGate = !state.lowerGate;
+    state.moves++;
+    updateUI();
+    tryMoveBoat('lower');
+  }
+
+  function tryMoveBoat(gate) {
+    // If a boat is at the gate and gate is open, move it
+    const boat = state.boat;
+    if (gate === 'upper') {
+      if (boat.section === 'upper' && state.upperGate) boat.section = 'chamber';
+      else if (boat.section === 'chamber' && state.upperGate) boat.section = 'upper';
+    } else {
+      if (boat.section === 'lower' && state.lowerGate) boat.section = 'chamber';
+      else if (boat.section === 'chamber' && state.lowerGate) boat.section = 'lower';
+    }
+    if (state.extraBoat) {
+      const eb = state.extraBoat;
+      if (gate === 'upper') {
+        if (eb.section === 'upper' && state.upperGate) eb.section = 'chamber';
+        else if (eb.section === 'chamber' && state.upperGate) eb.section = 'upper';
+      } else {
+        if (eb.section === 'lower' && state.lowerGate) eb.section = 'chamber';
+        else if (eb.section === 'chamber' && state.lowerGate) eb.section = 'lower';
+      }
+    }
+  }
+
+  function flashHint(msg) {
+    const bar = document.getElementById('hintBar');
+    const old = bar.textContent;
+    bar.textContent = msg;
+    bar.style.color = 'var(--danger)';
+    setTimeout(() => { bar.textContent = old; bar.style.color = ''; }, 1800);
+  }
+
+  // --- UI ---
+  function updateUI() {
+    if (!state) return;
+    document.getElementById('moveCount').textContent = state.moves;
+    const pct = Math.min(100, Math.round((state.waterUsed / state.maxWater) * 100));
+    document.getElementById('waterUsed').textContent = pct;
+
+    setBtn('btnUpperSluice', 'lblUpperSluice', state.upperSluice);
+    setBtn('btnLowerSluice', 'lblLowerSluice', state.lowerSluice);
+    setBtn('btnUpperGate', 'lblUpperGate', state.upperGate);
+    setBtn('btnLowerGate', 'lblLowerGate', state.lowerGate);
+  }
+  function setBtn(id, lblId, open) {
+    const btn = document.getElementById(id);
+    const lbl = document.getElementById(lblId);
+    btn.classList.toggle('open', open);
+    lbl.textContent = open ? 'Open' : 'Closed';
+  }
+
+  function showWin() {
+    const overlay = document.getElementById('winOverlay');
+    const stars = document.getElementById('winStars');
+    const msg = document.getElementById('winMsg');
+
+    // Star rating: 3 stars if water used < 50% of max, 2 if < 100%, 1 otherwise
+    const ratio = state.waterUsed / state.maxWater;
+    let starCount = ratio < 0.5 ? 3 : ratio < 1.0 ? 2 : 1;
+    if (state.moves <= 4 && state.level <= 1) starCount = Math.max(starCount, 2);
+    stars.textContent = '⭐'.repeat(starCount) + '☆'.repeat(3 - starCount);
+
+    msg.textContent = `Moves: ${state.moves} · Water used: ${Math.round((state.waterUsed/state.maxWater)*100)}%`;
+
+    const nextBtn = document.getElementById('nextLevelBtn');
+    if (currentLevel >= LEVELS.length - 1) {
+      nextBtn.textContent = 'Play Again';
+      nextBtn.onclick = () => { currentLevel = 0; initLevel(0); };
+    } else {
+      nextBtn.textContent = 'Next Level';
+      nextBtn.onclick = () => { currentLevel++; initLevel(currentLevel); };
+    }
+    overlay.classList.add('show');
+  }
+
+  // --- Event wiring ---
+  document.getElementById('btnUpperSluice').addEventListener('click', toggleUpperSluice);
+  document.getElementById('btnLowerSluice').addEventListener('click', toggleLowerSluice);
+  document.getElementById('btnUpperGate').addEventListener('click', toggleUpperGate);
+  document.getElementById('btnLowerGate').addEventListener('click', toggleLowerGate);
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    document.getElementById('startOverlay').classList.remove('show');
+    initLevel(currentLevel);
+  });
+
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    initLevel(currentLevel);
+  });
+
+  // Level dots
+  function renderLevelDots() {
+    const container = document.getElementById('levelDots');
+    container.innerHTML = '';
+    LEVELS.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'level-dot' + (i === currentLevel ? ' active' : i < unlockedLevel ? ' done' : ' locked');
+      container.appendChild(d);
+    });
+  }
+  renderLevelDots();
+
+  // --- Animation Loop ---
+  function loop(ts) {
+    if (!lastTime) lastTime = ts;
+    const dt = Math.min((ts - lastTime) / 1000, 0.05);
+    lastTime = ts;
+    updatePhysics(dt);
+    draw();
+    animId = requestAnimationFrame(loop);
+  }
+  animId = requestAnimationFrame(loop);
+
+  // Initial draw (blank lock)
+  draw();
+
+})();
+</script>
+</body>
+</html>

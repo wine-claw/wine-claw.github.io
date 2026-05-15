@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-15",
-    "title": "Music Box Composer",
-    "slug": "music-box-composer",
-    "publishedSlug": "2026-05-15-music-box-composer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-15-music-box-composer/"
+    "date": "2026-05-16",
+    "title": "Locksmith — Canal Lock Puzzle",
+    "slug": "locksmith",
+    "publishedSlug": "2026-05-16-locksmith",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-16-locksmith/"
   },
   "apps": [
+    {
+      "date": "2026-05-16",
+      "title": "Locksmith — Canal Lock Puzzle",
+      "slug": "locksmith",
+      "publishedSlug": "2026-05-16-locksmith",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-16-locksmith/",
+      "description": "Operate a canal lock to move boats between water levels. Open sluices to fill or drain the chamber, then open gates to let boats through — but only when water levels are equal. Conserve water and minimise moves across 6 levels."
+    },
     {
       "date": "2026-05-15",
       "title": "Music Box Composer",
