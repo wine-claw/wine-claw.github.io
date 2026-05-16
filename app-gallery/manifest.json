@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-16",
-    "title": "Locksmith — Canal Lock Puzzle",
-    "slug": "locksmith",
-    "publishedSlug": "2026-05-16-locksmith",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-16-locksmith/"
+    "date": "2026-05-17",
+    "title": "Photon Sailor",
+    "slug": "photon-sailor",
+    "publishedSlug": "2026-05-17-photon-sailor",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-17-photon-sailor/"
   },
   "apps": [
+    {
+      "date": "2026-05-17",
+      "title": "Photon Sailor",
+      "slug": "photon-sailor",
+      "publishedSlug": "2026-05-17-photon-sailor",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-17-photon-sailor/",
+      "description": "Solar sail navigation sandbox — pilot a light-driven spacecraft between planets using only photon pressure and gravity"
+    },
     {
       "date": "2026-05-16",
       "title": "Locksmith — Canal Lock Puzzle",
