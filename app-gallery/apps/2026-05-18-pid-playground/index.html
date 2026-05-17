@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>PID Playground — Control Systems Sandbox</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0b0f17;
+    --panel: #121825;
+    --panel2: #1a2332;
+    --accent: #0ea5e9;
+    --accent2: #f59e0b;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --beam: #475569;
+    --ball: #f97316;
+    --setpoint: #ef4444;
+    --grid: rgba(148,163,184,0.08);
+    --border: rgba(148,163,184,0.12);
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+  }
+  #disclaimer {
+    background: #1f2937;
+    border-bottom: 1px solid #374151;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: #9ca3af;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  #disclaimer strong { color: #d1d5db; }
+  #app {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+  }
+  #sim-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-right: 1px solid var(--border);
+  }
+  #controls-panel {
+    width: 320px;
+    min-width: 280px;
+    max-width: 100%;
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    border-left: 1px solid var(--border);
+  }
+  #sim-canvas-wrap {
+    flex: 1;
+    position: relative;
+    min-height: 200px;
+    cursor: crosshair;
+  }
+  #sim-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  #graphs-wrap {
+    height: 160px;
+    min-height: 120px;
+    border-top: 1px solid var(--border);
+    position: relative;
+    background: var(--panel);
+  }
+  #graph-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .panel-header {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel2);
+  }
+  .control-group {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .control-label span:last-child {
+    font-family: 'SF Mono', monospace;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--panel2);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+  }
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+  button {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  button:hover { opacity: 0.9; }
+  button:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-success { background: var(--success); color: #fff; }
+  .preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 16px 14px;
+  }
+  .preset-btn {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text2);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { border-color: var(--accent); color: var(--text); }
+  .preset-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(14,165,233,0.08); }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 16px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .stat-row span:last-child {
+    font-family: 'SF Mono', monospace;
+    color: var(--text);
+  }
+  .mode-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .mode-running { background: var(--success); box-shadow: 0 0 6px var(--success); }
+  .mode-paused { background: var(--accent2); }
+  .legend {
+    display: flex;
+    gap: 16px;
+    padding: 6px 16px;
+    font-size: 10px;
+    color: var(--text2);
+    border-top: 1px solid var(--border);
+  }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-dot { width: 8px; height: 3px; border-radius: 2px; }
+  @media (max-width: 768px) {
+    #app { flex-direction: column; }
+    #controls-panel { width: 100%; height: 45vh; min-height: 280px; border-left: none; border-top: 1px solid var(--border); }
+    #graphs-wrap { height: 120px; }
+  }
+</style>
+</head>
+<body>
+<div id="disclaimer">
+  <strong>Disclaimer:</strong> Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+<div id="app">
+  <div id="sim-panel">
+    <div id="sim-canvas-wrap">
+      <canvas id="sim-canvas"></canvas>
+    </div>
+    <div id="graphs-wrap">
+      <canvas id="graph-canvas"></canvas>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--ball)"></div>Position</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--setpoint)"></div>Setpoint</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Output</div>
+      </div>
+    </div>
+  </div>
+  <div id="controls-panel">
+    <div class="panel-header"><span class="mode-indicator mode-running" id="run-dot"></span>PID Controller</div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btn-run">Pause</button>
+      <button class="btn-secondary" id="btn-reset">Reset</button>
+      <button class="btn-danger" id="btn-poke">Poke</button>
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Proportional (P)</span><span id="val-p">2.0</span></div>
+      <input type="range" id="slider-p" min="0" max="10" step="0.1" value="2.0">
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Integral (I)</span><span id="val-i">0.5</span></div>
+      <input type="range" id="slider-i" min="0" max="5" step="0.05" value="0.5">
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Derivative (D)</span><span id="val-d">0.3</span></div>
+      <input type="range" id="slider-d" min="0" max="3" step="0.05" value="0.3">
+    </div>
+    <div class="panel-header">Presets</div>
+    <div class="preset-grid">
+      <div class="preset-btn active" data-p="2.0" data-i="0.5" data-d="0.3">Balanced</div>
+      <div class="preset-btn" data-p="6.0" data-i="0.1" data-d="0.1">Aggressive</div>
+      <div class="preset-btn" data-p="1.0" data-i="0.05" data-d="0.8">Smooth</div>
+      <div class="preset-btn" data-p="0.5" data-i="0.0" data-d="0.0">Sluggish</div>
+      <div class="preset-btn" data-p="8.0" data-i="2.0" data-d="0.05">Oscillating</div>
+      <div class="preset-btn" data-p="3.0" data-i="0.0" data-d="1.5">No Overshoot</div>
+    </div>
+    <div class="panel-header">Live Metrics</div>
+    <div class="stat-row"><span>Ball Position</span><span id="stat-pos">0.00</span></div>
+    <div class="stat-row"><span>Setpoint</span><span id="stat-sp">0.50</span></div>
+    <div class="stat-row"><span>Error</span><span id="stat-err">0.00</span></div>
+    <div class="stat-row"><span>Output</span><span id="stat-out">0.00</span></div>
+    <div class="stat-row"><span>Overshoot</span><span id="stat-overshoot">0%</span></div>
+    <div class="stat-row"><span>Settle Time</span><span id="stat-settle">--</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const simCanvas = document.getElementById('sim-canvas');
+  const graphCanvas = document.getElementById('graph-canvas');
+  const simCtx = simCanvas.getContext('2d');
+  const graphCtx = graphCanvas.getContext('2d');
+  const wrap = document.getElementById('sim-canvas-wrap');
+
+  let running = true;
+  let t = 0;
+  const dt = 1/60;
+  let history = [];
+  const maxHistory = 400;
+
+  // Physics state
+  let ballX = 0.3;       // 0 to 1, position along beam
+  let ballV = 0;         // velocity
+  let beamAngle = 0;     // radians
+  let setpoint = 0.5;
+  let integrator = 0;
+  let lastError = setpoint - ballX;
+  let output = 0;
+
+  // PID gains
+  let Kp = 2.0, Ki = 0.5, Kd = 0.3;
+
+  // Metrics
+  let maxPos = 0;
+  let settleStart = null;
+  let settled = false;
+  let overshootMax = 0;
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    simCanvas.width = wrap.clientWidth * dpr;
+    simCanvas.height = wrap.clientHeight * dpr;
+    simCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    graphCanvas.width = graphCanvas.parentElement.clientWidth * dpr;
+    graphCanvas.height = (graphCanvas.parentElement.clientHeight - 24) * dpr;
+    graphCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // PID + Physics
+  function step() {
+    if (!running) return;
+
+    const error = setpoint - ballX;
+
+    // PID
+    integrator += error * dt;
+    integrator = Math.max(-2, Math.min(2, integrator)); // anti-windup
+    const derivative = (error - lastError) / dt;
+    lastError = error;
+    output = Kp * error + Ki * integrator + Kd * derivative;
+    output = Math.max(-1, Math.min(1, output)); // saturation
+
+    // Beam dynamics (motor with lag)
+    const targetAngle = output * 0.4; // max tilt ~0.4 rad
+    beamAngle += (targetAngle - beamAngle) * 8 * dt;
+
+    // Ball on beam physics
+    const g = 9.81;
+    const accel = g * Math.sin(beamAngle); // roll acceleration
+    ballV += accel * dt * 0.15; // scaled for visual range
+    ballV *= 0.985; // friction
+    ballX += ballV * dt;
+
+    // Bounds
+    if (ballX < 0) { ballX = 0; ballV = -ballV * 0.3; }
+    if (ballX > 1) { ballX = 1; ballV = -ballV * 0.3; }
+
+    // Metrics
+    if (Math.abs(error) > overshootMax && ballX > setpoint) overshootMax = Math.abs(error);
+    if (!settled && Math.abs(error) < 0.02 && Math.abs(ballV) < 0.01) {
+      if (settleStart === null) settleStart = t;
+      else if (t - settleStart > 1.0) settled = true;
+    } else {
+      settleStart = null;
+    }
+
+    // History
+    history.push({ t, pos: ballX, sp: setpoint, out: output });
+    if (history.length > maxHistory) history.shift();
+
+    t += dt;
+  }
+
+  // Drawing
+  function drawSim() {
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    simCtx.clearRect(0, 0, w, h);
+
+    const cx = w / 2;
+    const cy = h * 0.55;
+    const beamLen = Math.min(w * 0.75, 500);
+    const beamH = 8;
+
+    // Draw pivot
+    simCtx.fillStyle = '#475569';
+    simCtx.beginPath();
+    simCtx.moveTo(cx, cy + 20);
+    simCtx.lineTo(cx - 12, cy + 60);
+    simCtx.lineTo(cx + 12, cy + 60);
+    simCtx.closePath();
+    simCtx.fill();
+
+    // Draw beam
+    simCtx.save();
+    simCtx.translate(cx, cy);
+    simCtx.rotate(beamAngle);
+    simCtx.fillStyle = '#334155';
+    simCtx.fillRect(-beamLen/2, -beamH/2, beamLen, beamH);
+    simCtx.strokeStyle = 'rgba(148,163,184,0.15)';
+    simCtx.lineWidth = 1;
+    for (let i = -4; i <= 4; i++) {
+      const x = i * beamLen / 10;
+      simCtx.beginPath();
+      simCtx.moveTo(x, -beamH/2);
+      simCtx.lineTo(x, beamH/2);
+      simCtx.stroke();
+    }
+    simCtx.restore();
+
+    // Draw setpoint marker
+    const spScreenX = cx + (setpoint - 0.5) * beamLen;
+    simCtx.strokeStyle = 'var(--setpoint)';
+    simCtx.lineWidth = 2;
+    simCtx.setLineDash([4, 4]);
+    simCtx.beginPath();
+    simCtx.moveTo(spScreenX, cy - 40);
+    simCtx.lineTo(spScreenX, cy + 40);
+    simCtx.stroke();
+    simCtx.setLineDash([]);
+    simCtx.fillStyle = 'var(--setpoint)';
+    simCtx.font = '11px sans-serif';
+    simCtx.textAlign = 'center';
+    simCtx.fillText('SETPOINT', spScreenX, cy - 48);
+
+    // Draw ball
+    const ballScreenX = cx + (ballX - 0.5) * beamLen;
+    const ballScreenY = cy - beamH/2 - 10;
+    simCtx.fillStyle = 'var(--ball)';
+    simCtx.shadowColor = 'var(--ball)';
+    simCtx.shadowBlur = 12;
+    simCtx.beginPath();
+    simCtx.arc(ballScreenX, ballScreenY, 10, 0, Math.PI * 2);
+    simCtx.fill();
+    simCtx.shadowBlur = 0;
+    simCtx.fillStyle = 'rgba(255,255,255,0.3)';
+    simCtx.beginPath();
+    simCtx.arc(ballScreenX - 3, ballScreenY - 3, 4, 0, Math.PI * 2);
+    simCtx.fill();
+
+    // Draw angle indicator
+    const angleDeg = (beamAngle * 180 / Math.PI).toFixed(1);
+    simCtx.fillStyle = 'var(--text2)';
+    simCtx.font = '12px monospace';
+    simCtx.textAlign = 'left';
+    simCtx.fillText(`Beam angle: ${angleDeg}°`, 16, h - 16);
+
+    // Instructions
+    simCtx.fillStyle = 'rgba(148,163,184,0.5)';
+    simCtx.font = '11px sans-serif';
+    simCtx.textAlign = 'center';
+    simCtx.fillText('Click or drag to move setpoint', w/2, h - 16);
+  }
+
+  function drawGraphs() {
+    const w = graphCanvas.parentElement.clientWidth;
+    const h = graphCanvas.parentElement.clientHeight - 24;
+    graphCtx.clearRect(0, 0, w, h);
+
+    // Grid
+    graphCtx.strokeStyle = 'var(--grid)';
+    graphCtx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = h * i / 4;
+      graphCtx.beginPath();
+      graphCtx.moveTo(0, y);
+      graphCtx.lineTo(w, y);
+      graphCtx.stroke();
+    }
+
+    if (history.length < 2) return;
+
+    const tMin = history[0].t;
+    const tMax = history[history.length - 1].t;
+    const tRange = Math.max(tMax - tMin, 0.01);
+
+    function drawLine(key, color) {
+      graphCtx.strokeStyle = color;
+      graphCtx.lineWidth = 2;
+      graphCtx.beginPath();
+      for (let i = 0; i < history.length; i++) {
+        const pt = history[i];
+        const x = ((pt.t - tMin) / tRange) * w;
+        const y = h - (pt[key] + 1) / 2 * h * 0.8 - h * 0.1;
+        if (i === 0) graphCtx.moveTo(x, y);
+        else graphCtx.lineTo(x, y);
+      }
+      graphCtx.stroke();
+    }
+
+    drawLine('sp', 'var(--setpoint)');
+    drawLine('pos', 'var(--ball)');
+    drawLine('out', 'var(--accent)');
+  }
+
+  function updateUI() {
+    document.getElementById('val-p').textContent = Kp.toFixed(1);
+    document.getElementById('val-i').textContent = Ki.toFixed(2);
+    document.getElementById('val-d').textContent = Kd.toFixed(2);
+    document.getElementById('stat-pos').textContent = ballX.toFixed(2);
+    document.getElementById('stat-sp').textContent = setpoint.toFixed(2);
+    document.getElementById('stat-err').textContent = (setpoint - ballX).toFixed(3);
+    document.getElementById('stat-out').textContent = output.toFixed(3);
+
+    const overshootPct = setpoint > 0.01 ? Math.round((overshootMax / setpoint) * 100) : 0;
+    document.getElementById('stat-overshoot').textContent = overshootPct + '%';
+    document.getElementById('stat-overshoot').style.color = overshootPct > 10 ? 'var(--danger)' : 'var(--success)';
+
+    if (settled) {
+      const settleTime = (settleStart + 1.0).toFixed(1);
+      document.getElementById('stat-settle').textContent = settleTime + 's';
+    } else {
+      document.getElementById('stat-settle').textContent = '--';
+    }
+
+    document.getElementById('run-dot').className = 'mode-indicator ' + (running ? 'mode-running' : 'mode-paused');
+    document.getElementById('btn-run').textContent = running ? 'Pause' : 'Resume';
+  }
+
+  // Loop
+  function loop() {
+    step();
+    drawSim();
+    drawGraphs();
+    updateUI();
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  // Controls
+  document.getElementById('slider-p').addEventListener('input', e => {
+    Kp = parseFloat(e.target.value);
+    clearPresetHighlight();
+  });
+  document.getElementById('slider-i').addEventListener('input', e => {
+    Ki = parseFloat(e.target.value);
+    clearPresetHighlight();
+  });
+  document.getElementById('slider-d').addEventListener('input', e => {
+    Kd = parseFloat(e.target.value);
+    clearPresetHighlight();
+  });
+
+  document.getElementById('btn-run').addEventListener('click', () => {
+    running = !running;
+  });
+  document.getElementById('btn-reset').addEventListener('click', resetSim);
+  document.getElementById('btn-poke').addEventListener('click', () => {
+    ballV += (Math.random() > 0.5 ? 0.15 : -0.15);
+    settled = false;
+    settleStart = null;
+  });
+
+  function resetSim() {
+    ballX = 0.3;
+    ballV = 0;
+    beamAngle = 0;
+    integrator = 0;
+    lastError = setpoint - ballX;
+    output = 0;
+    history = [];
+    t = 0;
+    maxPos = 0;
+    settleStart = null;
+    settled = false;
+    overshootMax = 0;
+  }
+
+  function clearPresetHighlight() {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      clearPresetHighlight();
+      btn.classList.add('active');
+      Kp = parseFloat(btn.dataset.p);
+      Ki = parseFloat(btn.dataset.i);
+      Kd = parseFloat(btn.dataset.d);
+      document.getElementById('slider-p').value = Kp;
+      document.getElementById('slider-i').value = Ki;
+      document.getElementById('slider-d').value = Kd;
+      resetSim();
+    });
+  });
+
+  // Click/drag setpoint
+  let dragging = false;
+  wrap.addEventListener('mousedown', e => { dragging = true; updateSetpoint(e); });
+  wrap.addEventListener('mousemove', e => { if (dragging) updateSetpoint(e); });
+  wrap.addEventListener('mouseup', () => { dragging = false; });
+  wrap.addEventListener('mouseleave', () => { dragging = false; });
+  wrap.addEventListener('touchstart', e => { dragging = true; updateSetpoint(e.touches[0]); e.preventDefault(); }, {passive:false});
+  wrap.addEventListener('touchmove', e => { if (dragging) updateSetpoint(e.touches[0]); e.preventDefault(); }, {passive:false});
+  wrap.addEventListener('touchend', () => { dragging = false; });
+
+  function updateSetpoint(e) {
+    const rect = wrap.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const cx = rect.width / 2;
+    const beamLen = Math.min(rect.width * 0.75, 500);
+    setpoint = Math.max(0, Math.min(1, 0.5 + (x - cx) / beamLen));
+    settled = false;
+    settleStart = null;
+    overshootMax = 0;
+  }
+})();
+</script>
+</body>
+</html>

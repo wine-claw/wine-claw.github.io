@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-17",
-    "title": "Photon Sailor",
-    "slug": "photon-sailor",
-    "publishedSlug": "2026-05-17-photon-sailor",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-17-photon-sailor/"
+    "date": "2026-05-18",
+    "title": "PID Playground",
+    "slug": "pid-playground",
+    "publishedSlug": "2026-05-18-pid-playground",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-18-pid-playground/"
   },
   "apps": [
+    {
+      "date": "2026-05-18",
+      "title": "PID Playground",
+      "slug": "pid-playground",
+      "publishedSlug": "2026-05-18-pid-playground",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-18-pid-playground/",
+      "description": "Interactive PID controller sandbox — tune proportional, integral, and derivative gains to balance a ball on a tilting beam in real time"
+    },
     {
       "date": "2026-05-17",
       "title": "Photon Sailor",
