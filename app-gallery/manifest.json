@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-18",
-    "title": "PID Playground",
-    "slug": "pid-playground",
-    "publishedSlug": "2026-05-18-pid-playground",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-18-pid-playground/"
+    "date": "2026-05-19",
+    "title": "Canopy Architect",
+    "slug": "canopy-architect",
+    "publishedSlug": "2026-05-19-canopy-architect",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-19-canopy-architect/"
   },
   "apps": [
+    {
+      "date": "2026-05-19",
+      "title": "Canopy Architect",
+      "slug": "canopy-architect",
+      "publishedSlug": "2026-05-19-canopy-architect",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-19-canopy-architect/",
+      "description": "Interactive grapevine canopy management simulator — prune, train, and manage your vine through a full growing season"
+    },
     {
       "date": "2026-05-18",
       "title": "PID Playground",
