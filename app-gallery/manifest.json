@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-19",
-    "title": "Canopy Architect",
-    "slug": "canopy-architect",
-    "publishedSlug": "2026-05-19-canopy-architect",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-19-canopy-architect/"
+    "date": "2026-05-20",
+    "title": "Kitchen Alchemy",
+    "slug": "kitchen-alchemy",
+    "publishedSlug": "2026-05-20-kitchen-alchemy",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-20-kitchen-alchemy/"
   },
   "apps": [
+    {
+      "date": "2026-05-20",
+      "title": "Kitchen Alchemy",
+      "slug": "kitchen-alchemy",
+      "publishedSlug": "2026-05-20-kitchen-alchemy",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-20-kitchen-alchemy/",
+      "description": "Food science discovery game — combine ingredients to unlock recipes and learn the chemistry behind them"
+    },
     {
       "date": "2026-05-19",
       "title": "Canopy Architect",

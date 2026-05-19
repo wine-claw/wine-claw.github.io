@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Kitchen Alchemy — Food Science Discovery Game</title>
+<style>
+  :root {
+    --bg: #1c1814;
+    --panel: #252019;
+    --panel2: #2e2820;
+    --card: #3a3228;
+    --card2: #4a4035;
+    --accent: #e8a040;
+    --accent2: #c9782e;
+    --success: #7cb342;
+    --text: #f0e6d8;
+    --muted: #a09080;
+    --border: #4a4035;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  .disclaimer {
+    background: #2e2e1e;
+    border-bottom: 1px solid #555;
+    color: #ccc;
+    text-align: center;
+    font-size: 11px;
+    padding: 6px 12px;
+    line-height: 1.4;
+  }
+  .disclaimer strong { color: #e8e5d8; }
+
+  header {
+    background: var(--panel);
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+  header .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .progress {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .progress span { color: var(--accent); font-weight: 700; }
+
+  .app {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    min-width: 200px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-search input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+  }
+  .sidebar-search input::placeholder { color: var(--muted); }
+  .sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-tab {
+    flex: 1;
+    padding: 8px;
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    transition: .15s;
+    user-select: none;
+  }
+  .sidebar-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--panel2);
+  }
+  .ingredient-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .ingredient-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: .15s;
+    user-select: none;
+    position: relative;
+  }
+  .ingredient-item:hover {
+    border-color: var(--accent);
+    background: var(--card2);
+  }
+  .ingredient-item.locked {
+    opacity: 0.4;
+    cursor: default;
+    filter: grayscale(0.7);
+  }
+  .ingredient-item.locked:hover {
+    border-color: var(--border);
+    background: var(--card);
+  }
+  .ingredient-item .emoji {
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .ingredient-item .name {
+    font-size: 10px;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .ingredient-item.locked .name { color: var(--muted); }
+  .ingredient-item.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent2);
+  }
+  .new-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--success);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 8px;
+    animation: popIn 0.4s ease;
+  }
+  @keyframes popIn {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  /* Main area */
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .workbench {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .slot {
+    width: 110px;
+    height: 110px;
+    border-radius: 16px;
+    border: 2px dashed var(--border);
+    background: var(--panel2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: .2s;
+    position: relative;
+  }
+  .slot:hover { border-color: var(--accent); }
+  .slot.filled { border-style: solid; border-color: var(--accent2); background: var(--card); }
+  .slot .slot-emoji { font-size: 42px; line-height: 1; }
+  .slot .slot-name { font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center; }
+  .slot.filled .slot-name { color: var(--text); }
+  .slot .clear {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--danger);
+    color: #fff;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: .15s;
+  }
+  .slot.filled:hover .clear { opacity: 1; }
+
+  .plus {
+    font-size: 24px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .combine-btn {
+    padding: 12px 32px;
+    border-radius: 30px;
+    border: none;
+    background: var(--accent);
+    color: #1c1814;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .15s;
+    margin-top: 4px;
+  }
+  .combine-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .combine-btn:disabled {
+    background: var(--border);
+    color: var(--muted);
+    cursor: default;
+    transform: none;
+  }
+
+  /* Result card */
+  .result-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 380px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: .3s ease;
+    z-index: 20;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .result-card.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .result-card .result-emoji { font-size: 56px; line-height: 1; margin-bottom: 8px; }
+  .result-card .result-name { font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .result-card .result-fact { font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 16px; }
+  .result-card .result-tag { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+  .result-card .result-close {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-size: 13px;
+    cursor: pointer;
+    transition: .15s;
+  }
+  .result-card .result-close:hover { background: var(--accent); color: #1c1814; }
+
+  /* Hint toast */
+  .hint-toast {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    opacity: 0;
+    transition: .3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .hint-toast.show { opacity: 1; }
+
+  /* Shake animation for no-match */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  .shake { animation: shake 0.4s ease; }
+
+  /* Star burst for new discovery */
+  .burst {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .burst-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: burstFly 0.8s ease forwards;
+  }
+  @keyframes burstFly {
+    0% { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+  }
+
+  /* Mobile */
+  @media (max-width: 700px) {
+    .sidebar { width: 140px; min-width: 140px; }
+    .ingredient-list { grid-template-columns: 1fr; }
+    .ingredient-item .emoji { font-size: 22px; }
+    .slot { width: 90px; height: 90px; }
+    .slot .slot-emoji { font-size: 34px; }
+    header h1 { font-size: 15px; }
+    .workbench { gap: 10px; }
+    .plus { font-size: 18px; }
+    .combine-btn { padding: 10px 22px; font-size: 14px; }
+  }
+
+  /* Scrollbar */
+  .ingredient-list::-webkit-scrollbar { width: 6px; }
+  .ingredient-list::-webkit-scrollbar-track { background: transparent; }
+  .ingredient-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">
+  <strong>Unlisted OpenClaw AI mini-apps.</strong> Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+
+<header>
+  <div>
+    <h1>🍳 Kitchen Alchemy</h1>
+    <div class="subtitle">Combine ingredients. Discover food science.</div>
+  </div>
+  <div class="progress"><span id="discovered-count">0</span> / <span id="total-count">0</span> discovered</div>
+</header>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-search">
+      <input type="text" id="search" placeholder="Search ingredients..." autocomplete="off">
+    </div>
+    <div class="sidebar-tabs">
+      <div class="sidebar-tab active" data-tab="all">All</div>
+      <div class="sidebar-tab" data-tab="discovered">Found</div>
+      <div class="sidebar-tab" data-tab="locked">Locked</div>
+    </div>
+    <div class="ingredient-list" id="ingredient-list"></div>
+  </div>
+
+  <div class="main">
+    <div class="workbench" id="workbench">
+      <div class="slot" id="slot-a" onclick="selectSlot('a')">
+        <span class="slot-emoji">➕</span>
+        <span class="slot-name">Pick ingredient</span>
+        <span class="clear" onclick="event.stopPropagation();clearSlot('a')">×</span>
+      </div>
+      <div class="plus">+</div>
+      <div class="slot" id="slot-b" onclick="selectSlot('b')">
+        <span class="slot-emoji">➕</span>
+        <span class="slot-name">Pick ingredient</span>
+        <span class="clear" onclick="event.stopPropagation();clearSlot('b')">×</span>
+      </div>
+    </div>
+    <button class="combine-btn" id="combine-btn" disabled onclick="combine()">Combine</button>
+
+    <div class="result-card" id="result-card">
+      <div class="result-emoji" id="result-emoji"></div>
+      <div class="result-name" id="result-name"></div>
+      <div class="result-tag" id="result-tag"></div>
+      <div class="result-fact" id="result-fact"></div>
+      <button class="result-close" onclick="closeResult()">Keep Exploring</button>
+    </div>
+
+    <div class="hint-toast" id="hint-toast">Try a different combination...</div>
+    <div class="burst" id="burst"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const STARTERS = ['Water','Flour','Salt','Sugar','Yeast','Egg','Milk','Oil','Heat','Time','Vinegar','Cocoa'];
+
+  const INGREDIENTS = {
+    'Water':{emoji:'💧',tag:'Basic'},
+    'Flour':{emoji:'🌾',tag:'Basic'},
+    'Salt':{emoji:'🧂',tag:'Basic'},
+    'Sugar':{emoji:'🍬',tag:'Basic'},
+    'Yeast':{emoji:'🦠',tag:'Basic'},
+    'Egg':{emoji:'🥚',tag:'Basic'},
+    'Milk':{emoji:'🥛',tag:'Basic'},
+    'Oil':{emoji:'🫒',tag:'Basic'},
+    'Heat':{emoji:'🔥',tag:'Basic'},
+    'Time':{emoji:'⏳',tag:'Basic'},
+    'Vinegar':{emoji:'🍶',tag:'Basic'},
+    'Cocoa':{emoji:'🍫',tag:'Basic'},
+    'Dough':{emoji:'🍞',tag:'Mix',fact:'Gluten proteins link when hydrated, creating an elastic network that traps CO₂ from yeast.'},
+    'Bread':{emoji:'🥖',tag:'Bake',fact:'Maillard reaction browns the crust above 140°C, producing hundreds of flavour compounds.'},
+    'Pasta':{emoji:'🍝',tag:'Dough',fact:'Durum wheat semolina gives pasta its firm texture and golden colour after drying.'},
+    'Noodles':{emoji:'🍜',tag:'Dough',fact:'Alkaline water (kansui) gives ramen noodles their yellow colour and springy bite.'},
+    'Batter':{emoji:'🥞',tag:'Mix',fact:'Carbon dioxide from baking soda or beaten air creates the bubbles that make pancakes fluffy.'},
+    'Pancake':{emoji:'🥞',tag:'Cook',fact:'The flipping moment is when bubbles set on the surface, trapping air inside.'},
+    'Mayonnaise':{emoji:'🥄',tag:'Emulsion',fact:'An oil-in-water emulsion stabilised by lecithin from egg yolk — a molecular handshake.'},
+    'Butter':{emoji:'🧈',tag:'Dairy',fact:'Churning breaks fat globule membranes, causing them to clump into solid butter.'},
+    'Cheese':{emoji:'🧀',tag:'Dairy',fact:'Rennet curdles milk; then bacteria and enzymes break proteins into flavour-rich peptides.'},
+    'Yogurt':{emoji:'🥣',tag:'Ferment',fact:'Lactobacillus converts lactose to lactic acid, dropping pH to set milk proteins.'},
+    'Kefir':{emoji:'🥤',tag:'Ferment',fact:'Over 30 species of yeast and bacteria live symbiotically in kefir grains.'},
+    'Sourdough':{emoji:'🍞',tag:'Ferment',fact:'Wild lactobacilli and yeasts colonise flour-water paste, creating complex acids and CO₂.'},
+    'Beer':{emoji:'🍺',tag:'Brew',fact:'Brewers’ yeast ferments maltose from malted barley; hops add bitterness and preservation.'},
+    'Wine':{emoji:'🍷',tag:'Brew',fact:'Saccharomyces cerevisiae converts grape sugars to ethanol and CO₂ in anaerobic conditions.'},
+    'Vinegar':{emoji:'🍶',tag:'Brew',fact:'Acetobacter bacteria oxidise ethanol into acetic acid, turning wine into vinegar.'},
+    'Kombucha':{emoji:'🍵',tag:'Ferment',fact:'A SCOBY (symbiotic culture of bacteria and yeast) floats on sweet tea, producing acids and fizz.'},
+    'Kimchi':{emoji:'🥬',tag:'Ferment',fact:'Lacto-fermentation in brine creates the tangy, probiotic signature of Korean kimchi.'},
+    'Sauerkraut':{emoji:'🥬',tag:'Ferment',fact:'Shredded cabbage ferments in its own juices; salt draws out water and selects for friendly bacteria.'},
+    'Pickles':{emoji:'🥒',tag:'Ferment',fact:'Cucumbers in brine undergo lactic acid fermentation, preserving crunch and adding tang.'},
+    'Soy Sauce':{emoji:'🍶',tag:'Ferment',fact:'Aspergillus mould (koji) breaks soy proteins; then bacteria and yeast age the mash for months.'},
+    'Miso':{emoji:'🍲',tag:'Ferment',fact:'Koji-fermented soybeans and rice create umami-rich paste via proteolysis.'},
+    'Tempeh':{emoji:'🫘',tag:'Ferment',fact:'Rhizopus oligosporus binds soybeans into a firm cake while increasing digestibility.'},
+    'Natto':{emoji:'🫘',tag:'Ferment',fact:'Bacillus subtilis creates the famously slimy, stringy texture and strong flavour.'},
+    'Chocolate':{emoji:'🍫',tag:'Confection',fact:'Cocoa butter melts at 34°C — just below body temperature, giving chocolate its melt-in-mouth feel.'},
+    'Caramel':{emoji:'🍮',tag:'Confection',fact:'Heating sugar above 160°C triggers caramelisation, creating hundreds of flavour molecules.'},
+    'Toffee':{emoji:'🍬',tag:'Confection',fact:'Butter + sugar heated to hard-crack stage (150°C) sets into a brittle, glossy sheet.'},
+    'Meringue':{emoji:'🍥',tag:'Confection',fact:'Whipped egg whites trap air in a protein-stabilised foam that sets crisp when baked.'},
+    'Custard':{emoji:'🍮',tag:'Dairy',fact:'Egg proteins coagulate at 82°C, thickening milk into a smooth, silky custard.'},
+    'Ice Cream':{emoji:'🍦',tag:'Frozen',fact:'Rapid freezing while churning keeps ice crystals small — the secret to creamy texture.'},
+    'Gelato':{emoji:'🍨',tag:'Frozen',fact:'Less air (20–30% overrun vs 50%+ in ice cream) and warmer serving temp = denser flavour.'},
+    'Jam':{emoji:'🍓',tag:'Preserve',fact:'High sugar + pectin + acid forms a gel network that traps fruit pulp.'},
+    'Honey':{emoji:'🍯',tag:'Nature',fact:'Bees invert sucrose into glucose + fructose and evaporate water to ~17% moisture.'},
+    'Bread Crumbs':{emoji:'🍞',tag:'Leftover',fact:'Staling is retrogradation — starch molecules re-crystallise, firming the crumb.'},
+    'Stock':{emoji:'🍲',tag:'Broth',fact:'Simmering bones and veg extracts collagen (gelatin), amino acids, and Maillard flavours.'},
+    'Roux':{emoji:'🥣',tag:'Sauce',fact:'Cooking flour in fat coats starch granules, preventing lumps when liquid is added.'},
+    'Béchamel':{emoji:'🥛',tag:'Sauce',fact:'One of the French mother sauces: roux + milk, the base for mac and cheese.'},
+    'Hollandaise':{emoji:'🍳',tag:'Sauce',fact:'An emulsion of butter and egg yolk held at ~60°C — too hot and it splits.'},
+    'Pizza':{emoji:'🍕',tag:'Bake',fact:'A 60–70% hydration dough ferments 24–72 hours for flavour and an open, airy crust.'},
+    'Tofu':{emoji:'🧊',tag:'Soy',fact:'Coagulating soymilk with calcium or magnesium salts creates the protein curd we call tofu.'},
+    'Biscuit':{emoji:'🍪',tag:'Bake',fact:'Creaming butter and sugar traps air; chemical leaveners (baking powder) add more CO₂.'},
+    'Whipped Cream':{emoji:'🥛',tag:'Dairy',fact:'Fat globules partially coalesce around air bubbles, creating a stable foam.'},
+    'Curd':{emoji:'🥣',tag:'Dairy',fact:'Acid or rennet denatures casein proteins, causing milk to separate into curds and whey.'},
+    'Whey':{emoji:'🥛',tag:'Dairy',fact:'The liquid left after curdling contains lactose, soluble proteins, and minerals.'},
+    'Brine':{emoji:'🧂',tag:'Basic',fact:'Salt water lowers water activity, inhibiting spoilage microbes and enabling fermentation.'},
+    'Malted Milk':{emoji:'🥤',tag:'Dairy',fact:'Sprouted barley (malt) provides enzymes that break starch into sweet maltose.'},
+    'Koji':{emoji:'🌾',tag:'Ferment',fact:'Aspergillus oryzae grown on rice or soy is the foundational mould for sake, miso, and soy sauce.'},
+    'Sake':{emoji:'🍶',tag:'Brew',fact:'Multiple parallel fermentation: koji breaks rice starch while yeast converts sugars simultaneously.'},
+  };
+
+  const RECIPES = {
+    'Dough':['Water','Flour'],
+    'Bread':['Dough','Heat'],
+    'Pasta':['Dough','Salt'],
+    'Noodles':['Pasta','Water'],
+    'Batter':['Flour','Milk'],
+    'Pancake':['Batter','Heat'],
+    'Mayonnaise':['Oil','Egg'],
+    'Butter':['Milk','Time'],
+    'Cheese':['Milk','Time'],
+    'Yogurt':['Milk','Time'],
+    'Kefir':['Milk','Time'],
+    'Sourdough':['Dough','Time'],
+    'Beer':['Malted Milk','Yeast'],
+    'Wine':['Sugar','Yeast'],
+    'Vinegar':['Wine','Time'],
+    'Kombucha':['Sugar','Time'],
+    'Kimchi':['Salt','Time'],
+    'Sauerkraut':['Salt','Time'],
+    'Pickles':['Salt','Time'],
+    'Soy Sauce':['Koji','Salt'],
+    'Miso':['Koji','Salt'],
+    'Tempeh':['Koji','Heat'],
+    'Natto':['Koji','Heat'],
+    'Chocolate':['Cocoa','Sugar'],
+    'Caramel':['Sugar','Heat'],
+    'Toffee':['Caramel','Butter'],
+    'Meringue':['Egg','Sugar'],
+    'Custard':['Egg','Milk'],
+    'Ice Cream':['Custard','Heat'],
+    'Gelato':['Custard','Milk'],
+    'Jam':['Sugar','Heat'],
+    'Honey':['Sugar','Time'],
+    'Bread Crumbs':['Bread','Heat'],
+    'Stock':['Water','Heat'],
+    'Roux':['Flour','Butter'],
+    'Béchamel':['Roux','Milk'],
+    'Hollandaise':['Butter','Egg'],
+    'Pizza':['Dough','Heat'],
+    'Tofu':['Soy Sauce','Heat'],
+    'Biscuit':['Flour','Butter'],
+    'Whipped Cream':['Milk','Time'],
+    'Curd':['Milk','Vinegar'],
+    'Whey':['Curd','Water'],
+    'Brine':['Salt','Water'],
+    'Malted Milk':['Milk','Heat'],
+    'Koji':['Rice','Time'],
+    'Sake':['Koji','Yeast'],
+  };
+
+  // Rice is missing from ingredients list; add it
+  INGREDIENTS['Rice'] = {emoji:'🍚',tag:'Basic'};
+  STARTERS.push('Rice');
+
+  let discovered = new Set(STARTERS);
+  let selectedA = null, selectedB = null;
+  let activeTab = 'all';
+  let searchTerm = '';
+
+  function save() {
+    try { localStorage.setItem('kitchenAlchemy', JSON.stringify([...discovered])); } catch(e){}
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem('kitchenAlchemy');
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) discovered = new Set(arr);
+      }
+    } catch(e){}
+  }
+  load();
+
+  function renderList() {
+    const list = document.getElementById('ingredient-list');
+    list.innerHTML = '';
+    const items = Object.keys(INGREDIENTS).sort();
+    let count = 0;
+    items.forEach(name => {
+      const isDiscovered = discovered.has(name);
+      if (activeTab === 'discovered' && !isDiscovered) return;
+      if (activeTab === 'locked' && isDiscovered) return;
+      if (searchTerm && !name.toLowerCase().includes(searchTerm.toLowerCase())) return;
+      count++;
+      const data = INGREDIENTS[name];
+      const el = document.createElement('div');
+      el.className = 'ingredient-item' + (isDiscovered ? '' : ' locked') + (selectedA === name || selectedB === name ? ' selected' : '');
+      el.innerHTML = '<span class="emoji">' + (isDiscovered ? data.emoji : '❓') + '</span><span class="name">' + (isDiscovered ? name : '???') + '</span>';
+      if (isDiscovered) {
+        el.onclick = () => pickIngredient(name);
+      }
+      list.appendChild(el);
+    });
+    document.getElementById('discovered-count').textContent = discovered.size;
+    document.getElementById('total-count').textContent = Object.keys(INGREDIENTS).length;
+  }
+
+  function pickIngredient(name) {
+    if (!selectedA) {
+      selectedA = name;
+    } else if (!selectedB && selectedA !== name) {
+      selectedB = name;
+    } else if (selectedA === name) {
+      selectedA = null;
+    } else if (selectedB === name) {
+      selectedB = null;
+    } else {
+      selectedB = name;
+    }
+    updateWorkbench();
+    renderList();
+  }
+
+  function selectSlot(slot) {
+    // Clicking slot when empty just focuses; when filled clears it
+    if (slot === 'a' && selectedA) { selectedA = null; }
+    else if (slot === 'b' && selectedB) { selectedB = null; }
+    updateWorkbench();
+    renderList();
+  }
+  window.selectSlot = selectSlot;
+
+  function clearSlot(slot) {
+    if (slot === 'a') selectedA = null;
+    if (slot === 'b') selectedB = null;
+    updateWorkbench();
+    renderList();
+  }
+  window.clearSlot = clearSlot;
+
+  function updateWorkbench() {
+    const slotA = document.getElementById('slot-a');
+    const slotB = document.getElementById('slot-b');
+    const btn = document.getElementById('combine-btn');
+
+    if (selectedA) {
+      slotA.classList.add('filled');
+      slotA.querySelector('.slot-emoji').textContent = INGREDIENTS[selectedA].emoji;
+      slotA.querySelector('.slot-name').textContent = selectedA;
+    } else {
+      slotA.classList.remove('filled');
+      slotA.querySelector('.slot-emoji').textContent = '➕';
+      slotA.querySelector('.slot-name').textContent = 'Pick ingredient';
+    }
+
+    if (selectedB) {
+      slotB.classList.add('filled');
+      slotB.querySelector('.slot-emoji').textContent = INGREDIENTS[selectedB].emoji;
+      slotB.querySelector('.slot-name').textContent = selectedB;
+    } else {
+      slotB.classList.remove('filled');
+      slotB.querySelector('.slot-emoji').textContent = '➕';
+      slotB.querySelector('.slot-name').textContent = 'Pick ingredient';
+    }
+
+    btn.disabled = !(selectedA && selectedB);
+  }
+
+  function combine() {
+    if (!selectedA || !selectedB) return;
+    const pair = [selectedA, selectedB].sort();
+    let result = null;
+    for (const [name, req] of Object.entries(RECIPES)) {
+      const sorted = [...req].sort();
+      if (sorted[0] === pair[0] && sorted[1] === pair[1]) {
+        result = name;
+        break;
+      }
+    }
+
+    if (result) {
+      const isNew = !discovered.has(result);
+      discovered.add(result);
+      save();
+      showResult(result, isNew);
+      if (isNew) spawnBurst();
+    } else {
+      // No match
+      document.getElementById('workbench').classList.add('shake');
+      setTimeout(() => document.getElementById('workbench').classList.remove('shake'), 400);
+      const hint = document.getElementById('hint-toast');
+      hint.textContent = 'Nothing new. Try a different pair...';
+      hint.classList.add('show');
+      setTimeout(() => hint.classList.remove('show'), 2000);
+    }
+    selectedA = null;
+    selectedB = null;
+    updateWorkbench();
+    renderList();
+  }
+  window.combine = combine;
+
+  function showResult(name, isNew) {
+    const data = INGREDIENTS[name];
+    document.getElementById('result-emoji').textContent = data.emoji;
+    document.getElementById('result-name').textContent = (isNew ? 'Discovered: ' : 'You made: ') + name;
+    document.getElementById('result-tag').textContent = data.tag || '';
+    document.getElementById('result-fact').textContent = data.fact || 'A classic kitchen creation.';
+    document.getElementById('result-card').classList.add('show');
+  }
+  window.closeResult = function() {
+    document.getElementById('result-card').classList.remove('show');
+  };
+
+  function spawnBurst() {
+    const burst = document.getElementById('burst');
+    burst.innerHTML = '';
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('div');
+      p.className = 'burst-particle';
+      const angle = (Math.PI * 2 * i) / 12;
+      const dist = 80 + Math.random() * 60;
+      p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      burst.appendChild(p);
+    }
+    setTimeout(() => burst.innerHTML = '', 900);
+  }
+
+  // Tabs
+  document.querySelectorAll('.sidebar-tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeTab = tab.dataset.tab;
+      renderList();
+    };
+  });
+
+  // Search
+  document.getElementById('search').addEventListener('input', e => {
+    searchTerm = e.target.value;
+    renderList();
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeResult();
+    if (e.key === 'Enter' && selectedA && selectedB) combine();
+  });
+
+  // Init
+  renderList();
+  updateWorkbench();
+
+})();
+</script>
+</body>
+</html>
