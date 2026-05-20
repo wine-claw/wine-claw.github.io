@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-20",
-    "title": "Kitchen Alchemy",
-    "slug": "kitchen-alchemy",
-    "publishedSlug": "2026-05-20-kitchen-alchemy",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-20-kitchen-alchemy/"
+    "date": "2026-05-21",
+    "title": "Wind Tunnel",
+    "slug": "wind-tunnel",
+    "publishedSlug": "2026-05-21-wind-tunnel",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-21-wind-tunnel/"
   },
   "apps": [
+    {
+      "date": "2026-05-21",
+      "title": "Wind Tunnel",
+      "slug": "wind-tunnel",
+      "publishedSlug": "2026-05-21-wind-tunnel",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-21-wind-tunnel/",
+      "description": "Interactive aerodynamics sandbox — explore fluid flow around obstacles with potential flow physics, vortex shedding, and pressure visualization"
+    },
     {
       "date": "2026-05-20",
       "title": "Kitchen Alchemy",

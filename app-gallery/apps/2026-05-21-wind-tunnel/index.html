@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Wind Tunnel — Interactive Aerodynamics Sandbox</title>
+<style>
+:root{--bg:#0b0f14;--panel:#111820;--text:#e8eef4;--muted:#8a9aae;--accent:#4fc3f7;--accent2:#ff7043;--line:#1c2833;--grid:rgba(255,255,255,0.04);}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,'SF Pro Text',Inter,sans-serif;background:var(--bg);color:var(--text);}
+#app{display:flex;height:100vh;width:100vw;}
+#sidebar{width:300px;min-width:260px;max-width:320px;background:var(--panel);border-right:1px solid var(--line);padding:18px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;flex-shrink:0;}
+#canvasWrap{flex:1;position:relative;min-width:0;}
+canvas{display:block;width:100%;height:100%;touch-action:none;}
+.disclaimer{font-size:0.78rem;color:#b89a7a;background:rgba(184,154,122,0.08);border:1px solid rgba(184,154,122,0.18);border-radius:10px;padding:10px 12px;line-height:1.45;}
+h1{font-size:1.15rem;line-height:1.25;margin:0 0 2px;color:var(--accent);}
+.subtitle{font-size:0.82rem;color:var(--muted);margin-bottom:6px;}
+.control-group{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:12px;padding:12px;}
+.control-group h3{font-size:0.78rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:10px;font-weight:600;}
+label{display:flex;align-items:center;justify-content:space-between;font-size:0.84rem;margin-bottom:8px;gap:8px;}
+label span{flex-shrink:0;}
+input[type=range]{flex:1;min-width:60px;accent-color:var(--accent);}
+.value{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600;font-size:0.8rem;min-width:36px;text-align:right;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+button{font-family:inherit;font-size:0.8rem;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;background:var(--line);color:var(--text);transition:background 0.15s;}
+button:hover{background:#243040;}
+button.primary{background:linear-gradient(135deg,var(--accent),#29b6f6);color:#061218;font-weight:700;}
+button.primary:hover{opacity:0.9;}
+button.active{background:var(--accent2);color:#fff;}
+.presets{display:flex;flex-wrap:wrap;gap:6px;}
+.preset-btn{font-size:0.75rem;padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid var(--line);cursor:pointer;color:var(--muted);}
+.preset-btn:hover{background:rgba(255,255,255,0.1);color:var(--text);}
+.stats{font-size:0.72rem;color:var(--muted);display:flex;justify-content:space-between;padding-top:4px;border-top:1px solid var(--line);margin-top:4px;}
+.hint{font-size:0.75rem;color:var(--muted);line-height:1.4;}
+.hint kbd{background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.7rem;}
+#mobileToggle{display:none;position:absolute;top:12px;right:12px;z-index:10;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:0.8rem;color:var(--text);}
+@media(max-width:720px){
+#app{flex-direction:column;}
+#sidebar{position:absolute;top:0;left:0;height:100vh;width:260px;z-index:20;transform:translateX(-100%);transition:transform 0.25s ease;border-right:none;border-bottom:1px solid var(--line);}
+#sidebar.open{transform:translateX(0);}
+#mobileToggle{display:block;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="sidebar">
+<div>
+<h1>Wind Tunnel</h1>
+<div class="subtitle">Interactive Aerodynamics Sandbox</div>
+<div class="disclaimer">Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.</div>
+</div>
+
+<div class="control-group">
+<h3>Body Shape</h3>
+<div class="presets">
+<span class="preset-btn" onclick="setShape('cylinder')">Cylinder</span>
+<span class="preset-btn" onclick="setShape('airfoil')">Airfoil</span>
+<span class="preset-btn" onclick="setShape('flatplate')">Flat Plate</span>
+<span class="preset-btn" onclick="setShape('ellipse')">Ellipse</span>
+<span class="preset-btn" onclick="setShape('none')">Free Flow</span>
+</div>
+</div>
+
+<div class="control-group">
+<h3>Flow Parameters</h3>
+<label><span>Speed</span><input type="range" id="speed" min="0.5" max="8" step="0.1" value="3"><span class="value" id="speedVal">3.0</span></label>
+<label><span>Circulation</span><input type="range" id="circ" min="-8" max="8" step="0.1" value="0"><span class="value" id="circVal">0.0</span></label>
+<label><span>Reynolds</span><input type="range" id="reynolds" min="10" max="500" step="10" value="100"><span class="value" id="reynoldsVal">100</span></label>
+<label><span>Viscosity</span><input type="range" id="viscosity" min="0" max="0.5" step="0.01" value="0.05"><span class="value" id="viscosityVal">0.05</span></label>
+</div>
+
+<div class="control-group">
+<h3>Visualisation</h3>
+<div class="btn-row">
+<button class="primary" id="btnStream" onclick="toggleMode('streamlines')">Streamlines</button>
+<button id="btnSmoke" onclick="toggleMode('smoke')">Smoke</button>
+<button id="btnPressure" onclick="toggleMode('pressure')">Pressure</button>
+</div>
+<label style="margin-top:10px"><span>Particle Count</span><input type="range" id="particles" min="100" max="3000" step="100" value="800"><span class="value" id="particlesVal">800</span></label>
+</div>
+
+<div class="control-group">
+<h3>Interactions</h3>
+<div class="hint">
+• <kbd>Drag</kbd> the body to move it<br>
+• <kbd>Click</kbd> empty space to add a vortex<br>
+• <kbd>Shift+Click</kbd> to remove nearest vortex<br>
+• <kbd>Scroll</kbd> to zoom (desktop)
+</div>
+<div class="btn-row" style="margin-top:10px">
+<button onclick="clearVortices()">Clear Vortices</button>
+<button onclick="resetView()">Reset View</button>
+</div>
+</div>
+
+<div class="control-group">
+<h3>Live Telemetry</h3>
+<div class="stats"><span>Lift coeff (CL)</span><span id="clVal">0.00</span></div>
+<div class="stats"><span>Drag coeff (CD)</span><span id="cdVal">0.00</span></div>
+<div class="stats"><span>Stagnation pts</span><span id="stagVal">2</span></div>
+<div class="stats"><span>Vortices</span><span id="vortCount">0</span></div>
+</div>
+</div>
+
+<div id="canvasWrap">
+<button id="mobileToggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ Controls</button>
+<canvas id="c"></canvas>
+</div>
+</div>
+
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let W,H,cx,cy,scale=1,panX=0,panY=0;
+let shape='cylinder';
+let bodyX=0,bodyY=0,bodyR=60,bodyAngle=0;
+let vortices=[]; // {x,y,strength,age}
+let particles=[];
+let animParticles=[];
+let mode='streamlines'; // streamlines | smoke | pressure
+let t=0;
+let mouse={x:0,y:0,down:false,dragBody:false};
+
+// Parameters
+let flowSpeed=3, circulation=0, reynolds=100, viscosity=0.05, particleCount=800;
+
+function resize(){
+  const wrap=document.getElementById('canvasWrap');
+  W=wrap.clientWidth; H=wrap.clientHeight;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  cx=W/2+panX; cy=H/2+panY;
+}
+window.addEventListener('resize',resize);
+resize();
+
+// UI bindings
+function bind(id,prop,displayId,mult=1){const el=document.getElementById(id),disp=document.getElementById(displayId);el.addEventListener('input',()=>{window[prop]=parseFloat(el.value);disp.textContent=(window[prop]*mult).toFixed(mult===1?((window[prop]%1===0)?0:2):0);if(prop==='particleCount')initParticles();});}
+bind('speed','flowSpeed','speedVal');
+bind('circ','circulation','circVal');
+bind('reynolds','reynolds','reynoldsVal');
+bind('viscosity','viscosity','viscosityVal');
+bind('particles','particleCount','particlesVal');
+
+function toggleMode(m){
+  mode=m;
+  document.getElementById('btnStream').className=m==='streamlines'?'primary':'';
+  document.getElementById('btnSmoke').className=m==='smoke'?'primary':'';
+  document.getElementById('btnPressure').className=m==='pressure'?'primary':'';
+  initParticles();
+}
+function setShape(s){shape=s; initParticles();}
+function clearVortices(){vortices=[];}
+function resetView(){panX=0;panY=0;scale=1;bodyX=0;bodyY=0;bodyAngle=0;circulation=0;document.getElementById('circ').value=0;document.getElementById('circVal').textContent='0.0';vortices=[];resize();}
+
+// ===== PHYSICS =====
+// Potential flow: uniform + doublet + vortices
+// For cylinder: phi = U*(r + R^2/r)*cos(theta) + circulation*theta/(2*pi)
+// Velocity field from complex potential: dW/dz
+
+function velocityAt(x,y){
+  const dx=x-cx-bodyX, dy=y-cy-bodyY;
+  const r2=dx*dx+dy*dy;
+  let vx=flowSpeed, vy=0;
+
+  if(shape==='cylinder'){
+    const R=bodyR;
+    if(r2>R*R*0.01){
+      const r4=r2*r2;
+      vx += flowSpeed*R*R*(dx*dx-dy*dy)/r4;
+      vy += flowSpeed*R*R*(2*dx*dy)/r4;
+    }
+    if(r2>1){
+      const circ= circulation*50; // scale for display
+      vx += circ*dy/(2*Math.PI*r2);
+      vy += -circ*dx/(2*Math.PI*r2);
+    }
+  } else if(shape==='ellipse'){
+    const a=bodyR*1.4, b=bodyR*0.6;
+    const fac=(a+b)/2;
+    if(r2>1){
+      const r4=r2*r2;
+      vx += flowSpeed*fac*fac*(dx*dx-dy*dy)/r4;
+      vy += flowSpeed*fac*fac*(2*dx*dy)/r4;
+    }
+    if(r2>1){
+      const circ= circulation*50;
+      vx += circ*dy/(2*Math.PI*r2);
+      vy += -circ*dx/(2*Math.PI*r2);
+    }
+  } else if(shape==='flatplate'){
+    // Approximate as dipole + uniform, aligned with bodyAngle
+    const ca=Math.cos(bodyAngle), sa=Math.sin(bodyAngle);
+    const rdx=dx*ca+dy*sa, rdy=-dx*sa+dy*ca;
+    const rr2=rdx*rdx+rdy*rdy;
+    const L=bodyR*1.5;
+    if(rr2>L*L*0.05){
+      const d=L*L/rr2;
+      const uvx=flowSpeed*(1+d*(rdx*rdx-rdy*rdy)/rr2);
+      const uvy=flowSpeed*d*(2*rdx*rdy)/rr2;
+      vx = uvx*ca - uvy*sa;
+      vy = uvx*sa + uvy*ca;
+    }
+  } else if(shape==='airfoil'){
+    // Joukowski-like: cylinder + slight offset + transform
+    const R=bodyR;
+    // Map to zeta plane (cylinder with offset)
+    const mu=bodyR*0.15, beta=Math.PI*0.08; // slight camber
+    const zx=dx-mu*Math.cos(beta), zy=dy-mu*Math.sin(beta);
+    const zr2=zx*zx+zy*zy;
+    if(zr2>R*R*0.01){
+      const zr4=zr2*zr2;
+      vx += flowSpeed*R*R*(zx*zx-zy*zy)/zr4;
+      vy += flowSpeed*R*R*(2*zx*zy)/zr4;
+    }
+    if(zr2>1){
+      const circ= circulation*50 + flowSpeed*R*2*Math.PI*0.08; // Kutta condition approx
+      vx += circ*zy/(2*Math.PI*zr2);
+      vy += -circ*zx/(2*Math.PI*zr2);
+    }
+  }
+
+  // Vortices
+  for(let v of vortices){
+    const vdx=x-v.x, vdy=y-v.y;
+    const vd2=vdx*vdx+vdy*vdy;
+    if(vd2>4){
+      const core=10; // vortex core size
+      const factor = v.strength * (1-Math.exp(-vd2/(core*core))) / (2*Math.PI*Math.max(vd2,core*core));
+      vx += factor * (-vdy);
+      vy += factor * vdx;
+    }
+  }
+
+  // Add slight random perturbation proportional to viscosity for turbulent effects
+  if(viscosity>0 && Math.random()<0.3){
+    const turb=viscosity*0.5;
+    vx += (Math.random()-0.5)*turb;
+    vy += (Math.random()-0.5)*turb;
+  }
+
+  return {vx,vy};
+}
+
+function bodyAt(x,y){
+  const dx=x-cx-bodyX, dy=y-cy-bodyY;
+  if(shape==='cylinder')return dx*dx+dy*dy<bodyR*bodyR;
+  if(shape==='ellipse')return (dx*dx)/((bodyR*1.4)**2)+(dy*dy)/((bodyR*0.6)**2)<1;
+  if(shape==='flatplate'){
+    const ca=Math.cos(bodyAngle), sa=Math.sin(bodyAngle);
+    const rdx=dx*ca+dy*sa, rdy=-dx*sa+dy*ca;
+    return Math.abs(rdx)<bodyR*1.5 && Math.abs(rdy)<bodyR*0.12;
+  }
+  if(shape==='airfoil'){
+    // Simple Joukowski approximation
+    const R=bodyR;
+    const mu=R*0.15;
+    const zx=dx-mu, zy=dy;
+    const zr=Math.sqrt(zx*zx+zy*zy);
+    // Inside shifted circle = inside airfoil roughly
+    if(zr>R*1.1)return false;
+    // Joukowski: zeta = z + c^2/z
+    if(zr<0.1)return true;
+    const zetaX=zx+R*R*zx/zr/zr, zetaY=zy-R*R*zy/zr/zr;
+    return zetaX*zetaX/(R*R*2.5)+zetaY*zetaY/(R*R*0.3)<1.2;
+  }
+  return false;
+}
+
+// ===== PARTICLES =====
+function initParticles(){
+  particles=[];
+  animParticles=[];
+  if(mode==='pressure')return;
+  const count=mode==='smoke'?Math.min(particleCount,2000):Math.min(particleCount,1500);
+  if(mode==='streamlines'){
+    // Seed particles uniformly across the field
+    for(let i=0;i<count;i++){
+      particles.push({
+        x:Math.random()*W, y:Math.random()*H,
+        age:Math.random()*200, life:200+Math.random()*300,
+        hue:180+Math.random()*60
+      });
+    }
+  } else if(mode==='smoke'){
+    // Emit from the left edge
+    for(let i=0;i<count;i++){
+      particles.push({
+        x:-5,y:Math.random()*H,
+        age:0,life:600+Math.random()*400,
+        hue:200+Math.random()*40
+      });
+    }
+  }
+}
+initParticles();
+
+// ===== DRAWING =====
+function drawGrid(){
+  ctx.strokeStyle=GRID_RGBA;
+  ctx.lineWidth=0.5;
+  const step=50*scale;
+  const ox=(panX%step+step)%step, oy=(panY%step+step)%step;
+  ctx.beginPath();
+  for(let x=ox;x<W;x+=step){ctx.moveTo(x,0);ctx.lineTo(x,H);}
+  for(let y=oy;y<H;y+=step){ctx.moveTo(0,y);ctx.lineTo(W,y);}
+  ctx.stroke();
+}
+const GRID_RGBA='rgba(255,255,255,0.04)';
+
+function drawBody(){
+  if(shape==='none')return;
+  const bx=cx+bodyX, by=cy+bodyY;
+  ctx.save();
+  ctx.translate(bx,by);
+
+  // Shadow
+  ctx.shadowColor='rgba(0,0,0,0.4)';
+  ctx.shadowBlur=20;
+  ctx.shadowOffsetY=8;
+
+  // Body fill
+  ctx.fillStyle='rgba(30,40,50,0.92)';
+  ctx.strokeStyle='rgba(79,195,247,0.5)';
+  ctx.lineWidth=2;
+
+  if(shape==='cylinder'){
+    ctx.beginPath();ctx.arc(0,0,bodyR,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // Highlight
+    ctx.fillStyle='rgba(79,195,247,0.15)';
+    ctx.beginPath();ctx.arc(-bodyR*0.25,-bodyR*0.25,bodyR*0.6,0,Math.PI*2);ctx.fill();
+  } else if(shape==='ellipse'){
+    ctx.beginPath();ctx.ellipse(0,0,bodyR*1.4,bodyR*0.6,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(79,195,247,0.15)';
+    ctx.beginPath();ctx.ellipse(-bodyR*0.2,-bodyR*0.1,bodyR*0.8,bodyR*0.35,0,0,Math.PI*2);ctx.fill();
+  } else if(shape==='flatplate'){
+    ctx.rotate(bodyAngle);
+    ctx.beginPath();ctx.roundRect(-bodyR*1.5,-bodyR*0.12,bodyR*3,bodyR*0.24,4);ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(79,195,247,0.15)';
+    ctx.beginPath();ctx.roundRect(-bodyR*1.2,-bodyR*0.06,bodyR*2.4,bodyR*0.12,2);ctx.fill();
+    ctx.rotate(-bodyAngle);
+  } else if(shape==='airfoil'){
+    // Draw Joukowski-like airfoil
+    ctx.rotate(-0.05); // slight tilt
+    ctx.beginPath();
+    const R=bodyR;
+    for(let a=0;a<=Math.PI*2;a+=0.05){
+      // Parametric airfoil shape
+      const th=a-0.15;
+      const x0=R*Math.cos(th)+R*0.15, y0=R*Math.sin(th);
+      const rr=Math.sqrt(x0*x0+y0*y0);
+      const xi=x0+R*R*x0/rr/rr, yi=y0-R*R*y0/rr/rr;
+      if(a===0)ctx.moveTo(xi,yi);else ctx.lineTo(xi,yi);
+    }
+    ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(79,195,247,0.15)';
+    ctx.beginPath();
+    for(let a=0;a<=Math.PI;a+=0.05){
+      const th=a-0.15;
+      const x0=R*0.7*Math.cos(th)+R*0.15, y0=R*0.7*Math.sin(th);
+      const rr=Math.sqrt(x0*x0+y0*y0);
+      const xi=x0+R*R*x0/rr/rr, yi=y0-R*R*y0/rr/rr;
+      if(a===0)ctx.moveTo(xi,yi);else ctx.lineTo(xi,yi);
+    }
+    ctx.closePath();ctx.fill();
+    ctx.rotate(0.05);
+  }
+
+  ctx.shadowColor='transparent';
+  ctx.restore();
+}
+
+function drawVortices(){
+  for(let v of vortices){
+    const ageFade=Math.max(0,1-v.age/2000);
+    ctx.beginPath();
+    ctx.arc(v.x,v.y,6+Math.sin(t*0.05+v.age*0.01)*2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,112,67,${0.4*ageFade})`;
+    ctx.fill();
+    ctx.strokeStyle=`rgba(255,112,67,${0.7*ageFade})`;
+    ctx.lineWidth=1;
+    ctx.stroke();
+    // Spiral indication
+    ctx.beginPath();
+    for(let a=0;a<Math.PI*4;a+=0.2){
+      const r=3+a*1.5;
+      const sx=v.x+Math.cos(a+t*0.02*v.strength/Math.abs(v.strength||1))*r;
+      const sy=v.y+Math.sin(a+t*0.02*v.strength/Math.abs(v.strength||1))*r;
+      if(a===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);
+    }
+    ctx.strokeStyle=`rgba(255,160,100,${0.15*ageFade})`;
+    ctx.lineWidth=0.5;
+    ctx.stroke();
+  }
+}
+
+function drawPressureField(){
+  if(mode!=='pressure')return;
+  const imgData=ctx.createImageData(W,H);
+  const data=imgData.data;
+  // Sample pressure on a coarse grid
+  const step=4;
+  for(let y=0;y<H;y+=step){
+    for(let x=0;x<W;x+=step){
+      const vel=velocityAt(x,y);
+      const vMag=Math.sqrt(vel.vx*vel.vx+vel.vy*vel.vy);
+      // Bernoulli: p + 0.5*rho*v^2 = const => lower pressure where velocity is higher
+      const pRaw=1-Math.min(vMag/flowSpeed/3,1);
+      // Map to color: low pressure=blue/cyan, high pressure=orange/red
+      let r,g,b;
+      if(pRaw<0.5){const t2=pRaw*2;r=0;g=Math.floor(150*t2);b=Math.floor(200+55*(1-t2));}
+      else{const t2=(pRaw-0.5)*2;r=Math.floor(255*t2);g=Math.floor(150*(1-t2));b=Math.floor(100*(1-t2));}
+      for(let dy=0;dy<step && y+dy<H;dy++){
+        for(let dx=0;dx<step && x+dx<W;dx++){
+          const idx=((y+dy)*W+(x+dx))*4;
+          data[idx]=r;data[idx+1]=g;data[idx+2]=b;data[idx+3]=220;
+        }
+      }
+    }
+  }
+  ctx.putImageData(imgData,0,0);
+}
+
+function drawParticles(){
+  if(mode==='pressure')return;
+  const dt=0.4;
+  for(let p of particles){
+    // Velocity at particle position
+    const vel=velocityAt(p.x,p.y);
+    let speed=Math.sqrt(vel.vx*vel.vx+vel.vy*vel.vy);
+    // Adaptive RK-ish: sample mid-point
+    const mx=p.x+vel.vx*dt*0.5, my=p.y+vel.vy*dt*0.5;
+    const v2=velocityAt(mx,my);
+
+    p.x += v2.vx*dt;
+    p.y += v2.vy*dt;
+    p.age += 1;
+
+    // Reset if out of bounds, inside body, or expired
+    const out=p.x<-10||p.x>W+10||p.y<-10||p.y>H+10;
+    const inside=bodyAt(p.x,p.y);
+    const expired=p.age>p.life;
+    if(out||inside||expired){
+      if(mode==='smoke'){
+        p.x=-5; p.y=Math.random()*H; p.age=0; p.life=600+Math.random()*400;
+      } else {
+        p.x=Math.random()*W; p.y=Math.random()*H; p.age=0; p.life=200+Math.random()*300;
+      }
+    }
+
+    // Speed-based color
+    const spd=Math.sqrt(v2.vx*v2.vx+v2.vy*v2.vy);
+    const spdNorm=Math.min(spd/(flowSpeed*2.5),1);
+    const alpha=mode==='smoke'?Math.min(1,1-p.age/p.life)*0.6:0.35;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,mode==='smoke'?1.5:1,0,Math.PI*2);
+    // Color by speed: slow=blue, fast=red
+    const hue=200-spdNorm*180;
+    ctx.fillStyle=`hsla(${hue},80%,60%,${alpha})`;
+    ctx.fill();
+  }
+}
+
+// ===== TELEMETRY =====
+function updateTelemetry(){
+  // Approximate CL and CD from circulation and pressure integration
+  let cl=0, cd=0;
+  if(shape==='cylinder'||shape==='airfoil'||shape==='ellipse'){
+    // Theoretical: CL ≈ 2π*α (thin airfoil) or CL ≈ Γ/(U*c)
+    // Simplified display values scaled for visual feedback
+    const circDisplay=circulation;
+    cl = circDisplay * 0.6;
+    // Drag increases with circulation (induced drag)
+    cd = 0.05 + Math.abs(circDisplay)*0.08 + (reynolds<100?0.3:0.1);
+    if(shape==='cylinder')cd += 0.4; // bluff body drag
+  } else if(shape==='flatplate'){
+    cl = circulation * 0.4 * Math.cos(bodyAngle);
+    cd = 0.02 + Math.abs(circulation)*0.05 + Math.abs(Math.sin(bodyAngle))*0.3;
+  }
+  document.getElementById('clVal').textContent=cl.toFixed(2);
+  document.getElementById('cdVal').textContent=cd.toFixed(2);
+
+  // Stagnation points
+  let stag=2;
+  if(shape==='cylinder'){
+    if(Math.abs(circulation)<0.5)stag=2;
+    else if(Math.abs(circulation)<4)stag=1;
+    else stag=0; // all flow goes one way
+  } else if(shape==='airfoil'){
+    stag=1; // leading edge
+  }
+  document.getElementById('stagVal').textContent=stag;
+  document.getElementById('vortCount').textContent=vortices.length;
+}
+
+// ===== VORTEX SHEDDING =====
+let shedTimer=0;
+function shedVortices(){
+  if(shape==='none')return;
+  shedTimer++;
+  // Shed vortices periodically from separation points
+  const period=Math.max(20,120-reynolds*0.2);
+  if(shedTimer%Math.floor(period)===0 && vortices.length<40){
+    const bx=cx+bodyX, by=cy+bodyY;
+    if(shape==='cylinder'){
+      // Karman vortex street: alternate top and bottom
+      const side=(shedTimer%(period*2)<period)?1:-1;
+      vortices.push({
+        x:bx+bodyR*0.8,y:by+side*bodyR*0.5,
+        strength:side*flowSpeed*(0.5+Math.random()*0.5),
+        age:0
+      });
+    } else if(shape==='airfoil'){
+      // Trailing edge vortices
+      const side=(shedTimer%(period*2)<period)?1:-1;
+      vortices.push({
+        x:bx+bodyR*2,y:by+side*bodyR*0.2,
+        strength:side*flowSpeed*(0.3+Math.random()*0.4),
+        age:0
+      });
+    } else if(shape==='flatplate'){
+      const side=(shedTimer%(period*2)<period)?1:-1;
+      vortices.push({
+        x:bx+Math.cos(bodyAngle)*bodyR*1.2+side*Math.sin(bodyAngle)*bodyR*0.3,
+        y:by+Math.sin(bodyAngle)*bodyR*1.2-side*Math.cos(bodyAngle)*bodyR*0.3,
+        strength:side*flowSpeed*0.6,
+        age:0
+      });
+    }
+  }
+  // Age vortices
+  for(let v of vortices)v.age++;
+  // Remove old ones
+  vortices=vortices.filter(v=>v.age<2000);
+}
+
+// ===== INPUT =====
+canvas.addEventListener('mousedown',e=>{
+  mouse.down=true;
+  const r=canvas.getBoundingClientRect();
+  mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top;
+  const bx=cx+bodyX, by=cy+bodyY;
+  const dist=Math.sqrt((mouse.x-bx)**2+(mouse.y-by)**2);
+  if(shape!=='none' && dist<bodyR+20){
+    mouse.dragBody=true;
+  }
+});
+canvas.addEventListener('mousemove',e=>{
+  const r=canvas.getBoundingClientRect();
+  mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top;
+  if(mouse.down && mouse.dragBody){
+    bodyX=mouse.x-cx; bodyY=mouse.y-cy;
+  }
+});
+canvas.addEventListener('mouseup',e=>{
+  if(!mouse.dragBody && shape!=='none'){
+    // Click without drag = add vortex (unless shift held)
+    if(!e.shiftKey){
+      vortices.push({x:mouse.x,y:mouse.y,strength:(Math.random()-0.5)*flowSpeed*3,age:0});
+    } else {
+      // Remove nearest vortex
+      let nearest=-1, nd=Infinity;
+      for(let i=0;i<vortices.length;i++){
+        const d=(vortices[i].x-mouse.x)**2+(vortices[i].y-mouse.y)**2;
+        if(d<nd){nd=d;nearest=i;}
+      }
+      if(nearest>=0 && nd<900)vortices.splice(nearest,1);
+    }
+  }
+  mouse.down=false; mouse.dragBody=false;
+});
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  const t=e.touches[0];
+  mouse.x=t.clientX-r.left; mouse.y=t.clientY-r.top;
+  mouse.down=true;
+  const bx=cx+bodyX, by=cy+bodyY;
+  const dist=Math.sqrt((mouse.x-bx)**2+(mouse.y-by)**2);
+  if(shape!=='none' && dist<bodyR+20)mouse.dragBody=true;
+},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(!mouse.down)return;
+  const r=canvas.getBoundingClientRect();
+  const t=e.touches[0];
+  mouse.x=t.clientX-r.left; mouse.y=t.clientY-r.top;
+  if(mouse.dragBody){bodyX=mouse.x-cx;bodyY=mouse.y-cy;}
+},{passive:false});
+canvas.addEventListener('touchend',e=>{
+  if(!mouse.dragBody){
+    vortices.push({x:mouse.x,y:mouse.y,strength:(Math.random()-0.5)*flowSpeed*3,age:0});
+  }
+  mouse.down=false;mouse.dragBody=false;
+});
+
+// ===== MAIN LOOP =====
+function frame(){
+  t++;
+
+  if(mode==='pressure'){
+    // Clear with dark background
+    ctx.fillStyle=BG_COLOR;
+    ctx.fillRect(0,0,W,H);
+    drawPressureField();
+  } else {
+    // Fade for trail effect
+    ctx.fillStyle='rgba(11,15,20,0.25)';
+    ctx.fillRect(0,0,W,H);
+  }
+
+  drawGrid();
+  shedVortices();
+  drawParticles();
+  drawVortices();
+  drawBody();
+  updateTelemetry();
+
+  requestAnimationFrame(frame);
+}
+const BG_COLOR='#0b0f14';
+
+// Scroll to zoom
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const delta=e.deltaY>0?0.9:1.1;
+  scale=Math.max(0.5,Math.min(3,scale*delta));
+},{passive:false});
+
+// Close sidebar when clicking canvas on mobile
+canvas.addEventListener('click',()=>{
+  if(window.innerWidth<=720)document.getElementById('sidebar').classList.remove('open');
+});
+
+frame();
+</script>
+</body>
+</html>
