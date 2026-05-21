@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+  <title>Cloud Factory — Atmospheric Physics Sandbox</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #0f172a 0%, #1e3a5f 40%, #2d5a87 70%, #4a7fb5 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .disclaimer {
+      background: rgba(220, 38, 38, 0.9);
+      color: #fff;
+      text-align: center;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.2rem;
+      margin-bottom: 4px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      letter-spacing: -0.5px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 768px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: rgba(15, 23, 42, 0.7);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      backdrop-filter: blur(10px);
+    }
+    .panel h2 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      color: #60a5fa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .control-group {
+      margin-bottom: 20px;
+    }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    .control-group .value {
+      color: #60a5fa;
+      font-weight: 600;
+      font-family: 'SF Mono', monospace;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(148, 163, 184, 0.2);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #60a5fa;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(96, 165, 250, 0.4);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #60a5fa;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 10px rgba(96, 165, 250, 0.4);
+    }
+    .preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .preset-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(96, 165, 250, 0.4);
+      background: rgba(96, 165, 250, 0.1);
+      color: #93c5fd;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .preset-btn:hover {
+      background: rgba(96, 165, 250, 0.25);
+      border-color: rgba(96, 165, 250, 0.7);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .stat-box {
+      background: rgba(30, 41, 59, 0.6);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-box .stat-label {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-box .stat-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-top: 4px;
+    }
+    .stat-box .stat-unit {
+      font-size: 0.7rem;
+      color: #64748b;
+    }
+    #skyCanvas {
+      width: 100%;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #0c4a6e 0%, #075985 30%, #0369a1 60%, #0284c7 100%);
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .cloud-info {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(30, 41, 59, 0.5);
+      border-radius: 10px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .cloud-info h3 {
+      color: #60a5fa;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+    .phase-indicator {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .phase-clear { background: #166534; color: #86efac; }
+    .phase-mist { background: #3f6212; color: #bef264; }
+    .phase-cumulus { background: #1e40af; color: #93c5fd; }
+    .phase-stratus { background: #475569; color: #cbd5e1; }
+    .phase-storm { background: #7f1d1d; color: #fca5a5; }
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .science-tip {
+      margin-top: 16px;
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
+      border-radius: 12px;
+      border-left: 3px solid #60a5fa;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    .science-tip strong {
+      color: #60a5fa;
+    }
+  </style>
+</head>
+<body>
+  <div class="disclaimer">
+    Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+  </div>
+  <div class="container">
+    <h1>☁️ Cloud Factory</h1>
+    <p class="subtitle">Atmospheric Physics Sandbox — Build clouds from scratch</p>
+    <div class="main-grid">
+      <div class="controls panel">
+        <h2>🌡️ Conditions</h2>
+        <div class="control-group">
+          <label>Surface Temperature <span class="value" id="tempVal">20°C</span></label>
+          <input type="range" id="temperature" min="-20" max="40" value="20" step="1">
+        </div>
+        <div class="control-group">
+          <label>Relative Humidity <span class="value" id="humVal">60%</span></label>
+          <input type="range" id="humidity" min="0" max="100" value="60" step="1">
+        </div>
+        <div class="control-group">
+          <label>Atmospheric Lift <span class="value" id="liftVal">Medium</span></label>
+          <input type="range" id="lift" min="0" max="100" value="50" step="1">
+        </div>
+        <div class="control-group">
+          <label>Wind Speed <span class="value" id="windVal">10 km/h</span></label>
+          <input type="range" id="wind" min="0" max="80" value="10" step="1">
+        </div>
+        <div class="preset-buttons">
+          <button class="preset-btn" onclick="setPreset('clear')">Clear Sky</button>
+          <button class="preset-btn" onclick="setPreset('mist')">Morning Mist</button>
+          <button class="preset-btn" onclick="setPreset('cumulus')">Fair Weather</button>
+          <button class="preset-btn" onclick="setPreset('storm')">Thunderstorm</button>
+          <button class="preset-btn" onclick="setPreset('stratus')">Overcast</button>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">Dew Point</div>
+            <div class="stat-value" id="dewPoint">12°</div>
+            <div class="stat-unit">Celsius</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Lifting Condensation</div>
+            <div class="stat-value" id="lcl">850</div>
+            <div class="stat-unit">meters</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Cloud Droplets</div>
+            <div class="stat-value" id="dropletCount">0</div>
+            <div class="stat-unit">active</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Precipitation</div>
+            <div class="stat-value" id="precipRate">0</div>
+            <div class="stat-unit">mm/hr</div>
+          </div>
+        </div>
+        <div class="cloud-info">
+          <h3>Current Phase <span class="phase-indicator phase-clear" id="phaseBadge">Clear Sky</span></h3>
+          <p id="phaseDesc">Air is warmer than dew point. Water vapor remains invisible. No condensation occurring.</p>
+        </div>
+      </div>
+      <div class="visualization panel">
+        <canvas id="skyCanvas" width="800" height="500"></canvas>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Rising warm air</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#e2e8f0"></div>Cloud droplets</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Rain drops</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div>Cool sinking air</div>
+        </div>
+        <div class="science-tip" id="scienceTip">
+          <strong>💡 How clouds form:</strong> Warm air rises and cools. As temperature drops, air can hold less water vapor. When it reaches the dew point, invisible vapor condenses into tiny droplets around condensation nuclei (dust, pollen, salt). Billions of these droplets scatter light — and we see a cloud.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // CLOUD FACTORY — Atmospheric Physics Sandbox
+    // ============================================
+
+    const canvas = document.getElementById('skyCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Make canvas responsive
+    function resizeCanvas() {
+      const parent = canvas.parentElement;
+      canvas.width = parent.clientWidth;
+      canvas.height = Math.min(500, window.innerHeight * 0.5);
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // State
+    let temperature = 20;
+    let humidity = 60;
+    let liftStrength = 50;
+    let windSpeed = 10;
+    let time = 0;
+
+    // Particles
+    const MAX_PARTICLES = 400;
+    let particles = [];
+    let rainDrops = [];
+    let condensationNuclei = [];
+
+    // Phase tracking
+    let currentPhase = 'clear';
+    let phaseTimer = 0;
+
+    // Science tips
+    const tips = [
+      "Warm air rises because it's less dense than cool air. This is convection — the engine that drives weather.",
+      "The dew point is the temperature at which air becomes saturated. Every 1°C the air cools, it can hold ~7% less water vapor.",
+      "Cloud droplets are tiny — about 0.01 mm across. It takes millions to make a visible cloud.",
+      "Rain only falls when droplets collide and merge (coalescence) until they're heavy enough to overcome updrafts.",
+      "A typical cumulus cloud weighs about 1 million kg — yet it floats because the air inside is slightly warmer.",
+      "Condensation releases latent heat, which makes rising air buoyant and fuels further cloud growth.",
+      "Thunderstorms need three ingredients: moisture, instability (warm surface, cold upper air), and a trigger (lift).",
+      "Stratus clouds form in stable air with gentle, widespread lift — unlike the strong, localised lift that builds cumulus."
+    ];
+    let tipIndex = 0;
+    let tipTimer = 0;
+
+    // UI Elements
+    const tempSlider = document.getElementById('temperature');
+    const humSlider = document.getElementById('humidity');
+    const liftSlider = document.getElementById('lift');
+    const windSlider = document.getElementById('wind');
+
+    // Event listeners
+    tempSlider.addEventListener('input', (e) => { temperature = parseInt(e.target.value); updateUI(); });
+    humSlider.addEventListener('input', (e) => { humidity = parseInt(e.target.value); updateUI(); });
+    liftSlider.addEventListener('input', (e) => { liftStrength = parseInt(e.target.value); updateUI(); });
+    windSlider.addEventListener('input', (e) => { windSpeed = parseInt(e.target.value); updateUI(); });
+
+    // Dew point approximation (Magnus formula)
+    function calcDewPoint(T, RH) {
+      const a = 17.625;
+      const b = 243.04;
+      const alpha = Math.log(RH / 100.0) + (a * T) / (b + T);
+      return (b * alpha) / (a - alpha);
+    }
+
+    // Lifting Condensation Level (approximate)
+    function calcLCL(T, Td) {
+      // Simplified: LCL ≈ 125 * (T - Td) in meters
+      return Math.round(125 * (T - Td));
+    }
+
+    function updateUI() {
+      document.getElementById('tempVal').textContent = temperature + '°C';
+      document.getElementById('humVal').textContent = humidity + '%';
+      const liftLabels = ['None', 'Very Low', 'Low', 'Medium', 'High', 'Very High', 'Extreme'];
+      const liftIdx = Math.min(6, Math.floor(liftStrength / 15));
+      document.getElementById('liftVal').textContent = liftLabels[liftIdx];
+      document.getElementById('windVal').textContent = windSpeed + ' km/h';
+
+      const Td = calcDewPoint(temperature, humidity);
+      const lcl = calcLCL(temperature, Td);
+      document.getElementById('dewPoint').textContent = Math.round(Td) + '°';
+      document.getElementById('lcl').textContent = lcl;
+
+      updatePhase(Td, lcl);
+    }
+
+    function updatePhase(Td, lcl) {
+      const TdC = Math.round(Td);
+      const lift = liftStrength;
+      const hum = humidity;
+
+      let newPhase = 'clear';
+      let phaseName = 'Clear Sky';
+      let phaseClass = 'phase-clear';
+      let desc = `Air is warmer than dew point (${TdC}°C). Water vapor remains invisible. No condensation occurring.`;
+
+      if (hum > 85 && lift > 30 && lcl < 1500) {
+        newPhase = 'storm';
+        phaseName = 'Cumulonimbus / Storm';
+        phaseClass = 'phase-storm';
+        desc = `Strong lift carries moist air high. Rapid condensation releases latent heat, accelerating updrafts. Heavy precipitation and lightning possible.`;
+      } else if (hum > 70 && lift > 40 && lcl < 2000) {
+        newPhase = 'cumulus';
+        phaseName = 'Cumulus / Fair Weather';
+        phaseClass = 'phase-cumulus';
+        desc = `Warm surface air rises in bubbles. Condensation begins at ${lcl}m, creating puffy clouds with flat bases.`;
+      } else if (hum > 80 && lift < 30) {
+        newPhase = 'stratus';
+        phaseName = 'Stratus / Overcast';
+        phaseClass = 'phase-stratus';
+        desc = `Widespread gentle lift in moist stable air creates a uniform cloud layer. Light drizzle possible.`;
+      } else if (hum > 90 && lift < 20 && temperature < 15) {
+        newPhase = 'mist';
+        phaseName = 'Mist / Fog';
+        phaseClass = 'phase-mist';
+        desc = `Air near the surface is saturated. Condensation occurs at ground level, reducing visibility.`;
+      }
+
+      if (newPhase !== currentPhase) {
+        currentPhase = newPhase;
+        document.getElementById('phaseBadge').textContent = phaseName;
+        document.getElementById('phaseBadge').className = 'phase-indicator ' + phaseClass;
+        document.getElementById('phaseDesc').textContent = desc;
+      }
+    }
+
+    // Particle system
+    class Particle {
+      constructor(type) {
+        this.reset(type);
+      }
+      reset(type) {
+        this.type = type || 'air';
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height - 10 - Math.random() * 40;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = -0.5 - Math.random() * 1.5;
+        this.life = 0;
+        this.maxLife = 200 + Math.random() * 300;
+        this.size = 1 + Math.random() * 2;
+        this.opacity = 0;
+        this.targetOpacity = 0;
+        this.condensed = false;
+      }
+      update() {
+        const Td = calcDewPoint(temperature, humidity);
+        const lcl = calcLCL(temperature, Td);
+        const lclPixel = canvas.height - (lcl / 5000) * canvas.height * 0.7;
+
+        // Wind influence
+        this.vx += (windSpeed / 80) * 0.02;
+        this.x += this.vx;
+
+        // Lift influence
+        const liftForce = (liftStrength / 100) * (1 + Math.sin(time * 0.01 + this.x * 0.01) * 0.3);
+        this.vy -= liftForce * 0.01;
+
+        // Cooling as it rises (temperature decreases with altitude)
+        const altitude = canvas.height - this.y;
+        const localTemp = temperature - (altitude / canvas.height) * 30; // ~30°C drop to top
+
+        // Condensation check
+        if (localTemp <= Td && !this.condensed && this.type === 'air') {
+          this.condensed = true;
+          this.targetOpacity = 0.3 + Math.random() * 0.4;
+          this.size = 3 + Math.random() * 5;
+        }
+
+        // If too cold, droplets can grow
+        if (this.condensed && localTemp < Td - 5) {
+          this.size = Math.min(12, this.size * 1.002);
+          this.targetOpacity = Math.min(0.7, this.targetOpacity * 1.001);
+        }
+
+        // If warmed, droplets evaporate
+        if (this.condensed && localTemp > Td + 2) {
+          this.targetOpacity *= 0.99;
+          this.size *= 0.999;
+          if (this.targetOpacity < 0.05) {
+            this.condensed = false;
+            this.size = 1 + Math.random() * 2;
+          }
+        }
+
+        this.opacity += (this.targetOpacity - this.opacity) * 0.05;
+        this.life++;
+
+        // Terminal velocity for droplets
+        if (this.condensed && this.size > 6) {
+          this.vy += 0.05; // fall
+          if (this.vy > 2) this.vy = 2;
+        }
+
+        // Boundary wrap
+        if (this.x > canvas.width + 20) this.x = -20;
+        if (this.x < -20) this.x = canvas.width + 20;
+        if (this.y > canvas.height + 10) {
+          // Hit ground
+          if (this.condensed && this.size > 8) {
+            // Rain hit ground
+            createSplash(this.x, canvas.height - 5);
+          }
+          this.reset('air');
+        }
+        if (this.y < -50) {
+          this.reset('air');
+        }
+
+        // If droplet too big, becomes rain
+        if (this.condensed && this.size > 10 && Math.random() < 0.01) {
+          return 'rain';
+        }
+        return null;
+      }
+      draw() {
+        if (this.opacity < 0.01) return;
+        ctx.globalAlpha = this.opacity;
+        if (this.condensed) {
+          // Cloud droplet
+          ctx.fillStyle = '#e2e8f0';
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Air parcel (subtle)
+          ctx.fillStyle = temperature > 25 ? '#fbbf24' : '#94a3b8';
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    class RainDrop {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = windSpeed / 40;
+        this.vy = 3 + Math.random() * 2;
+        this.size = 2 + Math.random() * 3;
+        this.life = 0;
+        this.maxLife = 200;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.05; // gravity
+        this.life++;
+        if (this.y > canvas.height - 5) {
+          createSplash(this.x, canvas.height - 5);
+          return false;
+        }
+        return true;
+      }
+      draw() {
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = '#3b82f6';
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y, this.size * 0.5, this.size, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    const splashes = [];
+    function createSplash(x, y) {
+      for (let i = 0; i < 3; i++) {
+        splashes.push({
+          x: x + (Math.random() - 0.5) * 10,
+          y: y,
+          vx: (Math.random() - 0.5) * 2,
+          vy: -1 - Math.random() * 2,
+          life: 0,
+          maxLife: 20 + Math.random() * 10
+        });
+      }
+    }
+
+    // Initialize particles
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      particles.push(new Particle('air'));
+      // Stagger start positions
+      particles[i].y = canvas.height - Math.random() * canvas.height;
+      particles[i].x = Math.random() * canvas.width;
+    }
+
+    // Ground condensation nuclei visualization
+    for (let i = 0; i < 30; i++) {
+      condensationNuclei.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height - 5 - Math.random() * 15,
+        size: 1 + Math.random() * 2,
+        drift: (Math.random() - 0.5) * 0.2
+      });
+    }
+
+    // Mouse interaction — add extra lift at mouse position
+    let mouseX = -100, mouseY = -100;
+    let mouseActive = false;
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+      mouseActive = true;
+    });
+    canvas.addEventListener('mouseleave', () => { mouseActive = false; });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.touches[0].clientX - rect.left;
+      mouseY = e.touches[0].clientY - rect.top;
+      mouseActive = true;
+    });
+    canvas.addEventListener('touchend', () => { mouseActive = false; });
+
+    function drawSkyBackground() {
+      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      // Adjust sky color based on conditions
+      const cloudiness = particles.filter(p => p.condensed).length / particles.length;
+      if (cloudiness > 0.3) {
+        grad.addColorStop(0, '#334155');
+        grad.addColorStop(0.5, '#475569');
+        grad.addColorStop(1, '#64748b');
+      } else {
+        grad.addColorStop(0, '#0c4a6e');
+        grad.addColorStop(0.3, '#075985');
+        grad.addColorStop(0.6, '#0369a1');
+        grad.addColorStop(1, '#38bdf8');
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawGround() {
+      // Horizon line
+      const horizonY = canvas.height - 40;
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, horizonY, canvas.width, 40);
+
+      // Ground texture
+      ctx.fillStyle = '#0f172a';
+      for (let i = 0; i < canvas.width; i += 20) {
+        ctx.fillRect(i, horizonY + 5, 2, 3);
+      }
+
+      // Condensation nuclei at surface
+      ctx.fillStyle = '#64748b';
+      condensationNuclei.forEach(n => {
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      // Label
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px sans-serif';
+      ctx.fillText('Ground level — condensation nuclei (dust, pollen, salt)', 10, canvas.height - 8);
+    }
+
+    function drawAltitudeMarkers() {
+      const steps = 5;
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.3)';
+      ctx.font = '10px sans-serif';
+      for (let i = 1; i <= steps; i++) {
+        const y = canvas.height - (i / steps) * (canvas.height - 40) * 0.8;
+        const altMeters = Math.round((i / steps) * 5000);
+        ctx.fillRect(0, y, canvas.width, 1);
+        ctx.fillText(altMeters + ' m', canvas.width - 50, y - 3);
+      }
+
+      // LCL line
+      const Td = calcDewPoint(temperature, humidity);
+      const lcl = calcLCL(temperature, Td);
+      const lclY = canvas.height - (lcl / 5000) * (canvas.height - 40) * 0.8;
+      if (lclY > 40 && lclY < canvas.height - 40) {
+        ctx.strokeStyle = '#60a5fa';
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, lclY);
+        ctx.lineTo(canvas.width, lclY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#60a5fa';
+        ctx.fillText('LCL (Lifting Condensation Level)', 10, lclY - 3);
+      }
+    }
+
+    function drawWindArrows() {
+      if (windSpeed < 5) return;
+      const arrowSpacing = 80;
+      const arrowY = 30;
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.25)';
+      ctx.font = '12px sans-serif';
+      for (let x = 0; x < canvas.width; x += arrowSpacing) {
+        const offset = (time * windSpeed * 0.1 + x) % arrowSpacing;
+        const ax = x - offset;
+        if (ax > -30 && ax < canvas.width + 30) {
+          ctx.fillText('→', ax, arrowY);
+        }
+      }
+    }
+
+    function updateAndDraw() {
+      time++;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawSkyBackground();
+      drawAltitudeMarkers();
+      drawWindArrows();
+
+      // Mouse influence on particles
+      if (mouseActive) {
+        particles.forEach(p => {
+          const dx = mouseX - p.x;
+          const dy = mouseY - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 100) {
+            p.vx += dx * 0.001;
+            p.vy += dy * 0.001;
+          }
+        });
+      }
+
+      // Update and draw particles
+      let activeDroplets = 0;
+      let precipRate = 0;
+
+      particles.forEach(p => {
+        const result = p.update();
+        if (result === 'rain') {
+          rainDrops.push(new RainDrop(p.x, p.y));
+          p.reset('air');
+        }
+        if (p.condensed) activeDroplets++;
+        p.draw();
+      });
+
+      // Update and draw rain
+      rainDrops = rainDrops.filter(r => {
+        const alive = r.update();
+        if (alive) r.draw();
+        return alive;
+      });
+      precipRate = rainDrops.length;
+
+      // Splashes
+      for (let i = splashes.length - 1; i >= 0; i--) {
+        const s = splashes[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.vy += 0.1;
+        s.life++;
+        if (s.life > s.maxLife) {
+          splashes.splice(i, 1);
+          continue;
+        }
+        ctx.globalAlpha = 1 - s.life / s.maxLife;
+        ctx.fillStyle = '#60a5fa';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      drawGround();
+
+      // Update stats
+      document.getElementById('dropletCount').textContent = activeDroplets;
+      document.getElementById('precipRate').textContent = Math.round(precipRate * 0.5);
+
+      // Rotate science tips
+      tipTimer++;
+      if (tipTimer > 600) {
+        tipTimer = 0;
+        tipIndex = (tipIndex + 1) % tips.length;
+        document.getElementById('scienceTip').innerHTML = '<strong>💡 ' + tips[tipIndex].split(':')[0] + ':</strong> ' + tips[tipIndex].split(':').slice(1).join(':');
+      }
+
+      requestAnimationFrame(updateAndDraw);
+    }
+
+    // Presets
+    function setPreset(name) {
+      switch(name) {
+        case 'clear':
+          tempSlider.value = 30;
+          humSlider.value = 30;
+          liftSlider.value = 10;
+          windSlider.value = 5;
+          break;
+        case 'mist':
+          tempSlider.value = 8;
+          humSlider.value = 95;
+          liftSlider.value = 5;
+          windSlider.value = 2;
+          break;
+        case 'cumulus':
+          tempSlider.value = 25;
+          humSlider.value = 70;
+          liftSlider.value = 60;
+          windSlider.value = 10;
+          break;
+        case 'storm':
+          tempSlider.value = 28;
+          humSlider.value = 90;
+          liftSlider.value = 90;
+          windSlider.value = 50;
+          break;
+        case 'stratus':
+          tempSlider.value = 15;
+          humSlider.value = 85;
+          liftSlider.value = 25;
+          windSlider.value = 20;
+          break;
+      }
+      temperature = parseInt(tempSlider.value);
+      humidity = parseInt(humSlider.value);
+      liftStrength = parseInt(liftSlider.value);
+      windSpeed = parseInt(windSlider.value);
+      updateUI();
+    }
+
+    // Init
+    updateUI();
+    updateAndDraw();
+  </script>
+</body>
+</html>

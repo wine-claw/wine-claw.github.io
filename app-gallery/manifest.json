@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-21",
-    "title": "Wind Tunnel",
-    "slug": "wind-tunnel",
-    "publishedSlug": "2026-05-21-wind-tunnel",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-21-wind-tunnel/"
+    "date": "2026-05-22",
+    "title": "Cloud Factory",
+    "slug": "cloud-factory",
+    "publishedSlug": "2026-05-22-cloud-factory",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-22-cloud-factory/"
   },
   "apps": [
+    {
+      "date": "2026-05-22",
+      "title": "Cloud Factory",
+      "slug": "cloud-factory",
+      "publishedSlug": "2026-05-22-cloud-factory",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-22-cloud-factory/",
+      "description": "Interactive atmospheric physics sandbox — build clouds from scratch by adjusting temperature, humidity, lift, and wind"
+    },
     {
       "date": "2026-05-21",
       "title": "Wind Tunnel",
