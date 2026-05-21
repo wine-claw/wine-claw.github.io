@@ -199,8 +199,8 @@ function velocityAt(x,y){
     const L=bodyR*1.5;
     if(rr2>L*L*0.05){
       const d=L*L/rr2;
-      const uvx=flowSpeed*(1+d*(rdx*rdx-rdy*rdy)/rr2);
-      const uvy=flowSpeed*d*(2*rdx*rdy)/rr2;
+      const uvx=flowSpeed*(1-d*(rdx*rdx-rdy*rdy)/rr2);
+      const uvy=flowSpeed*(-d*(2*rdx*rdy)/rr2);
       vx = uvx*ca - uvy*sa;
       vy = uvx*sa + uvy*ca;
     }
@@ -213,8 +213,8 @@ function velocityAt(x,y){
     const zr2=zx*zx+zy*zy;
     if(zr2>R*R*0.01){
       const zr4=zr2*zr2;
-      vx += flowSpeed*R*R*(zx*zx-zy*zy)/zr4;
-      vy += flowSpeed*R*R*(2*zx*zy)/zr4;
+      vx += -flowSpeed*R*R*(zx*zx-zy*zy)/zr4;
+      vy += -flowSpeed*R*R*(2*zx*zy)/zr4;
     }
     if(zr2>1){
       const circ= circulation*50 + flowSpeed*R*2*Math.PI*0.08; // Kutta condition approx
