@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-22",
-    "title": "Cloud Factory",
-    "slug": "cloud-factory",
-    "publishedSlug": "2026-05-22-cloud-factory",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-22-cloud-factory/"
+    "date": "2026-05-23",
+    "title": "Seismic Explorer",
+    "slug": "seismic-explorer",
+    "publishedSlug": "2026-05-23-seismic-explorer",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-23-seismic-explorer/"
   },
   "apps": [
+    {
+      "date": "2026-05-23",
+      "title": "Seismic Explorer",
+      "slug": "seismic-explorer",
+      "publishedSlug": "2026-05-23-seismic-explorer",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-23-seismic-explorer/",
+      "description": "Interactive earthquake wave simulator — trigger quakes, watch P/S waves radiate through Earth, drag a seismograph station, and discover the shadow zones"
+    },
     {
       "date": "2026-05-22",
       "title": "Cloud Factory",

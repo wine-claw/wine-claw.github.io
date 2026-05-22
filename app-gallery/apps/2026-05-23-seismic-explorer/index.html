@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Seismic Explorer</title>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --panel: rgba(15, 20, 30, 0.92);
+    --border: rgba(100, 180, 255, 0.15);
+    --text: #d0dce8;
+    --text-dim: #6a7a8a;
+    --accent: #4ecdc4;
+    --accent2: #ff6b9d;
+    --accent3: #ffd93d;
+    --crust: #8B6914;
+    --mantle: #C44D34;
+    --outer-core: #E8A838;
+    --inner-core: #F5F5F0;
+    --star: rgba(255,255,255,0.4);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+  #canvas {
+    position: absolute; top:0; left:0;
+    width:100%; height:100%;
+    cursor: crosshair;
+  }
+  .ui-layer {
+    position: absolute; pointer-events: none;
+    width:100%; height:100%; top:0; left:0;
+  }
+  .ui-layer > * { pointer-events: auto; }
+
+  /* Disclaimer */
+  .disclaimer {
+    position: absolute; top:8px; left:50%; transform:translateX(-50%);
+    background: rgba(180,40,40,0.85);
+    color: #fff; font-size:11px; padding:5px 14px;
+    border-radius: 6px; text-align:center; max-width:90vw;
+    line-height:1.3; z-index: 50; white-space: nowrap;
+    pointer-events: none;
+  }
+  .disclaimer.full {
+    white-space: normal; max-width: 520px;
+  }
+
+  /* Title */
+  .title {
+    position: absolute; top:42px; left:16px;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: 0.5px; color: var(--text);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+    z-index: 20;
+  }
+  .subtitle {
+    position: absolute; top:68px; left:16px;
+    font-size: 12px; color: var(--text-dim);
+    z-index: 20;
+  }
+
+  /* Controls panel */
+  .controls {
+    position: absolute; top:94px; left:16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+    width: 210px; backdrop-filter: blur(10px);
+    z-index: 20;
+  }
+  .controls h3 {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .toggle-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px; cursor: pointer;
+    user-select: none;
+  }
+  .toggle-row:last-child { margin-bottom: 0; }
+  .toggle-box {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 2px solid var(--text-dim);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .toggle-box.on { border-color: var(--accent); background: var(--accent); }
+  .toggle-box.on.p { border-color: var(--accent); background: var(--accent); }
+  .toggle-box.on.s { border-color: var(--accent2); background: var(--accent2); }
+  .toggle-box svg { width: 12px; height: 12px; opacity: 0; }
+  .toggle-box.on svg { opacity: 1; }
+  .toggle-label { font-size: 13px; }
+  .toggle-label span { font-size: 11px; color: var(--text-dim); }
+
+  /* Action buttons */
+  .actions {
+    position: absolute; top: 94px; left: 238px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 20;
+  }
+  .btn {
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 8px 14px;
+    font-size: 12px; cursor: pointer; backdrop-filter: blur(10px);
+    transition: all 0.15s; font-weight: 500;
+    text-align: left; min-width: 120px;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:active { transform: scale(0.97); }
+  .btn.accent { border-color: var(--accent3); color: var(--accent3); }
+  .btn.accent:hover { background: rgba(255,217,61,0.08); }
+
+  /* Seismograph panel */
+  .seismo-panel {
+    position: absolute; bottom: 16px; right: 16px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+    width: 260px; backdrop-filter: blur(10px);
+    z-index: 20;
+  }
+  .seismo-panel h3 {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--text-dim);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .seismo-canvas {
+    width: 100%; height: 80px;
+    background: rgba(0,0,0,0.4); border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .seismo-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6px; margin-top: 8px;
+  }
+  .stat {
+    font-size: 11px; color: var(--text-dim);
+  }
+  .stat strong {
+    color: var(--text); font-size: 13px; display: block;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat.p strong { color: var(--accent); }
+  .stat.s strong { color: var(--accent2); }
+
+  /* Science fact panel */
+  .fact-panel {
+    position: absolute; bottom: 16px; left: 16px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+    max-width: 340px; backdrop-filter: blur(10px);
+    z-index: 20;
+  }
+  .fact-panel h3 {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .fact-text {
+    font-size: 12px; line-height: 1.5; color: var(--text);
+  }
+  .fact-text .key {
+    color: var(--accent3); font-weight: 600;
+  }
+
+  /* Layer legend */
+  .legend {
+    position: absolute; bottom: 16px;
+    left: 50%; transform: translateX(-50%);
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 14px;
+    display: flex; gap: 14px; align-items: center;
+    backdrop-filter: blur(10px); z-index: 20;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--text-dim);
+  }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+
+  /* Hint */
+  .hint {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.7); color: var(--text-dim);
+    padding: 10px 20px; border-radius: 8px;
+    font-size: 13px; pointer-events: none;
+    transition: opacity 0.5s; z-index: 10;
+  }
+  .hint.hidden { opacity: 0; }
+
+  /* Mobile adjustments */
+  @media (max-width: 700px) {
+    .controls { width: 160px; padding: 10px; top: 80px; }
+    .actions { left: 186px; top: 80px; }
+    .btn { min-width: 100px; padding: 6px 10px; font-size: 11px; }
+    .seismo-panel { width: 200px; right: 8px; bottom: 80px; }
+    .fact-panel { max-width: 260px; left: 8px; bottom: 80px; }
+    .legend { display: none; }
+    .title { font-size: 18px; top: 36px; }
+    .subtitle { top: 58px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<div class="ui-layer">
+  <div class="disclaimer full" id="disclaimer">
+    Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+  </div>
+
+  <div class="title">Seismic Explorer</div>
+  <div class="subtitle">Click the crust to trigger an earthquake</div>
+
+  <div class="controls">
+    <h3>Wave Types</h3>
+    <div class="toggle-row" id="toggleP">
+      <div class="toggle-box on p"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" fill="none" stroke="#0a0c10" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="toggle-label">P-Waves <span>(compressional)</span></div>
+    </div>
+    <div class="toggle-row" id="toggleS">
+      <div class="toggle-box on s"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" fill="none" stroke="#0a0c10" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="toggle-label">S-Waves <span>(shear)</span></div>
+    </div>
+    <h3 style="margin-top:12px">Playback</h3>
+    <div class="toggle-row" id="toggleSlow">
+      <div class="toggle-box"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" fill="none" stroke="#0a0c10" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="toggle-label">Slow Motion</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn accent" id="btnDemo">Auto Demo</button>
+    <button class="btn" id="btnReset">Reset</button>
+  </div>
+
+  <div class="seismo-panel">
+    <h3>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Seismograph
+    </h3>
+    <canvas class="seismo-canvas" id="seismoCanvas" width="260" height="80"></canvas>
+    <div class="seismo-stats">
+      <div class="stat p">P arrival<strong id="pArrival">—</strong></div>
+      <div class="stat s">S arrival<strong id="sArrival">—</strong></div>
+      <div class="stat">S-P gap<strong id="spGap">—</strong></div>
+      <div class="stat">Distance<strong id="distance">—</strong></div>
+    </div>
+  </div>
+
+  <div class="fact-panel">
+    <h3>Science Fact</h3>
+    <div class="fact-text" id="factText">
+      Click anywhere on Earth&#39;s surface to trigger an earthquake and watch <span class="key">P-waves</span> and <span class="key">S-waves</span> radiate through the planet.
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--crust)"></div>Crust</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--mantle)"></div>Mantle</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--outer-core)"></div>Outer Core</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--inner-core)"></div>Inner Core</div>
+  </div>
+
+  <div class="hint" id="hint">Click on Earth&#39;s surface to place an earthquake</div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const seismoCanvas = document.getElementById('seismoCanvas');
+  const seismoCtx = seismoCanvas.getContext('2d');
+
+  let W, H, cx, cy, R;
+  let epicenterAngle = -Math.PI / 4; // default
+  let stationAngle = Math.PI / 4;
+  let draggingStation = false;
+  let draggingEpicenter = false;
+  let showP = true, showS = true, slowMo = false;
+  let waves = [];
+  let seismoData = [];
+  let demoIndex = 0;
+  let demoTimer = null;
+  let time = 0;
+  let animId;
+  let hasTriggered = false;
+
+  const LAYERS = [
+    { r: 1.00, label: 'Crust', color: '#8B6914', thick: 0.015 },
+    { r: 0.55, label: 'Mantle', color: '#C44D34', thick: 0.44 },
+    { r: 0.19, label: 'Outer Core', color: '#E8A838', thick: 0.36 },
+    { r: 0.00, label: 'Inner Core', color: '#F5F5F0', thick: 0.19 },
+  ];
+
+  const FACTS = [
+    { check: () => true,
+      text: 'Click anywhere on Earth&#39;s surface to trigger an earthquake and watch <span class="key">P-waves</span> and <span class="key">S-waves</span> radiate through the planet.' },
+    { check: () => waves.some(w => w.type === 'P' && w.radius / R > 0.5),
+      text: '<span class="key">P-waves</span> (Primary) are compressional waves -- they push and pull rock in the direction of travel. They travel fastest (~8 km/s) and pass through both solid and liquid.' },
+    { check: () => waves.some(w => w.type === 'S' && w.radius / R > 0.3),
+      text: '<span class="key">S-waves</span> (Secondary) are shear waves -- they move rock side-to-side perpendicular to travel. They are slower (~4.5 km/s) and <span class="key">cannot travel through liquid</span>.' },
+    { check: () => waves.some(w => w.type === 'S' && w.shadow),
+      text: 'The <span class="key">S-wave shadow zone</span> exists because the liquid outer core blocks all S-waves. Stations beyond ~104 degrees from the epicenter detect no S-waves at all.' },
+    { check: () => waves.some(w => w.type === 'P' && w.shadow),
+      text: 'P-waves are refracted by the liquid outer core, creating a smaller <span class="key">P-wave shadow zone</span> between ~104 degrees and ~140 degrees. This pattern helped scientists prove the core is liquid.' },
+    { check: () => seismoData.some(d => d.pAmp > 0.01 && d.sAmp > 0.01),
+      text: 'The <span class="key">S-P gap</span> -- the time between P and S arrivals — tells seismologists how far away the earthquake is. One second of gap ~ 8 km distance.' },
+    { check: () => showP && !showS,
+      text: 'Turning off S-waves shows how P-waves alone still reach most of the globe, refracting through the liquid outer core and emerging on the far side.' },
+    { check: () => !showP && showS,
+      text: 'With only S-waves visible, the shadow zone becomes dramatic. No S-waves pass through the liquid outer core -- a direct clue to Earth&#39;s interior structure.' },
+  ];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    cx = W / 2;
+    cy = H / 2;
+    R = Math.min(W, H) * 0.38;
+    seismoCanvas.width = seismoCanvas.clientWidth * 2;
+    seismoCanvas.height = seismoCanvas.clientHeight * 2;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function angleFromPoint(x, y) {
+    return Math.atan2(y - cy, x - cx);
+  }
+
+  function posFromAngle(a, r) {
+    return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r };
+  }
+
+  // Get layer properties at a given normalized radius (0=centre, 1=surface)
+  function layerAt(nr) {
+    if (nr > 0.55) return { type: 'crust', vp: 7.0, vs: 4.0 };
+    if (nr > 0.19) return { type: 'mantle', vp: 12.0, vs: 6.5 };
+    if (nr > 0.00) return { type: 'outer_core', vp: 8.0, vs: 0 };
+    return { type: 'inner_core', vp: 11.0, vs: 3.5 };
+  }
+
+  function triggerEarthquake(angle) {
+    epicenterAngle = angle;
+    waves = [];
+    seismoData = [];
+    time = 0;
+    hasTriggered = true;
+    document.getElementById('hint').classList.add('hidden');
+
+    if (showP) {
+      waves.push({ type: 'P', radius: 0, angle: angle, opacity: 1, shadow: false });
+    }
+    if (showS) {
+      waves.push({ type: 'S', radius: 0, angle: angle, opacity: 1, shadow: false });
+    }
+  }
+
+  function update(dt) {
+    const speed = slowMo ? 0.3 : 1.0;
+    time += dt * speed;
+
+    // Update waves
+    for (const w of waves) {
+      const nr = w.radius / R;
+      const layer = layerAt(nr);
+      const v = w.type === 'P' ? layer.vp : layer.vs;
+      if (v > 0) {
+        w.radius += v * 3 * dt * speed; // scaled for visual effect
+      }
+      w.opacity = Math.max(0, 1 - (w.radius / (R * 2.2)));
+
+      // Check shadow for S waves crossing outer core
+      if (w.type === 'S' && nr > 0.19 && nr < 0.55) {
+        w.shadow = true;
+      }
+      // Check shadow for P waves refracted by outer core
+      if (w.type === 'P') {
+        // Simplified: P waves create a partial shadow between 104° and 140°
+        const delta = Math.abs(normalizeAngle(w.angle - epicenterAngle)) * 180 / Math.PI;
+        if (delta > 100 && delta < 145 && nr > 0.55) {
+          w.shadow = true;
+        }
+      }
+    }
+
+    waves = waves.filter(w => w.opacity > 0.01 && w.radius < R * 2.2);
+
+    // Seismograph
+    const delta = Math.abs(normalizeAngle(stationAngle - epicenterAngle)) * 180 / Math.PI;
+    const distKm = delta * 111; // rough
+    let pArr = null, sArr = null;
+
+    for (const w of waves) {
+      const wAngle = normalizeAngle(w.angle);
+      const stAngle = normalizeAngle(stationAngle);
+      const diff = Math.abs(wAngle - stAngle) * 180 / Math.PI;
+      if (diff < 3 && w.opacity > 0.3) {
+        if (w.type === 'P') pArr = w.radius / (layerAt(0.7).vp * 3);
+        if (w.type === 'S' && !w.shadow) sArr = w.radius / (layerAt(0.7).vs * 3);
+      }
+    }
+
+    const pAmp = pArr !== null ? Math.sin(time * 20) * 0.5 * Math.exp(-(pArr - time) * 0.5) : 0;
+    const sAmp = sArr !== null ? Math.sin(time * 12) * 0.8 * Math.exp(-(sArr - time) * 0.5) : 0;
+    seismoData.push({ pAmp: Math.abs(pAmp), sAmp: Math.abs(sAmp) });
+    if (seismoData.length > 300) seismoData.shift();
+
+    // Update stats
+    document.getElementById('distance').textContent = hasTriggered ? delta.toFixed(1) + '°' : '—';
+    document.getElementById('pArrival').textContent = pArr !== null ? (pArr * 10).toFixed(1) + ' min' : '—';
+    document.getElementById('sArrival').textContent = sArr !== null ? (sArr * 10).toFixed(1) + ' min' : '—';
+    document.getElementById('spGap').textContent = (pArr !== null && sArr !== null) ? ((sArr - pArr) * 10).toFixed(1) + ' min' : '—';
+
+    // Update fact
+    for (let i = FACTS.length - 1; i >= 0; i--) {
+      if (FACTS[i].check()) {
+        document.getElementById('factText').innerHTML = FACTS[i].text;
+        break;
+      }
+    }
+  }
+
+  function normalizeAngle(a) {
+    while (a < -Math.PI) a += Math.PI * 2;
+    while (a > Math.PI) a -= Math.PI * 2;
+    return a;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Stars
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    for (let i = 0; i < 80; i++) {
+      const sx = (Math.sin(i * 1.37) * 0.5 + 0.5) * W;
+      const sy = (Math.cos(i * 2.71) * 0.5 + 0.5) * H;
+      const sz = Math.sin(i * 3.91) * 0.5 + 0.5;
+      ctx.globalAlpha = sz * 0.6;
+      ctx.beginPath();
+      ctx.arc(sx, sy, sz * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Earth layers (drawn from outside in)
+    for (let i = 0; i < LAYERS.length; i++) {
+      const layer = LAYERS[i];
+      const r = layer.r * R;
+      const prevR = i === 0 ? R : LAYERS[i - 1].r * R;
+      ctx.beginPath();
+      ctx.arc(cx, cy, prevR, 0, Math.PI * 2);
+      ctx.fillStyle = layer.color;
+      ctx.fill();
+      // Inner shading
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fill();
+    }
+
+    // Layer boundary glows
+    for (let i = 1; i < LAYERS.length; i++) {
+      const r = LAYERS[i - 1].r * R;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Surface highlight
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Waves
+    for (const w of waves) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, w.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = w.type === 'P' ? 'rgba(78,205,196,' + (w.opacity * 0.7) + ')' : 'rgba(255,107,157,' + (w.opacity * 0.7) + ')';
+      ctx.lineWidth = w.type === 'P' ? 2 : 2.5;
+      if (w.shadow) {
+        ctx.setLineDash([6, 6]);
+        ctx.globalAlpha = w.opacity * 0.4;
+      } else {
+        ctx.setLineDash([]);
+        ctx.globalAlpha = w.opacity;
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // Epicenter marker
+    const ePos = posFromAngle(epicenterAngle, R);
+    ctx.beginPath();
+    ctx.arc(ePos.x, ePos.y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff4444';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(ePos.x, ePos.y, 14, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,68,68,0.4)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Pulsing ring
+    const pulse = (Math.sin(time * 4) + 1) * 0.5;
+    ctx.beginPath();
+    ctx.arc(ePos.x, ePos.y, 20 + pulse * 8, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,68,68,' + (0.3 * pulse) + ')';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Station marker
+    const sPos = posFromAngle(stationAngle, R);
+    ctx.beginPath();
+    ctx.arc(sPos.x, sPos.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffd93d';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(sPos.x, sPos.y, 10, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,217,61,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Labels
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.textAlign = 'center';
+    ctx.fillText('Epicenter', ePos.x, ePos.y + 24);
+    ctx.fillText('Station', sPos.x, sPos.y + 20);
+
+    // Angle arc
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 20, epicenterAngle, stationAngle, epicenterAngle > stationAngle);
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  function drawSeismo() {
+    const w = seismoCanvas.width;
+    const h = seismoCanvas.height;
+    seismoCtx.clearRect(0, 0, w, h);
+
+    // Grid
+    seismoCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+    seismoCtx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) {
+      const y = (h / 4) * i;
+      seismoCtx.beginPath();
+      seismoCtx.moveTo(0, y);
+      seismoCtx.lineTo(w, y);
+      seismoCtx.stroke();
+    }
+
+    // P-wave trace
+    if (seismoData.length > 1) {
+      seismoCtx.beginPath();
+      seismoCtx.strokeStyle = 'rgba(78,205,196,0.7)';
+      seismoCtx.lineWidth = 1.5;
+      for (let i = 0; i < seismoData.length; i++) {
+        const x = (i / 300) * w;
+        const y = h / 2 - seismoData[i].pAmp * h * 0.4;
+        if (i === 0) seismoCtx.moveTo(x, y);
+        else seismoCtx.lineTo(x, y);
+      }
+      seismoCtx.stroke();
+    }
+
+    // S-wave trace
+    if (seismoData.length > 1) {
+      seismoCtx.beginPath();
+      seismoCtx.strokeStyle = 'rgba(255,107,157,0.7)';
+      seismoCtx.lineWidth = 1.5;
+      for (let i = 0; i < seismoData.length; i++) {
+        const x = (i / 300) * w;
+        const y = h / 2 - seismoData[i].sAmp * h * 0.4;
+        if (i === 0) seismoCtx.moveTo(x, y);
+        else seismoCtx.lineTo(x, y);
+      }
+      seismoCtx.stroke();
+    }
+
+    // Center line
+    seismoCtx.beginPath();
+    seismoCtx.moveTo(0, h / 2);
+    seismoCtx.lineTo(w, h / 2);
+    seismoCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+    seismoCtx.lineWidth = 1;
+    seismoCtx.stroke();
+  }
+
+  let lastT = performance.now();
+  function loop() {
+    const now = performance.now();
+    const dt = Math.min((now - lastT) / 1000, 0.05);
+    lastT = now;
+    update(dt);
+    draw();
+    drawSeismo();
+    animId = requestAnimationFrame(loop);
+  }
+  loop();
+
+  // Input
+  canvas.addEventListener('pointerdown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const dx = x - cx, dy = y - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx);
+
+    const sPos = posFromAngle(stationAngle, R);
+    const sdx = x - sPos.x, sdy = y - sPos.y;
+    if (Math.sqrt(sdx * sdx + sdy * sdy) < 20) {
+      draggingStation = true;
+      return;
+    }
+
+    const ePos = posFromAngle(epicenterAngle, R);
+    const edx = x - ePos.x, edy = y - ePos.y;
+    if (Math.sqrt(edx * edx + edy * edy) < 20) {
+      draggingEpicenter = true;
+      return;
+    }
+
+    if (dist > R - 10 && dist < R + 30) {
+      triggerEarthquake(angle);
+    }
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (draggingStation) {
+      stationAngle = Math.atan2(y - cy, x - cx);
+      seismoData = [];
+    }
+    if (draggingEpicenter) {
+      epicenterAngle = Math.atan2(y - cy, x - cx);
+    }
+  });
+
+  canvas.addEventListener('pointerup', () => {
+    draggingStation = false;
+    draggingEpicenter = false;
+  });
+
+  // Controls
+  document.getElementById('toggleP').addEventListener('click', () => {
+    showP = !showP;
+    document.querySelector('#toggleP .toggle-box').classList.toggle('on', showP);
+    document.querySelector('#toggleP .toggle-box').classList.toggle('p', showP);
+    if (hasTriggered) seismoData = [];
+  });
+  document.getElementById('toggleS').addEventListener('click', () => {
+    showS = !showS;
+    document.querySelector('#toggleS .toggle-box').classList.toggle('on', showS);
+    document.querySelector('#toggleS .toggle-box').classList.toggle('s', showS);
+    if (hasTriggered) seismoData = [];
+  });
+  document.getElementById('toggleSlow').addEventListener('click', () => {
+    slowMo = !slowMo;
+    document.querySelector('#toggleSlow .toggle-box').classList.toggle('on', slowMo);
+  });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    waves = [];
+    seismoData = [];
+    time = 0;
+    hasTriggered = false;
+    epicenterAngle = -Math.PI / 4;
+    stationAngle = Math.PI / 4;
+    document.getElementById('hint').classList.remove('hidden');
+    document.getElementById('factText').innerHTML = FACTS[0].text;
+    document.getElementById('distance').textContent = '—';
+    document.getElementById('pArrival').textContent = '—';
+    document.getElementById('sArrival').textContent = '—';
+    document.getElementById('spGap').textContent = '—';
+    stopDemo();
+  });
+
+  const demoAngles = [-Math.PI / 3, -Math.PI / 6, Math.PI / 8, Math.PI / 2.5, Math.PI * 0.8];
+  document.getElementById('btnDemo').addEventListener('click', () => {
+    if (demoTimer) { stopDemo(); return; }
+    demoIndex = 0;
+    runDemoStep();
+    demoTimer = setInterval(runDemoStep, 4000);
+    document.getElementById('btnDemo').textContent = 'Stop Demo';
+  });
+
+  function runDemoStep() {
+    triggerEarthquake(demoAngles[demoIndex]);
+    demoIndex = (demoIndex + 1) % demoAngles.length;
+  }
+
+  function stopDemo() {
+    if (demoTimer) { clearInterval(demoTimer); demoTimer = null; }
+    document.getElementById('btnDemo').textContent = 'Auto Demo';
+  }
+
+  // Init: trigger one for visual
+  setTimeout(() => triggerEarthquake(-Math.PI / 4), 500);
+})();
+</script>
+</body>
+</html>
