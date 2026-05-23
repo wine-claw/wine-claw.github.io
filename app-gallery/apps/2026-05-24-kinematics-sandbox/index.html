@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Kinematics Sandbox — Interactive Robot Arm</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --panel: #111827;
+    --panel2: #1a2332;
+    --border: #1e3a5f;
+    --accent: #00d4aa;
+    --accent2: #ff6b6b;
+    --accent3: #ffd93d;
+    --text: #e0e8f0;
+    --muted: #6b7d8d;
+    --grid: rgba(30, 58, 95, 0.3);
+    --link1: #00d4aa;
+    --link2: #4ecdc4;
+    --joint: #ffd93d;
+    --ee: #ff6b6b;
+    --target: #ff6b6b88;
+    --trail: rgba(0, 212, 170, 0.15);
+    --workspace: rgba(0, 212, 170, 0.08);
+    --workspace-border: rgba(0, 212, 170, 0.3);
+    --ellipsoid: rgba(78, 205, 196, 0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .disclaimer {
+    background: #7f1d1d;
+    color: #fca5a5;
+    text-align: center;
+    padding: 6px 12px;
+    font-size: 11px;
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .top-bar h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .top-bar h1 span { color: var(--muted); font-weight: 400; font-size: 13px; }
+
+  .mode-tabs {
+    display: flex;
+    gap: 4px;
+  }
+
+  .mode-tabs button {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .mode-tabs button.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .mode-tabs button:hover:not(.active) {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .main-area {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .canvas-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .sidebar {
+    width: 260px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    font-size: 12px;
+  }
+
+  .sb-section {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sb-section h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 8px;
+  }
+
+  .control-row label {
+    color: var(--text);
+    font-size: 12px;
+    min-width: 70px;
+  }
+
+  .control-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 4px;
+  }
+
+  .control-row .val {
+    color: var(--accent);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .toggle-row label { font-size: 12px; }
+
+  .toggle-row input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table td {
+    padding: 2px 0;
+    font-size: 11px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .data-table td:first-child { color: var(--muted); }
+  .data-table td:last-child { color: var(--text); text-align: right; }
+
+  .jacobian-matrix {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 10px;
+    background: var(--panel2);
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin-top: 4px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .jacobian-matrix .label { color: var(--muted); }
+
+  .status-line {
+    color: var(--accent);
+    font-size: 11px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    padding: 2px 0;
+  }
+
+  .btn {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-row { display: flex; gap: 6px; margin-top: 6px; }
+
+  .help-bubble {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .help-bubble strong { color: var(--text); }
+
+  .singularity-warn {
+    color: var(--accent2);
+    font-weight: 600;
+    font-size: 11px;
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { width: 100%; max-height: 40vh; border-left: none; border-top: 1px solid var(--border); }
+    .main-area { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">
+  Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+
+<div class="top-bar">
+  <h1>Kinematics Sandbox <span>— Interactive Robot Arm</span></h1>
+  <div class="mode-tabs">
+    <button id="btnIK" class="active" onclick="setMode('ik')">Inverse Kinematics</button>
+    <button id="btnFK" onclick="setMode('fk')">Forward Kinematics</button>
+  </div>
+</div>
+
+<div class="main-area">
+  <div class="canvas-container">
+    <canvas id="armCanvas"></canvas>
+  </div>
+
+  <div class="sidebar">
+    <div class="sb-section">
+      <h3>Links</h3>
+      <div class="control-row">
+        <label>L₁ length</label>
+        <input type="range" id="sliderL1" min="40" max="200" value="120" oninput="updateParams()">
+        <span class="val" id="valL1">120</span>
+      </div>
+      <div class="control-row">
+        <label>L₂ length</label>
+        <input type="range" id="sliderL2" min="40" max="200" value="100" oninput="updateParams()">
+        <span class="val" id="valL2">100</span>
+      </div>
+      <div class="control-row">
+        <label>Segments</label>
+        <input type="range" id="sliderLinks" min="2" max="6" value="2" oninput="updateLinkCount()">
+        <span class="val" id="valLinks">2</span>
+      </div>
+    </div>
+
+    <div class="sb-section" id="fkControls" style="display:none;">
+      <h3>Joint Angles</h3>
+      <div id="angleSliders"></div>
+    </div>
+
+    <div class="sb-section" id="ikInfo">
+      <h3>End Effector</h3>
+      <table class="data-table">
+        <tr><td>Target</td><td id="dataTarget">(0, 0)</td></tr>
+        <tr><td>Actual</td><td id="dataActual">(0, 0)</td></tr>
+        <tr><td>Error</td><td id="dataError">0.00</td></tr>
+        <tr><td>Distance</td><td id="dataDist">0.00</td></tr>
+      </table>
+      <div class="status-line" id="reachStatus">Reachable ✓</div>
+    </div>
+
+    <div class="sb-section">
+      <h3>Jacobian</h3>
+      <div class="jacobian-matrix" id="jacobianDisplay">
+        <span class="label">J =</span><br>
+        [ 0.00 &nbsp; 0.00 ]<br>
+        [ 0.00 &nbsp; 0.00 ]
+      </div>
+      <table class="data-table" style="margin-top:6px;">
+        <tr><td>det(J)</td><td id="dataDetJ">0.00</td></tr>
+        <tr><td>manipulability</td><td id="dataManip">0.00</td></tr>
+        <tr><td>condition #</td><td id="dataCond">—</td></tr>
+      </table>
+      <div id="singularityMsg"></div>
+    </div>
+
+    <div class="sb-section">
+      <h3>Display</h3>
+      <div class="toggle-row"><label>Workspace envelope</label><input type="checkbox" id="chkWorkspace" checked onchange="draw()"></div>
+      <div class="toggle-row"><label>Trail</label><input type="checkbox" id="chkTrail" checked onchange="draw()"></div>
+      <div class="toggle-row"><label>Manipulability ellipsoid</label><input type="checkbox" id="chkEllipsoid" checked onchange="draw()"></div>
+      <div class="toggle-row"><label>Joint angle arcs</label><input type="checkbox" id="chkArcs" onchange="draw()"></div>
+      <div class="toggle-row"><label>Grid</label><input type="checkbox" id="chkGrid" checked onchange="draw()"></div>
+      <div class="toggle-row"><label>Elbow config</label>
+        <select id="elbowConfig" onchange="solveAndDraw()">
+          <option value="down">Elbow down</option>
+          <option value="up">Elbow up</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="clearTrail()">Clear Trail</button>
+        <button class="btn" onclick="resetArm()">Reset</button>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="help-bubble">
+        <strong>IK mode:</strong> Click/drag on the canvas to set the target position. The arm follows!<br><br>
+        <strong>FK mode:</strong> Use the angle sliders to set each joint angle directly.<br><br>
+        <strong>Tip:</strong> Watch the manipulability ellipsoid shrink near singularities — that's where the arm loses dexterity!
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// Kinematics Sandbox — Core Engine
+// =============================================
+
+const canvas = document.getElementById('armCanvas');
+const ctx = canvas.getContext('2d');
+
+// State
+let mode = 'ik'; // 'ik' or 'fk'
+let numLinks = 2;
+let linkLengths = [120, 100, 80, 70, 60, 50];
+let jointAngles = [0, 0, 0, 0, 0, 0]; // radians, relative
+let targetX = 0, targetY = 0;
+let trail = [];
+const MAX_TRAIL = 600;
+let baseX = 0, baseY = 0;
+let dpr = 1;
+let canvasW = 0, canvasH = 0;
+let dragging = false;
+let animating = false;
+let animTarget = null;
+
+// Colors for links
+const linkColors = ['#00d4aa', '#4ecdc4', '#45b7d1', '#5b86e5', '#7c5cbf', '#c56cf0'];
+
+function resize() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  dpr = window.devicePixelRatio || 1;
+  canvasW = rect.width;
+  canvasH = rect.height;
+  canvas.width = canvasW * dpr;
+  canvas.height = canvasH * dpr;
+  canvas.style.width = canvasW + 'px';
+  canvas.style.height = canvasH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  baseX = canvasW / 2;
+  baseY = canvasH * 0.75;
+  draw();
+}
+
+window.addEventListener('resize', resize);
+
+// =============================================
+// Forward Kinematics
+// =============================================
+
+function forwardKinematics(angles, lengths, n) {
+  // Returns array of {x, y} for base, joint1, ..., end effector
+  const points = [{x: 0, y: 0}];
+  let cumAngle = 0;
+  let x = 0, y = 0;
+  for (let i = 0; i < n; i++) {
+    cumAngle += angles[i];
+    x += lengths[i] * Math.cos(cumAngle);
+    y += lengths[i] * Math.sin(cumAngle);
+    points.push({x, y});
+  }
+  return points;
+}
+
+function getEndEffector(angles, lengths, n) {
+  const pts = forwardKinematics(angles, lengths, n);
+  return pts[n];
+}
+
+// =============================================
+// Inverse Kinematics — CCD (Cyclic Coordinate Descent)
+// Works for any number of links
+// =============================================
+
+function solveIK(tx, ty, lengths, n, angles, elbowUp) {
+  // CCD from end to base
+  let a = angles.slice(0, n);
+  const maxIter = 20;
+  
+  for (let iter = 0; iter < maxIter; iter++) {
+    for (let i = n - 1; i >= 0; i--) {
+      // Get current joint position in world coords
+      const pts = forwardKinematics(a, lengths, n);
+      const joint = pts[i];
+      const ee = pts[n];
+      
+      // Vector from joint to end effector
+      const eeDx = ee.x - joint.x;
+      const eeDy = ee.y - joint.y;
+      // Vector from joint to target
+      const tDx = tx - joint.x;
+      const tDy = ty - joint.y;
+      
+      const eeAngle = Math.atan2(eeDy, eeDx);
+      const tAngle = Math.atan2(tDy, tDx);
+      
+      let delta = tAngle - eeAngle;
+      // Normalize to [-PI, PI]
+      while (delta > Math.PI) delta -= 2 * Math.PI;
+      while (delta < -Math.PI) delta += 2 * Math.PI;
+      
+      // For 2-link, apply elbow config bias
+      if (n === 2 && i === 1 && iter === 0) {
+        // 2-link analytical for the first pass
+      }
+      
+      a[i] += delta;
+    }
+    
+    // Check if close enough
+    const ee = getEndEffector(a, lengths, n);
+    const err = Math.sqrt((ee.x - tx) ** 2 + (ee.y - ty) ** 2);
+    if (err < 0.5) break;
+  }
+  
+  // For 2-link, override with analytical solution for precision
+  if (n === 2) {
+    return solveIK2Link(tx, ty, lengths, elbowUp);
+  }
+  
+  return a;
+}
+
+function solveIK2Link(tx, ty, lengths, elbowUp) {
+  const L1 = lengths[0], L2 = lengths[1];
+  const d2 = tx * tx + ty * ty;
+  const d = Math.sqrt(d2);
+  const maxReach = L1 + L2;
+  const minReach = Math.abs(L1 - L2);
+  
+  // Clamp if out of reach or at origin
+  let px = tx, py = ty;
+  if (d < 0.01) {
+    // Target at origin: point arm straight up along y-axis
+    return [Math.PI / 2, elbowUp === 'up' ? -Math.acos(Math.max(-1, Math.min(1, (minReach*minReach - L1*L1 - L2*L2) / (2*L1*L2)))) : Math.acos(Math.max(-1, Math.min(1, (minReach*minReach - L1*L1 - L2*L2) / (2*L1*L2))))];
+  } else if (d > maxReach) {
+    const scale = maxReach / d;
+    px = tx * scale;
+    py = ty * scale;
+  } else if (d < minReach) {
+    const scale = minReach / d;
+    px = tx * scale;
+    py = ty * scale;
+  }
+  
+  const pd2 = px * px + py * py;
+  const cosTheta2 = (pd2 - L1 * L1 - L2 * L2) / (2 * L1 * L2);
+  const clampedCos = Math.max(-1, Math.min(1, cosTheta2));
+  
+  let theta2;
+  if (elbowUp === 'up') {
+    theta2 = -Math.acos(clampedCos); // elbow up (negative in our coords)
+  } else {
+    theta2 = Math.acos(clampedCos); // elbow down
+  }
+  
+  const sinTheta2 = Math.sin(theta2);
+  const theta1 = Math.atan2(py, px) - Math.atan2(L2 * sinTheta2, L1 + L2 * Math.cos(theta2));
+  
+  return [theta1, theta2];
+}
+
+// =============================================
+// Jacobian Computation (2-link only)
+// =============================================
+
+function computeJacobian2Link(t1, t2, L1, L2) {
+  const s1 = Math.sin(t1), c1 = Math.cos(t1);
+  const s12 = Math.sin(t1 + t2), c12 = Math.cos(t1 + t2);
+  
+  // J = [dx/dθ1, dx/dθ2; dy/dθ1, dy/dθ2]
+  return [
+    [-L1 * s1 - L2 * s12, -L2 * s12],
+    [ L1 * c1 + L2 * c12,  L2 * c12]
+  ];
+}
+
+// =============================================
+// Drawing
+// =============================================
+
+function toCanvas(p) {
+  // Convert arm coords (y-up) to canvas coords (y-down)
+  return {
+    x: baseX + p.x,
+    y: baseY - p.y
+  };
+}
+
+function fromCanvas(cx, cy) {
+  return {
+    x: cx - baseX,
+    y: baseY - cy
+  };
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvasW, canvasH);
+  
+  const n = numLinks;
+  const lengths = linkLengths.slice(0, n);
+  const angles = jointAngles.slice(0, n);
+  const elbowUp = document.getElementById('elbowConfig').value;
+  
+  // In IK mode, solve
+  if (mode === 'ik') {
+    const solved = solveIK(targetX, targetY, lengths, n, angles, elbowUp);
+    for (let i = 0; i < n; i++) jointAngles[i] = solved[i];
+  }
+  
+  const pts = forwardKinematics(jointAngles, lengths, n);
+  const canvasPts = pts.map(toCanvas);
+  
+  // Draw grid
+  if (document.getElementById('chkGrid').checked) {
+    drawGrid();
+  }
+  
+  // Draw workspace envelope
+  if (document.getElementById('chkWorkspace').checked) {
+    drawWorkspace(lengths, n);
+  }
+  
+  // Draw trail
+  if (document.getElementById('chkTrail').checked && trail.length > 1) {
+    drawTrail();
+  }
+  
+  // Draw manipulability ellipsoid (2-link only)
+  if (document.getElementById('chkEllipsoid').checked && n === 2) {
+    drawEllipsoid(jointAngles, lengths);
+  }
+  
+  // Draw joint angle arcs
+  if (document.getElementById('chkArcs').checked) {
+    drawArcs(pts, jointAngles, lengths, n);
+  }
+  
+  // Draw target (IK mode)
+  if (mode === 'ik') {
+    const tc = toCanvas({x: targetX, y: targetY});
+    ctx.beginPath();
+    ctx.arc(tc.x, tc.y, 8, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#ff6b6b';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Crosshair
+    ctx.beginPath();
+    ctx.moveTo(tc.x - 12, tc.y);
+    ctx.lineTo(tc.x + 12, tc.y);
+    ctx.moveTo(tc.x, tc.y - 12);
+    ctx.lineTo(tc.x, tc.y + 12);
+    ctx.strokeStyle = '#ff6b6b88';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  
+  // Draw arm links
+  for (let i = 0; i < n; i++) {
+    const p1 = canvasPts[i];
+    const p2 = canvasPts[i + 1];
+    
+    // Link shadow
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    
+    // Link
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.strokeStyle = linkColors[i % linkColors.length];
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    
+    // Link length label
+    const mx = (p1.x + p2.x) / 2;
+    const my = (p1.y + p2.y) / 2;
+    ctx.font = '10px "SF Mono", "Fira Code", monospace';
+    ctx.fillStyle = '#ffffff88';
+    ctx.textAlign = 'center';
+    ctx.fillText(`L${i+1}=${lengths[i]}`, mx, my - 8);
+  }
+  
+  // Draw joints
+  for (let i = 0; i <= n; i++) {
+    const p = canvasPts[i];
+    
+    if (i === 0) {
+      // Base
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 12, 0, 2 * Math.PI);
+      ctx.fillStyle = '#1a2332';
+      ctx.fill();
+      ctx.strokeStyle = var_accent();
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      
+      // Base mount lines
+      ctx.beginPath();
+      ctx.moveTo(p.x - 18, p.y + 8);
+      ctx.lineTo(p.x + 18, p.y + 8);
+      ctx.strokeStyle = '#ffffff44';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Hatching
+      for (let h = -16; h <= 16; h += 6) {
+        ctx.beginPath();
+        ctx.moveTo(p.x + h, p.y + 8);
+        ctx.lineTo(p.x + h - 5, p.y + 16);
+        ctx.strokeStyle = '#ffffff22';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    } else if (i === n) {
+      // End effector
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 8, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Small gripper lines
+      const eeArm = pts[n];
+      let prevAngle = 0;
+      for (let j = 0; j < n; j++) prevAngle += jointAngles[j];
+      const perpAngle = prevAngle + Math.PI / 2;
+      const gripLen = 12;
+      const gx = Math.cos(perpAngle) * gripLen;
+      const gy = Math.sin(perpAngle) * gripLen;
+      const gp = toCanvas({x: eeArm.x + Math.cos(prevAngle) * 6, y: eeArm.y + Math.sin(prevAngle) * 6});
+      
+      ctx.beginPath();
+      ctx.moveTo(gp.x - gx, gp.y + gy);
+      ctx.lineTo(gp.x + gx, gp.y - gy);
+      ctx.strokeStyle = '#ff6b6b';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    } else {
+      // Intermediate joint
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 7, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ffd93d';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+  
+  // Update data panel
+  updateDataPanel(pts, lengths, n);
+}
+
+function var_accent() { return '#00d4aa'; }
+
+function drawGrid() {
+  const step = 50;
+  ctx.strokeStyle = 'rgba(30, 58, 95, 0.2)';
+  ctx.lineWidth = 0.5;
+  
+  // Vertical
+  for (let x = baseX % step; x < canvasW; x += step) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvasH);
+    ctx.stroke();
+  }
+  // Horizontal
+  for (let y = baseY % step; y < canvasH; y += step) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvasW, y);
+    ctx.stroke();
+  }
+  
+  // Axes
+  ctx.strokeStyle = 'rgba(30, 58, 95, 0.5)';
+  ctx.lineWidth = 1;
+  // X axis
+  ctx.beginPath();
+  ctx.moveTo(0, baseY);
+  ctx.lineTo(canvasW, baseY);
+  ctx.stroke();
+  // Y axis
+  ctx.beginPath();
+  ctx.moveTo(baseX, 0);
+  ctx.lineTo(baseX, canvasH);
+  ctx.stroke();
+  
+  // Origin label
+  ctx.font = '10px "SF Mono", monospace';
+  ctx.fillStyle = '#ffffff44';
+  ctx.textAlign = 'left';
+  ctx.fillText('(0, 0)', baseX + 4, baseY - 4);
+}
+
+function drawWorkspace(lengths, n) {
+  if (n === 2) {
+    const L1 = lengths[0], L2 = lengths[1];
+    const maxR = L1 + L2;
+    const minR = Math.abs(L1 - L2);
+    
+    // Outer annulus
+    ctx.beginPath();
+    ctx.arc(baseX, baseY, maxR, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(0, 212, 170, 0.04)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 212, 170, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Inner hole (if L1 ≠ L2)
+    if (minR > 2) {
+      ctx.beginPath();
+      ctx.arc(baseX, baseY, minR, 0, 2 * Math.PI);
+      ctx.strokeStyle = 'rgba(0, 212, 170, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  } else {
+    // For >2 links, draw max reach circle
+    const maxR = lengths.reduce((a, b) => a + b, 0);
+    ctx.beginPath();
+    ctx.arc(baseX, baseY, maxR, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(0, 212, 170, 0.04)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 212, 170, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+function drawTrail() {
+  if (trail.length < 2) return;
+  
+  ctx.beginPath();
+  for (let i = 0; i < trail.length; i++) {
+    const p = toCanvas(trail[i]);
+    const alpha = (i / trail.length) * 0.6;
+    if (i === 0) {
+      ctx.moveTo(p.x, p.y);
+    } else {
+      ctx.lineTo(p.x, p.y);
+    }
+  }
+  ctx.strokeStyle = 'rgba(0, 212, 170, 0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Fade effect: draw segments with decreasing opacity
+  for (let i = 1; i < trail.length; i++) {
+    const p0 = toCanvas(trail[i - 1]);
+    const p1 = toCanvas(trail[i]);
+    const alpha = (i / trail.length) * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.strokeStyle = `rgba(0, 212, 170, ${alpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
+function drawEllipsoid(angles, lengths) {
+  const n = 2;
+  const t1 = angles[0], t2 = angles[1];
+  const L1 = lengths[0], L2 = lengths[1];
+  const J = computeJacobian2Link(t1, t2, L1, L2);
+  
+  // J * J^T
+  const JJT = [
+    [J[0][0]*J[0][0] + J[0][1]*J[0][1], J[0][0]*J[1][0] + J[0][1]*J[1][1]],
+    [J[1][0]*J[0][0] + J[1][1]*J[0][1], J[1][0]*J[1][0] + J[1][1]*J[1][1]]
+  ];
+  
+  // Eigenvalues of 2x2 symmetric matrix
+  const trace = JJT[0][0] + JJT[1][1];
+  const det = JJT[0][0] * JJT[1][1] - JJT[0][1] * JJT[1][0];
+  const disc = Math.max(0, trace * trace - 4 * det);
+  const lambda1 = (trace + Math.sqrt(disc)) / 2;
+  const lambda2 = (trace - Math.sqrt(disc)) / 2;
+  
+  // Rotation angle of ellipse
+  let ellAngle;
+  if (Math.abs(JJT[0][1]) < 1e-10) {
+    ellAngle = 0;
+  } else {
+    ellAngle = Math.atan2(lambda1 - JJT[0][0], JJT[0][1]);
+  }
+  
+  const ee = forwardKinematics(angles, lengths, n)[n];
+  const center = toCanvas(ee);
+  
+  // Scale factor for visibility
+  const scale = 0.4;
+  const a = Math.sqrt(Math.abs(lambda1)) * scale;
+  const b = Math.sqrt(Math.abs(lambda2)) * scale;
+  
+  if (a < 0.5 && b < 0.5) return; // Too small to see
+  
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.rotate(-ellAngle); // Negate because canvas y is flipped
+  ctx.beginPath();
+  ctx.ellipse(0, 0, Math.max(1, a), Math.max(1, b), 0, 0, 2 * Math.PI);
+  ctx.fillStyle = 'rgba(78, 205, 196, 0.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(78, 205, 196, 0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Draw principal axes
+  ctx.beginPath();
+  ctx.moveTo(-a, 0);
+  ctx.lineTo(a, 0);
+  ctx.moveTo(0, -b);
+  ctx.lineTo(0, b);
+  ctx.strokeStyle = 'rgba(78, 205, 196, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  ctx.restore();
+}
+
+function drawArcs(pts, angles, lengths, n) {
+  let cumAngle = 0;
+  
+  for (let i = 0; i < n; i++) {
+    const p = toCanvas(pts[i]);
+    const radius = 25;
+    const startAngle = -(cumAngle); // Canvas y-flip
+    const endAngle = -(cumAngle + angles[i]);
+    
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, radius, startAngle, endAngle, angles[i] > 0);
+    ctx.strokeStyle = linkColors[i % linkColors.length] + '88';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    cumAngle += angles[i];
+  }
+}
+
+// =============================================
+// Data Panel Update
+// =============================================
+
+function updateDataPanel(pts, lengths, n) {
+  const ee = pts[n];
+  
+  // Target / actual
+  if (mode === 'ik') {
+    document.getElementById('dataTarget').textContent = `(${targetX.toFixed(1)}, ${targetY.toFixed(1)})`;
+    document.getElementById('dataActual').textContent = `(${ee.x.toFixed(1)}, ${ee.y.toFixed(1)})`;
+    const err = Math.sqrt((ee.x - targetX) ** 2 + (ee.y - targetY) ** 2);
+    document.getElementById('dataError').textContent = err.toFixed(2);
+  } else {
+    document.getElementById('dataTarget').textContent = '—';
+    document.getElementById('dataActual').textContent = `(${ee.x.toFixed(1)}, ${ee.y.toFixed(1)})`;
+    document.getElementById('dataError').textContent = '—';
+  }
+  
+  const dist = Math.sqrt(ee.x * ee.x + ee.y * ee.y);
+  document.getElementById('dataDist').textContent = dist.toFixed(1);
+  
+  // Reachability
+  const totalLen = lengths.reduce((a, b) => a + b, 0);
+  const reachable = dist <= totalLen * 1.01;
+  const reachEl = document.getElementById('reachStatus');
+  if (reachable) {
+    reachEl.textContent = 'Reachable ✓';
+    reachEl.style.color = '#00d4aa';
+  } else {
+    reachEl.textContent = 'Out of reach ✗';
+    reachEl.style.color = '#ff6b6b';
+  }
+  
+  // Jacobian (2-link only)
+  if (n === 2) {
+    const J = computeJacobian2Link(jointAngles[0], jointAngles[1], lengths[0], lengths[1]);
+    document.getElementById('jacobianDisplay').innerHTML = `
+      <span class="label">J =</span><br>
+      [ ${J[0][0].toFixed(2)} &nbsp; ${J[0][1].toFixed(2)} ]<br>
+      [ ${J[1][0].toFixed(2)} &nbsp; ${J[1][1].toFixed(2)} ]
+    `;
+    
+    const det = J[0][0] * J[1][1] - J[0][1] * J[1][0];
+    const manip = Math.sqrt(Math.abs(det));
+    const JJT00 = J[0][0]*J[0][0] + J[0][1]*J[0][1];
+    const JJT11 = J[1][0]*J[1][0] + J[1][1]*J[1][1];
+    const JJT01 = J[0][0]*J[1][0] + J[0][1]*J[1][1];
+    const traceJJT = JJT00 + JJT11;
+    const detJJT = JJT00 * JJT11 - JJT01 * JJT01;
+    const cond = Math.abs(detJJT) > 0.001 ? (traceJJT / (2 * Math.sqrt(Math.abs(detJJT)))).toFixed(2) : '∞';
+    
+    document.getElementById('dataDetJ').textContent = det.toFixed(2);
+    document.getElementById('dataManip').textContent = manip.toFixed(2);
+    document.getElementById('dataCond').textContent = cond;
+    
+    const singMsg = document.getElementById('singularityMsg');
+    if (Math.abs(det) < 5) {
+      singMsg.innerHTML = '<span class="singularity-warn">⚠ Near singularity — dexterity limited</span>';
+    } else {
+      singMsg.innerHTML = '';
+    }
+  } else {
+    document.getElementById('jacobianDisplay').innerHTML = '<span class="label">Jacobian display for 2-link mode</span>';
+    document.getElementById('dataDetJ').textContent = '—';
+    document.getElementById('dataManip').textContent = '—';
+    document.getElementById('dataCond').textContent = '—';
+    document.getElementById('singularityMsg').innerHTML = '';
+  }
+}
+
+// =============================================
+// Interaction
+// =============================================
+
+function getMousePos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  return fromCanvas(x, y);
+}
+
+function getTouchPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  return fromCanvas(x, y);
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  if (mode !== 'ik') return;
+  dragging = true;
+  const p = getMousePos(e);
+  targetX = p.x;
+  targetY = p.y;
+  draw();
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (mode !== 'ik' || !dragging) return;
+  const p = getMousePos(e);
+  targetX = p.x;
+  targetY = p.y;
+  draw();
+  
+  // Add to trail
+  const ee = getEndEffector(jointAngles, linkLengths, numLinks);
+  trail.push({x: ee.x, y: ee.y});
+  if (trail.length > MAX_TRAIL) trail.shift();
+});
+
+canvas.addEventListener('mouseup', () => { dragging = false; });
+canvas.addEventListener('mouseleave', () => { dragging = false; });
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  if (mode !== 'ik') return;
+  dragging = true;
+  const p = getTouchPos(e);
+  targetX = p.x;
+  targetY = p.y;
+  draw();
+}, {passive: false});
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (mode !== 'ik' || !dragging) return;
+  const p = getTouchPos(e);
+  targetX = p.x;
+  targetY = p.y;
+  draw();
+  
+  const ee = getEndEffector(jointAngles, linkLengths, numLinks);
+  trail.push({x: ee.x, y: ee.y});
+  if (trail.length > MAX_TRAIL) trail.shift();
+}, {passive: false});
+
+canvas.addEventListener('touchend', () => { dragging = false; });
+
+// =============================================
+// Mode Switching & Controls
+// =============================================
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btnIK').classList.toggle('active', m === 'ik');
+  document.getElementById('btnFK').classList.toggle('active', m === 'fk');
+  document.getElementById('fkControls').style.display = m === 'fk' ? 'block' : 'none';
+  document.getElementById('ikInfo').querySelector('h3').textContent = m === 'ik' ? 'End Effector' : 'End Effector (FK)';
+  
+  if (m === 'fk') {
+    buildAngleSliders();
+  }
+  draw();
+}
+
+function buildAngleSliders() {
+  const container = document.getElementById('angleSliders');
+  container.innerHTML = '';
+  for (let i = 0; i < numLinks; i++) {
+    const row = document.createElement('div');
+    row.className = 'control-row';
+    row.innerHTML = `
+      <label>θ${i + 1}</label>
+      <input type="range" min="-180" max="180" value="${Math.round(jointAngles[i] * 180 / Math.PI)}" 
+             id="sliderA${i}" oninput="updateAngle(${i}, this.value)">
+      <span class="val" id="valA${i}">${Math.round(jointAngles[i] * 180 / Math.PI)}°</span>
+    `;
+    container.appendChild(row);
+  }
+}
+
+function updateAngle(i, deg) {
+  jointAngles[i] = deg * Math.PI / 180;
+  document.getElementById(`valA${i}`).textContent = `${deg}°`;
+  
+  const ee = getEndEffector(jointAngles, linkLengths, numLinks);
+  trail.push({x: ee.x, y: ee.y});
+  if (trail.length > MAX_TRAIL) trail.shift();
+  
+  draw();
+}
+
+function updateParams() {
+  linkLengths[0] = parseInt(document.getElementById('sliderL1').value);
+  linkLengths[1] = parseInt(document.getElementById('sliderL2').value);
+  document.getElementById('valL1').textContent = linkLengths[0];
+  document.getElementById('valL2').textContent = linkLengths[1];
+  
+  trail = [];
+  draw();
+}
+
+function updateLinkCount() {
+  const newCount = parseInt(document.getElementById('sliderLinks').value);
+  document.getElementById('valLinks').textContent = newCount;
+  numLinks = newCount;
+  
+  // Initialize any new angles to 0
+  for (let i = 0; i < numLinks; i++) {
+    if (jointAngles[i] === undefined) jointAngles[i] = 0;
+  }
+  
+  if (mode === 'fk') {
+    buildAngleSliders();
+  }
+  
+  trail = [];
+  draw();
+}
+
+function clearTrail() {
+  trail = [];
+  draw();
+}
+
+function resetArm() {
+  jointAngles = [0, 0, 0, 0, 0, 0];
+  linkLengths = [120, 100, 80, 70, 60, 50];
+  numLinks = 2;
+  targetX = 150;
+  targetY = 100;
+  trail = [];
+  
+  document.getElementById('sliderL1').value = 120;
+  document.getElementById('sliderL2').value = 100;
+  document.getElementById('valL1').textContent = '120';
+  document.getElementById('valL2').textContent = '100';
+  document.getElementById('sliderLinks').value = 2;
+  document.getElementById('valLinks').textContent = '2';
+  
+  if (mode === 'fk') buildAngleSliders();
+  draw();
+}
+
+function solveAndDraw() {
+  draw();
+}
+
+// =============================================
+// Presets
+// =============================================
+
+function loadPreset(name) {
+  switch(name) {
+    case 'default':
+      resetArm();
+      break;
+    case 'scara':
+      numLinks = 2;
+      linkLengths = [130, 110];
+      jointAngles = [0.5, 0.8];
+      targetX = 100;
+      targetY = 150;
+      break;
+    case 'long_reach':
+      numLinks = 2;
+      linkLengths = [180, 160];
+      jointAngles = [0.3, 0.5];
+      targetX = 200;
+      targetY = 100;
+      break;
+    case 'multi_link':
+      numLinks = 4;
+      linkLengths = [90, 80, 70, 60];
+      jointAngles = [0.5, -0.3, 0.4, -0.2, 0, 0];
+      targetX = 100;
+      targetY = 150;
+      break;
+  }
+  
+  document.getElementById('sliderL1').value = linkLengths[0];
+  document.getElementById('sliderL2').value = linkLengths[1];
+  document.getElementById('valL1').textContent = linkLengths[0];
+  document.getElementById('valL2').textContent = linkLengths[1];
+  document.getElementById('sliderLinks').value = numLinks;
+  document.getElementById('valLinks').textContent = numLinks;
+  
+  trail = [];
+  
+  if (mode === 'fk') buildAngleSliders();
+  draw();
+}
+
+// =============================================
+// Init
+// =============================================
+
+// Set a nice default target
+targetX = 150;
+targetY = 100;
+
+// Initial IK solve
+jointAngles = solveIK(targetX, targetY, linkLengths, numLinks, jointAngles, 'down');
+
+resize();
+</script>
+</body>
+</html>

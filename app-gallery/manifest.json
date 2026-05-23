@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-23",
-    "title": "Seismic Explorer",
-    "slug": "seismic-explorer",
-    "publishedSlug": "2026-05-23-seismic-explorer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-23-seismic-explorer/"
+    "date": "2026-05-24",
+    "title": "Kinematics Sandbox",
+    "slug": "kinematics-sandbox",
+    "publishedSlug": "2026-05-24-kinematics-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-24-kinematics-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-05-24",
+      "title": "Kinematics Sandbox",
+      "slug": "kinematics-sandbox",
+      "publishedSlug": "2026-05-24-kinematics-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-24-kinematics-sandbox/",
+      "description": "Interactive robot arm playground — drag the end-effector, solve inverse kinematics in real time, visualise workspace envelopes and manipulability ellipsoids"
+    },
     {
       "date": "2026-05-23",
       "title": "Seismic Explorer",
