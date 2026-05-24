@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Root Quest — Plant Root Puzzle Game</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #1a1510;
+    --panel: #2a2218;
+    --panel-border: #4a3e2e;
+    --text: #e8dcc8;
+    --text-dim: #a09078;
+    --accent: #7cb342;
+    --accent-bright: #9ccc65;
+    --water: #4fc3f7;
+    --water-deep: #0288d1;
+    --nutrient: #ffca28;
+    --rock: #5d4037;
+    --clay: #6d4c41;
+    --loam: #8d6e63;
+    --sand: #bcaaa4;
+    --danger: #ef5350;
+    --warning: #ffa726;
+  }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+  .disclaimer {
+    width: 100%;
+    text-align: center;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: #a09078;
+    background: #120e0a;
+    border-bottom: 1px solid #3a3020;
+    line-height: 1.4;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent-bright);
+    margin: 12px 0 4px;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .game-container {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    padding: 0 16px 16px;
+    max-width: 900px;
+    width: 100%;
+    align-items: flex-start;
+  }
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .panel h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent-bright);
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 6px;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 4px 0;
+    border-bottom: 1px dashed #3a3020;
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: var(--text-dim); }
+  .stat-value { font-weight: 600; }
+  .energy-bar-container {
+    height: 10px;
+    background: #3a3020;
+    border-radius: 5px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .energy-bar {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+  .soil-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .legend-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
+  }
+  .legend-cost { color: var(--text-dim); margin-left: auto; }
+  .board-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+  }
+  .level-header {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .level-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .level-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .stars {
+    font-size: 20px;
+    margin-top: 4px;
+    letter-spacing: 4px;
+  }
+  .star { opacity: 0.25; transition: opacity 0.3s; }
+  .star.earned { opacity: 1; }
+  .grid {
+    display: grid;
+    gap: 2px;
+    padding: 6px;
+    background: #120e0a;
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .cell {
+    width: 44px;
+    height: 44px;
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .cell:hover { transform: scale(1.08); z-index: 2; }
+  .cell.taproot {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-bright) 100%);
+    box-shadow: 0 0 8px rgba(124,179,66,0.4);
+    cursor: default;
+  }
+  .cell.root {
+    background: linear-gradient(135deg, #558b2f 0%, #7cb342 100%);
+    box-shadow: 0 0 6px rgba(124,179,66,0.3);
+    cursor: default;
+  }
+  .cell.sand { background: var(--sand); }
+  .cell.loam { background: var(--loam); }
+  .cell.clay { background: var(--clay); }
+  .cell.rock { background: var(--rock); cursor: not-allowed; }
+  .cell.water-table {
+    background: linear-gradient(180deg, var(--water) 0%, var(--water-deep) 100%);
+    box-shadow: 0 0 10px rgba(79,195,247,0.3);
+  }
+  .cell.nutrient::after {
+    content: '💎';
+    font-size: 16px;
+    position: absolute;
+  }
+  .cell.water-table.nutrient::after {
+    content: '💎';
+    text-shadow: 0 0 4px rgba(0,0,0,0.5);
+  }
+  .cell.adjacent {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: -2px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { outline-color: var(--accent-bright); }
+    50% { outline-color: rgba(156,204,101,0.3); }
+  }
+  .cell.cost-indicator {
+    position: absolute;
+    bottom: 1px;
+    right: 2px;
+    font-size: 9px;
+    color: rgba(0,0,0,0.6);
+    font-weight: 700;
+  }
+  .cell .soil-icon {
+    font-size: 14px;
+    opacity: 0.7;
+  }
+  .cell.rock .soil-icon { opacity: 0.9; }
+  .controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  button {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    font-family: inherit;
+  }
+  button:hover {
+    background: #3a3020;
+    border-color: var(--accent);
+  }
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a1510;
+    font-weight: 600;
+  }
+  button.primary:hover { background: var(--accent-bright); }
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .message {
+    text-align: center;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  .message.success { background: rgba(124,179,66,0.15); color: var(--accent-bright); border: 1px solid rgba(124,179,66,0.3); }
+  .message.warning { background: rgba(255,167,38,0.15); color: var(--warning); border: 1px solid rgba(255,167,38,0.3); }
+  .message.danger { background: rgba(239,83,80,0.15); color: var(--danger); border: 1px solid rgba(239,83,80,0.3); }
+  .message.info { background: rgba(79,195,247,0.1); color: var(--water); border: 1px solid rgba(79,195,247,0.3); }
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,8,6,0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+  }
+  .modal h2 {
+    font-size: 22px;
+    color: var(--accent-bright);
+    margin-bottom: 12px;
+  }
+  .modal p { font-size: 14px; color: var(--text-dim); line-height: 1.5; margin-bottom: 8px; }
+  .modal .big-stars { font-size: 32px; margin: 12px 0; }
+  .level-select {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .level-card {
+    background: #1a1510;
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 12px 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+    text-align: center;
+  }
+  .level-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .level-card.locked { opacity: 0.4; cursor: not-allowed; }
+  .level-card.locked:hover { transform: none; border-color: var(--panel-border); }
+  .level-card .lv-num { font-size: 18px; font-weight: 700; color: var(--accent-bright); }
+  .level-card .lv-name { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .level-card .lv-stars { font-size: 14px; margin-top: 4px; }
+
+  @media (max-width: 700px) {
+    .game-container { flex-direction: column; align-items: center; }
+    .sidebar { width: 100%; max-width: 400px; }
+    .cell { width: 36px; height: 36px; font-size: 14px; }
+    .grid { gap: 1px; padding: 4px; }
+    h1 { font-size: 18px; }
+  }
+  @media (max-width: 400px) {
+    .cell { width: 32px; height: 32px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="disclaimer">
+  Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+
+<h1>🌱 Root Quest</h1>
+<div class="subtitle">Guide your plant's roots to water and nutrients — one cell at a time</div>
+
+<div class="game-container">
+  <div class="sidebar">
+    <div class="panel">
+      <h3>Status</h3>
+      <div class="stat-row"><span class="stat-label">Level</span><span class="stat-value" id="level-display">1</span></div>
+      <div class="stat-row"><span class="stat-label">Energy</span><span class="stat-value"><span id="energy-display">20</span> / <span id="energy-max">20</span></span></div>
+      <div class="energy-bar-container"><div class="energy-bar" id="energy-bar" style="width:100%;background:var(--accent);"></div></div>
+      <div class="stat-row"><span class="stat-label">Nutrients</span><span class="stat-value" id="nutrients-display">0 / 0</span></div>
+      <div class="stat-row"><span class="stat-label">Depth</span><span class="stat-value" id="depth-display">0</span></div>
+      <div class="stat-row"><span class="stat-label">Roots grown</span><span class="stat-value" id="roots-display">0</span></div>
+    </div>
+    <div class="panel">
+      <h3>Soil Types</h3>
+      <div class="soil-legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--sand);"></div><span>Sand</span><span class="legend-cost">1⚡</span></div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--loam);"></div><span>Loam</span><span class="legend-cost">2⚡</span></div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--clay);"></div><span>Clay</span><span class="legend-cost">3⚡</span></div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--rock);"></div><span>Rock</span><span class="legend-cost">Blocked</span></div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--water);"></div><span>Water</span><span class="legend-cost">Goal</span></div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--nutrient);"></div><span>Nutrient 💎</span><span class="legend-cost">+ bonus</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>How to Play</h3>
+      <p style="font-size:12px;color:var(--text-dim);line-height:1.5;">
+        Click highlighted cells next to your roots to grow. Reach the water table (blue row) to win. Collect nutrients 💎 for bonus stars. Avoid running out of energy!
+      </p>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div class="level-header">
+      <div class="level-name" id="level-name">The Seedling</div>
+      <div class="level-desc" id="level-desc">Sandy soil makes for easy digging. Find your way to water.</div>
+      <div class="stars" id="stars-display">⭐⭐⭐</div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="controls">
+      <button onclick="resetLevel()">↺ Reset Level</button>
+      <button class="primary" onclick="showLevelSelect()">📋 Levels</button>
+      <button onclick="toggleHelp()">❓ Help</button>
+    </div>
+    <div class="message info" id="message">Click a highlighted cell to grow your first root!</div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <h2 id="modal-title">Level Complete!</h2>
+    <div class="big-stars" id="modal-stars">⭐⭐⭐</div>
+    <p id="modal-message">You reached the water table with energy to spare!</p>
+    <div class="controls" style="margin-top:16px;">
+      <button onclick="nextLevel()">Next Level →</button>
+      <button onclick="resetLevel();hideOverlay();">Replay</button>
+      <button onclick="showLevelSelect()">All Levels</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ========== LEVELS ========== */
+const COLS = 8;
+const ROWS = 10;
+const SOIL = { SAND:'sand', LOAM:'loam', CLAY:'clay', ROCK:'rock' };
+const COST = { sand:1, loam:2, clay:3, rock:99 };
+
+const LEVELS = [
+  {
+    name: "The Seedling",
+    desc: "Sandy soil makes for easy digging. Find your way to water.",
+    energy: 18,
+    waterRow: 9,
+    map: [
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['water','water','water','water','water','water','water','water'],
+    ],
+    nutrients: [[5,3],[7,7]],
+    startCol: 3,
+    starThresholds: [5, 10, 14] // remaining energy for 1,2,3 stars
+  },
+  {
+    name: "Loam Layers",
+    desc: "Rich loam holds nutrients but costs more energy to penetrate.",
+    energy: 22,
+    waterRow: 9,
+    map: [
+      ['sand','sand','loam','loam','sand','sand','loam','sand'],
+      ['sand','loam','loam','loam','loam','sand','loam','loam'],
+      ['loam','loam','sand','sand','loam','loam','loam','loam'],
+      ['sand','loam','sand','loam','loam','sand','sand','loam'],
+      ['loam','loam','loam','sand','sand','loam','loam','sand'],
+      ['sand','loam','sand','loam','loam','sand','loam','loam'],
+      ['loam','sand','loam','loam','sand','loam','sand','loam'],
+      ['sand','loam','sand','loam','loam','sand','loam','sand'],
+      ['loam','loam','loam','sand','loam','loam','sand','loam'],
+      ['water','water','water','water','water','water','water','water'],
+    ],
+    nutrients: [[2,2],[5,5],[6,7]],
+    startCol: 3,
+    starThresholds: [4, 9, 14]
+  },
+  {
+    name: "Clay Challenge",
+    desc: "Dense clay drains your energy fast. Look for sand veins!",
+    energy: 24,
+    waterRow: 9,
+    map: [
+      ['sand','clay','clay','sand','clay','clay','clay','sand'],
+      ['clay','clay','sand','clay','clay','sand','clay','clay'],
+      ['clay','sand','clay','clay','sand','clay','clay','sand'],
+      ['clay','clay','clay','sand','clay','clay','sand','clay'],
+      ['sand','clay','sand','clay','clay','sand','clay','clay'],
+      ['clay','clay','clay','sand','clay','clay','clay','sand'],
+      ['clay','sand','clay','clay','sand','clay','sand','clay'],
+      ['clay','clay','sand','clay','clay','sand','clay','clay'],
+      ['sand','clay','clay','sand','clay','clay','clay','sand'],
+      ['water','water','water','water','water','water','water','water'],
+    ],
+    nutrients: [[1,1],[4,4],[7,2]],
+    startCol: 3,
+    starThresholds: [3, 8, 13]
+  },
+  {
+    name: "Rocky Terrain",
+    desc: "Solid rock blocks your path. Navigate around the obstacles.",
+    energy: 26,
+    waterRow: 9,
+    map: [
+      ['sand','sand','loam','sand','sand','sand','loam','sand'],
+      ['sand','rock','loam','rock','sand','rock','loam','rock'],
+      ['loam','sand','sand','sand','loam','sand','sand','sand'],
+      ['sand','rock','loam','rock','sand','rock','loam','rock'],
+      ['loam','sand','sand','loam','sand','sand','sand','loam'],
+      ['sand','loam','rock','sand','rock','loam','sand','sand'],
+      ['sand','sand','sand','loam','sand','sand','rock','loam'],
+      ['rock','loam','sand','sand','rock','sand','loam','sand'],
+      ['sand','sand','loam','sand','sand','loam','sand','sand'],
+      ['water','water','water','water','water','water','water','water'],
+    ],
+    nutrients: [[3,3],[5,1],[6,6]],
+    startCol: 3,
+    starThresholds: [4, 10, 16]
+  },
+  {
+    name: "The Deep",
+    desc: "A long descent through mixed soils. Plan your route carefully.",
+    energy: 28,
+    waterRow: 9,
+    map: [
+      ['sand','sand','loam','sand','sand','loam','sand','sand'],
+      ['loam','clay','sand','loam','sand','clay','loam','sand'],
+      ['sand','loam','clay','sand','loam','sand','clay','loam'],
+      ['loam','sand','loam','clay','sand','loam','sand','sand'],
+      ['clay','loam','sand','loam','clay','sand','loam','clay'],
+      ['sand','clay','loam','sand','loam','clay','sand','loam'],
+      ['loam','sand','clay','loam','sand','loam','clay','sand'],
+      ['sand','loam','sand','clay','loam','sand','loam','clay'],
+      ['clay','sand','loam','sand','clay','loam','sand','loam'],
+      ['water','water','water','water','water','water','water','water'],
+    ],
+    nutrients: [[2,4],[4,2],[5,6],[6,3]],
+    startCol: 3,
+    starThresholds: [5, 12, 18]
+  },
+  {
+    name: "Boulder Field",
+    desc: "A maze of rocks with narrow passages. Every move counts.",
+    energy: 24,
+    waterRow: 9,
+    map: [
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','rock','rock','sand','rock','rock','rock','sand'],
+      ['sand','rock','sand','sand','sand','sand','rock','sand'],
+      ['sand','sand','sand','rock','rock','sand','sand','sand'],
+      ['rock','sand','rock','sand','sand','rock','sand','rock'],
+      ['sand','sand','sand','rock','sand','sand','sand','sand'],
+      ['sand','rock','sand','sand','rock','rock','sand','rock'],
+      ['sand','sand','rock','sand','sand','sand','rock','sand'],
+      ['rock','sand','sand','sand','rock','sand','sand','sand'],
+      ['water','water','water','water','water','water','water','water'],
+    ],
+    nutrients: [[1,3],[4,5],[7,2]],
+    startCol: 3,
+    starThresholds: [4, 10, 15]
+  },
+  {
+    name: "Nutrient Rush",
+    desc: "Packed with nutrients but tricky soils. Can you collect them all?",
+    energy: 30,
+    waterRow: 9,
+    map: [
+      ['sand','clay','sand','clay','sand','clay','sand','clay'],
+      ['clay','sand','clay','sand','clay','sand','clay','sand'],
+      ['sand','clay','sand','loam','sand','clay','sand','clay'],
+      ['clay','sand','loam','sand','loam','sand','clay','sand'],
+      ['sand','loam','sand','clay','sand','loam','sand','clay'],
+      ['loam','sand','clay','sand','clay','sand','loam','sand'],
+      ['sand','clay','sand','loam','sand','clay','sand','clay'],
+      ['clay','sand','loam','sand','loam','sand','clay','sand'],
+      ['sand','loam','sand','clay','sand','loam','sand','clay'],
+      ['water','water','water','water','water','water','water','water'],
+    ],
+    nutrients: [[0,1],[2,3],[4,5],[5,2],[6,6],[7,4]],
+    startCol: 3,
+    starThresholds: [6, 14, 22]
+  },
+  {
+    name: "The Oasis",
+    desc: "A desert puzzle with scarce resources and distant water.",
+    energy: 20,
+    waterRow: 9,
+    map: [
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','sand','sand'],
+      ['sand','rock','sand','sand','sand','rock','sand','sand'],
+      ['sand','sand','sand','rock','sand','sand','sand','sand'],
+      ['sand','sand','sand','sand','sand','sand','rock','sand'],
+      ['rock','sand','sand','sand','rock','sand','sand','sand'],
+      ['sand','sand','rock','sand','sand','sand','sand','rock'],
+      ['sand','sand','sand','sand','sand','rock','sand','sand'],
+      ['sand','rock','sand','sand','sand','sand','sand','sand'],
+      ['water','water','water','water','water','water','water','water'],
+    ],
+    nutrients: [[2,4],[5,6]],
+    startCol: 3,
+    starThresholds: [2, 6, 10]
+  },
+];
+
+/* ========== STATE ========== */
+let currentLevelIdx = 0;
+let energy = 0;
+let roots = []; // array of [r,c]
+let nutrientsCollected = 0;
+let totalNutrients = 0;
+let gameState = 'playing'; // playing, won, lost
+let levelProgress = JSON.parse(localStorage.getItem('rootquest_progress') || '[]');
+
+/* ========== INIT ========== */
+function init() {
+  loadLevel(0);
+}
+
+function loadLevel(idx) {
+  currentLevelIdx = idx;
+  const lvl = LEVELS[idx];
+  energy = lvl.energy;
+  roots = [[0, lvl.startCol]];
+  nutrientsCollected = 0;
+  totalNutrients = lvl.nutrients.length;
+  gameState = 'playing';
+
+  document.getElementById('level-name').textContent = lvl.name;
+  document.getElementById('level-desc').textContent = lvl.desc;
+  document.getElementById('level-display').textContent = idx + 1;
+  document.getElementById('energy-display').textContent = energy;
+  document.getElementById('energy-max').textContent = lvl.energy;
+  document.getElementById('nutrients-display').textContent = `0 / ${totalNutrients}`;
+  updateEnergyBar();
+  updateStarsDisplay(0);
+  renderGrid();
+  setMessage('Click a highlighted cell to grow your first root!', 'info');
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  grid.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+  const lvl = LEVELS[currentLevelIdx];
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+
+      const isRoot = roots.some(([rr,cc]) => rr===r && cc===c);
+      const isStart = r === 0 && c === lvl.startCol;
+      const soil = lvl.map[r][c];
+      const isWater = r === lvl.waterRow;
+      const nutrient = lvl.nutrients.some(([nr,nc]) => nr===r && nc===c) && !roots.some(([rr,cc]) => rr===r && cc===c);
+
+      if (isStart) {
+        cell.classList.add('taproot');
+        cell.textContent = '🌱';
+      } else if (isRoot) {
+        cell.classList.add('root');
+        cell.textContent = '';
+      } else if (isWater) {
+        cell.classList.add('water-table');
+        cell.textContent = '💧';
+      } else {
+        cell.classList.add(soil);
+        const icons = { sand:'', loam:'', clay:'', rock:'🪨' };
+        const icon = document.createElement('span');
+        icon.className = 'soil-icon';
+        icon.textContent = icons[soil] || '';
+        cell.appendChild(icon);
+      }
+
+      if (nutrient && !isRoot) {
+        cell.classList.add('nutrient');
+      }
+
+      // Show cost on adjacent growable cells
+      if (!isRoot && !isStart && gameState === 'playing') {
+        const adj = isAdjacentToRoot(r, c);
+        if (adj && soil !== 'rock' && !isWater) {
+          cell.classList.add('adjacent');
+          const cost = COST[soil];
+          const costEl = document.createElement('span');
+          costEl.className = 'cost-indicator';
+          costEl.textContent = cost + '⚡';
+          cell.appendChild(costEl);
+        }
+      }
+
+      cell.addEventListener('click', () => onCellClick(r, c));
+      grid.appendChild(cell);
+    }
+  }
+
+  document.getElementById('depth-display').textContent = maxDepth();
+  document.getElementById('roots-display').textContent = roots.length - 1;
+}
+
+function isAdjacentToRoot(r, c) {
+  return roots.some(([rr, cc]) => {
+    const dr = Math.abs(rr - r);
+    const dc = Math.abs(cc - c);
+    return (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
+  });
+}
+
+function maxDepth() {
+  return Math.max(...roots.map(([r]) => r));
+}
+
+function onCellClick(r, c) {
+  if (gameState !== 'playing') return;
+  const lvl = LEVELS[currentLevelIdx];
+  const soil = lvl.map[r][c];
+
+  // Already root
+  if (roots.some(([rr,cc]) => rr===r && cc===c)) return;
+
+  // Must be adjacent
+  if (!isAdjacentToRoot(r, c)) {
+    setMessage('You can only grow into cells next to your existing roots.', 'warning');
+    return;
+  }
+
+  // Rock blocked
+  if (soil === 'rock') {
+    setMessage('Rock is impassable! Find another path.', 'danger');
+    return;
+  }
+
+  // Water = win condition
+  if (r === lvl.waterRow) {
+    growRoot(r, c);
+    checkWin();
+    return;
+  }
+
+  const cost = COST[soil];
+  if (energy < cost) {
+    setMessage(`Not enough energy! Need ${cost}⚡, have ${energy}⚡.`, 'danger');
+    return;
+  }
+
+  growRoot(r, c);
+}
+
+function growRoot(r, c) {
+  const lvl = LEVELS[currentLevelIdx];
+  const soil = lvl.map[r][c];
+  const cost = COST[soil];
+
+  if (r !== lvl.waterRow) {
+    energy -= cost;
+  }
+  roots.push([r, c]);
+
+  // Check nutrient collection
+  const nutrientIdx = lvl.nutrients.findIndex(([nr,nc]) => nr===r && nc===c);
+  if (nutrientIdx !== -1) {
+    nutrientsCollected++;
+    setMessage(`Nutrient collected! ${nutrientsCollected}/${totalNutrients}`, 'success');
+  }
+
+  document.getElementById('energy-display').textContent = energy;
+  document.getElementById('nutrients-display').textContent = `${nutrientsCollected} / ${totalNutrients}`;
+  updateEnergyBar();
+  renderGrid();
+
+  // Check lose condition (no moves left)
+  if (r !== lvl.waterRow && energy <= 0) {
+    const hasMoves = hasAnyValidMove();
+    if (!hasMoves) {
+      gameState = 'lost';
+      showOverlay('Out of Energy!', 'Your roots ran out of energy before reaching water. Try a more efficient path.', getStars(), true);
+    }
+  }
+}
+
+function hasAnyValidMove() {
+  const lvl = LEVELS[currentLevelIdx];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (roots.some(([rr,cc]) => rr===r && cc===c)) continue;
+      if (!isAdjacentToRoot(r, c)) continue;
+      const soil = lvl.map[r][c];
+      if (soil === 'rock') continue;
+      if (r === lvl.waterRow) return true;
+      if (energy >= COST[soil]) return true;
+    }
+  }
+  return false;
+}
+
+function checkWin() {
+  gameState = 'won';
+  const stars = getStars();
+  saveProgress(stars);
+  const msg = stars === 3 ? 'Perfect! You mastered this soil profile.' :
+              stars === 2 ? 'Great job! Efficient root growth.' :
+              'You made it! Try collecting more nutrients next time.';
+  showOverlay('Water Reached!', msg, stars, false);
+}
+
+function getStars() {
+  const lvl = LEVELS[currentLevelIdx];
+  const thresholds = lvl.starThresholds;
+  const remaining = energy;
+  if (remaining >= thresholds[2]) return 3;
+  if (remaining >= thresholds[1]) return 2;
+  if (remaining >= thresholds[0]) return 1;
+  return 0;
+}
+
+function updateEnergyBar() {
+  const lvl = LEVELS[currentLevelIdx];
+  const pct = Math.max(0, (energy / lvl.energy) * 100);
+  const bar = document.getElementById('energy-bar');
+  bar.style.width = pct + '%';
+  if (pct > 50) bar.style.background = 'var(--accent)';
+  else if (pct > 25) bar.style.background = 'var(--warning)';
+  else bar.style.background = 'var(--danger)';
+}
+
+function updateStarsDisplay(stars) {
+  const el = document.getElementById('stars-display');
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    html += `<span class="star ${i < stars ? 'earned' : ''}">⭐</span>`;
+  }
+  el.innerHTML = html;
+}
+
+function setMessage(text, type) {
+  const el = document.getElementById('message');
+  el.textContent = text;
+  el.className = 'message ' + type;
+}
+
+/* ========== OVERLAY ========== */
+function showOverlay(title, message, stars, isLoss) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-message').textContent = message;
+  let starHtml = '';
+  for (let i = 0; i < 3; i++) {
+    starHtml += i < stars ? '⭐' : '<span style="opacity:0.2">⭐</span>';
+  }
+  document.getElementById('modal-stars').innerHTML = starHtml;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function hideOverlay() {
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function nextLevel() {
+  hideOverlay();
+  if (currentLevelIdx + 1 < LEVELS.length) {
+    loadLevel(currentLevelIdx + 1);
+  } else {
+    showLevelSelect();
+  }
+}
+
+function resetLevel() {
+  hideOverlay();
+  loadLevel(currentLevelIdx);
+}
+
+/* ========== LEVEL SELECT ========== */
+function showLevelSelect() {
+  hideOverlay();
+  const overlay = document.getElementById('overlay');
+  const modal = document.getElementById('modal');
+  modal.innerHTML = '<h2>Select Level</h2><div class="level-select" id="level-select"></div>';
+  const select = document.getElementById('level-select');
+
+  LEVELS.forEach((lvl, idx) => {
+    const saved = levelProgress[idx] || 0;
+    const locked = idx > 0 && (levelProgress[idx-1] || 0) === 0 && idx !== 0;
+    const card = document.createElement('div');
+    card.className = 'level-card' + (locked ? ' locked' : '');
+    card.innerHTML = `
+      <div class="lv-num">${idx+1}</div>
+      <div class="lv-name">${lvl.name}</div>
+      <div class="lv-stars">${'⭐'.repeat(saved)}${'⚫'.repeat(3-saved).replace(/⚫/g,'<span style="opacity:0.15">⭐</span>')}</div>
+    `;
+    if (!locked) {
+      card.addEventListener('click', () => { hideOverlay(); loadLevel(idx); });
+    }
+    select.appendChild(card);
+  });
+
+  const controls = document.createElement('div');
+  controls.className = 'controls';
+  controls.style.marginTop = '16px';
+  controls.innerHTML = '<button onclick="hideOverlay()">Close</button>';
+  modal.appendChild(controls);
+
+  overlay.classList.add('show');
+}
+
+function saveProgress(stars) {
+  const current = levelProgress[currentLevelIdx] || 0;
+  if (stars > current) {
+    levelProgress[currentLevelIdx] = stars;
+    localStorage.setItem('rootquest_progress', JSON.stringify(levelProgress));
+  }
+}
+
+function toggleHelp() {
+  setMessage('Grow roots by clicking highlighted cells. Sand=1⚡, Loam=2⚡, Clay=3⚡. Reach the blue water table to win! Collect 💎 for bonus stars.', 'info');
+}
+
+/* ========== START ========== */
+init();
+</script>
+</body>
+</html>
