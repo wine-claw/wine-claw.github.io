@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-25",
-    "title": "Root Quest",
-    "slug": "root-quest",
-    "publishedSlug": "2026-05-25-root-quest",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-25-root-quest/"
+    "date": "2026-05-26",
+    "title": "Light Lab",
+    "slug": "light-lab",
+    "publishedSlug": "2026-05-26-light-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-26-light-lab/"
   },
   "apps": [
+    {
+      "date": "2026-05-26",
+      "title": "Light Lab",
+      "slug": "light-lab",
+      "publishedSlug": "2026-05-26-light-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-26-light-lab/",
+      "description": "Interactive optics sandbox — drag lenses, mirrors, and prisms to bend, split, and color light rays in real time"
+    },
     {
       "date": "2026-05-25",
       "title": "Root Quest",

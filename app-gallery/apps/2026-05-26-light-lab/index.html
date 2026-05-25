@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Light Lab — Interactive Optics Sandbox</title>
+<style>
+  :root {
+    --bg: #0a0a12;
+    --panel: #12121f;
+    --panel-border: #1e1e35;
+    --text: #e0e0f0;
+    --text-dim: #8888a0;
+    --accent: #00e5ff;
+    --accent-dim: #008899;
+    --red: #ff3366;
+    --green: #00ff88;
+    --yellow: #ffdd00;
+    --purple: #cc66ff;
+    --orange: #ff8833;
+    --grid: #1a1a2e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    width: 100%; height: 100%;
+  }
+
+  /* Disclaimer */
+  #disclaimer {
+    background: #1a0a0a;
+    border-bottom: 1px solid #331111;
+    color: #cc8888;
+    font-size: 11px;
+    padding: 6px 14px;
+    text-align: center;
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+
+  /* Toolbar */
+  #toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-border);
+    flex-shrink: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tool-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: #1e1e35;
+    border: 1px solid #2a2a45;
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .tool-btn:hover { background: #2a2a4a; color: var(--text); }
+  .tool-btn.active {
+    background: rgba(0,229,255,0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tool-btn svg { width: 16px; height: 16px; fill: currentColor; }
+  .tool-sep { width: 1px; height: 24px; background: var(--panel-border); margin: 0 4px; flex-shrink: 0; }
+
+  /* Main area */
+  #main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+  }
+
+  /* Canvas container */
+  #canvas-wrap {
+    flex: 1;
+    position: relative;
+    background: var(--bg);
+    cursor: crosshair;
+    overflow: hidden;
+  }
+  #canvas-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    opacity: .4;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* Sidebar */
+  #sidebar {
+    width: 220px;
+    background: var(--panel);
+    border-left: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  #sidebar h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    padding: 14px 14px 6px;
+  }
+  .sidebar-section { padding: 0 14px 10px; }
+  .preset-btn {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    background: #1a1a30;
+    border: 1px solid #2a2a45;
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all .15s;
+  }
+  .preset-btn:hover { background: #252545; border-color: var(--accent-dim); }
+  .preset-btn .emoji { margin-right: 6px; }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .control-row label { display: flex; align-items: center; gap: 6px; }
+  input[type="range"] {
+    width: 80px;
+    accent-color: var(--accent);
+  }
+  input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px; height: 16px;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    padding: 10px 14px;
+    border-top: 1px solid var(--panel-border);
+    margin-top: auto;
+  }
+  .hint kbd {
+    background: #1e1e35;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 10px;
+    border: 1px solid #2a2a45;
+  }
+
+  /* Mobile sidebar toggle */
+  #sidebar-toggle {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    width: 36px; height: 36px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 700px) {
+    #sidebar {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      z-index: 5;
+      transform: translateX(100%);
+      transition: transform .2s;
+      width: 200px;
+    }
+    #sidebar.open { transform: translateX(0); }
+    #sidebar-toggle { display: block; }
+  }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text);
+    pointer-events: none;
+    opacity: 0;
+    transition: all .3s;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="disclaimer">
+    Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+  </div>
+
+  <div id="toolbar">
+    <button class="tool-btn active" data-tool="select" title="Select / Drag">
+      <svg viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+      Select
+    </button>
+    <button class="tool-btn" data-tool="ray" title="Ray / Beam Source">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 2v3m0 14v3m10-10h-3M5 12H2m15.07-6.07l-2.12 2.12M8.05 15.95l-2.12 2.12m12.14 0l-2.12-2.12M8.05 8.05L5.93 5.93"/></svg>
+      Light
+    </button>
+    <button class="tool-btn" data-tool="mirror" title="Plane Mirror">
+      <svg viewBox="0 0 24 24"><rect x="11" y="4" width="2" height="16"/></svg>
+      Mirror
+    </button>
+    <button class="tool-btn" data-tool="lens-convex" title="Convex Lens">
+      <svg viewBox="0 0 24 24"><path d="M8 4c3 0 4 8 4 8s-1 8-4 8" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M16 4c-3 0-4 8-4 8s1 8 4 8" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      Convex
+    </button>
+    <button class="tool-btn" data-tool="lens-concave" title="Concave Lens">
+      <svg viewBox="0 0 24 24"><path d="M7 4c5 0 6 8 6 8s-1 8-6 8" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M17 4c-5 0-6 8-6 8s1 8 6 8" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      Concave
+    </button>
+    <button class="tool-btn" data-tool="prism" title="Triangular Prism">
+      <svg viewBox="0 0 24 24"><polygon points="12,4 20,18 4,18" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      Prism
+    </button>
+    <button class="tool-btn" data-tool="beamsplitter" title="Beam Splitter">
+      <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" transform="rotate(45 12 12)"/></svg>
+      Splitter
+    </button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" id="btn-clear" title="Clear All">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/></svg>
+      Clear
+    </button>
+  </div>
+
+  <div id="main">
+    <div id="canvas-wrap">
+      <canvas id="lab"></canvas>
+      <button id="sidebar-toggle">⚙</button>
+    </div>
+    <div id="sidebar">
+      <h3>Presets</h3>
+      <div class="sidebar-section">
+        <button class="preset-btn" data-preset="rainbow"><span class="emoji">🌈</span> Rainbow Prism</button>
+        <button class="preset-btn" data-preset="telescope"><span class="emoji">🔭</span> Telescope</button>
+        <button class="preset-btn" data-preset="periscope"><span class="emoji">🔍</span> Periscope</button>
+        <button class="preset-btn" data-preset="laser-maze"><span class="emoji">🔦</span> Laser Maze</button>
+        <button class="preset-btn" data-preset="microscope"><span class="emoji">🧫</span> Microscope</button>
+      </div>
+
+      <h3>Settings</h3>
+      <div class="sidebar-section">
+        <div class="control-row">
+          <label><input type="checkbox" id="chk-dispersion" checked> Color Dispersion</label>
+        </div>
+        <div class="control-row">
+          <label><input type="checkbox" id="chk-grid" checked> Show Grid</label>
+        </div>
+        <div class="control-row">
+          <label>Ray Count</label>
+          <input type="range" id="ray-count" min="3" max="15" value="7">
+        </div>
+        <div class="control-row">
+          <label>Beam Width</label>
+          <input type="range" id="beam-width" min="10" max="120" value="40">
+        </div>
+      </div>
+
+      <div class="hint">
+        <strong>Light Lab</strong><br><br>
+        • Click toolbar to select a tool<br>
+        • Click on canvas to place<br>
+        • Drag elements to move<br>
+        • Drag the <kbd>⟳</kbd> handle to rotate<br>
+        • Drag source <kbd>●</kbd> to aim<br>
+        • Double-click to delete<br>
+        • Try the presets!
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ========== Light Lab ========== */
+const canvas = document.getElementById('lab');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+const sidebar = document.getElementById('sidebar');
+const toastEl = document.getElementById('toast');
+
+let W, H;
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = wrap.clientWidth;
+  H = wrap.clientHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* --- State --- */
+let tool = 'select';
+let elements = [];
+let selectedId = null;
+let dragging = null; // { id, handle }
+let dragOffset = { x: 0, y: 0 };
+let nextId = 1;
+let showGrid = true;
+let dispersion = true;
+let rayCount = 7;
+let beamWidth = 40;
+
+/* Physics constants */
+const C_AIR = 1.0;
+const C_GLASS = 1.5;
+const MAX_BOUNCES = 12;
+const RAY_STEP = 2;
+const WAVE_COLORS = [
+  { wl: 700, r: 255, g: 0,   b: 0   },   // red
+  { wl: 620, r: 255, g: 80,  b: 0   },   // orange
+  { wl: 580, r: 255, g: 200, b: 0   },   // yellow
+  { wl: 530, r: 0,   g: 255, b: 0   },   // green
+  { wl: 470, r: 0,   g: 100, b: 255 },   // blue
+  { wl: 420, r: 100, g: 0,   b: 255 },   // violet
+];
+
+/* --- Element types --- */
+const ELEM_DEFS = {
+  ray: {
+    w: 0, h: 0,
+    drawShape(ctx, el) {
+      ctx.fillStyle = '#ffee88';
+      ctx.beginPath();
+      ctx.arc(0, 0, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffcc00';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // glow
+      const g = ctx.createRadialGradient(0, 0, 2, 0, 0, 18);
+      g.addColorStop(0, 'rgba(255, 240, 150, 0.5)');
+      g.addColorStop(1, 'rgba(255, 240, 150, 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+      // aim dot
+      const ax = Math.cos(el.angle) * 18;
+      const ay = Math.sin(el.angle) * 18;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(ax, ay, 3, 0, Math.PI * 2); ctx.fill();
+    },
+    handles: ['move', 'rotate']
+  },
+  mirror: {
+    w: 8, h: 100,
+    drawShape(ctx, el) {
+      ctx.save();
+      ctx.fillStyle = '#c0d0e8';
+      ctx.fillRect(-4, -50, 8, 100);
+      ctx.strokeStyle = '#8899bb';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(-4, -50, 8, 100);
+      // reflective backing indicator
+      ctx.fillStyle = '#556688';
+      ctx.fillRect(2, -50, 2, 100);
+      ctx.restore();
+    },
+    handles: ['move', 'rotate']
+  },
+  'lens-convex': {
+    w: 16, h: 100,
+    drawShape(ctx, el) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(180, 220, 255, 0.25)';
+      ctx.strokeStyle = 'rgba(120, 180, 255, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-8, -50);
+      ctx.bezierCurveTo(20, -30, 20, 30, -8, 50);
+      ctx.lineTo(8, 50);
+      ctx.bezierCurveTo(-20, 30, -20, -30, 8, -50);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      // center line
+      ctx.strokeStyle = 'rgba(120,180,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, -50); ctx.lineTo(0, 50); ctx.stroke();
+      ctx.restore();
+    },
+    ior: 1.5,
+    handles: ['move', 'rotate']
+  },
+  'lens-concave': {
+    w: 16, h: 100,
+    drawShape(ctx, el) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(180, 220, 255, 0.25)';
+      ctx.strokeStyle = 'rgba(120, 180, 255, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-8, -50);
+      ctx.bezierCurveTo(-30, -30, -30, 30, -8, 50);
+      ctx.lineTo(8, 50);
+      ctx.bezierCurveTo(30, 30, 30, -30, 8, -50);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+    },
+    ior: 1.5,
+    handles: ['move', 'rotate']
+  },
+  prism: {
+    w: 80, h: 70,
+    drawShape(ctx, el) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(180, 220, 255, 0.2)';
+      ctx.strokeStyle = 'rgba(120, 180, 255, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -40);
+      ctx.lineTo(40, 35);
+      ctx.lineTo(-40, 35);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+    },
+    ior: 1.5,
+    handles: ['move', 'rotate']
+  },
+  beamsplitter: {
+    w: 80, h: 8,
+    drawShape(ctx, el) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(200, 200, 220, 0.3)';
+      ctx.strokeStyle = 'rgba(160, 160, 200, 0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(-40, -4, 80, 8);
+      ctx.strokeRect(-40, -4, 80, 8);
+      // diagonal line
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.beginPath(); ctx.moveTo(-30, -3); ctx.lineTo(30, 3); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    },
+    handles: ['move', 'rotate']
+  }
+};
+
+function makeElement(type, x, y, angle = 0) {
+  const def = ELEM_DEFS[type];
+  return {
+    id: nextId++,
+    type,
+    x, y,
+    angle,
+    w: def.w || 0,
+    h: def.h || 0,
+    ior: def.ior || null
+  };
+}
+
+/* --- Ray tracing --- */
+function traceRay(ox, oy, angle, colorObj, maxDist = 2000) {
+  const path = [];
+  let x = ox, y = oy;
+  let dir = angle;
+  let inside = null; // element id if inside a medium
+  let bounces = 0;
+  let alive = true;
+  const color = colorObj || { r: 255, g: 240, b: 200 };
+
+  path.push({ x, y });
+
+  while (alive && bounces < MAX_BOUNCES) {
+    // Find nearest intersection with any element
+    let best = null;
+    let bestDist = Infinity;
+
+    for (const el of elements) {
+      if (el.type === 'ray') continue;
+      const hit = intersectElement(x, y, dir, el);
+      if (hit && hit.dist > 0.5 && hit.dist < bestDist) {
+        // Don't re-hit the same surface immediately (prevent self-intersection)
+        if (path.length >= 2) {
+          const last = path[path.length - 1];
+          const d = Math.hypot(hit.x - last.x, hit.y - last.y);
+          if (d < 1) continue;
+        }
+        best = hit;
+        bestDist = hit.dist;
+      }
+    }
+
+    if (!best) {
+      // No intersection — ray exits canvas
+      const dx = Math.cos(dir), dy = Math.sin(dir);
+      // Extend to boundary
+      let t = Infinity;
+      if (dx > 0.001) t = Math.min(t, (W + 50 - x) / dx);
+      if (dx < -0.001) t = Math.min(t, (-50 - x) / dx);
+      if (dy > 0.001) t = Math.min(t, (H + 50 - y) / dy);
+      if (dy < -0.001) t = Math.min(t, (-50 - y) / dy);
+      x += dx * t; y += dy * t;
+      path.push({ x, y });
+      break;
+    }
+
+    // Move to intersection
+    x = best.x; y = best.y;
+    path.push({ x, y });
+
+    const el = best.el;
+    const n1 = inside === el.id ? (el.ior || C_AIR) : C_AIR;
+    const n2 = inside === el.id ? C_AIR : (el.ior || C_AIR);
+
+    // Compute surface normal
+    let nx = best.nx, ny = best.ny;
+    // Ensure normal points toward incoming side
+    if (nx * Math.cos(dir) + ny * Math.sin(dir) > 0) {
+      nx = -nx; ny = -ny;
+    }
+
+    if (el.type === 'mirror') {
+      // Perfect reflection
+      const dot = Math.cos(dir) * nx + Math.sin(dir) * ny;
+      dir = Math.atan2(
+        Math.sin(dir) - 2 * dot * ny,
+        Math.cos(dir) - 2 * dot * nx
+      );
+      bounces++;
+    } else if (el.type === 'beamsplitter') {
+      // Partial reflection + transmission (simplified: alternate)
+      if (bounces % 2 === 0) {
+        // Reflect
+        const dot = Math.cos(dir) * nx + Math.sin(dir) * ny;
+        dir = Math.atan2(
+          Math.sin(dir) - 2 * dot * ny,
+          Math.cos(dir) - 2 * dot * nx
+        );
+      } else {
+        // Transmit (straight through)
+        inside = inside === el.id ? null : el.id;
+      }
+      bounces++;
+    } else {
+      // Refraction via Snell's law
+      const sinTheta1 = Math.cos(dir) * (-ny) + Math.sin(dir) * nx; // sin of incidence angle
+      const sinTheta2 = (n1 / n2) * sinTheta1;
+
+      if (Math.abs(sinTheta2) > 1) {
+        // Total internal reflection
+        const dot = Math.cos(dir) * nx + Math.sin(dir) * ny;
+        dir = Math.atan2(
+          Math.sin(dir) - 2 * dot * ny,
+          Math.cos(dir) - 2 * dot * nx
+        );
+      } else {
+        const cosTheta2 = Math.sqrt(1 - sinTheta2 * sinTheta2);
+        // New direction: refracted
+        const tx = -ny, ty = nx; // tangent
+        dir = Math.atan2(
+          sinTheta2 * ty + cosTheta2 * ny,
+          sinTheta2 * tx + cosTheta2 * nx
+        );
+        inside = inside === el.id ? null : el.id;
+      }
+      bounces++;
+    }
+  }
+
+  return { path, color };
+}
+
+/* Intersection helpers */
+function intersectElement(ox, oy, dir, el) {
+  const cos = Math.cos(el.angle), sin = Math.sin(el.angle);
+  // Transform ray origin to element-local space
+  const dx = ox - el.x, dy = oy - el.y;
+  const lx = dx * cos + dy * sin;
+  const ly = -dx * sin + dy * cos;
+  const rdx = Math.cos(dir - el.angle);
+  const rdy = Math.sin(dir - el.angle);
+
+  if (el.type === 'mirror') {
+    // Line segment from (0, -50) to (0, 50)
+    if (Math.abs(rdx) < 0.001) return null;
+    const t = -lx / rdx;
+    if (t < 0.1) return null;
+    const iy = ly + t * rdy;
+    if (iy < -52 || iy > 52) return null;
+    const wx = ox + t * Math.cos(dir);
+    const wy = oy + t * Math.sin(dir);
+    return {
+      x: wx, y: wy, dist: t,
+      nx: cos, ny: sin, el
+    };
+  }
+
+  if (el.type === 'beamsplitter') {
+    // Rectangle from (-40, -4) to (40, 4)
+    // Check all four edges
+    let best = null, bestT = Infinity;
+    const edges = [
+      { x1: -40, y1: -4, x2: 40, y2: -4, nx: 0, ny: -1 },
+      { x1: -40, y1: 4, x2: 40, y2: 4, nx: 0, ny: 1 },
+      { x1: -40, y1: -4, x2: -40, y2: 4, nx: -1, ny: 0 },
+      { x1: 40, y1: -4, x2: 40, y2: 4, nx: 1, ny: 0 },
+    ];
+    for (const e of edges) {
+      const A = rdx, B = - (e.x2 - e.x1), C = rdy, D = - (e.y2 - e.y1);
+      const det = A * D - B * C;
+      if (Math.abs(det) < 0.001) continue;
+      const t = ((e.x1 - lx) * D - B * (e.y1 - ly)) / det;
+      const u = (A * (e.y1 - ly) - (e.x1 - lx) * C) / det;
+      if (t > 0.1 && u >= -0.01 && u <= 1.01 && t < bestT) {
+        bestT = t;
+        const wx = ox + t * Math.cos(dir);
+        const wy = oy + t * Math.sin(dir);
+        best = { x: wx, y: wy, dist: t, nx: e.nx * cos - e.ny * sin, ny: e.nx * sin + e.ny * cos, el };
+      }
+    }
+    return best;
+  }
+
+  if (el.type === 'lens-convex' || el.type === 'lens-concave') {
+    // Approximate as two circular arcs
+    // Simplified: treat as vertical slab with entry/exit at x = ±8 (local)
+    let best = null, bestT = Infinity;
+    const xs = [-8, 8];
+    for (const xv of xs) {
+      if (Math.abs(rdx) < 0.001) continue;
+      const t = (xv - lx) / rdx;
+      if (t < 0.1) continue;
+      const iy = ly + t * rdy;
+      if (iy < -52 || iy > 52) continue;
+      if (t < bestT) {
+        bestT = t;
+        const wx = ox + t * Math.cos(dir);
+        const wy = oy + t * Math.sin(dir);
+        best = { x: wx, y: wy, dist: t, nx: xv < 0 ? -cos : cos, ny: xv < 0 ? -sin : sin, el };
+      }
+    }
+    return best;
+  }
+
+  if (el.type === 'prism') {
+    // Triangle: (0, -40), (40, 35), (-40, 35)
+    let best = null, bestT = Infinity;
+    const verts = [{x:0,y:-40}, {x:40,y:35}, {x:-40,y:35}];
+    for (let i = 0; i < 3; i++) {
+      const a = verts[i], b = verts[(i+1)%3];
+      const ex = b.x - a.x, ey = b.y - a.y;
+      const A = rdx, B = -ex, C = rdy, D = -ey;
+      const det = A * D - B * C;
+      if (Math.abs(det) < 0.001) continue;
+      const t = ((a.x - lx) * D - B * (a.y - ly)) / det;
+      const u = (A * (a.y - ly) - (a.x - lx) * C) / det;
+      if (t > 0.1 && u >= -0.01 && u <= 1.01 && t < bestT) {
+        bestT = t;
+        const wx = ox + t * Math.cos(dir);
+        const wy = oy + t * Math.sin(dir);
+        // Normal (perpendicular to edge, pointing outward)
+        const nlen = Math.hypot(ex, ey);
+        let nx = -ey / nlen, ny = ex / nlen;
+        // Rotate to world
+        const wnx = nx * cos - ny * sin;
+        const wny = nx * sin + ny * cos;
+        best = { x: wx, y: wy, dist: t, nx: wnx, ny: wny, el };
+      }
+    }
+    return best;
+  }
+
+  return null;
+}
+
+/* --- Rendering --- */
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  if (showGrid) {
+    ctx.strokeStyle = 'rgba(30,30,50,0.3)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+  }
+
+  // Trace and draw rays
+  const sources = elements.filter(e => e.type === 'ray');
+  for (const src of sources) {
+    if (dispersion) {
+      for (let i = 0; i < WAVE_COLORS.length; i++) {
+        const spread = (i - (WAVE_COLORS.length - 1) / 2) * 0.003;
+        const result = traceRay(src.x, src.y, src.angle + spread, WAVE_COLORS[i]);
+        drawPath(result.path, result.color, 1.5);
+      }
+    } else {
+      // White light as multiple slightly divergent rays
+      for (let i = 0; i < rayCount; i++) {
+        const spread = (i - (rayCount - 1) / 2) * 0.008;
+        const result = traceRay(src.x, src.y, src.angle + spread, { r: 255, g: 250, b: 220 });
+        drawPath(result.path, result.color, 1.5);
+      }
+    }
+  }
+
+  // Draw elements
+  for (const el of elements) {
+    drawElement(el);
+  }
+
+  // Draw handles for selected
+  if (selectedId !== null) {
+    const el = elements.find(e => e.id === selectedId);
+    if (el) drawHandles(el);
+  }
+}
+
+function drawPath(path, color, width) {
+  if (path.length < 2) return;
+  ctx.strokeStyle = `rgba(${color.r},${color.g},${color.b},0.85)`;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(path[0].x, path[0].y);
+  for (let i = 1; i < path.length; i++) {
+    ctx.lineTo(path[i].x, path[i].y);
+  }
+  ctx.stroke();
+
+  // Glow
+  ctx.strokeStyle = `rgba(${color.r},${color.g},${color.b},0.15)`;
+  ctx.lineWidth = width + 4;
+  ctx.beginPath();
+  ctx.moveTo(path[0].x, path[0].y);
+  for (let i = 1; i < path.length; i++) {
+    ctx.lineTo(path[i].x, path[i].y);
+  }
+  ctx.stroke();
+}
+
+function drawElement(el) {
+  ctx.save();
+  ctx.translate(el.x, el.y);
+  ctx.rotate(el.angle);
+  const def = ELEM_DEFS[el.type];
+  if (def && def.drawShape) def.drawShape(ctx, el);
+  ctx.restore();
+}
+
+function drawHandles(el) {
+  // Move handle (center)
+  ctx.fillStyle = 'rgba(0,229,255,0.9)';
+  ctx.strokeStyle = '#00e5ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(el.x, el.y, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+  // Rotate handle (at top)
+  const rx = el.x - Math.sin(el.angle) * (el.h / 2 + 20);
+  const ry = el.y + Math.cos(el.angle) * (el.h / 2 + 20);
+  ctx.fillStyle = 'rgba(255,221,0,0.9)';
+  ctx.strokeStyle = '#ffdd00';
+  ctx.beginPath(); ctx.arc(rx, ry, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+  // Aim handle for rays
+  if (el.type === 'ray') {
+    const ax = el.x + Math.cos(el.angle) * 25;
+    const ay = el.y + Math.sin(el.angle) * 25;
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.strokeStyle = '#fff';
+    ctx.beginPath(); ctx.arc(ax, ay, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+
+  // Selection box
+  ctx.strokeStyle = 'rgba(0,229,255,0.3)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  const hw = el.w / 2 + 10, hh = el.h / 2 + 10;
+  ctx.save();
+  ctx.translate(el.x, el.y);
+  ctx.rotate(el.angle);
+  ctx.strokeRect(-hw, -hh, hw * 2, hh * 2);
+  ctx.restore();
+  ctx.setLineDash([]);
+}
+
+/* --- Input --- */
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+function findElementAt(x, y) {
+  // Check in reverse (top first)
+  for (let i = elements.length - 1; i >= 0; i--) {
+    const el = elements[i];
+    const dx = x - el.x, dy = y - el.y;
+    const rx = dx * Math.cos(-el.angle) - dy * Math.sin(-el.angle);
+    const ry = dx * Math.sin(-el.angle) + dy * Math.cos(-el.angle);
+    const hw = Math.max(el.w / 2 + 12, 14);
+    const hh = Math.max(el.h / 2 + 12, 14);
+    if (Math.abs(rx) <= hw && Math.abs(ry) <= hh) return el;
+  }
+  return null;
+}
+
+function findHandle(x, y, el) {
+  if (!el) return null;
+  // Move handle
+  if (Math.hypot(x - el.x, y - el.y) < 14) return 'move';
+  // Rotate handle
+  const rx = el.x - Math.sin(el.angle) * (el.h / 2 + 20);
+  const ry = el.y + Math.cos(el.angle) * (el.h / 2 + 20);
+  if (Math.hypot(x - rx, y - ry) < 14) return 'rotate';
+  // Aim handle for rays
+  if (el.type === 'ray') {
+    const ax = el.x + Math.cos(el.angle) * 25;
+    const ay = el.y + Math.sin(el.angle) * 25;
+    if (Math.hypot(x - ax, y - ay) < 12) return 'aim';
+  }
+  return null;
+}
+
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const p = getPos(e);
+
+  if (tool !== 'select') {
+    // Place new element
+    const el = makeElement(tool, p.x, p.y, 0);
+    elements.push(el);
+    selectedId = el.id;
+    tool = 'select';
+    updateToolButtons();
+    draw();
+    showToast('Placed! Drag to move, drag ⟳ to rotate');
+    return;
+  }
+
+  // Select / drag existing
+  const el = findElementAt(p.x, p.y);
+  if (el) {
+    const handle = findHandle(p.x, p.y, el);
+    if (handle) {
+      selectedId = el.id;
+      dragging = { id: el.id, handle };
+      dragOffset = { x: p.x - el.x, y: p.y - el.y };
+      if (handle === 'rotate') {
+        dragOffset.startAngle = el.angle;
+        dragOffset.startX = p.x; dragOffset.startY = p.y;
+      }
+      if (handle === 'aim') {
+        dragOffset.startAngle = el.angle;
+      }
+    } else {
+      selectedId = el.id;
+      dragging = { id: el.id, handle: 'move' };
+      dragOffset = { x: p.x - el.x, y: p.y - el.y };
+    }
+  } else {
+    selectedId = null;
+  }
+  draw();
+});
+
+window.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const p = getPos(e);
+  const el = elements.find(e => e.id === dragging.id);
+  if (!el) return;
+
+  if (dragging.handle === 'move') {
+    el.x = p.x - dragOffset.x;
+    el.y = p.y - dragOffset.y;
+  } else if (dragging.handle === 'rotate') {
+    const dy = p.y - el.y;
+    const dx = p.x - el.x;
+    // Rotate handle is at top, so angle from center to pointer
+    el.angle = Math.atan2(dy, dx) - Math.PI / 2;
+  } else if (dragging.handle === 'aim') {
+    el.angle = Math.atan2(p.y - el.y, p.x - el.x);
+  }
+  draw();
+});
+
+window.addEventListener('pointerup', () => {
+  dragging = null;
+});
+
+canvas.addEventListener('dblclick', e => {
+  const p = getPos(e);
+  const el = findElementAt(p.x, p.y);
+  if (el) {
+    elements = elements.filter(e => e.id !== el.id);
+    if (selectedId === el.id) selectedId = null;
+    draw();
+    showToast('Deleted');
+  }
+});
+
+/* Touch support for mobile */
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    // Single touch — normal behavior handled by pointer events
+  }
+}, { passive: false });
+
+/* --- Toolbar --- */
+function updateToolButtons() {
+  document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tool === tool);
+  });
+}
+document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    tool = btn.dataset.tool;
+    updateToolButtons();
+  });
+});
+document.getElementById('btn-clear').addEventListener('click', () => {
+  elements = [];
+  selectedId = null;
+  draw();
+  showToast('Canvas cleared');
+});
+
+/* --- Sidebar controls --- */
+document.getElementById('chk-dispersion').addEventListener('change', e => {
+  dispersion = e.target.checked;
+  draw();
+});
+document.getElementById('chk-grid').addEventListener('change', e => {
+  showGrid = e.target.checked;
+  draw();
+});
+document.getElementById('ray-count').addEventListener('input', e => {
+  rayCount = parseInt(e.target.value);
+  draw();
+});
+document.getElementById('beam-width').addEventListener('input', e => {
+  beamWidth = parseInt(e.target.value);
+  draw();
+});
+
+/* --- Presets --- */
+const PRESETS = {
+  rainbow() {
+    return [
+      makeElement('ray', W * 0.15, H * 0.3, 0.15),
+      makeElement('prism', W * 0.5, H * 0.5, 0),
+    ];
+  },
+  telescope() {
+    return [
+      makeElement('ray', W * 0.1, H * 0.5, 0),
+      makeElement('lens-convex', W * 0.35, H * 0.5, 0),
+      makeElement('lens-convex', W * 0.65, H * 0.5, 0),
+    ];
+  },
+  periscope() {
+    return [
+      makeElement('ray', W * 0.1, H * 0.8, -Math.PI / 2 + 0.1),
+      makeElement('mirror', W * 0.3, H * 0.3, -Math.PI / 4),
+      makeElement('mirror', W * 0.7, H * 0.3, Math.PI / 4),
+    ];
+  },
+  'laser-maze'() {
+    return [
+      makeElement('ray', W * 0.1, H * 0.2, 0.3),
+      makeElement('mirror', W * 0.4, H * 0.4, 0.8),
+      makeElement('mirror', W * 0.6, H * 0.7, -0.5),
+      makeElement('prism', W * 0.8, H * 0.5, 0.3),
+    ];
+  },
+  microscope() {
+    return [
+      makeElement('ray', W * 0.1, H * 0.5, 0.05),
+      makeElement('lens-convex', W * 0.3, H * 0.5, 0),
+      makeElement('lens-convex', W * 0.5, H * 0.5, 0),
+      makeElement('lens-concave', W * 0.7, H * 0.5, 0),
+    ];
+  }
+};
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const name = btn.dataset.preset;
+    const preset = PRESETS[name];
+    if (preset) {
+      elements = preset();
+      selectedId = null;
+      draw();
+      showToast(`Loaded: ${btn.textContent.trim()}`);
+    }
+  });
+});
+
+/* --- Toast --- */
+let toastTimer;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2000);
+}
+
+/* --- Sidebar toggle for mobile --- */
+document.getElementById('sidebar-toggle').addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+});
+
+/* --- Initial state --- */
+elements = PRESETS.rainbow();
+draw();
+showToast('🌈 Light Lab — Drag elements, aim the light, watch rays bend!');
+
+/* --- Animation loop for smooth rendering --- */
+function animate() {
+  draw();
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>
