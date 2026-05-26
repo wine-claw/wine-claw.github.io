@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Mycelium Network</title>
+<style>
+  :root{
+    --bg:#0f1210;
+    --panel:#1a1f1b;
+    --panel2:#232a25;
+    --accent:#7ecf7e;
+    --accent2:#c4a35a;
+    --text:#d8e6d8;
+    --text2:#8a9a8a;
+    --danger:#c75b5b;
+    --water:#4a7a9a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+  #disclaimer{position:fixed;top:0;left:0;right:0;z-index:1000;background:#2a1f15;color:#d4a76a;padding:6px 14px;font-size:11px;text-align:center;border-bottom:1px solid #3a2f25}
+  #wrap{flex:1;display:flex;position:relative;overflow:hidden}
+  #canvasWrap{flex:1;position:relative;cursor:crosshair}
+  canvas{display:block;width:100%;height:100%}
+  #sidebar{width:300px;background:var(--panel);border-left:1px solid #2a332a;display:flex;flex-direction:column;overflow-y:auto;transition:transform .25s ease}
+  #sidebar.collapsed{transform:translateX(100%);position:absolute;right:0;top:0;bottom:0;z-index:200}
+  #sidebar h2{font-size:16px;padding:14px 16px 8px;color:var(--accent);letter-spacing:.5px}
+  .sec{padding:0 16px 14px;border-bottom:1px solid #2a332a}
+  .sec label{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text2);margin:10px 0 4px}
+  .sec label span{color:var(--text);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+  .btnRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  button{background:var(--panel2);border:1px solid #3a4a3a;color:var(--text);padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;transition:background .15s;flex:1;min-width:80px}
+  button:hover{background:#2d382d}
+  button.accent{background:var(--accent);color:#0f1210;border-color:var(--accent);font-weight:600}
+  button.accent:hover{background:#6ebf6e}
+  button.warn{background:var(--danger);border-color:#8b3b3b;color:#fff}
+  .hint{font-size:11px;color:var(--text2);margin-top:8px;line-height:1.5}
+  .stat{font-size:12px;color:var(--text2);padding:3px 0}
+  .stat b{color:var(--accent);font-weight:500}
+  #toggleBar{display:none;position:absolute;top:44px;right:12px;z-index:150}
+  #toggleBar button{background:rgba(26,31,27,.85);backdrop-filter:blur(6px);border:1px solid #3a4a3a;padding:8px 12px;border-radius:6px;color:var(--text);font-size:12px}
+  #infoOverlay{position:absolute;bottom:12px;left:12px;background:rgba(15,18,16,.8);backdrop-filter:blur(6px);padding:8px 14px;border-radius:8px;border:1px solid #2a332a;font-size:11px;color:var(--text2);pointer-events:none;z-index:50;max-width:220px;line-height:1.5}
+  #infoOverlay b{color:var(--accent)}
+  .modeRow{display:flex;gap:6px;margin-top:8px}
+  .modeBtn{flex:1;padding:6px 8px;font-size:11px;border-radius:4px;background:var(--panel2);border:1px solid #3a4a3a;color:var(--text2);cursor:pointer;text-align:center}
+  .modeBtn.on{background:var(--accent);color:#0f1210;border-color:var(--accent);font-weight:600}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:rgba(26,31,27,.95);backdrop-filter:blur(8px);border:1px solid var(--accent);color:var(--accent);padding:10px 20px;border-radius:8px;font-size:13px;opacity:0;transition:all .35s ease;z-index:300;pointer-events:none}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:700px){
+    #wrap{flex-direction:column}
+    #canvasWrap{flex:1;min-height:55vh}
+    #sidebar{width:100%;height:45vh;border-left:none;border-top:1px solid #2a332a;position:relative;transform:none}
+    #sidebar.collapsed{transform:translateY(100%);position:fixed;bottom:0;left:0;right:0;height:45vh;z-index:200}
+    #toggleBar{display:block;top:auto;bottom:8px;right:8px}
+    #toggleBar button{padding:10px 14px;font-size:13px}
+    #infoOverlay{bottom:50px;left:8px;right:auto;max-width:55vw}
+    .sec{padding:0 12px 10px}
+    #sidebar h2{padding:10px 12px 6px;font-size:14px}
+  }
+</style>
+</head>
+<body>
+<div id="disclaimer">Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.</div>
+<div id="wrap">
+  <div id="canvasWrap"><canvas id="c"></canvas></div>
+  <div id="toggleBar"><button onclick="toggleSidebar()">☰ Controls</button></div>
+  <aside id="sidebar">
+    <h2>🍄 Mycelium Network</h2>
+    <div class="sec">
+      <div class="modeRow">
+        <div class="modeBtn on" id="mFood" onclick="setMode('food')">🍂 Drop Food</div>
+        <div class="modeBtn" id="mSpore" onclick="setMode('spore')">🌱 Drop Spore</div>
+      </div>
+      <p class="hint">Click or drag on the canvas to <b id="modeHint">drop food</b>. Watch the mycelium forage and spread.</p>
+    </div>
+    <div class="sec">
+      <label>Speed <span id="vSpeed">1.5</span></label><input type="range" id="speed" min="0.3" max="4" step="0.1" value="1.5">
+      <label>Branch Chance <span id="vBranch">0.03</span></label><input type="range" id="branch" min="0" max="0.1" step="0.005" value="0.03">
+      <label>Curiosity (wander) <span id="vWander">0.08</span></label><input type="range" id="wander" min="0" max="0.3" step="0.01" value="0.08">
+      <label>Nutrient Map <span id="vNutrient">0.5</span></label><input type="range" id="nutrient" min="0" max="1" step="0.05" value="0.5">
+      <label>Hypha Opacity <span id="vAlpha">0.45</span></label><input type="range" id="alpha" min="0.1" max="1" step="0.05" value="0.45">
+    </div>
+    <div class="sec">
+      <div class="btnRow">
+        <button onclick="resetSim()">Clear All</button>
+        <button class="accent" onclick="seedPreset(0)">Forest Floor</button>
+      </div>
+      <div class="btnRow">
+        <button onclick="seedPreset(1)">Petri Dish</button>
+        <button onclick="seedPreset(2)">Mycorrhizal</button>
+      </div>
+      <p class="hint">Presets place initial spores and food patches. Mycorrhizal mode simulates fungal-plant root partnership.</p>
+    </div>
+    <div class="sec">
+      <div class="stat">Live tips: <b id="sTips">0</b></div>
+      <div class="stat">Total hyphae: <b id="sTotal">0</b></div>
+      <div class="stat">Network age: <b id="sAge">0</b> s</div>
+      <div class="stat">Food patches: <b id="sFood">0</b></div>
+      <div class="stat">Fruiting bodies: <b id="sFruit">0</b></div>
+      <div class="stat">Anastomoses: <b id="sFuse">0</b></div>
+    </div>
+    <div class="sec">
+      <p class="hint"><b>About:</b> Mycelium is the vegetative part of fungi — a vast underground network of thread-like hyphae. It can span kilometres, connect trees, and trade nutrients. Real mycorrhizal fungi form symbiotic partnerships with ~90% of land plants.</p>
+    </div>
+  </aside>
+</div>
+<div id="toast"></div>
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let W,H,scale=1;
+let tips=[],segments=[],foods=[],fruits=[],fusions=0;
+let mode='food';
+let running=true,pauseTS=0,accPaused=0;
+let startTime=performance.now();
+let tipLimit=2200,segLimit=60000;
+let lastFrame=0;
+let mouseDown=false,mx=0,my=0;
+
+function resize(){
+  const r=document.getElementById('canvasWrap').getBoundingClientRect();
+  W=r.width;H=r.height;
+  scale=window.devicePixelRatio||1;
+  canvas.width=W*scale;canvas.height=H*scale;
+  ctx.setTransform(scale,0,0,scale,0,0);
+}
+window.addEventListener('resize',resize);
+resize();
+
+const UI={
+  speed:()=>+document.getElementById('speed').value,
+  branch:()=>+document.getElementById('branch').value,
+  wander:()=>+document.getElementById('wander').value,
+  nutrient:()=>+document.getElementById('nutrient').value,
+  alpha:()=>+document.getElementById('alpha').value
+};
+['speed','branch','wander','nutrient','alpha'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',e=>{
+    document.getElementById('v'+id[0].toUpperCase()+id.slice(1)).textContent=e.target.value;
+  });
+});
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.modeBtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById(m==='food'?'mFood':'mSpore').classList.add('on');
+  document.getElementById('modeHint').textContent=m==='food'?'drop food':'plant a spore';
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function spawnTip(x,y,angle,speed,parentGen){
+  if(tips.length>=tipLimit)return;
+  tips.push({x,y,angle,speed,curv:(Math.random()-.5)*0.06,gen:parentGen+1||1,age:0,foodBonus:0,dead:false});
+}
+function dropFood(x,y,r,amt){
+  foods.push({x,y,r:r||30+Math.random()*40,amt:amt||100+Math.random()*150,initial:amt||100+Math.random()*150});
+}
+function dropSpore(x,y){
+  spawnTip(x,y,Math.random()*Math.PI*2,UI.speed()*0.8,0);
+  for(let i=0;i<6;i++)spawnTip(x,y,Math.random()*Math.PI*2,UI.speed()*0.5,0);
+}
+
+function foodDensityAt(x,y){
+  let d=0;
+  for(const f of foods){const dx=x-f.x,dy=y-f.y,dist=Math.hypot(dx,dy);if(dist<f.r)d+=f.amt/(1+dist*0.05);}
+  return d*UI.nutrient()*0.001;
+}
+function nearestFoodDist(x,y){
+  let best=Infinity;
+  for(const f of foods){best=Math.min(best,Math.hypot(x-f.x,y-f.y)-f.r);}
+  return best;
+}
+function consumeFood(x,y,amt){
+  for(const f of foods){const dx=x-f.x,dy=y-f.y,dist=Math.hypot(dx,dy);if(dist<f.r){f.amt-=amt;if(f.amt<0)f.amt=0;}}
+}
+
+function update(dt){
+  const spd=UI.speed(),br=UI.branch(),wand=UI.wander();
+  const newTips=[];
+  for(let i=tips.length-1;i>=0;i--){
+    const t=tips[i];if(t.dead)continue;
+    t.age+=dt;
+    const fd=foodDensityAt(t.x,t.y);
+    t.foodBonus=Math.max(0,t.foodBonus-0.02);
+    if(fd>0.3){t.foodBonus=1;t.speed=spd*1.3;consumeFood(t.x,t.y,0.15);}
+    else if(fd>0.1){t.foodBonus=0.5;t.speed=spd*1.1;consumeFood(t.x,t.y,0.08);}
+    else{t.speed=spd*(0.6+0.4*Math.max(0,1-t.age*0.005));}
+
+    const step=t.speed*dt*60;
+    const oldX=t.x,oldY=t.y;
+    t.angle+=t.curv*dt*60;
+    t.angle+=(Math.random()-.5)*wand*dt*60;
+
+    if(foods.length>0){
+      let bestA=null,bestD=Infinity;
+      for(const f of foods){const dx=f.x-t.x,dy=f.y-t.y,d=Math.hypot(dx,dy);if(d<180&&d<bestD){bestD=d;bestA=Math.atan2(dy,dx);}}
+      if(bestA!==null){const diff=bestA-t.angle;const turn=Math.atan2(Math.sin(diff),Math.cos(diff))*0.04; t.angle+=turn*dt*60;}
+    }
+
+    t.x+=Math.cos(t.angle)*step;
+    t.y+=Math.sin(t.angle)*step;
+
+    if(t.x<0||t.x>W||t.y<0||t.y>H){t.dead=true;continue;}
+
+    if(segments.length<segLimit){
+      segments.push({x1:oldX,y1:oldY,x2:t.x,y2:t.y,age:t.age,gen:t.gen,alpha:1});
+    }
+
+    if(Math.random()<br*dt*60 && tips.length<tipLimit){
+      const splitAngle=t.angle+((Math.random()<.5?1:-1)*(0.4+Math.random()*0.5));
+      newTips.push({x:t.x,y:t.y,angle:splitAngle,speed:t.speed*0.9,curv:(Math.random()-.5)*0.08,gen:t.gen,age:t.age*0.5,foodBonus:t.foodBonus,dead:false});
+    }
+
+    const nf=nearestFoodDist(t.x,t.y);
+    if(nf>300 && t.age>8 && Math.random()<0.005*dt*60)t.dead=true;
+    if(t.age>25 && Math.random()<0.01*dt*60)t.dead=true;
+  }
+
+  for(const nt of newTips)tips.push(nt);
+  tips=tips.filter(t=>!t.dead);
+
+  // anastomosis: tips near existing segments fuse
+  if(tips.length>0 && segments.length>100){
+    for(let i=0;i<tips.length;i++){
+      const t=tips[i];
+      let fused=false;
+      for(let j=segments.length-1;j>=Math.max(0,segments.length-800);j--){
+        const s=segments[j];
+        const d=pointLineDist(t.x,t.y,s.x1,s.y1,s.x2,s.y2);
+        if(d<3 && Math.hypot(t.x-s.x2,t.y-s.y2)>10){
+          segments.push({x1:t.x,y1:t.y,x2:s.x2,y2:s.y2,age:t.age,gen:Math.min(t.gen,s.gen||0),alpha:1,fused:true});
+          t.dead=true;fused=true;fusions++;break;
+        }
+      }
+      if(fused)continue;
+    }
+    tips=tips.filter(t=>!t.dead);
+  }
+
+  // fruiting body formation
+  if(tips.length>80 && fruits.length<5 && Math.random()<0.001*dt*60){
+    const cx=W*0.3+Math.random()*W*0.4,cy=H*0.3+Math.random()*H*0.4;
+    let nearby=0;
+    for(const s of segments){if(Math.hypot(s.x1-cx,s.y1-cy)<60)nearby++;}
+    if(nearby>200)fruits.push({x:cx,y:cy,r:0,targetR:6+Math.random()*10,growing:true,age:0});
+  }
+  for(const f of fruits){if(f.growing&&f.r<f.targetR)f.r+=0.04;f.age+=dt;}
+
+  // remove empty food patches
+  foods=foods.filter(f=>f.amt>5);
+}
+
+function pointLineDist(px,py,x1,y1,x2,y2){
+  const A=px-x1,B=py-y1,C=x2-x1,D=y2-y1;
+  const dot=A*C+B*D,lenSq=C*C+D*D;
+  let param=lenSq!==0?dot/lenSq:-1;
+  let xx,yy;
+  if(param<0){xx=x1;yy=y1;}
+  else if(param>1){xx=x2;yy=y2;}
+  else{xx=x1+param*C;yy=y1+param*D;}
+  const dx=px-xx,dy=py-yy;
+  return Math.hypot(dx,dy);
+}
+
+function draw(){
+  ctx.fillStyle='#0f1210';
+  ctx.fillRect(0,0,W,H);
+
+  // subtle soil texture
+  ctx.save();
+  ctx.globalAlpha=0.04;
+  for(let i=0;i<40;i++){
+    const x=(i*137.5)%W;
+    const y=(i*73.3)%H;
+    ctx.fillStyle=Math.random()>.5?'#1a221a':'#121612';
+    ctx.beginPath();ctx.arc(x,y,1+Math.random()*3,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+
+  // food patches (glow)
+  for(const f of foods){
+    const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);
+    const intensity=f.amt/f.initial;
+    glow.addColorStop(0,'rgba(196,163,90,'+(0.25*intensity)+')');
+    glow.addColorStop(0.5,'rgba(196,163,90,'+(0.08*intensity)+')');
+    glow.addColorStop(1,'rgba(196,163,90,0)');
+    ctx.fillStyle=glow;ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,Math.PI*2);ctx.fill();
+  }
+
+  // segments
+  const alpha=UI.alpha();
+  ctx.lineCap='round';
+  for(const s of segments){
+    const ageFade=Math.max(0.15,1-s.age*0.008);
+    const genFade=Math.max(0.2,1-s.gen*0.04);
+    const a=alpha*ageFade*genFade;
+    ctx.globalAlpha=a;
+    const w=Math.max(0.5,2.2-s.gen*0.15);
+    ctx.lineWidth=w;
+    if(s.fused){
+      ctx.strokeStyle='#aaccaa';
+      ctx.lineWidth=w*1.3;
+    }else if(s.gen<=2){
+      ctx.strokeStyle='#e8f0e8';
+    }else if(s.gen<=5){
+      ctx.strokeStyle='#c8dcc8';
+    }else{
+      ctx.strokeStyle='#9ab89a';
+    }
+    ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
+  // tips
+  for(const t of tips){
+    ctx.fillStyle=t.foodBonus>0.5?'#fff':'#b8d4b8';
+    ctx.globalAlpha=0.7+0.3*Math.sin(t.age*4);
+    ctx.beginPath();ctx.arc(t.x,t.y,1.6,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // fruiting bodies
+  for(const f of fruits){
+    const r=f.r;
+    const grad=ctx.createRadialGradient(f.x,f.y-r*0.3,0,f.x,f.y,r*2);
+    grad.addColorStop(0,'rgba(200,160,100,0.6)');
+    grad.addColorStop(0.4,'rgba(180,130,70,0.3)');
+    grad.addColorStop(1,'rgba(180,130,70,0)');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(f.x,f.y,r*1.2,r*0.9,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#d4a86a';
+    ctx.beginPath();ctx.ellipse(f.x,f.y,r,r*0.75,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#e8c89a';
+    ctx.beginPath();ctx.ellipse(f.x,f.y-r*0.15,r*0.6,r*0.4,0,0,Math.PI*2);ctx.fill();
+  }
+}
+
+function loop(ts){
+  if(!running){requestAnimationFrame(loop);return;}
+  if(!lastFrame)lastFrame=ts;
+  const dt=Math.min((ts-lastFrame)/1000,0.05);
+  lastFrame=ts;
+  update(dt);
+  draw();
+  updateStats();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function updateStats(){
+  document.getElementById('sTips').textContent=tips.length;
+  document.getElementById('sTotal').textContent=segments.length.toLocaleString();
+  const elapsed=((performance.now()-startTime-accPaused)/1000).toFixed(0);
+  document.getElementById('sAge').textContent=elapsed;
+  document.getElementById('sFood').textContent=foods.length;
+  document.getElementById('sFruit').textContent=fruits.length;
+  document.getElementById('sFuse').textContent=fusions;
+}
+
+function resetSim(){
+  tips=[];segments=[];foods=[];fruits=[];fusions=0;
+  startTime=performance.now();accPaused=0;lastFrame=0;
+  toast('Cleared');
+}
+
+function seedPreset(n){
+  resetSim();
+  if(n===0){ // forest floor
+    dropSpore(W*0.5,H*0.55);
+    dropFood(W*0.25,H*0.3,50,300);dropFood(W*0.7,H*0.25,45,250);
+    dropFood(W*0.4,H*0.7,40,200);dropFood(W*0.8,H*0.6,55,350);
+    dropFood(W*0.15,H*0.75,35,180);dropFood(W*0.6,H*0.45,30,150);
+    toast('Forest Floor preset');
+  }else if(n===1){ // petri dish
+    dropSpore(W*0.5,H*0.5);
+    for(let i=0;i<12;i++){
+      const a=Math.random()*Math.PI*2;
+      const d=60+Math.random()*140;
+      dropFood(W*0.5+Math.cos(a)*d,H*0.5+Math.sin(a)*d,25+Math.random()*25,120+Math.random()*100);
+    }
+    toast('Petri Dish preset');
+  }else if(n===2){ // mycorrhizal
+    dropSpore(W*0.3,H*0.6);
+    dropSpore(W*0.7,H*0.55);
+    // "roots"
+    const rootColor='#5a8a5a';
+    for(let i=0;i<80;i++){
+      const y=H*0.35+Math.random()*H*0.4;
+      const x=W*0.2+Math.random()*W*0.6;
+      segments.push({x1:x,y1:H*0.35,x2:x+Math.random()*6-3,y2:y,age:100,gen:99,alpha:0.3,root:true});
+    }
+    dropFood(W*0.25,H*0.4,40,200);dropFood(W*0.75,H*0.38,40,200);
+    dropFood(W*0.5,H*0.75,50,300);
+    toast('Mycorrhizal preset');
+  }
+}
+
+// input
+const cw=document.getElementById('canvasWrap');
+cw.addEventListener('pointerdown',e=>{mouseDown=true;handleInput(e);});
+cw.addEventListener('pointermove',e=>{mx=e.offsetX;my=e.offsetY;if(mouseDown)handleInput(e);});
+cw.addEventListener('pointerup',()=>mouseDown=false);
+cw.addEventListener('pointerleave',()=>mouseDown=false);
+
+function handleInput(e){
+  const rect=cw.getBoundingClientRect();
+  const x=e.clientX-rect.left;
+  const y=e.clientY-rect.top;
+  if(mode==='food'){dropFood(x,y,28+Math.random()*22,100+Math.random()*100);}
+  else{dropSpore(x,y);}
+}
+
+// keyboard
+window.addEventListener('keydown',e=>{
+  if(e.key===' ')running=!running;
+  if(e.key==='f')setMode('food');
+  if(e.key==='s')setMode('spore');
+  if(e.key==='r')resetSim();
+});
+
+// initial seed
+seedPreset(0);
+</script>
+</body>
+</html>

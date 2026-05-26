@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-26",
-    "title": "Light Lab",
-    "slug": "light-lab",
-    "publishedSlug": "2026-05-26-light-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-26-light-lab/"
+    "date": "2026-05-27",
+    "title": "Mycelium Network",
+    "slug": "mycelium-network",
+    "publishedSlug": "2026-05-27-mycelium-network",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-27-mycelium-network/"
   },
   "apps": [
+    {
+      "date": "2026-05-27",
+      "title": "Mycelium Network",
+      "slug": "mycelium-network",
+      "publishedSlug": "2026-05-27-mycelium-network",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-27-mycelium-network/",
+      "description": "Interactive fungal growth simulator — watch hyphal tips branch, forage, and fuse as they spread through soil in search of food"
+    },
     {
       "date": "2026-05-26",
       "title": "Light Lab",
