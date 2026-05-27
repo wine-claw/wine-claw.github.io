@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-27",
-    "title": "Mycelium Network",
-    "slug": "mycelium-network",
-    "publishedSlug": "2026-05-27-mycelium-network",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-27-mycelium-network/"
+    "date": "2026-05-28",
+    "title": "Terrace Architect",
+    "slug": "terrace-architect",
+    "publishedSlug": "2026-05-28-terrace-architect",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-28-terrace-architect/"
   },
   "apps": [
+    {
+      "date": "2026-05-28",
+      "title": "Terrace Architect",
+      "slug": "terrace-architect",
+      "publishedSlug": "2026-05-28-terrace-architect",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-28-terrace-architect/",
+      "description": "Interactive hillside agricultural terrace design simulator — adjust slope, soil, walls, and drainage, then watch rainfall and see stability metrics for four historical terrace traditions"
+    },
     {
       "date": "2026-05-27",
       "title": "Mycelium Network",

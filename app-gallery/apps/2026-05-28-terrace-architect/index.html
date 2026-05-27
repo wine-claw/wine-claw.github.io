@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+  <title>Terrace Architect — Hillside Agricultural Terrace Design Simulator</title>
+  <style>
+    :root {
+      --bg: #1a1814;
+      --panel: #252320;
+      --accent: #c4956a;
+      --accent2: #6b8f5e;
+      --accent3: #8faec4;
+      --danger: #c46a6a;
+      --text: #e8e2d9;
+      --text-dim: #a0988a;
+      --border: #3a3530;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .banner {
+      background: #3a2a1a;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #c4956a;
+      text-align: center;
+    }
+    header {
+      padding: 16px 20px 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+    .subtitle { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .top-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn:hover { border-color: var(--accent); }
+    .btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    .main { flex: 1; display: flex; min-height: 0; }
+    .sidebar {
+      width: 300px;
+      min-width: 260px;
+      border-right: 1px solid var(--border);
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .sidebar h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px; }
+    .control-group { display: flex; flex-direction: column; gap: 6px; }
+    .control-group label { font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; }
+    .control-group label span.value { color: var(--accent); font-weight: 600; }
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .preset-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .preset-btns .btn { font-size: 11px; padding: 5px 10px; }
+    .canvas-wrap { flex: 1; position: relative; min-height: 0; display: flex; align-items: center; justify-content: center; background: #141210; }
+    canvas { display: block; max-width: 100%; max-height: 100%; }
+    .metrics {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(26,24,20,.92);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      line-height: 1.7;
+      min-width: 180px;
+      pointer-events: none;
+    }
+    .metrics .metric { display: flex; justify-content: space-between; gap: 16px; }
+    .metrics .metric .val { font-weight: 600; }
+    .metrics .metric .val.good { color: var(--accent2); }
+    .metrics .metric .val.warn { color: var(--accent); }
+    .metrics .metric .val.bad { color: var(--danger); }
+    .score-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .score-bar .fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .3s, background .3s;
+    }
+    .legend {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(26,24,20,.92);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 2px; }
+    .info-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .info-panel h3 { font-size: 13px; margin-bottom: 6px; color: var(--accent); }
+    @media (max-width: 800px) {
+      .main { flex-direction: column; }
+      .sidebar { width: 100%; min-width: auto; border-right: none; border-bottom: 1px solid var(--border); max-height: 45vh; }
+      .metrics { font-size: 11px; padding: 8px 10px; min-width: 150px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+  </div>
+  <header>
+    <div>
+      <h1>Terrace Architect</h1>
+      <div class="subtitle">Design hillside agricultural terraces. Watch water, stability, and erosion.</div>
+    </div>
+    <div class="top-controls">
+      <button class="btn" id="btn-run" onclick="toggleRain()">Start Rain</button>
+      <button class="btn" onclick="resetView()">Reset View</button>
+    </div>
+  </header>
+  <div class="main">
+    <div class="sidebar">
+      <div>
+        <h2>Terrace Tradition</h2>
+        <div class="preset-btns">
+          <button class="btn preset active" data-preset="douro" onclick="loadPreset('douro')">Douro Narrow</button>
+          <button class="btn preset" data-preset="inca" onclick="loadPreset('inca')">Inca Andenes</button>
+          <button class="btn preset" data-preset="rice" onclick="loadPreset('rice')">Rice Terrace</button>
+          <button class="btn preset" data-preset="mediterranean" onclick="loadPreset('mediterranean')">Mediterranean</button>
+        </div>
+      </div>
+
+      <div>
+        <h2>Hillside</h2>
+        <div class="control-group">
+          <label>Slope angle <span class="value" id="v-slope">25</span>°</label>
+          <input type="range" id="slope" min="5" max="45" value="25" step="1">
+        </div>
+        <div class="control-group">
+          <label>Soil depth <span class="value" id="v-soil">0.8</span> m</label>
+          <input type="range" id="soil" min="0.2" max="2.0" value="0.8" step="0.1">
+        </div>
+        <div class="control-group">
+          <label>Rainfall intensity <span class="value" id="v-rain">50</span> mm/h</label>
+          <input type="range" id="rain" min="0" max="150" value="50" step="5">
+        </div>
+      </div>
+
+      <div>
+        <h2>Terrace Design</h2>
+        <div class="control-group">
+          <label>Terrace width <span class="value" id="v-width">3.0</span> m</label>
+          <input type="range" id="width" min="1.0" max="8.0" value="3.0" step="0.2">
+        </div>
+        <div class="control-group">
+          <label>Wall height <span class="value" id="v-wall">1.2</span> m</label>
+          <input type="range" id="wall" min="0.3" max="3.0" value="1.2" step="0.1">
+        </div>
+        <div class="control-group">
+          <label>Wall material</label>
+          <div class="preset-btns">
+            <button class="btn mat active" data-mat="dry" onclick="setMaterial('dry')">Dry Stone</button>
+            <button class="btn mat" data-mat="mortar" onclick="setMaterial('mortar')">Mortared</button>
+            <button class="btn mat" data-mat="concrete" onclick="setMaterial('concrete')">Concrete</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Drainage channel <span class="value" id="v-drain">15</span> cm</label>
+          <input type="range" id="drain" min="0" max="40" value="15" step="5">
+        </div>
+      </div>
+
+      <div class="info-panel" id="info-panel">
+        <h3>Douro Narrow Terraces</h3>
+        <p>Used in the steep schist hillsides of Portugal's Douro Valley for viticulture. Narrow terraces (~1.5-3 m) with dry-stone retaining walls allow vine roots to penetrate fractures in the bedrock. The stone walls absorb heat during the day and release it at night, aiding grape ripening.</p>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="terrCanvas"></canvas>
+      <div class="metrics" id="metrics">
+        <div class="metric"><span>Stability score</span><span class="val" id="m-score">--</span></div>
+        <div class="score-bar"><div class="fill" id="score-fill" style="width:0%"></div></div>
+        <div class="metric"><span>Erosion risk</span><span class="val" id="m-erosion">--</span></div>
+        <div class="metric"><span>Drainage adequacy</span><span class="val" id="m-drain">--</span></div>
+        <div class="metric"><span>Wall stress</span><span class="val" id="m-stress">--</span></div>
+        <div class="metric"><span>Terraces per hectare</span><span class="val" id="m-density">--</span></div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="dot" style="background:#6b8f5e"></div>Soil</div>
+        <div class="legend-item"><div class="dot" style="background:#8faec4"></div>Water</div>
+        <div class="legend-item"><div class="dot" style="background:#c4956a"></div>Stone wall</div>
+        <div class="legend-item"><div class="dot" style="background:#c46a6a"></div>Erosion flow</div>
+        <div class="legend-item"><div class="dot" style="background:#555"></div>Bedrock</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const canvas = document.getElementById('terrCanvas');
+const ctx = canvas.getContext('2d');
+let animating = false;
+let rainOn = false;
+let particles = [];
+let time = 0;
+
+const presets = {
+  douro: { slope: 28, soil: 0.6, width: 2.0, wall: 1.5, mat: 'dry', drain: 10, info: `<h3>Douro Narrow Terraces</h3><p>Steep schist hillsides of Portugal's Douro Valley for viticulture. Narrow terraces (~1.5-3 m) with dry-stone retaining walls allow vine roots to penetrate bedrock fractures. Stone walls absorb daytime heat and release it at night, aiding grape ripening.</p>` },
+  inca: { slope: 20, soil: 1.2, width: 4.0, wall: 1.8, mat: 'dry', drain: 25, info: `<h3>Inca Andenes</h3><p>Massive agricultural terraces built across the Andes, some dating to 1400 CE. Deep soil fill, wide platforms, and sophisticated drainage systems allowed cultivation at altitudes up to 4,000 m. The retaining walls often incorporate polygonal stonework fitted without mortar.</p>` },
+  rice: { slope: 12, soil: 0.5, width: 5.0, wall: 0.8, mat: 'mortar', drain: 5, info: `<h3>Asian Rice Terraces</h3><p>Found across Southeast Asia (Philippines, Indonesia, Vietnam, China). Shallow slopes with flooded paddies. The water layer itself provides stability, while the bund walls (often mud/mortar) retain the flood. Sophisticated irrigation channels distribute water by gravity.</p>` },
+  mediterranean: { slope: 18, soil: 1.0, width: 3.5, wall: 1.0, mat: 'dry', drain: 20, info: `<h3>Mediterranean Bancales</h3><p>Traditional terraces found across Spain, Italy, and Greece for olives, grapes, and cereals. Moderate slopes with dry-stone walls that have lasted centuries. The walls are often rebuilt communally after winter rains, and the tread is periodically replenished with organic matter.</p>` }
+};
+
+let state = { ...presets.douro };
+
+function resize() {
+  const wrap = canvas.parentElement;
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  draw();
+}
+window.addEventListener('resize', resize);
+
+function loadPreset(name) {
+  const p = presets[name];
+  state = { ...p };
+  document.getElementById('slope').value = state.slope;
+  document.getElementById('soil').value = state.soil;
+  document.getElementById('width').value = state.width;
+  document.getElementById('wall').value = state.wall;
+  document.getElementById('drain').value = state.drain;
+  setMaterial(state.mat);
+  document.querySelectorAll('.preset').forEach(b => b.classList.toggle('active', b.dataset.preset === name));
+  document.getElementById('info-panel').innerHTML = state.info;
+  updateLabels();
+  draw();
+}
+
+function setMaterial(m) {
+  state.mat = m;
+  document.querySelectorAll('.mat').forEach(b => b.classList.toggle('active', b.dataset.mat === m));
+  draw();
+}
+
+function updateLabels() {
+  document.getElementById('v-slope').textContent = state.slope;
+  document.getElementById('v-soil').textContent = state.soil.toFixed(1);
+  document.getElementById('v-width').textContent = state.width.toFixed(1);
+  document.getElementById('v-wall').textContent = state.wall.toFixed(1);
+  document.getElementById('v-drain').textContent = state.drain;
+  document.getElementById('v-rain').textContent = document.getElementById('rain').value;
+}
+
+function computeMetrics() {
+  const slopeRad = state.slope * Math.PI / 180;
+  const matFactors = { dry: 0.7, mortar: 0.85, concrete: 1.0 };
+  const matFactor = matFactors[state.mat] || 0.7;
+
+  // Stability: wall height vs slope. Steeper + taller wall = more stress
+  const wallStress = (state.wall * Math.tan(slopeRad)) / matFactor;
+  const stability = Math.max(0, Math.min(100, 100 - wallStress * 25 + state.soil * 8));
+
+  // Erosion: higher slope + more rain + less vegetation/cover
+  const rainFactor = parseInt(document.getElementById('rain').value) / 150;
+  const erosion = Math.max(0, Math.min(100, (state.slope / 45) * 60 + rainFactor * 30 - state.soil * 5));
+
+  // Drainage: channel size vs rainfall
+  const rain = parseInt(document.getElementById('rain').value);
+  const drainAdequacy = Math.max(0, Math.min(100, (state.drain / Math.max(1, rain * 0.3)) * 100));
+
+  // Terraces per hectare (approximate for contour terraces)
+  // vertical drop per terrace = wall + some rise
+  const vertDrop = state.wall + state.width * Math.tan(slopeRad);
+  const terraceCount = Math.floor(100 / vertDrop); // per 100m slope
+  const density = Math.round(terraceCount * 10); // rough per hectare
+
+  return { stability, erosion, drainAdequacy, wallStress: Math.min(100, wallStress * 40), density };
+}
+
+function draw() {
+  const W = canvas.width;
+  const H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const slopeRad = state.slope * Math.PI / 180;
+  const groundY = H * 0.82;
+  const startX = W * 0.08;
+  const endX = W * 0.92;
+  const hillHeight = Math.min(H * 0.55, (endX - startX) * Math.tan(slopeRad) * 0.5);
+
+  // Hill base line (left to right going up)
+  const hillTopY = groundY - hillHeight;
+  const hillTopX = startX + (endX - startX) * 0.5;
+
+  // Draw bedrock base
+  ctx.fillStyle = '#3a3530';
+  ctx.beginPath();
+  ctx.moveTo(startX, groundY);
+  ctx.lineTo(startX, groundY + 60);
+  ctx.lineTo(endX, groundY + 60);
+  ctx.lineTo(endX, groundY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Draw natural hillside surface
+  ctx.fillStyle = '#2a2824';
+  ctx.beginPath();
+  ctx.moveTo(startX, groundY);
+  ctx.lineTo(hillTopX, hillTopY);
+  ctx.lineTo(endX, hillTopY + (endX - hillTopX) * Math.tan(slopeRad * 0.3));
+  ctx.lineTo(endX, groundY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Terrace parameters
+  const terraceWidthPx = Math.min(180, state.width * 40);
+  const wallHeightPx = state.wall * 35;
+  const soilDepthPx = state.soil * 25;
+  const drainWidth = Math.max(4, state.drain * 0.4);
+
+  // Number of terraces that fit
+  const slopeLength = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(hillHeight, 2));
+  const terraceCount = Math.max(2, Math.min(10, Math.floor(slopeLength / (terraceWidthPx + wallHeightPx * 0.5))));
+
+  // Draw terraces
+  for (let i = 0; i < terraceCount; i++) {
+    const t = i / (terraceCount - 1);
+    const baseX = startX + t * (endX - startX);
+    const baseY = groundY - t * hillHeight * 0.9;
+    const wallX = baseX + terraceWidthPx;
+    const wallTopY = baseY - wallHeightPx;
+
+    // Terrace tread (soil)
+    ctx.fillStyle = '#5a4a3a';
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY);
+    ctx.lineTo(wallX, wallTopY);
+    ctx.lineTo(wallX, wallTopY - soilDepthPx);
+    ctx.lineTo(baseX, baseY - soilDepthPx);
+    ctx.closePath();
+    ctx.fill();
+
+    // Topsoil layer
+    ctx.fillStyle = '#6b8f5e';
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY - soilDepthPx);
+    ctx.lineTo(wallX, wallTopY - soilDepthPx);
+    ctx.lineTo(wallX, wallTopY - soilDepthPx - 4);
+    ctx.lineTo(baseX, baseY - soilDepthPx - 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Vegetation hints
+    if (i % 2 === 0) {
+      for (let v = 0; v < 3; v++) {
+        const vx = baseX + (v + 0.5) * (terraceWidthPx / 3.5);
+        const vy = baseY - soilDepthPx - 6;
+        ctx.strokeStyle = '#4a7a3a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(vx, vy);
+        ctx.lineTo(vx - 3, vy - 8);
+        ctx.moveTo(vx, vy);
+        ctx.lineTo(vx + 3, vy - 10);
+        ctx.moveTo(vx, vy);
+        ctx.lineTo(vx, vy - 12);
+        ctx.stroke();
+      }
+    }
+
+    // Retaining wall
+    const matColors = { dry: '#a08860', mortar: '#807060', concrete: '#706868' };
+    ctx.fillStyle = matColors[state.mat] || '#a08860';
+    ctx.fillRect(wallX - 4, wallTopY, 8, wallHeightPx + soilDepthPx + 4);
+
+    // Dry stone texture
+    if (state.mat === 'dry') {
+      ctx.strokeStyle = 'rgba(80,65,45,0.3)';
+      ctx.lineWidth = 0.5;
+      for (let r = 0; r < 4; r++) {
+        const ry = wallTopY + r * (wallHeightPx / 4);
+        ctx.beginPath();
+        ctx.moveTo(wallX - 4, ry);
+        ctx.lineTo(wallX + 4, ry);
+        ctx.stroke();
+      }
+    }
+
+    // Drainage channel at back of terrace
+    if (state.drain > 0) {
+      ctx.fillStyle = '#7a9ab0';
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY - soilDepthPx - 2);
+      ctx.lineTo(baseX + drainWidth, baseY - soilDepthPx - 2);
+      ctx.lineTo(baseX + drainWidth, baseY - soilDepthPx - 6);
+      ctx.lineTo(baseX, baseY - soilDepthPx - 6);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // Water particles
+  if (rainOn) {
+    drawRain();
+  }
+
+  // Draw slope line overlay
+  ctx.strokeStyle = 'rgba(200,180,150,0.15)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(startX, groundY);
+  ctx.lineTo(hillTopX, hillTopY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Slope angle label
+  ctx.fillStyle = 'rgba(200,180,150,0.5)';
+  ctx.font = '11px system-ui';
+  ctx.fillText(`${state.slope}° slope`, startX + 10, groundY - 8);
+
+  updateMetricsDisplay();
+}
+
+function drawRain() {
+  // Add new particles
+  for (let i = 0; i < 3; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -10,
+      vx: (Math.random() - 0.5) * 1,
+      vy: 2 + Math.random() * 2,
+      life: 1.0
+    });
+  }
+
+  // Update and draw
+  ctx.fillStyle = 'rgba(140,180,210,0.4)';
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx + Math.sin(time * 0.02 + p.y * 0.01) * 0.3;
+    p.y += p.vy;
+    p.life -= 0.005;
+
+    if (p.y > canvas.height || p.life <= 0) {
+      particles.splice(i, 1);
+      continue;
+    }
+
+    // Draw rain drop
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // If it hits a terrace, spawn a flow particle
+    if (p.y > canvas.height * 0.3 && Math.random() < 0.1) {
+      // Simplified: draw flow lines on terraces
+    }
+  }
+
+  // Draw erosion flow on surface
+  const slopeRad = state.slope * Math.PI / 180;
+  ctx.strokeStyle = 'rgba(180,100,80,0.25)';
+  ctx.lineWidth = 1.5;
+  for (let f = 0; f < 4; f++) {
+    const fx = (time * 0.5 + f * 100) % (canvas.width * 0.8) + canvas.width * 0.08;
+    const fy = canvas.height * 0.82 - (fx - canvas.width * 0.08) * Math.tan(slopeRad) * 0.5;
+    if (fy > canvas.height * 0.4) {
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.lineTo(fx + 8, fy + 5);
+      ctx.stroke();
+    }
+  }
+}
+
+function updateMetricsDisplay() {
+  const m = computeMetrics();
+  const scoreEl = document.getElementById('m-score');
+  const fillEl = document.getElementById('score-fill');
+  scoreEl.textContent = Math.round(m.stability) + '/100';
+  scoreEl.className = 'val ' + (m.stability >= 70 ? 'good' : m.stability >= 40 ? 'warn' : 'bad');
+  fillEl.style.width = m.stability + '%';
+  fillEl.style.background = m.stability >= 70 ? 'var(--accent2)' : m.stability >= 40 ? 'var(--accent)' : 'var(--danger)';
+
+  const eroEl = document.getElementById('m-erosion');
+  eroEl.textContent = (m.erosion < 30 ? 'Low' : m.erosion < 60 ? 'Moderate' : 'High') + ' (' + Math.round(m.erosion) + ')';
+  eroEl.className = 'val ' + (m.erosion < 30 ? 'good' : m.erosion < 60 ? 'warn' : 'bad');
+
+  const drEl = document.getElementById('m-drain');
+  drEl.textContent = (m.drainAdequacy > 80 ? 'Good' : m.drainAdequacy > 50 ? 'Fair' : 'Poor') + ' (' + Math.round(m.drainAdequacy) + ')';
+  drEl.className = 'val ' + (m.drainAdequacy > 80 ? 'good' : m.drainAdequacy > 50 ? 'warn' : 'bad');
+
+  const strEl = document.getElementById('m-stress');
+  strEl.textContent = (m.wallStress < 40 ? 'Low' : m.wallStress < 70 ? 'Moderate' : 'High') + ' (' + Math.round(m.wallStress) + ')';
+  strEl.className = 'val ' + (m.wallStress < 40 ? 'good' : m.wallStress < 70 ? 'warn' : 'bad');
+
+  document.getElementById('m-density').textContent = '~' + m.density;
+}
+
+function toggleRain() {
+  rainOn = !rainOn;
+  document.getElementById('btn-run').textContent = rainOn ? 'Stop Rain' : 'Start Rain';
+  document.getElementById('btn-run').classList.toggle('active', rainOn);
+  if (rainOn && !animating) { animating = true; animate(); }
+  if (!rainOn) { particles = []; }
+}
+
+function animate() {
+  if (!animating) return;
+  time++;
+  draw();
+  requestAnimationFrame(animate);
+}
+
+function resetView() {
+  rainOn = false;
+  animating = false;
+  particles = [];
+  document.getElementById('btn-run').textContent = 'Start Rain';
+  document.getElementById('btn-run').classList.remove('active');
+  loadPreset('douro');
+}
+
+// Input bindings
+['slope','soil','width','wall','drain','rain'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    state[id === 'rain' ? 'rain' : id] = parseFloat(document.getElementById(id).value);
+    updateLabels();
+    draw();
+  });
+});
+
+// Init
+setTimeout(() => { resize(); loadPreset('douro'); }, 10);
+</script>
+</body>
+</html>
