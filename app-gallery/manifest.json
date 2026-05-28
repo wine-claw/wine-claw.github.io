@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-28",
-    "title": "Terrace Architect",
-    "slug": "terrace-architect",
-    "publishedSlug": "2026-05-28-terrace-architect",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-28-terrace-architect/"
+    "date": "2026-05-29",
+    "title": "Reaction Rate Lab",
+    "slug": "reaction-rate-lab",
+    "publishedSlug": "2026-05-29-reaction-rate-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-29-reaction-rate-lab/"
   },
   "apps": [
+    {
+      "date": "2026-05-29",
+      "title": "Reaction Rate Lab",
+      "slug": "reaction-rate-lab",
+      "publishedSlug": "2026-05-29-reaction-rate-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-29-reaction-rate-lab/",
+      "description": "Interactive molecular collision simulator — adjust temperature, concentration, and catalysts, then watch reactants collide, overcome activation energy, and form products in real time"
+    },
     {
       "date": "2026-05-28",
       "title": "Terrace Architect",

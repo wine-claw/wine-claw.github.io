@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Reaction Rate Lab</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f1115;
+    color: #e2e4e9;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .banner {
+    background: #1a1d24;
+    border-bottom: 1px solid #2a2e38;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: #8b92a8;
+    text-align: center;
+  }
+  .banner strong { color: #c9a96e; }
+  header {
+    padding: 16px 20px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.3px; }
+  .subtitle { font-size: 12px; color: #7a8199; margin-top: 2px; }
+  .stats {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+  }
+  .stat { text-align: center; }
+  .stat-value { font-size: 18px; font-weight: 700; color: #6ec9a0; }
+  .stat-label { font-size: 10px; color: #7a8199; text-transform: uppercase; letter-spacing: 0.5px; }
+  .main { flex: 1; display: flex; gap: 0; min-height: 0; }
+  .sidebar {
+    width: 260px;
+    background: #16181f;
+    border-right: 1px solid #252836;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+  }
+  .panel-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #5a6080;
+    margin-bottom: 4px;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #a0a8c0;
+  }
+  .control-label span:last-child { color: #6ec9a0; font-weight: 600; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #2a2e3e;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #6ec9a0;
+    cursor: pointer;
+    border: 2px solid #16181f;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #6ec9a0;
+    cursor: pointer;
+    border: 2px solid #16181f;
+  }
+  .reaction-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .rxn-btn {
+    background: #1e212d;
+    border: 1px solid #2a2e3e;
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    text-align: left;
+    color: #a0a8c0;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .rxn-btn:hover { background: #252a3a; }
+  .rxn-btn.active {
+    background: #1a2e25;
+    border-color: #6ec9a0;
+    color: #6ec9a0;
+  }
+  .rxn-btn .rxn-name { font-weight: 600; display: block; margin-bottom: 2px; }
+  .rxn-btn .rxn-formula { font-size: 11px; opacity: 0.7; }
+  .preset-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .preset-btn {
+    background: #252a3a;
+    border: 1px solid #33384a;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #8b92a8;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { background: #2e3345; color: #c9c9d4; }
+  .chart-wrap {
+    background: #1e212d;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #2a2e3e;
+  }
+  .chart-label {
+    font-size: 11px;
+    color: #5a6080;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  canvas.graph { width: 100%; height: 100px; }
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    background: #0b0d12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #simCanvas {
+    max-width: 100%;
+    max-height: 100%;
+  }
+  .legend {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(15, 17, 21, 0.85);
+    backdrop-filter: blur(4px);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 11px;
+    line-height: 1.8;
+    border: 1px solid #2a2e3e;
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .overlay-hint {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 17, 21, 0.85);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 11px;
+    color: #5a6080;
+    border: 1px solid #2a2e3e;
+    pointer-events: none;
+  }
+  .action-btn {
+    background: #2a3a2e;
+    border: 1px solid #3a5a40;
+    color: #6ec9a0;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .action-btn:hover { background: #334a38; }
+  .action-btn.secondary {
+    background: #252a3a;
+    border-color: #3a4050;
+    color: #8b92a8;
+  }
+  .action-btn.secondary:hover { background: #2e3345; }
+  .energy-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: #2a2e3e;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .energy-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .hint-text { font-size: 11px; color: #5a6080; line-height: 1.4; }
+  @media (max-width: 768px) {
+    .main { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #252836; max-height: 45vh; }
+    header { padding: 12px 14px; }
+    h1 { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  <strong>Unlisted OpenClaw AI mini-apps.</strong> Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+
+<header>
+  <div>
+    <h1>Reaction Rate Lab</h1>
+    <div class="subtitle">Watch molecules collide and react in real time</div>
+  </div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="rateDisplay">0</div>
+      <div class="stat-label">Reactions/s</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="conversionDisplay">0%</div>
+      <div class="stat-label">Conversion</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="timeDisplay">0s</div>
+      <div class="stat-label">Elapsed</div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar">
+    <div class="panel-title">Reaction Type</div>
+    <div class="reaction-selector" id="reactionSelector"></div>
+
+    <div class="panel-title">Conditions</div>
+    <div class="control-group">
+      <div class="control-label"><span>Temperature</span><span id="tempVal">300 K</span></div>
+      <input type="range" id="tempSlider" min="200" max="800" value="300">
+      <div class="energy-bar"><div class="energy-fill" id="tempBar" style="width:20%;background:#6ec9a0;"></div></div>
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Concentration A</span><span id="concAVal">50%</span></div>
+      <input type="range" id="concASlider" min="10" max="100" value="50">
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Concentration B</span><span id="concBVal">50%</span></div>
+      <input type="range" id="concBSlider" min="10" max="100" value="50">
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Catalyst</span><span id="catVal">None</span></div>
+      <input type="range" id="catSlider" min="0" max="3" value="0" step="1">
+    </div>
+
+    <div class="panel-title">Quick Presets</div>
+    <div class="preset-row">
+      <button class="preset-btn" onclick="applyPreset('room')">Room Temp</button>
+      <button class="preset-btn" onclick="applyPreset('hot')">Hot</button>
+      <button class="preset-btn" onclick="applyPreset('catalyst')">+Catalyst</button>
+      <button class="preset-btn" onclick="applyPreset('dilute')">Dilute</button>
+    </div>
+
+    <div class="panel-title">Rate History</div>
+    <div class="chart-wrap">
+      <canvas class="graph" id="rateGraph"></canvas>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="action-btn" onclick="resetSim()">Reset</button>
+      <button class="action-btn secondary" onclick="togglePause()" id="pauseBtn">Pause</button>
+    </div>
+
+    <div class="hint-text">
+      Molecules must collide with enough energy (>E<sub>a</sub>) to react. Temperature raises kinetic energy. Catalysts lower the activation barrier.
+    </div>
+  </aside>
+
+  <div class="canvas-wrap">
+    <canvas id="simCanvas"></canvas>
+    <div class="legend">
+      <div><span class="legend-dot" style="background:#5b9bd5;"></span>Reactant A</div>
+      <div><span class="legend-dot" style="background:#e07050;"></span>Reactant B</div>
+      <div><span class="legend-dot" style="background:#6ec9a0;"></span>Product</div>
+      <div><span class="legend-dot" style="background:#c9a96e;"></span>Activated</div>
+    </div>
+    <div class="overlay-hint">Successful collisions flash gold · Products drift away</div>
+  </div>
+</div>
+
+<script>
+// ========== CONFIGURATION ==========
+const REACTIONS = [
+  {
+    id: 'synthesis',
+    name: 'Synthesis',
+    formula: 'A + B → AB',
+    colorA: '#5b9bd5',
+    colorB: '#e07050',
+    colorP: '#6ec9a0',
+    eaBase: 45,
+    rateConstant: 1.0,
+    desc: 'Two molecules combine to form one product'
+  },
+  {
+    id: 'decomposition',
+    name: 'Decomposition',
+    formula: 'AB → A + B',
+    colorA: '#5b9bd5',
+    colorB: '#e07050',
+    colorP: '#c9a96e',
+    eaBase: 55,
+    rateConstant: 0.7,
+    desc: 'One molecule splits into two products'
+  },
+  {
+    id: 'combustion',
+    name: 'Combustion',
+    formula: 'Fuel + O₂ → CO₂ + H₂O',
+    colorA: '#d4a843',
+    colorB: '#7ab8e0',
+    colorP: '#e8e8e8',
+    eaBase: 35,
+    rateConstant: 1.4,
+    desc: 'Exothermic oxidation releasing energy'
+  },
+  {
+    id: 'exchange',
+    name: 'Exchange',
+    formula: 'AB + C → AC + B',
+    colorA: '#9b6bd5',
+    colorB: '#d4a843',
+    colorP: '#6ec9a0',
+    eaBase: 50,
+    rateConstant: 0.9,
+    desc: 'Atoms swap partners between molecules'
+  }
+];
+
+const CATALYST_NAMES = ['None', 'MnO₂', 'Pt', 'Enzyme'];
+const CATALYST_EFFECT = [1.0, 2.5, 4.0, 6.0];
+
+// ========== STATE ==========
+let currentReaction = 0;
+let temperature = 300;
+let concA = 50;
+let concB = 50;
+let catalyst = 0;
+let paused = false;
+let elapsed = 0;
+let reactionCount = 0;
+let rateHistory = [];
+let particles = [];
+let lastTime = performance.now();
+let rateCounter = 0;
+let rateTimer = 0;
+
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+
+// ========== PARTICLE SYSTEM ==========
+class Particle {
+  constructor(type, x, y) {
+    this.type = type; // 'A', 'B', 'P'
+    this.x = x || Math.random() * canvas.width;
+    this.y = y || Math.random() * canvas.height;
+    const speed = Math.sqrt(temperature / 300) * (0.5 + Math.random() * 1.0);
+    const angle = Math.random() * Math.PI * 2;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
+    this.radius = type === 'P' ? 7 : 5;
+    this.life = 0;
+    this.flash = 0;
+  }
+
+  update(dt) {
+    this.x += this.vx * dt * 60;
+    this.y += this.vy * dt * 60;
+    this.life += dt;
+
+    // Bounce off walls
+    if (this.x < this.radius) { this.x = this.radius; this.vx *= -1; }
+    if (this.x > canvas.width - this.radius) { this.x = canvas.width - this.radius; this.vx *= -1; }
+    if (this.y < this.radius) { this.y = this.radius; this.vy *= -1; }
+    if (this.y > canvas.height - this.radius) { this.y = canvas.height - this.radius; this.vy *= -1; }
+
+    // Flash decay
+    if (this.flash > 0) this.flash -= dt * 3;
+
+    // Product drift (slightly slower, directional spread)
+    if (this.type === 'P') {
+      this.vx *= 0.999;
+      this.vy *= 0.999;
+    }
+  }
+
+  draw(ctx) {
+    const rxn = REACTIONS[currentReaction];
+    let color = this.type === 'A' ? rxn.colorA : this.type === 'B' ? rxn.colorB : rxn.colorP;
+    if (this.flash > 0) {
+      color = '#c9a96e';
+    }
+
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Glow for activated
+    if (this.flash > 0) {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius + 4 * this.flash, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(201, 169, 110, ${this.flash * 0.4})`;
+      ctx.fill();
+    }
+
+    // Inner highlight
+    ctx.beginPath();
+    ctx.arc(this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.type, this.x, this.y + 3);
+  }
+}
+
+function initParticles() {
+  particles = [];
+  const total = Math.floor((concA + concB) * 0.8);
+  const countA = Math.floor(total * (concA / (concA + concB)));
+  const countB = total - countA;
+
+  for (let i = 0; i < countA; i++) {
+    particles.push(new Particle('A'));
+  }
+  for (let i = 0; i < countB; i++) {
+    particles.push(new Particle('B'));
+  }
+}
+
+// ========== COLLISION & REACTION ==========
+function getActivationEnergy() {
+  const rxn = REACTIONS[currentReaction];
+  return rxn.eaBase / CATALYST_EFFECT[catalyst];
+}
+
+function getKineticEnergy(p) {
+  return 0.5 * (p.vx * p.vx + p.vy * p.vy) * 100;
+}
+
+function tryReact(p1, p2) {
+  if (p1.type === p2.type) return false;
+  if (p1.type === 'P' || p2.type === 'P') return false;
+
+  const ea = getActivationEnergy();
+  const ke1 = getKineticEnergy(p1);
+  const ke2 = getKineticEnergy(p2);
+
+  // Combined energy must exceed activation energy
+  if (ke1 + ke2 < ea) return false;
+
+  // Success! Create product
+  const midX = (p1.x + p2.x) / 2;
+  const midY = (p1.y + p2.y) / 2;
+  const product = new Particle('P', midX, midY);
+  product.flash = 1;
+  product.vx = (p1.vx + p2.vx) * 0.5 + (Math.random() - 0.5) * 0.5;
+  product.vy = (p1.vy + p2.vy) * 0.5 + (Math.random() - 0.5) * 0.5;
+
+  // Remove reactants, add product
+  const idx1 = particles.indexOf(p1);
+  const idx2 = particles.indexOf(p2);
+  if (idx1 > idx2) {
+    particles.splice(idx1, 1);
+    particles.splice(idx2, 1);
+  } else {
+    particles.splice(idx2, 1);
+    particles.splice(idx1, 1);
+  }
+  particles.push(product);
+
+  // Add energy to nearby particles (exothermic spread)
+  particles.forEach(p => {
+    const dx = p.x - midX;
+    const dy = p.y - midY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 50 && p !== product) {
+      p.vx += (dx / dist) * 0.3;
+      p.vy += (dy / dist) * 0.3;
+    }
+  });
+
+  reactionCount++;
+  rateCounter++;
+  return true;
+}
+
+function checkCollisions() {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const p1 = particles[i];
+      const p2 = particles[j];
+      const dx = p1.x - p2.x;
+      const dy = p1.y - p2.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const minDist = p1.radius + p2.radius;
+
+      if (dist < minDist) {
+        // Elastic collision bounce
+        const angle = Math.atan2(dy, dx);
+        const sin = Math.sin(angle);
+        const cos = Math.cos(angle);
+
+        // Rotate velocities
+        const vx1 = p1.vx * cos + p1.vy * sin;
+        const vy1 = p1.vy * cos - p1.vx * sin;
+        const vx2 = p2.vx * cos + p2.vy * sin;
+        const vy2 = p2.vy * cos - p2.vx * sin;
+
+        // Swap x velocities
+        const finalVx1 = vx2;
+        const finalVx2 = vx1;
+
+        // Rotate back
+        p1.vx = finalVx1 * cos - vy1 * sin;
+        p1.vy = vy1 * cos + finalVx1 * sin;
+        p2.vx = finalVx2 * cos - vy2 * sin;
+        p2.vy = vy2 * cos + finalVx2 * sin;
+
+        // Separate to prevent sticking
+        const overlap = minDist - dist;
+        const sepX = (dx / dist) * overlap * 0.5;
+        const sepY = (dy / dist) * overlap * 0.5;
+        p1.x += sepX;
+        p1.y += sepY;
+        p2.x -= sepX;
+        p2.y -= sepY;
+
+        // Try reaction
+        tryReact(p1, p2);
+      }
+    }
+  }
+}
+
+// ========== RATE GRAPH ==========
+function drawRateGraph() {
+  const gCanvas = document.getElementById('rateGraph');
+  const gCtx = gCanvas.getContext('2d');
+  const w = gCanvas.width = gCanvas.offsetWidth * 2;
+  const h = gCanvas.height = gCanvas.offsetHeight * 2;
+
+  gCtx.clearRect(0, 0, w, h);
+
+  if (rateHistory.length < 2) return;
+
+  // Grid
+  gCtx.strokeStyle = '#2a2e3e';
+  gCtx.lineWidth = 1;
+  gCtx.beginPath();
+  for (let i = 0; i <= 4; i++) {
+    const y = h - (h * i / 4);
+    gCtx.moveTo(0, y);
+    gCtx.lineTo(w, y);
+  }
+  gCtx.stroke();
+
+  // Find max
+  const maxRate = Math.max(...rateHistory, 1);
+
+  // Line
+  gCtx.strokeStyle = '#6ec9a0';
+  gCtx.lineWidth = 2;
+  gCtx.beginPath();
+  rateHistory.forEach((r, i) => {
+    const x = (i / (rateHistory.length - 1)) * w;
+    const y = h - (r / maxRate) * h * 0.85 - h * 0.05;
+    if (i === 0) gCtx.moveTo(x, y);
+    else gCtx.lineTo(x, y);
+  });
+  gCtx.stroke();
+
+  // Fill
+  gCtx.fillStyle = 'rgba(110, 201, 160, 0.1)';
+  gCtx.beginPath();
+  rateHistory.forEach((r, i) => {
+    const x = (i / (rateHistory.length - 1)) * w;
+    const y = h - (r / maxRate) * h * 0.85 - h * 0.05;
+    if (i === 0) gCtx.moveTo(x, y);
+    else gCtx.lineTo(x, y);
+  });
+  gCtx.lineTo(w, h);
+  gCtx.lineTo(0, h);
+  gCtx.closePath();
+  gCtx.fill();
+}
+
+// ========== MAIN LOOP ==========
+function resize() {
+  const wrap = document.querySelector('.canvas-wrap');
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+}
+
+function loop(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+
+  if (!paused) {
+    elapsed += dt;
+    rateTimer += dt;
+
+    // Sample rate every 0.5s
+    if (rateTimer >= 0.5) {
+      rateHistory.push(rateCounter * 2);
+      if (rateHistory.length > 60) rateHistory.shift();
+      rateCounter = 0;
+      rateTimer = 0;
+    }
+
+    // Update particles
+    particles.forEach(p => p.update(dt));
+    checkCollisions();
+
+    // Replenish reactants slowly to keep sim alive
+    const reactantCount = particles.filter(p => p.type === 'A' || p.type === 'B').length;
+    const targetCount = Math.floor((concA + concB) * 0.8);
+    if (reactantCount < targetCount * 0.3 && Math.random() < 0.1) {
+      const type = Math.random() < (concA / (concA + concB)) ? 'A' : 'B';
+      const p = new Particle(type);
+      // Spawn at edges
+      if (Math.random() < 0.5) {
+        p.x = Math.random() < 0.5 ? -5 : canvas.width + 5;
+        p.y = Math.random() * canvas.height;
+      } else {
+        p.x = Math.random() * canvas.width;
+        p.y = Math.random() < 0.5 ? -5 : canvas.height + 5;
+      }
+      p.vx = (canvas.width / 2 - p.x) * 0.01 + (Math.random() - 0.5);
+      p.vy = (canvas.height / 2 - p.y) * 0.01 + (Math.random() - 0.5);
+      particles.push(p);
+    }
+  }
+
+  // Draw
+  ctx.fillStyle = '#0b0d12';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw faint grid
+  ctx.strokeStyle = '#1a1e28';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < canvas.width; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  }
+
+  // Draw activation energy threshold indicator
+  const ea = getActivationEnergy();
+  const eaY = canvas.height - 30;
+  ctx.fillStyle = 'rgba(90, 96, 128, 0.3)';
+  ctx.fillRect(0, eaY, canvas.width, 2);
+  ctx.fillStyle = '#5a6080';
+  ctx.font = '10px sans-serif';
+  ctx.fillText(`Activation Energy = ${ea.toFixed(1)}`, 10, eaY - 6);
+
+  particles.forEach(p => p.draw(ctx));
+
+  // Update UI
+  const currentRate = rateHistory.length > 0 ? rateHistory[rateHistory.length - 1] : 0;
+  document.getElementById('rateDisplay').textContent = currentRate;
+  const total = particles.length;
+  const products = particles.filter(p => p.type === 'P').length;
+  const conversion = total > 0 ? Math.round((products / total) * 100) : 0;
+  document.getElementById('conversionDisplay').textContent = conversion + '%';
+  document.getElementById('timeDisplay').textContent = Math.floor(elapsed) + 's';
+
+  drawRateGraph();
+
+  requestAnimationFrame(loop);
+}
+
+// ========== UI BINDINGS ==========
+function buildReactionSelector() {
+  const container = document.getElementById('reactionSelector');
+  container.innerHTML = '';
+  REACTIONS.forEach((rxn, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'rxn-btn' + (i === currentReaction ? ' active' : '');
+    btn.innerHTML = `<span class="rxn-name">${rxn.name}</span><span class="rxn-formula">${rxn.formula}</span>`;
+    btn.onclick = () => {
+      currentReaction = i;
+      buildReactionSelector();
+      resetSim();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function bindSlider(id, valId, barId, unit, scale, callback) {
+  const slider = document.getElementById(id);
+  const val = document.getElementById(valId);
+  const bar = barId ? document.getElementById(barId) : null;
+  slider.addEventListener('input', () => {
+    const v = parseFloat(slider.value);
+    val.textContent = unit ? (scale ? Math.round(v * scale) + unit : v + unit) : v;
+    if (bar) {
+      const pct = (v - slider.min) / (slider.max - slider.min) * 100;
+      bar.style.width = pct + '%';
+      // Color shift from cool to hot
+      const r = Math.round(110 + pct * 1.2);
+      const g = Math.round(201 - pct * 1.0);
+      const b = Math.round(160 - pct * 1.2);
+      bar.style.background = `rgb(${r},${g},${b})`;
+    }
+    if (callback) callback(v);
+  });
+}
+
+bindSlider('tempSlider', 'tempVal', 'tempBar', ' K', false, v => { temperature = v; });
+bindSlider('concASlider', 'concAVal', null, '%', false, v => { concA = v; });
+bindSlider('concBSlider', 'concBVal', null, '%', false, v => { concB = v; });
+
+document.getElementById('catSlider').addEventListener('input', () => {
+  const v = parseInt(document.getElementById('catSlider').value);
+  catalyst = v;
+  document.getElementById('catVal').textContent = CATALYST_NAMES[v];
+});
+
+function applyPreset(name) {
+  if (name === 'room') {
+    document.getElementById('tempSlider').value = 300;
+    document.getElementById('concASlider').value = 50;
+    document.getElementById('concBSlider').value = 50;
+    document.getElementById('catSlider').value = 0;
+  } else if (name === 'hot') {
+    document.getElementById('tempSlider').value = 600;
+    document.getElementById('concASlider').value = 70;
+    document.getElementById('concBSlider').value = 70;
+    document.getElementById('catSlider').value = 0;
+  } else if (name === 'catalyst') {
+    document.getElementById('tempSlider').value = 300;
+    document.getElementById('concASlider').value = 50;
+    document.getElementById('concBSlider').value = 50;
+    document.getElementById('catSlider').value = 2;
+  } else if (name === 'dilute') {
+    document.getElementById('tempSlider').value = 300;
+    document.getElementById('concASlider').value = 20;
+    document.getElementById('concBSlider').value = 20;
+    document.getElementById('catSlider').value = 0;
+  }
+  // Trigger events
+  ['tempSlider', 'concASlider', 'concBSlider', 'catSlider'].forEach(id => {
+    document.getElementById(id).dispatchEvent(new Event('input'));
+  });
+  resetSim();
+}
+
+function resetSim() {
+  elapsed = 0;
+  reactionCount = 0;
+  rateCounter = 0;
+  rateTimer = 0;
+  rateHistory = [];
+  initParticles();
+}
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+}
+
+// ========== INIT ==========
+window.addEventListener('resize', () => { resize(); initParticles(); });
+resize();
+buildReactionSelector();
+initParticles();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
