@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-29",
-    "title": "Reaction Rate Lab",
-    "slug": "reaction-rate-lab",
-    "publishedSlug": "2026-05-29-reaction-rate-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-29-reaction-rate-lab/"
+    "date": "2026-05-30",
+    "title": "Wave Composer",
+    "slug": "wave-composer",
+    "publishedSlug": "2026-05-30-wave-composer",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-30-wave-composer/"
   },
   "apps": [
+    {
+      "date": "2026-05-30",
+      "title": "Wave Composer",
+      "slug": "wave-composer",
+      "publishedSlug": "2026-05-30-wave-composer",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-30-wave-composer/",
+      "description": "Interactive sound synthesis sandbox — combine oscillators, hear the physics, and watch waveforms in real time"
+    },
     {
       "date": "2026-05-29",
       "title": "Reaction Rate Lab",

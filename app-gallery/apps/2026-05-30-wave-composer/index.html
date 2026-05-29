@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+  <title>Wave Composer — Sound Synthesis Sandbox</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --panel: #111827;
+      --panel-border: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent2: #a78bfa;
+      --accent3: #34d399;
+      --accent4: #fb923c;
+      --accent5: #f472b6;
+      --warn: #fbbf24;
+      --danger: #ef4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .banner {
+      background: linear-gradient(90deg, #1e3a5f, #0f172a);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    header { text-align: center; margin-bottom: 20px; }
+    header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; }
+    header p { color: var(--muted); margin-top: 4px; font-size: 0.95rem; }
+
+    .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .canvas-wrap {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 12px;
+      position: relative;
+    }
+    .canvas-wrap canvas { width: 100%; height: 220px; display: block; border-radius: 8px; background: #0b1220; }
+    .canvas-label { position: absolute; top: 18px; left: 20px; font-size: 11px; color: var(--muted); pointer-events: none; }
+
+    .spectrum-wrap canvas { width: 100%; height: 140px; display: block; border-radius: 8px; background: #0b1220; margin-top: 12px; }
+
+    .controls {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .controls h3 { font-size: 0.9rem; margin-bottom: 12px; color: var(--text); }
+    .preset-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .preset-btn {
+      background: #1e293b; border: 1px solid #334155; color: var(--text);
+      padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .preset-btn:hover { border-color: var(--accent); }
+    .preset-btn.active { background: var(--accent); color: #0b0f19; border-color: var(--accent); font-weight: 600; }
+
+    .oscillator {
+      background: #0f172a; border: 1px solid #1e293b; border-radius: 8px;
+      padding: 12px; margin-bottom: 10px; position: relative;
+    }
+    .osc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .osc-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .osc-name { font-size: 12px; font-weight: 600; flex: 1; }
+    .osc-toggle {
+      width: 32px; height: 18px; border-radius: 9px; background: #334155;
+      position: relative; cursor: pointer; transition: background 0.15s;
+    }
+    .osc-toggle.on { background: var(--accent); }
+    .osc-toggle::after {
+      content: ''; position: absolute; width: 14px; height: 14px;
+      border-radius: 50%; background: #fff; top: 2px; left: 2px;
+      transition: left 0.15s;
+    }
+    .osc-toggle.on::after { left: 16px; }
+    .osc-sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .slider-group { display: flex; flex-direction: column; gap: 3px; }
+    .slider-group label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .slider-group input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .slider-group .val { font-size: 11px; color: var(--text); }
+
+    .master-controls {
+      display: flex; gap: 12px; align-items: center; margin-top: 12px; padding-top: 12px;
+      border-top: 1px solid var(--panel-border);
+    }
+    .big-btn {
+      flex: 1; padding: 12px; border-radius: 8px; border: none;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .play-btn { background: var(--accent3); color: #064e3b; }
+    .play-btn:hover { background: #6ee7b7; }
+    .play-btn.playing { background: var(--danger); color: #fff; }
+
+    .info-panel {
+      background: var(--panel); border: 1px solid var(--panel-border);
+      border-radius: 12px; padding: 16px; margin-top: 16px;
+    }
+    .info-panel h3 { font-size: 0.9rem; margin-bottom: 10px; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+    .info-item { background: #0f172a; padding: 8px 12px; border-radius: 6px; font-size: 12px; }
+    .info-item .label { color: var(--muted); margin-bottom: 2px; }
+    .info-item .value { font-weight: 600; font-size: 14px; }
+
+    .scope-mode {
+      display: flex; gap: 6px; margin-bottom: 12px;
+    }
+    .mode-btn {
+      background: #1e293b; border: 1px solid #334155; color: var(--text);
+      padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
+    }
+    .mode-btn.active { background: var(--accent); color: #0b0f19; border-color: var(--accent); }
+
+    .osc-wave-select { display: flex; gap: 4px; margin-bottom: 8px; }
+    .wave-opt { background: #1e293b; border: 1px solid #334155; color: var(--muted);
+      padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;
+    }
+    .wave-opt.active { background: #334155; color: var(--text); border-color: var(--text); }
+
+    .hint { color: var(--muted); font-size: 11px; margin-top: 10px; }
+
+    .add-osc { background: transparent; border: 1px dashed #334155; color: var(--muted);
+      padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; width: 100%; margin-top: 6px;
+    }
+    .add-osc:hover { border-color: var(--accent); color: var(--accent); }
+
+    .remove-osc { position: absolute; top: 8px; right: 8px; background: none; border: none;
+      color: #475569; font-size: 14px; cursor: pointer; }
+    .remove-osc:hover { color: var(--danger); }
+
+    .lissajous-wrap canvas { width: 100%; height: 180px; display: block; border-radius: 8px; background: #0b1220; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+  </div>
+  <div class="container">
+    <header>
+      <h1>Wave Composer</h1>
+      <p>Build sounds from scratch. Add oscillators, hear the physics, watch the waves.</p>
+    </header>
+    <div class="main-grid">
+      <div>
+        <div class="canvas-wrap">
+          <span class="canvas-label">Time-domain oscilloscope (combined waveform)</span>
+          <canvas id="scope" width="800" height="220"></canvas>
+        </div>
+        <div class="canvas-wrap" style="margin-top:12px;">
+          <span class="canvas-label">Lissajous figure (X vs Y oscillator)</span>
+          <canvas id="lissajous" width="800" height="180"></canvas>
+        </div>
+        <div class="canvas-wrap spectrum-wrap" style="margin-top:12px;">
+          <span class="canvas-label" style="position:absolute;top:18px;left:20px;">Frequency spectrum</span>
+          <canvas id="spectrum" width="800" height="140"></canvas>
+        </div>
+      </div>
+      <div class="controls">
+        <h3>Presets</h3>
+        <div class="preset-row" id="presets"></div>
+        <h3>Oscillators</h3>
+        <div id="oscillators"></div>
+        <button class="add-osc" id="addOsc" title="Add another oscillator (max 5)">+ Add oscillator</button>
+        <div class="master-controls">
+          <button class="big-btn play-btn" id="playBtn">▶ Play Sound</button>
+        </div>
+        <p class="hint">Adjust sliders and hear changes in real time. Click presets for instant sounds.</p>
+      </div>
+    </div>
+    <div class="info-panel">
+      <h3>Live Analysis</h3>
+      <div class="info-grid">
+        <div class="info-item"><div class="label">Fundamental frequency</div><div class="value" id="fundFreq">—</div></div>
+        <div class="info-item"><div class="label">Peak amplitude</div><div class="value" id="peakAmp">—</div></div>
+        <div class="info-item"><div class="label">RMS level</div><div class="value" id="rms">—</div></div>
+        <div class="info-item"><div class="label">Active harmonics</div><div class="value" id="harmCount">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // --- Audio Context ---
+    let audioCtx = null;
+    let masterGain = null;
+    let analyser = null;
+    let isPlaying = false;
+
+    const WAVE_COLORS = [ '#38bdf8', '#a78bfa', '#34d399', '#fb923c', '#f472b6' ];
+    const WAVE_NAMES = [ 'Sine', 'Square', 'Sawtooth', 'Triangle', 'Noise' ];
+    const PRESETS = [
+      { name: 'Pure Tone', waves: [
+        { type:'sine', freq:440, amp:0.7, phase:0, on:true }
+      ]},
+      { name: 'Organ', waves: [
+        { type:'sine', freq:220, amp:0.5, phase:0, on:true },
+        { type:'sine', freq:440, amp:0.3, phase:0, on:true },
+        { type:'sine', freq:660, amp:0.2, phase:0, on:true }
+      ]},
+      { name: 'Square Bass', waves: [
+        { type:'square', freq:110, amp:0.4, phase:0, on:true },
+        { type:'square', freq:220, amp:0.2, phase:0, on:true }
+      ]},
+      { name: 'Saw Lead', waves: [
+        { type:'sawtooth', freq:330, amp:0.5, phase:0, on:true },
+        { type:'sine', freq:660, amp:0.25, phase:0, on:true }
+      ]},
+      { name: 'Beats', waves: [
+        { type:'sine', freq:440, amp:0.5, phase:0, on:true },
+        { type:'sine', freq:445, amp:0.5, phase:0, on:true }
+      ]},
+      { name: 'Chimes', waves: [
+        { type:'triangle', freq:523, amp:0.4, phase:0, on:true },
+        { type:'triangle', freq:659, amp:0.3, phase:0, on:true },
+        { type:'triangle', freq:784, amp:0.25, phase:0, on:true }
+      ]},
+      { name: 'Dissonance', waves: [
+        { type:'sawtooth', freq:300, amp:0.35, phase:0, on:true },
+        { type:'sawtooth', freq:307, amp:0.35, phase:0, on:true }
+      ]},
+      { name: 'Sub Bass', waves: [
+        { type:'sine', freq:55, amp:0.7, phase:0, on:true },
+        { type:'square', freq:110, amp:0.3, phase:0, on:true }
+      ]},
+    ];
+
+    let oscillators = [];
+    let audioNodes = [];
+    let noiseBuffers = [];
+
+    // --- State ---
+    let activePreset = -1;
+    const scopeCanvas = document.getElementById('scope');
+    const specCanvas = document.getElementById('spectrum');
+    const lissaCanvas = document.getElementById('lissajous');
+    const scopeCtx = scopeCanvas.getContext('2d');
+    const specCtx = specCanvas.getContext('2d');
+    const lissaCtx = lissaCanvas.getContext('2d');
+    let animId = null;
+    let scopeData = new Float32Array(2048);
+    let lissaPhase = 0;
+
+    // --- Helpers ---
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.3;
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 4096;
+      masterGain.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+
+    function createNoiseBuffer() {
+      if (!audioCtx) return null;
+      const len = audioCtx.sampleRate * 2;
+      const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      return buf;
+    }
+
+    function buildAudioGraph() {
+      if (!audioCtx) return;
+      // Stop and disconnect old
+      audioNodes.forEach(n => {
+        try { n.osc.stop(); } catch(e){}
+        try { n.osc.disconnect(); } catch(e){}
+        try { n.gain.disconnect(); } catch(e){}
+      });
+      audioNodes = [];
+
+      oscillators.forEach((osc, i) => {
+        if (!osc.on) return;
+        if (osc.type === 'noise') {
+          const src = audioCtx.createBufferSource();
+          src.buffer = noiseBuffers[i] || createNoiseBuffer();
+          src.loop = true;
+          const g = audioCtx.createGain();
+          g.gain.value = osc.amp;
+          src.connect(g);
+          g.connect(masterGain);
+          src.start();
+          audioNodes.push({ osc: src, gain: g });
+        } else {
+          const o = audioCtx.createOscillator();
+          o.type = osc.type;
+          o.frequency.value = osc.freq;
+          const g = audioCtx.createGain();
+          g.gain.value = osc.amp;
+          // phase not supported on standard OscillatorNode; skip
+          o.connect(g);
+          g.connect(masterGain);
+          o.start();
+          audioNodes.push({ osc: o, gain: g });
+        }
+      });
+    }
+
+    function updateAudioParams() {
+      if (!audioCtx) return;
+      // Rebuild is simplest for type changes; for freq/amp only, we could update live
+      buildAudioGraph();
+    }
+
+    // --- Wave math ---
+    function waveValue(type, t, freq) {
+      const p = t * freq * 2 * Math.PI;
+      switch(type) {
+        case 'sine': return Math.sin(p);
+        case 'square': return Math.sin(p) >= 0 ? 1 : -1;
+        case 'sawtooth': return 2 * ((p / (2*Math.PI)) % 1) - 1;
+        case 'triangle': return Math.asin(Math.sin(p)) * (2/Math.PI);
+        case 'noise': return Math.random() * 2 - 1;
+        default: return Math.sin(p);
+      }
+    }
+
+    // --- Drawing ---
+    function drawScope() {
+      const w = scopeCanvas.width, h = scopeCanvas.height;
+      scopeCtx.clearRect(0,0,w,h);
+
+      // Grid
+      scopeCtx.strokeStyle = '#1e293b';
+      scopeCtx.lineWidth = 1;
+      for (let i=0;i<=10;i++) {
+        const y = (h/10)*i;
+        scopeCtx.beginPath(); scopeCtx.moveTo(0,y); scopeCtx.lineTo(w,y); scopeCtx.stroke();
+      }
+      for (let i=0;i<=20;i++) {
+        const x = (w/20)*i;
+        scopeCtx.beginPath(); scopeCtx.moveTo(x,0); scopeCtx.lineTo(x,h); scopeCtx.stroke();
+      }
+      // Center line
+      scopeCtx.strokeStyle = '#334155';
+      scopeCtx.beginPath(); scopeCtx.moveTo(0,h/2); scopeCtx.lineTo(w,h/2); scopeCtx.stroke();
+
+      const now = performance.now() / 1000;
+      const duration = 2; // show 2 cycles of fundamental
+      const baseFreq = getFundamental();
+      const samples = 800;
+      const dt = (duration / baseFreq) / samples;
+
+      // Draw individual waves faint
+      oscillators.forEach((osc, idx) => {
+        if (!osc.on) return;
+        scopeCtx.strokeStyle = WAVE_COLORS[idx % WAVE_COLORS.length] + '40';
+        scopeCtx.lineWidth = 1;
+        scopeCtx.beginPath();
+        for (let i=0;i<=samples;i++) {
+          const t = now + i*dt;
+          const v = waveValue(osc.type, t, osc.freq) * osc.amp;
+          const x = (i/samples)*w;
+          const y = h/2 - v*(h*0.4);
+          if (i===0) scopeCtx.moveTo(x,y); else scopeCtx.lineTo(x,y);
+        }
+        scopeCtx.stroke();
+      });
+
+      // Combined wave
+      scopeCtx.strokeStyle = '#e2e8f0';
+      scopeCtx.lineWidth = 2;
+      scopeCtx.beginPath();
+      let maxAmp = 0, sumSq = 0;
+      for (let i=0;i<=samples;i++) {
+        const t = now + i*dt;
+        let sum = 0;
+        oscillators.forEach(osc => {
+          if (!osc.on) return;
+          sum += waveValue(osc.type, t + osc.phase, osc.freq) * osc.amp;
+        });
+        const x = (i/samples)*w;
+        const y = h/2 - sum*(h*0.4);
+        if (i===0) scopeCtx.moveTo(x,y); else scopeCtx.lineTo(x,y);
+        if (Math.abs(sum) > maxAmp) maxAmp = Math.abs(sum);
+        sumSq += sum*sum;
+      }
+      scopeCtx.stroke();
+
+      // Update stats
+      document.getElementById('peakAmp').textContent = maxAmp.toFixed(3);
+      document.getElementById('rms').textContent = Math.sqrt(sumSq/(samples+1)).toFixed(3);
+    }
+
+    function drawSpectrum() {
+      if (!analyser) { drawMockSpectrum(); return; }
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(data);
+      const w = specCanvas.width, h = specCanvas.height;
+      specCtx.clearRect(0,0,w,h);
+
+      // Grid
+      specCtx.fillStyle = '#0b1220'; specCtx.fillRect(0,0,w,h);
+      specCtx.strokeStyle = '#1e293b'; specCtx.lineWidth = 1;
+      for (let i=0;i<=5;i++) {
+        const y = (h/5)*i;
+        specCtx.beginPath(); specCtx.moveTo(0,y); specCtx.lineTo(w,y); specCtx.stroke();
+      }
+
+      const barCount = 120;
+      const barW = w / barCount;
+      const nyquist = audioCtx.sampleRate / 2;
+      const maxFreq = 4000;
+      const binsPerBar = Math.floor((data.length * maxFreq / nyquist) / barCount);
+
+      for (let i=0;i<barCount;i++) {
+        let sum = 0;
+        const start = Math.floor(i * binsPerBar);
+        for (let j=0;j<binsPerBar;j++) sum += data[start+j] || 0;
+        const val = sum / binsPerBar;
+        const barH = (val / 255) * h;
+        const hue = 180 + (i/barCount)*160;
+        specCtx.fillStyle = `hsl(${hue}, 80%, 60%)`;
+        specCtx.fillRect(i*barW + 1, h - barH, barW - 2, barH);
+      }
+    }
+
+    function drawMockSpectrum() {
+      const w = specCanvas.width, h = specCanvas.height;
+      specCtx.fillStyle = '#0b1220'; specCtx.fillRect(0,0,w,h);
+      specCtx.strokeStyle = '#1e293b'; specCtx.lineWidth = 1;
+      for (let i=0;i<=5;i++) {
+        const y = (h/5)*i;
+        specCtx.beginPath(); specCtx.moveTo(0,y); specCtx.lineTo(w,y); specCtx.stroke();
+      }
+      // Approximate from oscillator data
+      const barCount = 120;
+      const barW = w / barCount;
+      for (let i=0;i<barCount;i++) {
+        const freq = (i/barCount)*4000;
+        let val = 0;
+        oscillators.forEach(osc => {
+          if (!osc.on) return;
+          const dist = Math.abs(freq - osc.freq);
+          if (osc.type === 'sine' || osc.type === 'triangle') {
+            if (dist < 40) val += osc.amp * 255 * (1 - dist/40);
+          } else if (osc.type === 'square') {
+            // Odd harmonics
+            for (let h=1;h<=7;h+=2) {
+              const hf = osc.freq*h;
+              const d = Math.abs(freq - hf);
+              if (d < 40) val += (osc.amp/h) * 255 * (1 - d/40);
+            }
+          } else if (osc.type === 'sawtooth') {
+            for (let h=1;h<=7;h++) {
+              const hf = osc.freq*h;
+              const d = Math.abs(freq - hf);
+              if (d < 40) val += (osc.amp/h) * 255 * (1 - d/40);
+            }
+          } else if (osc.type === 'noise') {
+            val += osc.amp * 30;
+          }
+        });
+        val = Math.min(255, val);
+        const barH = (val/255)*h;
+        const hue = 180 + (i/barCount)*160;
+        specCtx.fillStyle = `hsl(${hue}, 80%, 60%)`;
+        specCtx.fillRect(i*barW + 1, h - barH, barW - 2, barH);
+      }
+    }
+
+    function drawLissajous() {
+      const w = lissaCanvas.width, h = lissaCanvas.height;
+      lissaCtx.fillStyle = '#0b1220'; lissaCtx.fillRect(0,0,w,h);
+      lissaCtx.strokeStyle = '#1e293b'; lissaCtx.lineWidth = 1;
+      lissaCtx.beginPath(); lissaCtx.moveTo(0,h/2); lissaCtx.lineTo(w,h/2); lissaCtx.stroke();
+      lissaCtx.beginPath(); lissaCtx.moveTo(w/2,0); lissaCtx.lineTo(w/2,h); lissaCtx.stroke();
+
+      // Use first two active oscillators as X and Y
+      const active = oscillators.filter(o => o.on);
+      if (active.length < 2) {
+        lissaCtx.fillStyle = '#475569';
+        lissaCtx.font = '12px sans-serif';
+        lissaCtx.textAlign = 'center';
+        lissaCtx.fillText('Enable at least 2 oscillators to see Lissajous figure', w/2, h/2);
+        return;
+      }
+      const xOsc = active[0], yOsc = active[1];
+      const now = performance.now() / 1000;
+      const points = 800;
+      const duration = 2 * Math.PI / Math.min(xOsc.freq, yOsc.freq);
+      const dt = duration / points;
+
+      lissaCtx.strokeStyle = '#a78bfa';
+      lissaCtx.lineWidth = 1.5;
+      lissaCtx.beginPath();
+      for (let i=0;i<=points;i++) {
+        const t = now + i*dt;
+        const x = waveValue(xOsc.type, t, xOsc.freq) * xOsc.amp;
+        const y = waveValue(yOsc.type, t, yOsc.freq) * yOsc.amp;
+        const px = w/2 + x * (w*0.4);
+        const py = h/2 - y * (h*0.4);
+        if (i===0) lissaCtx.moveTo(px,py); else lissaCtx.lineTo(px,py);
+      }
+      lissaCtx.stroke();
+    }
+
+    function getFundamental() {
+      const active = oscillators.filter(o => o.on);
+      if (!active.length) return 440;
+      return Math.min(...active.map(o => o.freq));
+    }
+
+    function updateStats() {
+      const active = oscillators.filter(o => o.on);
+      document.getElementById('fundFreq').textContent = active.length ? getFundamental() + ' Hz' : '—';
+      document.getElementById('harmCount').textContent = active.length;
+    }
+
+    function animate() {
+      drawScope();
+      if (isPlaying && analyser) drawSpectrum(); else drawMockSpectrum();
+      drawLissajous();
+      updateStats();
+      animId = requestAnimationFrame(animate);
+    }
+
+    // --- UI builders ---
+    function renderOscillators() {
+      const container = document.getElementById('oscillators');
+      container.innerHTML = '';
+      oscillators.forEach((osc, i) => {
+        const div = document.createElement('div');
+        div.className = 'oscillator';
+        div.innerHTML = `
+          ${oscillators.length > 1 ? `<button class="remove-osc" data-i="${i}" title="Remove">×</button>` : ''}
+          <div class="osc-header">
+            <div class="osc-color" style="background:${WAVE_COLORS[i%WAVE_COLORS.length]}"></div>
+            <div class="osc-name">Osc ${i+1}</div>
+            <div class="osc-toggle ${osc.on?'on':''}" data-i="${i}"></div>
+          </div>
+          <div class="osc-wave-select">
+            ${WAVE_NAMES.map((n,j) => `<span class="wave-opt ${osc.type===n.toLowerCase()?'active':''}" data-i="${i}" data-type="${n.toLowerCase()}">${n}</span>`).join('')}
+          </div>
+          <div class="osc-sliders">
+            <div class="slider-group">
+              <label>Frequency</label>
+              <input type="range" min="20" max="2000" value="${osc.freq}" data-i="${i}" data-param="freq">
+              <div class="val">${osc.freq} Hz</div>
+            </div>
+            <div class="slider-group">
+              <label>Amplitude</label>
+              <input type="range" min="0" max="100" value="${Math.round(osc.amp*100)}" data-i="${i}" data-param="amp">
+              <div class="val">${(osc.amp).toFixed(2)}</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      // Event delegation
+      container.querySelectorAll('.osc-toggle').forEach(el => {
+        el.addEventListener('click', () => {
+          const i = +el.dataset.i;
+          oscillators[i].on = !oscillators[i].on;
+          renderOscillators();
+          if (isPlaying) updateAudioParams();
+        });
+      });
+      container.querySelectorAll('.wave-opt').forEach(el => {
+        el.addEventListener('click', () => {
+          const i = +el.dataset.i;
+          oscillators[i].type = el.dataset.type;
+          renderOscillators();
+          if (isPlaying) updateAudioParams();
+        });
+      });
+      container.querySelectorAll('input[type="range"]').forEach(el => {
+        el.addEventListener('input', () => {
+          const i = +el.dataset.i;
+          const p = el.dataset.param;
+          if (p === 'freq') oscillators[i].freq = +el.value;
+          if (p === 'amp') oscillators[i].amp = +el.value/100;
+          renderOscillators();
+          if (isPlaying) updateAudioParams();
+        });
+      });
+      container.querySelectorAll('.remove-osc').forEach(el => {
+        el.addEventListener('click', () => {
+          const i = +el.dataset.i;
+          oscillators.splice(i,1);
+          renderOscillators();
+          if (isPlaying) updateAudioParams();
+        });
+      });
+    }
+
+    function renderPresets() {
+      const row = document.getElementById('presets');
+      row.innerHTML = '';
+      PRESETS.forEach((p, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'preset-btn' + (i === activePreset ? ' active' : '');
+        btn.textContent = p.name;
+        btn.addEventListener('click', () => {
+          activePreset = i;
+          oscillators = p.waves.map(w => ({...w}));
+          renderPresets();
+          renderOscillators();
+          if (isPlaying) updateAudioParams();
+        });
+        row.appendChild(btn);
+      });
+    }
+
+    // --- Play / Stop ---
+    document.getElementById('playBtn').addEventListener('click', () => {
+      if (isPlaying) {
+        // Stop
+        audioNodes.forEach(n => {
+          try { n.osc.stop(); } catch(e){}
+          try { n.osc.disconnect(); } catch(e){}
+          try { n.gain.disconnect(); } catch(e){}
+        });
+        audioNodes = [];
+        if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+        isPlaying = false;
+        document.getElementById('playBtn').textContent = '▶ Play Sound';
+        document.getElementById('playBtn').classList.remove('playing');
+      } else {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        buildAudioGraph();
+        isPlaying = true;
+        document.getElementById('playBtn').textContent = '⏹ Stop Sound';
+        document.getElementById('playBtn').classList.add('playing');
+      }
+    });
+
+    document.getElementById('addOsc').addEventListener('click', () => {
+      if (oscillators.length >= 5) return;
+      oscillators.push({ type:'sine', freq:440, amp:0.5, phase:0, on:true });
+      activePreset = -1;
+      renderOscillators();
+      if (isPlaying) updateAudioParams();
+    });
+
+    // --- Init ---
+    oscillators = PRESETS[0].waves.map(w => ({...w}));
+    renderPresets();
+    renderOscillators();
+    animate();
+
+    // Resize handling
+    function resize() {
+      const wrap = scopeCanvas.parentElement;
+      scopeCanvas.width = wrap.clientWidth - 24;
+      specCanvas.width = wrap.clientWidth - 24;
+      lissaCanvas.width = wrap.clientWidth - 24;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+  })();
+  </script>
+</body>
+</html>
