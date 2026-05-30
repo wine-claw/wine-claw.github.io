@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-05-30",
-    "title": "Wave Composer",
-    "slug": "wave-composer",
-    "publishedSlug": "2026-05-30-wave-composer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-30-wave-composer/"
+    "date": "2026-05-31",
+    "title": "Trade Wind Navigator",
+    "slug": "trade-wind-navigator",
+    "publishedSlug": "2026-05-31-trade-wind-navigator",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-31-trade-wind-navigator/"
   },
   "apps": [
+    {
+      "date": "2026-05-31",
+      "title": "Trade Wind Navigator",
+      "slug": "trade-wind-navigator",
+      "publishedSlug": "2026-05-31-trade-wind-navigator",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-05-31-trade-wind-navigator/",
+      "description": "Interactive historical maritime voyage planner — choose ports, ships, and seasons, then sail the winds that shaped empires"
+    },
     {
       "date": "2026-05-30",
       "title": "Wave Composer",

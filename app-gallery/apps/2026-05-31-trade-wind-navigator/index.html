@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Trade Wind Navigator</title>
+<style>
+  :root {
+    --parchment: #f4e4bc;
+    --parchment-dark: #e8d5a8;
+    --ink: #2c2416;
+    --ink-light: #5a4d3a;
+    --accent: #8b4513;
+    --accent-light: #a0522d;
+    --sea: #c4ddf0;
+    --sea-deep: #8bbcd9;
+    --land: #d4c5a3;
+    --land-dark: #b8a684;
+    --danger: #c0392b;
+    --success: #27ae60;
+    --warning: #f39c12;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .disclaimer {
+    background: var(--danger);
+    color: white;
+    text-align: center;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: system-ui, sans-serif;
+    letter-spacing: 0.3px;
+  }
+  header {
+    text-align: center;
+    padding: 20px 16px 12px;
+    border-bottom: 2px solid var(--accent);
+    background: linear-gradient(to bottom, var(--parchment), var(--parchment-dark));
+  }
+  header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+  }
+  header .subtitle {
+    font-size: 14px;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-top: 4px;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .container { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .panel h2 {
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent-light);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .control-group { margin-bottom: 16px; }
+  .control-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--ink-light);
+  }
+  select, button {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    border: 1px solid var(--accent-light);
+    border-radius: 3px;
+    background: var(--parchment);
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  select:hover, button:hover {
+    border-color: var(--accent);
+    background: var(--parchment-dark);
+  }
+  button {
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+    margin-top: 8px;
+  }
+  button:hover { background: var(--accent-light); }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .ship-card {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--land-dark);
+    border-radius: 3px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.4);
+  }
+  .ship-card:hover { border-color: var(--accent); background: rgba(255,255,255,0.7); }
+  .ship-card.selected {
+    border-color: var(--accent);
+    background: rgba(139,69,19,0.08);
+    box-shadow: 0 0 0 2px var(--accent-light);
+  }
+  .ship-icon {
+    font-size: 32px;
+    line-height: 1;
+  }
+  .ship-info h3 {
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 2px;
+  }
+  .ship-info p {
+    font-size: 12px;
+    color: var(--ink-light);
+    line-height: 1.4;
+  }
+  .ship-stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--ink-light);
+  }
+  .map-container {
+    position: relative;
+    background: var(--sea);
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    overflow: hidden;
+    aspect-ratio: 16/10;
+  }
+  #mapCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .map-overlay {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(244,228,188,0.9);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: 8px 12px;
+    font-size: 12px;
+    max-width: 200px;
+  }
+  .map-legend {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(244,228,188,0.9);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .legend-color {
+    width: 16px;
+    height: 3px;
+    border-radius: 1px;
+  }
+  .voyage-log {
+    margin-top: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .log-entry {
+    padding: 10px 12px;
+    border-left: 3px solid var(--accent);
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.5);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .log-entry .day {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .log-entry.event-storm { border-left-color: var(--danger); }
+  .log-entry.event-calm { border-left-color: var(--warning); }
+  .log-entry.event-land { border-left-color: var(--success); }
+  .result-panel {
+    text-align: center;
+    padding: 20px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 4px;
+    margin-top: 12px;
+  }
+  .result-panel h3 {
+    font-size: 18px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .stat-box {
+    padding: 12px;
+    background: var(--parchment);
+    border: 1px solid var(--land-dark);
+    border-radius: 3px;
+  }
+  .stat-box .value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-box .label {
+    font-size: 11px;
+    color: var(--ink-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .port-marker {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border: 2px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 10;
+  }
+  .port-marker:hover { background: var(--danger); transform: translate(-50%, -50%) scale(1.3); }
+  .port-marker.origin { background: var(--success); }
+  .port-marker.destination { background: var(--danger); }
+  .port-label {
+    position: absolute;
+    font-size: 11px;
+    color: var(--ink);
+    background: rgba(244,228,188,0.85);
+    padding: 2px 5px;
+    border-radius: 2px;
+    white-space: nowrap;
+    transform: translate(-50%, -140%);
+    pointer-events: none;
+    font-weight: 600;
+  }
+  .wind-label {
+    position: absolute;
+    font-size: 10px;
+    color: rgba(44,36,22,0.5);
+    font-style: italic;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .hidden { display: none !important; }
+  @media (max-width: 600px) {
+    header h1 { font-size: 20px; }
+    .ship-card { flex-direction: column; gap: 6px; }
+    .ship-icon { font-size: 24px; }
+    .result-stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="disclaimer">
+  Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+</div>
+
+<header>
+  <h1>⚓ Trade Wind Navigator</h1>
+  <p class="subtitle">Plan your voyage, read the winds, and discover the routes that shaped empires</p>
+</header>
+
+<div class="container">
+  <div class="left-column">
+    <div class="panel">
+      <h2>⚙ Voyage Plan</h2>
+      <div class="control-group">
+        <label for="originSelect">Port of Departure</label>
+        <select id="originSelect"></select>
+      </div>
+      <div class="control-group">
+        <label for="destSelect">Destination</label>
+        <select id="destSelect"></select>
+      </div>
+      <div class="control-group">
+        <label for="monthSelect">Month of Departure</label>
+        <select id="monthSelect"></select>
+      </div>
+      <div class="control-group">
+        <label>Choose Your Vessel</label>
+        <div id="shipList"></div>
+      </div>
+      <button id="sailBtn">Set Sail!</button>
+      <button id="resetBtn" class="hidden">Plan New Voyage</button>
+    </div>
+
+    <div class="panel hidden" id="resultPanel">
+      <h2>📜 Voyage Result</h2>
+      <div class="result-panel">
+        <h3 id="resultTitle">Voyage Complete</h3>
+        <div class="result-stats">
+          <div class="stat-box">
+            <div class="value" id="statDuration">--</div>
+            <div class="label">Days at Sea</div>
+          </div>
+          <div class="stat-box">
+            <div class="value" id="statDistance">--</div>
+            <div class="label">Nautical Miles</div>
+          </div>
+          <div class="stat-box">
+            <div class="value" id="statAvgSpeed">--</div>
+            <div class="label">Avg. Speed (kn)</div>
+          </div>
+        </div>
+        <p id="resultDesc" style="font-size:13px;line-height:1.6;color:var(--ink-light);"></p>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="logPanel">
+      <h2>📖 Captain's Log</h2>
+      <div class="voyage-log" id="voyageLog"></div>
+    </div>
+  </div>
+
+  <div class="right-column">
+    <div class="map-container" id="mapContainer">
+      <canvas id="mapCanvas"></canvas>
+      <div class="map-overlay" id="mapOverlay">
+        <strong>Click a port</strong> to select departure, then click another for destination.
+      </div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-color" style="background:#c0392b;"></div>Trade Winds</div>
+        <div class="legend-item"><div class="legend-color" style="background:#2980b9;"></div>Westerlies</div>
+        <div class="legend-item"><div class="legend-color" style="background:#27ae60;"></div>Monsoons</div>
+        <div class="legend-item"><div class="legend-color" style="background:#f39c12;"></div>Doldrums</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const PORTS = [
+  { name: 'Lisbon', lat: 38.7, lon: -9.1, region: 'Europe' },
+  { name: 'London', lat: 51.5, lon: -0.1, region: 'Europe' },
+  { name: 'Amsterdam', lat: 52.4, lon: 4.9, region: 'Europe' },
+  { name: 'Cádiz', lat: 36.5, lon: -6.3, region: 'Europe' },
+  { name: 'Boston', lat: 42.4, lon: -71.0, region: 'Americas' },
+  { name: 'Veracruz', lat: 19.2, lon: -96.1, region: 'Americas' },
+  { name: 'Rio de Janeiro', lat: -22.9, lon: -43.2, region: 'Americas' },
+  { name: 'Cape Town', lat: -33.9, lon: 18.4, region: 'Africa' },
+  { name: 'Mombasa', lat: -4.0, lon: 39.7, region: 'Africa' },
+  { name: 'Goa', lat: 15.3, lon: 73.9, region: 'Asia' },
+  { name: 'Canton (Guangzhou)', lat: 23.1, lon: 113.3, region: 'Asia' },
+  { name: 'Nagasaki', lat: 32.7, lon: 129.9, region: 'Asia' },
+  { name: 'Sydney', lat: -33.9, lon: 151.2, region: 'Oceania' },
+  { name: 'Jakarta (Batavia)', lat: -6.2, lon: 106.8, region: 'Asia' }
+];
+
+const SHIPS = [
+  {
+    id: 'carrack',
+    name: 'Carrack',
+    icon: '⛵',
+    period: '15th–16th century',
+    speed: 4,
+    cargo: 400,
+    desc: 'Sturdy Atlantic trader. Slow but reliable.',
+    traits: ['resilient', 'slow']
+  },
+  {
+    id: 'galleon',
+    name: 'Galleon',
+    icon: '🚢',
+    period: '16th–17th century',
+    speed: 5,
+    cargo: 600,
+    desc: 'Balanced warship-trader. Moderate speed and capacity.',
+    traits: ['balanced', 'armed']
+  },
+  {
+    id: 'eastindiaman',
+    name: 'East Indiaman',
+    icon: '🛳️',
+    period: '18th century',
+    speed: 5.5,
+    cargo: 800,
+    desc: 'Large company ship. Heavy cargo, steady pace.',
+    traits: ['high-capacity', 'steady']
+  },
+  {
+    id: 'clipper',
+    name: 'Clipper',
+    icon: '⛴️',
+    period: '19th century',
+    speed: 9,
+    cargo: 300,
+    desc: 'Racing hull built for speed. Fragile but fast.',
+    traits: ['fast', 'fragile']
+  },
+  {
+    id: 'dhow',
+    name: 'Dhow',
+    icon: '🛶',
+    period: 'Ancient–Modern',
+    speed: 6,
+    cargo: 200,
+    desc: 'Lateen-rigged master of monsoon trade. Agile in coastal winds.',
+    traits: ['maneuverable', 'monsoon']
+  }
+];
+
+const MONTHS = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December'
+];
+
+// ===== STATE =====
+let origin = null;
+let destination = null;
+let selectedShip = SHIPS[1];
+let selectedMonth = 3; // April
+let isSailing = false;
+let animationId = null;
+let routeProgress = 0;
+let currentRoute = [];
+
+// ===== MAP SETUP =====
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+let canvasW, canvasH;
+
+function resizeCanvas() {
+  const container = document.getElementById('mapContainer');
+  canvasW = container.clientWidth;
+  canvasH = container.clientHeight;
+  canvas.width = canvasW * window.devicePixelRatio;
+  canvas.height = canvasH * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  canvas.style.width = canvasW + 'px';
+  canvas.style.height = canvasH + 'px';
+  drawMap();
+}
+
+function latLonToXY(lat, lon) {
+  const x = ((lon + 180) / 360) * canvasW;
+  const y = ((90 - lat) / 180) * canvasH;
+  return { x, y };
+}
+
+// ===== DRAWING =====
+function drawMap() {
+  ctx.clearRect(0, 0, canvasW, canvasH);
+  drawOcean();
+  drawWindPatterns();
+  drawLandMasses();
+  drawPorts();
+  if (isSailing && currentRoute.length > 1) {
+    drawRoute();
+  }
+  if (origin && destination && !isSailing) {
+    drawPlannedRoute();
+  }
+}
+
+function drawOcean() {
+  ctx.fillStyle = '#c4ddf0';
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  // Subtle grid lines
+  ctx.strokeStyle = 'rgba(139,188,217,0.3)';
+  ctx.lineWidth = 0.5;
+  for (let lon = -180; lon <= 180; lon += 30) {
+    const x = ((lon + 180) / 360) * canvasW;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvasH);
+    ctx.stroke();
+  }
+  for (let lat = -90; lat <= 90; lat += 30) {
+    const y = ((90 - lat) / 180) * canvasH;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvasW, y);
+    ctx.stroke();
+  }
+}
+
+function drawWindPatterns() {
+  // Simplified wind zones
+  const zones = [
+    { latMin: 30, latMax: 60, color: 'rgba(41,128,185,0.12)', name: 'Westerlies' },
+    { latMin: 0, latMax: 30, color: 'rgba(192,57,43,0.1)', name: 'Trade Winds' },
+    { latMin: -30, latMax: 0, color: 'rgba(192,57,43,0.1)', name: 'Trade Winds' },
+    { latMin: -60, latMax: -30, color: 'rgba(41,128,185,0.12)', name: 'Westerlies' },
+    { latMin: -10, latMax: 10, color: 'rgba(243,156,18,0.08)', name: 'Doldrums' }
+  ];
+
+  zones.forEach(zone => {
+    const y1 = ((90 - zone.latMax) / 180) * canvasH;
+    const y2 = ((90 - zone.latMin) / 180) * canvasH;
+    ctx.fillStyle = zone.color;
+    ctx.fillRect(0, y1, canvasW, y2 - y1);
+  });
+
+  // Draw wind arrows
+  drawWindArrows();
+}
+
+function drawWindArrows() {
+  ctx.save();
+  const arrowSpacing = 60;
+  const time = Date.now() / 2000;
+
+  for (let x = 30; x < canvasW; x += arrowSpacing) {
+    for (let y = 30; y < canvasH; y += arrowSpacing) {
+      const lat = 90 - (y / canvasH) * 180;
+      const wind = getWindAt(lat, x / canvasW, selectedMonth);
+      if (wind.speed < 0.3) continue;
+
+      const angle = wind.direction + Math.sin(time + x * 0.01) * 0.1;
+      const len = 12 + wind.speed * 8;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.strokeStyle = `rgba(44,36,22,${0.15 + wind.speed * 0.15})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-len/2, 0);
+      ctx.lineTo(len/2, 0);
+      ctx.stroke();
+      // Arrowhead
+      ctx.beginPath();
+      ctx.moveTo(len/2, 0);
+      ctx.lineTo(len/2 - 4, -3);
+      ctx.moveTo(len/2, 0);
+      ctx.lineTo(len/2 - 4, 3);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+function getWindAt(lat, lonRatio, month) {
+  // Simplified global wind model
+  let direction = 0;
+  let speed = 0;
+  let type = 'calm';
+
+  const absLat = Math.abs(lat);
+
+  if (absLat > 30 && absLat < 60) {
+    // Westerlies
+    direction = lat > 0 ? Math.PI * 0.85 : Math.PI * 0.15;
+    speed = 0.8;
+    type = 'westerlies';
+  } else if (absLat > 5 && absLat < 30) {
+    // Trade winds
+    if (lat > 0) {
+      direction = Math.PI * 1.15; // NE
+    } else {
+      direction = Math.PI * 0.35; // SE
+    }
+    speed = 0.7;
+    type = 'trade';
+  } else if (absLat < 10) {
+    // Doldrums / monsoon influence
+    speed = 0.2;
+    direction = Math.PI * 0.5;
+    type = 'doldrums';
+  } else if (absLat > 60) {
+    speed = 0.4;
+    direction = lat > 0 ? Math.PI * 0.7 : Math.PI * 0.3;
+    type = 'polar';
+  }
+
+  // Monsoon effect (Indian Ocean)
+  if (lonRatio > 0.4 && lonRatio < 0.8 && Math.abs(lat) < 30) {
+    const monsoonStrength = (month >= 4 && month <= 9) ? 1 : -0.5;
+    if (lat > 0) {
+      direction += monsoonStrength * 0.5;
+      speed += Math.abs(monsoonStrength) * 0.3;
+    } else {
+      direction -= monsoonStrength * 0.3;
+    }
+    type = 'monsoon';
+  }
+
+  return { direction, speed: Math.min(speed, 1.2), type };
+}
+
+function drawLandMasses() {
+  // Simplified continental shapes using rough polygons
+  const continents = [
+    // Europe-Africa
+    { points: [[-10,70],[40,70],[50,35],[35,25],[20,10],[15,-5],[10,-15],[15,-30],[25,-35],[35,-25],[30,0],[25,15],[20,25],[10,35],[0,40],[-10,50],[-15,60]], color: '#d4c5a3' },
+    // Asia
+    { points: [[40,70],[140,70],[160,60],[170,50],[170,20],[160,5],[140,-5],[120,-10],[100,0],[90,15],[80,25],[70,35],[60,40],[50,35]], color: '#d4c5a3' },
+    // Americas (North)
+    { points: [[-170,70],[-50,70],[-60,50],[-80,40],[-100,35],[-120,30],[-130,40],[-140,50],[-160,55]], color: '#d4c5a3' },
+    // Americas (South)
+    { points: [[-80,10],[-60,5],[-50,-10],[-45,-25],[-55,-40],[-65,-50],[-75,-40],[-80,-20],[-85,0]], color: '#d4c5a3' },
+    // Australia
+    { points: [[110,-10],[155,-10],[155,-40],[140,-45],[120,-40],[115,-25]], color: '#d4c5a3' },
+  ];
+
+  continents.forEach(continent => {
+    ctx.fillStyle = continent.color;
+    ctx.strokeStyle = '#b8a684';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    continent.points.forEach((pt, i) => {
+      const xy = latLonToXY(pt[1], pt[0]);
+      if (i === 0) ctx.moveTo(xy.x, xy.y);
+      else ctx.lineTo(xy.x, xy.y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  });
+}
+
+function drawPorts() {
+  PORTS.forEach(port => {
+    const xy = latLonToXY(port.lat, port.lon);
+    let color = '#8b4513';
+    let radius = 5;
+
+    if (origin && port.name === origin.name) {
+      color = '#27ae60';
+      radius = 7;
+    } else if (destination && port.name === destination.name) {
+      color = '#c0392b';
+      radius = 7;
+    }
+
+    ctx.fillStyle = color;
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(xy.x, xy.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Port name
+    ctx.fillStyle = '#2c2416';
+    ctx.font = 'bold 11px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText(port.name, xy.x, xy.y - 12);
+  });
+}
+
+function drawPlannedRoute() {
+  if (!origin || !destination) return;
+  const o = latLonToXY(origin.lat, origin.lon);
+  const d = latLonToXY(destination.lat, destination.lon);
+
+  ctx.strokeStyle = 'rgba(139,69,19,0.4)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(o.x, o.y);
+  ctx.lineTo(d.x, d.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Distance label
+  const midX = (o.x + d.x) / 2;
+  const midY = (o.y + d.y) / 2;
+  const dist = haversine(origin.lat, origin.lon, destination.lat, destination.lon);
+  ctx.fillStyle = 'rgba(44,36,22,0.6)';
+  ctx.font = '12px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${Math.round(dist)} nm`, midX, midY);
+}
+
+function drawRoute() {
+  if (currentRoute.length < 2) return;
+
+  // Draw full route as faint line
+  ctx.strokeStyle = 'rgba(139,69,19,0.2)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  currentRoute.forEach((pt, i) => {
+    const xy = latLonToXY(pt.lat, pt.lon);
+    if (i === 0) ctx.moveTo(xy.x, xy.y);
+    else ctx.lineTo(xy.x, xy.y);
+  });
+  ctx.stroke();
+
+  // Draw animated ship
+  const progress = routeProgress;
+  const idx = Math.floor(progress * (currentRoute.length - 1));
+  const frac = (progress * (currentRoute.length - 1)) - idx;
+
+  if (idx < currentRoute.length - 1) {
+    const p1 = latLonToXY(currentRoute[idx].lat, currentRoute[idx].lon);
+    const p2 = latLonToXY(currentRoute[idx+1].lat, currentRoute[idx+1].lon);
+    const shipX = p1.x + (p2.x - p1.x) * frac;
+    const shipY = p1.y + (p2.y - p1.y) * frac;
+
+    // Ship icon
+    ctx.font = '20px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(selectedShip.icon, shipX, shipY);
+
+    // Trail
+    ctx.strokeStyle = 'rgba(139,69,19,0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(shipX, shipY);
+    ctx.stroke();
+  }
+}
+
+// ===== MATH =====
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 3440; // Earth radius in nautical miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+// ===== ROUTE SIMULATION =====
+function calculateRoute() {
+  if (!origin || !destination) return null;
+
+  const points = [];
+  const steps = 50;
+
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    // Use great circle with some wind-following adjustment
+    let lat = lerp(origin.lat, destination.lat, t);
+    let lon = lerp(origin.lon, destination.lon, t);
+
+    // Add wind-following deviation
+    const wind = getWindAt(lat, (lon + 180) / 360, selectedMonth);
+    const deviation = Math.sin(t * Math.PI) * wind.speed * (wind.type === 'westerlies' ? 8 : 4);
+    lat += Math.sin(wind.direction) * deviation * 0.3;
+    lon += Math.cos(wind.direction) * deviation * 0.5;
+
+    points.push({ lat, lon });
+  }
+
+  // Calculate realistic distance along path
+  let distance = 0;
+  for (let i = 1; i < points.length; i++) {
+    distance += haversine(points[i-1].lat, points[i-1].lon, points[i].lat, points[i].lon);
+  }
+
+  // Adjust for ship speed and wind
+  let avgSpeed = selectedShip.speed;
+  const directDist = haversine(origin.lat, origin.lon, destination.lat, destination.lon);
+  const routeEfficiency = directDist / distance;
+
+  // Ship modifiers
+  if (selectedShip.id === 'clipper') avgSpeed *= 1.2;
+  if (selectedShip.id === 'dhow' && isMonsoonRoute()) avgSpeed *= 1.3;
+  if (selectedShip.id === 'carrack') avgSpeed *= 0.9;
+
+  // Wind factor along route
+  let windFactor = 0;
+  for (let i = 0; i < points.length; i += 5) {
+    const w = getWindAt(points[i].lat, (points[i].lon + 180) / 360, selectedMonth);
+    windFactor += w.speed;
+  }
+  windFactor /= (points.length / 5);
+  avgSpeed *= (0.7 + windFactor * 0.4);
+
+  const duration = distance / avgSpeed;
+
+  return { points, distance, duration, avgSpeed, routeEfficiency };
+}
+
+function isMonsoonRoute() {
+  // Dhow benefits from monsoon in Indian Ocean
+  const oLon = origin.lon, dLon = destination.lon;
+  const oLat = origin.lat, dLat = destination.lat;
+  return (oLon > 30 && oLon < 100 && dLon > 30 && dLon < 100 && Math.abs(oLat) < 30 && Math.abs(dLat) < 30);
+}
+
+function generateVoyageEvents(routeData) {
+  const events = [];
+  const { distance, duration } = routeData;
+  const dayEvents = Math.floor(duration / 7) + 1;
+
+  events.push({
+    day: 1,
+    text: `Departed ${origin.name} aboard the ${selectedShip.name}. The crew is in good spirits.`,
+    type: 'start'
+  });
+
+  // Random events based on route characteristics
+  const stormChance = (selectedMonth >= 6 && selectedMonth <= 10) ? 0.3 : 0.15;
+  const calmChance = (Math.abs(origin.lat) < 15 || Math.abs(destination.lat) < 15) ? 0.25 : 0.1;
+
+  for (let day = 7; day < duration; day += 7 + Math.random() * 7) {
+    const dayNum = Math.floor(day);
+    if (dayNum >= duration - 3) break;
+
+    const roll = Math.random();
+    if (roll < stormChance) {
+      const storms = [
+        `Day ${dayNum}: Heavy squall off the starboard bow! Sail damage sustained. Reduced speed for repairs.`,
+        `Day ${dayNum}: Storm in the night. Topgallant mast damaged. Crew working through rain.`,
+        `Day ${dayNum}: Violent winds from the west. Ship heeling hard. All hands on deck!`
+      ];
+      events.push({ day: dayNum, text: storms[Math.floor(Math.random() * storms.length)], type: 'storm' });
+    } else if (roll < stormChance + calmChance) {
+      const calms = [
+        `Day ${dayNum}: Dead calm. Canvas flapping uselessly. Water rations tightened.`,
+        `Day ${dayNum}: Caught in the doldrums. Not a breath of wind for three days.`,
+        `Day ${dayNum}: Fog and stillness. Drifting on the current, awaiting wind.`
+      ];
+      events.push({ day: dayNum, text: calms[Math.floor(Math.random() * calms.length)], type: 'calm' });
+    } else {
+      const normals = [
+        `Day ${dayNum}: Fair winds and following seas. Good progress made.`,
+        `Day ${dayNum}: Sighting of flying fish. Navigator reports favorable position.`,
+        `Day ${dayNum}: Passing through a pod of whales. Crew in wonder.`,
+        `Day ${dayNum}: Trade winds holding steady. Ship making excellent time.`
+      ];
+      events.push({ day: dayNum, text: normals[Math.floor(Math.random() * normals.length)], type: 'normal' });
+    }
+  }
+
+  events.push({
+    day: Math.floor(duration),
+    text: `Arrived at ${destination.name}! ${selectedShip.name} safely moored after a voyage of ${Math.floor(duration)} days.`,
+    type: 'arrival'
+  });
+
+  return events;
+}
+
+// ===== UI SETUP =====
+function populateSelects() {
+  const originSel = document.getElementById('originSelect');
+  const destSel = document.getElementById('destSelect');
+  const monthSel = document.getElementById('monthSelect');
+
+  PORTS.forEach((port, i) => {
+    const opt1 = document.createElement('option');
+    opt1.value = i;
+    opt1.textContent = port.name;
+    originSel.appendChild(opt1);
+
+    const opt2 = document.createElement('option');
+    opt2.value = i;
+    opt2.textContent = port.name;
+    destSel.appendChild(opt2);
+  });
+
+  MONTHS.forEach((m, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = m;
+    monthSel.appendChild(opt);
+  });
+
+  originSel.value = 0;
+  destSel.value = 8;
+  monthSel.value = 3;
+
+  origin = PORTS[0];
+  destination = PORTS[8];
+  selectedMonth = 3;
+}
+
+function populateShips() {
+  const container = document.getElementById('shipList');
+  container.innerHTML = '';
+
+  SHIPS.forEach((ship, i) => {
+    const card = document.createElement('div');
+    card.className = 'ship-card' + (i === 1 ? ' selected' : '');
+    card.dataset.index = i;
+    card.innerHTML = `
+      <div class="ship-icon">${ship.icon}</div>
+      <div class="ship-info">
+        <h3>${ship.name}</h3>
+        <p>${ship.desc}</p>
+        <div class="ship-stats">
+          <span>⚡ ${ship.speed} kn</span>
+          <span>📦 ${ship.cargo}t</span>
+          <span>📅 ${ship.period}</span>
+        </div>
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.ship-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedShip = SHIPS[i];
+    });
+    container.appendChild(card);
+  });
+}
+
+// ===== INTERACTION =====
+function setupInteractions() {
+  document.getElementById('originSelect').addEventListener('change', e => {
+    origin = PORTS[e.target.value];
+    drawMap();
+    updateMapOverlay();
+  });
+
+  document.getElementById('destSelect').addEventListener('change', e => {
+    destination = PORTS[e.target.value];
+    drawMap();
+    updateMapOverlay();
+  });
+
+  document.getElementById('monthSelect').addEventListener('change', e => {
+    selectedMonth = parseInt(e.target.value);
+    drawMap();
+  });
+
+  document.getElementById('sailBtn').addEventListener('click', startVoyage);
+  document.getElementById('resetBtn').addEventListener('click', resetVoyage);
+
+  // Canvas click for port selection
+  canvas.addEventListener('click', handleCanvasClick);
+}
+
+function handleCanvasClick(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clickX = (e.clientX - rect.left) * window.devicePixelRatio;
+  const clickY = (e.clientY - rect.top) * window.devicePixelRatio;
+
+  let closestPort = null;
+  let closestDist = Infinity;
+
+  PORTS.forEach((port, i) => {
+    const xy = latLonToXY(port.lat, port.lon);
+    const d = Math.hypot(clickX - xy.x, clickY - xy.y);
+    if (d < 30 * window.devicePixelRatio && d < closestDist) {
+      closestDist = d;
+      closestPort = { port, index: i };
+    }
+  });
+
+  if (closestPort) {
+    if (!origin || (origin && destination)) {
+      origin = closestPort.port;
+      destination = null;
+      document.getElementById('originSelect').value = closestPort.index;
+    } else if (!destination && closestPort.port.name !== origin.name) {
+      destination = closestPort.port;
+      document.getElementById('destSelect').value = closestPort.index;
+    }
+    drawMap();
+    updateMapOverlay();
+  }
+}
+
+function updateMapOverlay() {
+  const overlay = document.getElementById('mapOverlay');
+  if (!origin) {
+    overlay.innerHTML = '<strong>Click a port</strong> to select departure.';
+  } else if (!destination) {
+    overlay.innerHTML = `<strong>${origin.name}</strong> selected. Click another port for destination.`;
+  } else {
+    const dist = haversine(origin.lat, origin.lon, destination.lat, destination.lon);
+    overlay.innerHTML = `<strong>${origin.name}</strong> → <strong>${destination.name}</strong><br>${Math.round(dist)} nautical miles`;
+  }
+}
+
+function startVoyage() {
+  if (!origin || !destination || origin.name === destination.name) {
+    alert('Please select two different ports.');
+    return;
+  }
+
+  const routeData = calculateRoute();
+  if (!routeData) return;
+
+  currentRoute = routeData.points;
+  routeProgress = 0;
+  isSailing = true;
+
+  // UI updates
+  document.getElementById('sailBtn').classList.add('hidden');
+  document.getElementById('resetBtn').classList.remove('hidden');
+  document.getElementById('resultPanel').classList.remove('hidden');
+  document.getElementById('logPanel').classList.remove('hidden');
+
+  // Update result panel
+  document.getElementById('statDuration').textContent = Math.floor(routeData.duration);
+  document.getElementById('statDistance').textContent = Math.round(routeData.distance);
+  document.getElementById('statAvgSpeed').textContent = routeData.avgSpeed.toFixed(1);
+
+  // Generate description
+  const monthName = MONTHS[selectedMonth];
+  let desc = `Sailed from ${origin.name} to ${destination.name} in ${monthName} aboard the ${selectedShip.name}. `;
+
+  // Wind assessment
+  const windTypes = new Set();
+  for (let i = 0; i < currentRoute.length; i += 5) {
+    const w = getWindAt(currentRoute[i].lat, (currentRoute[i].lon + 180) / 360, selectedMonth);
+    windTypes.add(w.type);
+  }
+
+  if (windTypes.has('monsoon')) {
+    desc += 'The monsoon winds proved favorable for this crossing. ';
+  }
+  if (windTypes.has('westerlies') && windTypes.has('trade')) {
+    desc += 'The voyage crossed both trade wind and westerly zones, requiring careful navigation. ';
+  }
+  if (routeData.routeEfficiency < 0.7) {
+    desc += 'The route was circuitous due to unfavorable winds, adding significant distance. ';
+  }
+
+  desc += `The ${selectedShip.name}'s ${selectedShip.traits.join(' and ')} characteristics suited this ${Math.floor(routeData.duration)}-day passage.`;
+
+  document.getElementById('resultDesc').textContent = desc;
+
+  // Generate log
+  const events = generateVoyageEvents(routeData);
+  const logContainer = document.getElementById('voyageLog');
+  logContainer.innerHTML = '';
+  events.forEach(evt => {
+    const entry = document.createElement('div');
+    entry.className = 'log-entry event-' + evt.type;
+    entry.innerHTML = `<div class="day">Day ${evt.day}</div>${evt.text}`;
+    logContainer.appendChild(entry);
+  });
+
+  // Animation
+  animateRoute();
+}
+
+function animateRoute() {
+  if (!isSailing) return;
+
+  routeProgress += 0.005;
+  if (routeProgress >= 1) {
+    routeProgress = 1;
+    isSailing = false;
+  }
+
+  drawMap();
+
+  if (isSailing) {
+    animationId = requestAnimationFrame(animateRoute);
+  }
+}
+
+function resetVoyage() {
+  isSailing = false;
+  if (animationId) cancelAnimationFrame(animationId);
+  routeProgress = 0;
+  currentRoute = [];
+
+  document.getElementById('sailBtn').classList.remove('hidden');
+  document.getElementById('resetBtn').classList.add('hidden');
+  document.getElementById('resultPanel').classList.add('hidden');
+  document.getElementById('logPanel').classList.add('hidden');
+
+  drawMap();
+}
+
+// ===== INIT =====
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('load', () => {
+  populateSelects();
+  populateShips();
+  resizeCanvas();
+  setupInteractions();
+  updateMapOverlay();
+
+  // Start wind animation loop
+  function windLoop() {
+    if (!isSailing) drawMap();
+    requestAnimationFrame(windLoop);
+  }
+  windLoop();
+});
+</script>
+</body>
+</html>
