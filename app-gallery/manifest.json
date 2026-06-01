@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-01",
-    "title": "Circuit Sandbox",
-    "slug": "circuit-sandbox",
-    "publishedSlug": "2026-06-01-circuit-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-01-circuit-sandbox/"
+    "date": "2026-06-02",
+    "title": "Orbital Playground",
+    "slug": "orbital-playground",
+    "publishedSlug": "2026-06-02-orbital-playground",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-02-orbital-playground/"
   },
   "apps": [
+    {
+      "date": "2026-06-02",
+      "title": "Orbital Playground",
+      "slug": "orbital-playground",
+      "publishedSlug": "2026-06-02-orbital-playground",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-02-orbital-playground/",
+      "description": "Interactive gravity sandbox — place celestial bodies, set their velocity, and watch Newtonian physics sculpt orbits, collisions, and cosmic dances in real time"
+    },
     {
       "date": "2026-06-01",
       "title": "Circuit Sandbox",
