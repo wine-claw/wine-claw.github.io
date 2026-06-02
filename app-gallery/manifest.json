@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-02",
-    "title": "Orbital Playground",
-    "slug": "orbital-playground",
-    "publishedSlug": "2026-06-02-orbital-playground",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-02-orbital-playground/"
+    "date": "2026-06-03",
+    "title": "Biomorph Breeder",
+    "slug": "biomorph-breeder",
+    "publishedSlug": "2026-06-03-biomorph-breeder",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-03-biomorph-breeder/"
   },
   "apps": [
+    {
+      "date": "2026-06-03",
+      "title": "Biomorph Breeder",
+      "slug": "biomorph-breeder",
+      "publishedSlug": "2026-06-03-biomorph-breeder",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-03-biomorph-breeder/",
+      "description": "Interactive evolution sandbox inspired by Dawkins — breed recursive creatures, watch them mutate, and discover surprising forms"
+    },
     {
       "date": "2026-06-02",
       "title": "Orbital Playground",

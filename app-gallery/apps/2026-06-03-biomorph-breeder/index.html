@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+  <title>Biomorph Breeder</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      height: 100dvh;
+      width: 100vw;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    #canvas { display: block; cursor: crosshair; touch-action: none; }
+    .ui-layer {
+      position: absolute;
+      pointer-events: none;
+      top: 0; left: 0; right: 0; bottom: 0;
+    }
+    .ui-layer > * { pointer-events: auto; }
+
+    /* Disclaimer banner */
+    .disclaimer {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      background: rgba(180, 60, 60, 0.92);
+      color: #fff;
+      font-size: 0.72rem;
+      padding: 6px 14px;
+      text-align: center;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+      line-height: 1.4;
+    }
+
+    .header {
+      position: absolute;
+      top: 36px; left: 12px; right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
+      z-index: 10;
+    }
+    .title-block {
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 16px;
+      max-width: 300px;
+    }
+    .title-block h1 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #58a6ff;
+      margin-bottom: 3px;
+    }
+    .title-block p {
+      font-size: 0.78rem;
+      color: #8b949e;
+      line-height: 1.35;
+    }
+    .stats {
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      color: #8b949e;
+      min-width: 140px;
+    }
+    .stats .stat-val { color: #58a6ff; font-weight: 600; }
+
+    /* Controls panel */
+    .controls {
+      position: absolute;
+      bottom: 12px; left: 12px; right: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      z-index: 10;
+    }
+    .btn {
+      background: rgba(88,166,255,0.12);
+      border: 1px solid rgba(88,166,255,0.35);
+      color: #58a6ff;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .btn:hover { background: rgba(88,166,255,0.22); }
+    .btn:active { transform: scale(0.96); }
+    .btn.secondary {
+      background: rgba(139,148,158,0.10);
+      border-color: rgba(139,148,158,0.25);
+      color: #8b949e;
+    }
+    .btn.secondary:hover { background: rgba(139,148,158,0.20); }
+    .btn.danger {
+      background: rgba(248,81,73,0.12);
+      border-color: rgba(248,81,73,0.35);
+      color: #f85149;
+    }
+    .btn.danger:hover { background: rgba(248,81,73,0.22); }
+
+    /* Gene editor panel */
+    .gene-panel {
+      position: absolute;
+      top: 50%; right: 12px;
+      transform: translateY(-50%);
+      background: rgba(13,17,23,0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px;
+      width: 180px;
+      z-index: 10;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .gene-panel h3 {
+      font-size: 0.78rem;
+      color: #58a6ff;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .gene-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .gene-row label {
+      font-size: 0.72rem;
+      color: #8b949e;
+      width: 26px;
+      flex-shrink: 0;
+    }
+    .gene-row input[type="range"] {
+      flex: 1;
+      accent-color: #58a6ff;
+      height: 4px;
+    }
+    .gene-row .gene-val {
+      font-size: 0.72rem;
+      color: #58a6ff;
+      width: 22px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .hint-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      pointer-events: auto;
+    }
+    .hint-box {
+      background: rgba(13,17,23,0.98);
+      border: 1px solid rgba(88,166,255,0.25);
+      border-radius: 16px;
+      padding: 28px 32px;
+      max-width: 440px;
+      text-align: center;
+    }
+    .hint-box h2 {
+      font-size: 1.3rem;
+      color: #58a6ff;
+      margin-bottom: 12px;
+    }
+    .hint-box p {
+      font-size: 0.88rem;
+      color: #8b949e;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .hint-box .btn { margin-top: 6px; }
+
+    @media (max-width: 640px) {
+      .title-block { max-width: 200px; }
+      .title-block h1 { font-size: 0.92rem; }
+      .title-block p { font-size: 0.72rem; }
+      .stats { font-size: 0.7rem; min-width: 110px; padding: 8px 10px; }
+      .btn { padding: 7px 11px; font-size: 0.76rem; }
+      .gene-panel {
+        width: 150px;
+        right: 6px;
+        padding: 10px;
+      }
+      .gene-panel h3 { font-size: 0.7rem; }
+      .gene-row label { font-size: 0.65rem; width: 22px; }
+      .gene-row .gene-val { font-size: 0.65rem; width: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="disclaimer">
+    Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="ui-layer">
+    <div class="header">
+      <div class="title-block">
+        <h1>Biomorph Breeder</h1>
+        <p>Inspired by Dawkins' Blind Watchmaker. Click creatures to breed. Press Mutate for surprises. Discover forms no one has seen.</p>
+      </div>
+      <div class="stats">
+        <div>Generation: <span class="stat-val" id="genCount">1</span></div>
+        <div>Creatures: <span class="stat-val" id="creatureCount">9</span></div>
+        <div>Mutations: <span class="stat-val" id="mutCount">0</span></div>
+      </div>
+    </div>
+
+    <div class="gene-panel" id="genePanel">
+      <h3>Parent Genes</h3>
+      <div id="geneList"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="btnMutate">🧬 Mutate All</button>
+      <button class="btn" id="btnReset">🔄 Reset Grid</button>
+      <button class="btn secondary" id="btnAuto">▶ Auto-Evolve</button>
+      <button class="btn secondary" id="btnColor">🎨 Cycle Theme</button>
+      <button class="btn danger" id="btnClearHistory">🗑 Clear History</button>
+    </div>
+  </div>
+
+  <div class="hint-overlay" id="hintOverlay">
+    <div class="hint-box">
+      <h2>Welcome to Biomorph Breeder</h2>
+      <p>Each creature is defined by 9 genes controlling recursive branching — depth, angle, length, and symmetry.</p>
+      <p><strong>Click any creature</strong> to make it the new parent and generate mutated offspring.</p>
+      <p><strong>Mutate All</strong> randomly changes every gene. <strong>Auto-Evolve</strong> breeds the best-fit creature automatically.</p>
+      <p style="font-size:0.78rem;color:#6e7681;margin-top:8px;">Tip: Try to find creatures that look like insects, trees, letters, or abstract art.</p>
+      <button class="btn" id="btnStart">Start Breeding</button>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   BIOMORPH BREEDER
+   Interactive evolution sandbox inspired by Richard Dawkins'
+   biomorphs from "The Blind Watchmaker" (1986).
+   ============================================================ */
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// --- State ---
+let W, H;
+let creatures = [];
+let selectedParent = null;
+let generation = 1;
+let mutationCount = 0;
+let autoEvolving = false;
+let autoInterval = null;
+let colorThemeIdx = 0;
+let animFrame = null;
+let time = 0;
+
+const GENE_COUNT = 9;
+const GRID_COLS = 3;
+const GRID_ROWS = 3;
+
+const COLOR_THEMES = [
+  { bg: '#0d1117', creature: '#58a6ff', accent: '#79c0ff', trail: 'rgba(88,166,255,0.15)' },
+  { bg: '#0d1f0d', creature: '#3fb950', accent: '#56d364', trail: 'rgba(63,185,80,0.15)' },
+  { bg: '#1f0d0d', creature: '#f85149', accent: '#ff7b72', trail: 'rgba(248,81,73,0.15)' },
+  { bg: '#1f1a0d', creature: '#d29922', accent: '#e3b341', trail: 'rgba(210,153,34,0.15)' },
+  { bg: '#1a0d1f', creature: '#a371f7', accent: '#bc8cff', trail: 'rgba(163,113,247,0.15)' },
+];
+
+// Dawkins-style genes:
+// 0: depth (recursion depth)
+// 1: branch1 length factor
+// 2: branch2 length factor
+// 3: branch1 angle offset
+// 4: branch2 angle offset
+// 5: length decay per level
+// 6: line width decay
+// 7: symmetry (1=asymmetric, 2=bilateral, 3=trilateral, etc)
+// 8: twist (angle drift per level)
+function randomGenes() {
+  return [
+    3 + Math.floor(Math.random() * 5),     // depth 3-7
+    0.5 + Math.random() * 0.8,             // len1
+    0.4 + Math.random() * 0.9,             // len2
+    (Math.random() - 0.5) * Math.PI * 1.2, // angle1
+    (Math.random() - 0.5) * Math.PI * 1.2, // angle2
+    0.55 + Math.random() * 0.4,            // decay
+    0.5 + Math.random() * 0.5,             // width decay
+    1 + Math.floor(Math.random() * 4),     // symmetry 1-4
+    (Math.random() - 0.5) * 0.4,           // twist
+  ];
+}
+
+function clampGenes(g) {
+  g[0] = Math.max(2, Math.min(8, Math.round(g[0])));
+  g[1] = Math.max(0.2, Math.min(1.5, g[1]));
+  g[2] = Math.max(0.2, Math.min(1.5, g[2]));
+  g[3] = Math.max(-Math.PI * 1.3, Math.min(Math.PI * 1.3, g[3]));
+  g[4] = Math.max(-Math.PI * 1.3, Math.min(Math.PI * 1.3, g[4]));
+  g[5] = Math.max(0.3, Math.min(0.95, g[5]));
+  g[6] = Math.max(0.2, Math.min(1.0, g[6]));
+  g[7] = Math.max(1, Math.min(6, Math.round(g[7])));
+  g[8] = Math.max(-0.6, Math.min(0.6, g[8]));
+  return g;
+}
+
+function mutateGenes(parentGenes, rate = 0.35) {
+  const child = parentGenes.map((g, i) => {
+    if (Math.random() < rate) {
+      // different mutation scale per gene type
+      if (i === 0 || i === 7) {
+        return g + (Math.random() < 0.5 ? 1 : -1);
+      } else if (i === 3 || i === 4 || i === 8) {
+        return g + (Math.random() - 0.5) * 0.6;
+      } else {
+        return g * (0.7 + Math.random() * 0.8);
+      }
+    }
+    return g;
+  });
+  return clampGenes(child);
+}
+
+function randomMutate(genes) {
+  const child = genes.map((g, i) => {
+    if (i === 0 || i === 7) {
+      return Math.random() < 0.5 ? g + (Math.random() < 0.5 ? 1 : -1) : g;
+    }
+    return g * (0.5 + Math.random() * 1.2);
+  });
+  return clampGenes(child);
+}
+
+// --- Creature ---
+function createCreature(genes, x, y, cellW, cellH) {
+  return { genes, x, y, w: cellW, h: cellH, fitness: 0 };
+}
+
+// --- Drawing ---
+function drawCreature(creature, t) {
+  const { genes, x, y, w, h } = creature;
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+  const scale = Math.min(w, h) * 0.38;
+  const theme = COLOR_THEMES[colorThemeIdx];
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // Subtle breathing animation
+  const breathe = 1 + Math.sin(t * 0.0015 + x * 0.01 + y * 0.01) * 0.03;
+  ctx.scale(breathe, breathe);
+
+  ctx.strokeStyle = theme.creature;
+  ctx.fillStyle = theme.accent;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const depth = genes[0];
+  const sym = genes[7];
+
+  for (let s = 0; s < sym; s++) {
+    ctx.save();
+    ctx.rotate((s / sym) * Math.PI * 2 + t * 0.0002 * (s % 2 === 0 ? 1 : -1));
+    drawBranch(0, 0, -Math.PI / 2, scale, depth, genes, 1, t);
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  // Draw selection ring
+  if (selectedParent === creature) {
+    ctx.strokeStyle = theme.accent;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, scale * 1.15, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Fitness score (subtle)
+  ctx.fillStyle = theme.accent;
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.globalAlpha = 0.45;
+  ctx.fillText(`f:${creature.fitness.toFixed(1)}`, x + w - 6, y + h - 6);
+  ctx.globalAlpha = 1;
+}
+
+function drawBranch(bx, by, angle, len, depth, genes, widthScale, t) {
+  if (depth <= 0 || len < 1) return;
+
+  const theme = COLOR_THEMES[colorThemeIdx];
+  const len1 = genes[1];
+  const len2 = genes[2];
+  const ang1 = genes[3];
+  const ang2 = genes[4];
+  const decay = genes[5];
+  const wDecay = genes[6];
+  const twist = genes[8];
+
+  const ex = bx + Math.cos(angle) * len;
+  const ey = by + Math.sin(angle) * len;
+
+  ctx.lineWidth = Math.max(0.5, 2.5 * widthScale * wDecay);
+  ctx.strokeStyle = theme.creature;
+  ctx.globalAlpha = 0.7 + depth * 0.05;
+  ctx.beginPath();
+  ctx.moveTo(bx, by);
+  ctx.lineTo(ex, ey);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Endpoint dot
+  if (depth <= 2) {
+    ctx.fillStyle = theme.accent;
+    ctx.globalAlpha = 0.6 + Math.sin(t * 0.003 + depth * 2) * 0.3;
+    ctx.beginPath();
+    ctx.arc(ex, ey, Math.max(1.2, 2.5 * widthScale), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  const nextLen = len * decay;
+  const nextW = widthScale * wDecay;
+  const twistOff = twist * (genes[0] - depth + 1) * 0.5;
+
+  drawBranch(ex, ey, angle + ang1 + twistOff, nextLen * len1, depth - 1, genes, nextW, t);
+  drawBranch(ex, ey, angle + ang2 - twistOff, nextLen * len2, depth - 1, genes, nextW, t);
+}
+
+function drawGrid() {
+  const theme = COLOR_THEMES[colorThemeIdx];
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  for (let c = 0; c <= GRID_COLS; c++) {
+    const x = c * (W / GRID_COLS);
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let r = 0; r <= GRID_ROWS; r++) {
+    const y = r * (H / GRID_ROWS);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Cell backgrounds
+  for (const c of creatures) {
+    if (selectedParent === c) {
+      ctx.fillStyle = 'rgba(88,166,255,0.04)';
+      ctx.fillRect(c.x + 1, c.y + 1, c.w - 2, c.h - 2);
+    }
+  }
+}
+
+function computeFitness(genes) {
+  // Reward complexity, symmetry, and "interesting" variation
+  let score = 0;
+  score += genes[0] * 3; // depth
+  score += Math.abs(genes[3]) * 2 + Math.abs(genes[4]) * 2; // angle variety
+  score += Math.abs(genes[1] - genes[2]) * 4; // asymmetry between branches
+  score += genes[7] * 2; // symmetry
+  score += Math.abs(genes[8]) * 5; // twist
+  // Penalty for being too uniform
+  if (Math.abs(genes[3] - genes[4]) < 0.1) score -= 3;
+  return score;
+}
+
+function spawnGrid(parentGenes = null) {
+  creatures = [];
+  const cellW = W / GRID_COLS;
+  const cellH = (H - 80) / GRID_ROWS;
+  const startY = 60;
+
+  if (parentGenes) {
+    for (let r = 0; r < GRID_ROWS; r++) {
+      for (let c = 0; c < GRID_COLS; c++) {
+        const genes = mutateGenes(parentGenes, 0.35);
+        const creature = createCreature(genes, c * cellW, startY + r * cellH, cellW, cellH);
+        creature.fitness = computeFitness(genes);
+        creatures.push(creature);
+      }
+    }
+  } else {
+    // Initial random population
+    for (let r = 0; r < GRID_ROWS; r++) {
+      for (let c = 0; c < GRID_COLS; c++) {
+        const genes = randomGenes();
+        const creature = createCreature(genes, c * cellW, startY + r * cellH, cellW, cellH);
+        creature.fitness = computeFitness(genes);
+        creatures.push(creature);
+      }
+    }
+  }
+}
+
+function breedFrom(creature) {
+  selectedParent = creature;
+  generation++;
+  spawnGrid(creature.genes);
+  updateStats();
+  updateGenePanel();
+}
+
+function mutateAll() {
+  for (const c of creatures) {
+    c.genes = randomMutate(c.genes);
+    c.fitness = computeFitness(c.genes);
+  }
+  mutationCount += creatures.length;
+  updateStats();
+}
+
+function resetGrid() {
+  generation = 1;
+  mutationCount = 0;
+  selectedParent = null;
+  spawnGrid();
+  updateStats();
+  updateGenePanel();
+}
+
+function toggleAuto() {
+  autoEvolving = !autoEvolving;
+  const btn = document.getElementById('btnAuto');
+  btn.textContent = autoEvolving ? '⏸ Stop Auto' : '▶ Auto-Evolve';
+  btn.classList.toggle('secondary');
+  btn.classList.toggle('danger');
+
+  if (autoEvolving) {
+    autoInterval = setInterval(() => {
+      // Breed from highest-fitness creature
+      const best = creatures.reduce((a, b) => a.fitness > b.fitness ? a : b, creatures[0]);
+      breedFrom(best);
+    }, 1500);
+  } else {
+    clearInterval(autoInterval);
+    autoInterval = null;
+  }
+}
+
+function updateStats() {
+  document.getElementById('genCount').textContent = generation;
+  document.getElementById('creatureCount').textContent = creatures.length;
+  document.getElementById('mutCount').textContent = mutationCount;
+}
+
+function updateGenePanel() {
+  const panel = document.getElementById('geneList');
+  if (!selectedParent) {
+    panel.innerHTML = '<p style="font-size:0.72rem;color:#6e7681;margin-top:4px;">Click a creature to see its genes.</p>';
+    return;
+  }
+  const g = selectedParent.genes;
+  const labels = ['Depth','Len A','Len B','Ang A','Ang B','Decay','W-Decay','Sym','Twist'];
+  let html = '';
+  for (let i = 0; i < GENE_COUNT; i++) {
+    const minV = i === 0 || i === 7 ? 1 : 0;
+    const maxV = i === 0 ? 8 : i === 7 ? 6 : i === 3 || i === 4 || i === 8 ? 180 : 150;
+    const displayVal = i === 3 || i === 4 || i === 8 ? (g[i] * 180 / Math.PI).toFixed(0) + '°' : g[i].toFixed(2);
+    html += `<div class="gene-row">
+      <label>${labels[i]}</label>
+      <input type="range" min="${minV}" max="${maxV}" step="${i===0||i===7?1:0.1}" value="${g[i]}" data-idx="${i}" disabled>
+      <span class="gene-val">${displayVal}</span>
+    </div>`;
+  }
+  panel.innerHTML = html;
+}
+
+// --- Resize ---
+function resize() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+  // Recompute creature positions
+  const cellW = W / GRID_COLS;
+  const cellH = (H - 80) / GRID_ROWS;
+  const startY = 60;
+  creatures.forEach((c, i) => {
+    const r = Math.floor(i / GRID_COLS);
+    const col = i % GRID_COLS;
+    c.x = col * cellW;
+    c.y = startY + r * cellH;
+    c.w = cellW;
+    c.h = cellH;
+  });
+}
+
+// --- Interaction ---
+function getCreatureAt(px, py) {
+  for (const c of creatures) {
+    if (px >= c.x && px <= c.x + c.w && py >= c.y && py <= c.y + c.h) {
+      return c;
+    }
+  }
+  return null;
+}
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const px = e.clientX - rect.left;
+  const py = e.clientY - rect.top;
+  const c = getCreatureAt(px, py);
+  if (c) {
+    breedFrom(c);
+    // Flash effect
+    const theme = COLOR_THEMES[colorThemeIdx];
+    ctx.save();
+    ctx.fillStyle = theme.trail;
+    ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.restore();
+  }
+});
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const px = t.clientX - rect.left;
+  const py = t.clientY - rect.top;
+  const c = getCreatureAt(px, py);
+  if (c) breedFrom(c);
+}, { passive: false });
+
+// Buttons
+document.getElementById('btnMutate').addEventListener('click', mutateAll);
+document.getElementById('btnReset').addEventListener('click', resetGrid);
+document.getElementById('btnAuto').addEventListener('click', toggleAuto);
+document.getElementById('btnColor').addEventListener('click', () => {
+  colorThemeIdx = (colorThemeIdx + 1) % COLOR_THEMES.length;
+  document.body.style.background = COLOR_THEMES[colorThemeIdx].bg;
+});
+document.getElementById('btnClearHistory').addEventListener('click', () => {
+  generation = 1;
+  mutationCount = 0;
+  selectedParent = null;
+  spawnGrid();
+  updateStats();
+  updateGenePanel();
+});
+document.getElementById('btnStart').addEventListener('click', () => {
+  document.getElementById('hintOverlay').style.display = 'none';
+});
+
+// --- Main Loop ---
+function loop() {
+  time += 16;
+  const theme = COLOR_THEMES[colorThemeIdx];
+  ctx.fillStyle = theme.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  drawGrid();
+  for (const c of creatures) {
+    drawCreature(c, time);
+  }
+
+  animFrame = requestAnimationFrame(loop);
+}
+
+// --- Init ---
+function init() {
+  resize();
+  spawnGrid();
+  updateStats();
+  updateGenePanel();
+  loop();
+}
+
+window.addEventListener('resize', resize);
+init();
+</script>
+</body>
+</html>
