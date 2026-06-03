@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-03",
-    "title": "Biomorph Breeder",
-    "slug": "biomorph-breeder",
-    "publishedSlug": "2026-06-03-biomorph-breeder",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-03-biomorph-breeder/"
+    "date": "2026-06-04",
+    "title": "Mechanical Curiosity Shop",
+    "slug": "mechanical-curiosity-shop",
+    "publishedSlug": "2026-06-04-mechanical-curiosity-shop",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-04-mechanical-curiosity-shop/"
   },
   "apps": [
+    {
+      "date": "2026-06-04",
+      "title": "Mechanical Curiosity Shop",
+      "slug": "mechanical-curiosity-shop",
+      "publishedSlug": "2026-06-04-mechanical-curiosity-shop",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-04-mechanical-curiosity-shop/",
+      "description": "Interactive gallery of ancient machines with animated SVG cross-sections — explore how civilizations lifted water, harnessed wind, and moved mountains"
+    },
     {
       "date": "2026-06-03",
       "title": "Biomorph Breeder",
