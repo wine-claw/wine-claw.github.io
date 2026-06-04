@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-04",
-    "title": "Mechanical Curiosity Shop",
-    "slug": "mechanical-curiosity-shop",
-    "publishedSlug": "2026-06-04-mechanical-curiosity-shop",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-04-mechanical-curiosity-shop/"
+    "date": "2026-06-05",
+    "title": "Mycorrhizal Network Explorer",
+    "slug": "mycorrhizal-network-explorer",
+    "publishedSlug": "2026-06-05-mycorrhizal-network-explorer",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-05-mycorrhizal-network-explorer/"
   },
   "apps": [
+    {
+      "date": "2026-06-05",
+      "title": "Mycorrhizal Network Explorer",
+      "slug": "mycorrhizal-network-explorer",
+      "publishedSlug": "2026-06-05-mycorrhizal-network-explorer",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-05-mycorrhizal-network-explorer/",
+      "description": "Interactive visualization of the underground wood wide web — explore how trees share nutrients and warning signals through fungal networks"
+    },
     {
       "date": "2026-06-04",
       "title": "Mechanical Curiosity Shop",
