@@ -331,11 +331,11 @@
           const _id = (base) => base + idSuffix;
           svg.innerHTML = `
             <defs>
-              <linearGradient id="\${_id('waterGrad')}" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#4a90d9" stop-opacity="0.6"/>
                 <stop offset="100%" stop-color="#2c5aa0" stop-opacity="0.8"/>
               </linearGradient>
-              <pattern id="\${_id('woodPattern')}" width="8" height="8" patternUnits="userSpaceOnUse">
+              <pattern id="woodPattern" width="8" height="8" patternUnits="userSpaceOnUse">
                 <rect width="8" height="8" fill="#8b6914"/>
                 <path d="M0 4h8M4 0v8" stroke="#7a5a10" stroke-width="0.5"/>
               </pattern>
@@ -344,14 +344,14 @@
             <rect x="50" y="220" width="160" height="60" rx="4" fill="#1a3a5c" stroke="#4a90d9" stroke-width="2"/>
             <text x="130" y="255" text-anchor="middle" fill="#8ab4e8" font-size="12">Lower basin</text>
             <!-- Water in lower basin -->
-            <rect id="\${_id('lowerWater')}" x="55" y="235" width="150" height="40" fill="url(#\${_id('waterGrad')})"/>
+            <rect id="lowerWater" x="55" y="235" width="150" height="40" fill="url(#waterGrad)"/>
             <!-- Upper basin -->
             <rect x="390" y="80" width="160" height="60" rx="4" fill="#1a3a5c" stroke="#4a90d9" stroke-width="2"/>
             <text x="470" y="115" text-anchor="middle" fill="#8ab4e8" font-size="12">Upper basin</text>
             <!-- Screw tube -->
             <rect x="180" y="100" width="240" height="40" fill="none" stroke="#8b6914" stroke-width="3" transform="rotate(-18 300 220)"/>
             <!-- Screw helix -->
-            <g id="\${_id('screwHelix')}" transform="translate(300,220) rotate(-18)">
+            <g id="screwHelix" transform="translate(300,220) rotate(-18)">
               <path d="M-110,-10 Q-80,-40 -50,-10 T10,-10 T70,-10" fill="none" stroke="#a08040" stroke-width="3" opacity="0.7"/>
               <path d="M-110,10 Q-80,-20 -50,10 T10,10 T70,10" fill="none" stroke="#a08040" stroke-width="3" opacity="0.7"/>
               <path d="M-110,30 Q-80,0 -50,30 T10,30 T70,30" fill="none" stroke="#a08040" stroke-width="3" opacity="0.7"/>
@@ -360,14 +360,14 @@
             <!-- Shaft -->
             <line x1="190" y1="280" x2="410" y2="120" stroke="#a08040" stroke-width="6" stroke-linecap="round"/>
             <!-- Handle -->
-            <g id="\${_id('screwHandle')}" transform="translate(410,120)">
+            <g id="screwHandle" transform="translate(410,120)">
               <circle r="25" fill="none" stroke="#d4a574" stroke-width="3"/>
               <line x1="-25" y1="0" x2="25" y2="0" stroke="#d4a574" stroke-width="3"/>
               <line x1="0" y1="-25" x2="0" y2="25" stroke="#d4a574" stroke-width="3"/>
               <circle r="6" fill="#d4a574"/>
             </g>
             <!-- Water particles -->
-            <g id="\${_id('waterParticles')}"></g>
+            <g id="waterParticles"></g>
             <!-- Height labels -->
             <text x="470" y="75" text-anchor="middle" fill="#aaa" font-size="11">+3m</text>
             <text x="130" y="215" text-anchor="middle" fill="#aaa" font-size="11">0m</text>
@@ -376,12 +376,12 @@
         animate: (time, speed, svg, idSuffix = "") => {
           const _id = (base) => base + idSuffix;
           const angle = (time * speed * 0.05) % 360;
-          const handle = svg.querySelector('#' + _id('screwHandle'));
+          const handle = svg.querySelector('#screwHandle');
           if (handle) handle.setAttribute('transform', `translate(410,120) rotate(${angle})`);
-          const helix = svg.querySelector('#' + _id('screwHelix'));
+          const helix = svg.querySelector('#screwHelix');
           if (helix) helix.setAttribute('transform', `translate(300,220) rotate(-18) translate(0, ${Math.sin(time * speed * 0.1) * 3})`);
           // Water particles moving up
-          const particles = svg.querySelector('#' + _id('waterParticles'));
+          const particles = svg.querySelector('#waterParticles');
           if (!particles) return;
           particles.innerHTML = '';
           for (let i = 0; i < 5; i++) {
@@ -417,7 +417,7 @@
             <rect x="280" y="120" width="16" height="150" fill="#8b7355"/>
             <rect x="275" y="265" width="26" height="8" fill="#7a6545"/>
             <!-- Beam group -->
-            <g id="\${_id('shadoofBeam')}" transform="translate(288,120)">
+            <g id="shadoofBeam" transform="translate(288,120)">
               <!-- Main beam -->
               <rect x="-180" y="-4" width="360" height="8" fill="#a08040" rx="2"/>
               <!-- Counterweight -->
@@ -439,7 +439,7 @@
           const _id = (base) => base + idSuffix;
           const cycle = (time * speed * 0.02) % (Math.PI * 2);
           const angle = Math.sin(cycle) * 20;
-          const beam = svg.querySelector('#' + _id('shadoofBeam'));
+          const beam = svg.querySelector('#shadoofBeam');
           if (beam) beam.setAttribute('transform', `translate(288,120) rotate(${angle})`);
           // Water in bucket
           const waterLevel = Math.max(0, Math.sin(cycle));
@@ -463,40 +463,40 @@
             <path d="M120,150 L200,30 L280,150 Z" fill="#2a3a4a" opacity="0.5"/>
             <path d="M480,150 L540,60 L600,150 Z" fill="#2a3a4a" opacity="0.6"/>
             <!-- River flow -->
-            <g id="\${_id('riverFlow')}">
+            <g id="riverFlow">
               <path d="M50,120 Q150,100 200,140 T350,130 T500,140" fill="none" stroke="#3a7ad9" stroke-width="40" opacity="0.3"/>
               <path d="M50,120 Q150,100 200,140 T350,130 T500,140" fill="none" stroke="#5a9af9" stroke-width="20" opacity="0.4"/>
             </g>
             <!-- Fish Mouth (Yuzui) -->
-            <g id="\${_id('fishMouth')}" transform="translate(200,140)">
+            <g id="fishMouth" transform="translate(200,140)">
               <path d="M0,-30 Q30,0 0,30 L40,20 Q70,0 40,-20 Z" fill="#8b7355" stroke="#a08040" stroke-width="2"/>
               <text x="20" y="-40" text-anchor="middle" fill="#d4a574" font-size="11">Fish Mouth</text>
             </g>
             <!-- Inner channel -->
-            <path id="\${_id('innerChannel')}" d="M240,140 Q300,130 350,180 T450,200" fill="none" stroke="#4a90d9" stroke-width="25" opacity="0.35"/>
+            <path id="innerChannel" d="M240,140 Q300,130 350,180 T450,200" fill="none" stroke="#4a90d9" stroke-width="25" opacity="0.35"/>
             <text x="350" y="210" text-anchor="middle" fill="#8ab4e8" font-size="11">Inner channel (irrigation)</text>
             <!-- Outer channel -->
-            <path id="\${_id('outerChannel')}" d="M240,140 Q280,110 320,100 T500,80" fill="none" stroke="#4a90d9" stroke-width="20" opacity="0.25"/>
+            <path id="outerChannel" d="M240,140 Q280,110 320,100 T500,80" fill="none" stroke="#4a90d9" stroke-width="20" opacity="0.25"/>
             <text x="400" y="70" text-anchor="middle" fill="#8ab4e8" font-size="11">Outer channel (flood relief)</text>
             <!-- Feishayan weir -->
-            <g id="\${_id('feishayan')}" transform="translate(350,155)">
+            <g id="feishayan" transform="translate(350,155)">
               <rect x="-20" y="-5" width="40" height="10" fill="#6b5335" rx="2"/>
               <text x="0" y="25" text-anchor="middle" fill="#d4a574" font-size="10">Feishayan</text>
             </g>
             <!-- Flow particles -->
-            <g id="\${_id('flowParticles')}"></g>
+            <g id="flowParticles"></g>
             <!-- Season label -->
-            <text id="\${_id('seasonLabel')}" x="500" y="250" text-anchor="end" fill="#e94560" font-size="14" font-weight="600">Flood Season</text>
+            <text id="seasonLabel" x="500" y="250" text-anchor="end" fill="#e94560" font-size="14" font-weight="600">Flood Season</text>
           `;
         },
         animate: (time, speed, svg, idSuffix = "") => {
           const _id = (base) => base + idSuffix;
           const cycle = (time * speed * 0.015) % (Math.PI * 2);
           const season = Math.sin(cycle) > 0 ? 'Flood Season' : 'Dry Season';
-          const label = svg.querySelector('#' + _id('seasonLabel'));
+          const label = svg.querySelector('#seasonLabel');
           if (label) label.textContent = season;
           // Animate flow particles
-          const particles = svg.querySelector('#' + _id('flowParticles'));
+          const particles = svg.querySelector('#flowParticles');
           if (!particles) return;
           particles.innerHTML = '';
           const isFlood = Math.sin(cycle) > 0;
@@ -527,7 +527,7 @@
           const _id = (base) => base + idSuffix;
           svg.innerHTML = `
             <defs>
-              <radialGradient id="\${_id('wheelGrad')}" cx="50%" cy="50%">
+              <radialGradient id="wheelGrad" cx="50%" cy="50%">
                 <stop offset="0%" stop-color="#a08040"/>
                 <stop offset="80%" stop-color="#8b6914"/>
                 <stop offset="100%" stop-color="#6b4f0a"/>
@@ -536,11 +536,11 @@
             <!-- Ground -->
             <rect x="0" y="250" width="600" height="50" fill="#3a3020"/>
             <!-- Chariot body -->
-            <g id="\${_id('chariotBody')}" transform="translate(300,200)">
+            <g id="chariotBody" transform="translate(300,200)">
               <!-- Platform -->
               <rect x="-80" y="-20" width="160" height="20" fill="#8b6914" rx="4"/>
               <!-- Figure -->
-              <g id="\${_id('pointerFigure')}">
+              <g id="pointerFigure">
                 <circle cx="0" cy="-35" r="12" fill="#d4a574"/>
                 <line x1="0" y1="-23" x2="0" y2="-5" stroke="#c4a060" stroke-width="4"/>
                 <!-- Arms pointing -->
@@ -548,15 +548,15 @@
                 <polygon points="15,-22 25,-18 15,-14" fill="#e94560"/>
               </g>
               <!-- Wheels -->
-              <g id="\${_id('leftWheel')}" transform="translate(-85,0)">
-                <circle r="28" fill="url(#\${_id('wheelGrad')})" stroke="#5a4010" stroke-width="2"/>
+              <g id="leftWheel" transform="translate(-85,0)">
+                <circle r="28" fill="url(#wheelGrad)" stroke="#5a4010" stroke-width="2"/>
                 <line x1="-20" y1="0" x2="20" y2="0" stroke="#5a4010" stroke-width="2"/>
                 <line x1="0" y1="-20" x2="0" y2="20" stroke="#5a4010" stroke-width="2"/>
                 <line x1="-14" y1="-14" x2="14" y2="14" stroke="#5a4010" stroke-width="1.5"/>
                 <line x1="14" y1="-14" x2="-14" y2="14" stroke="#5a4010" stroke-width="1.5"/>
               </g>
-              <g id="\${_id('rightWheel')}" transform="translate(85,0)">
-                <circle r="28" fill="url(#\${_id('wheelGrad')})" stroke="#5a4010" stroke-width="2"/>
+              <g id="rightWheel" transform="translate(85,0)">
+                <circle r="28" fill="url(#wheelGrad)" stroke="#5a4010" stroke-width="2"/>
                 <line x1="-20" y1="0" x2="20" y2="0" stroke="#5a4010" stroke-width="2"/>
                 <line x1="0" y1="-20" x2="0" y2="20" stroke="#5a4010" stroke-width="2"/>
                 <line x1="-14" y1="-14" x2="14" y2="14" stroke="#5a4010" stroke-width="1.5"/>
@@ -583,14 +583,14 @@
           const cycle = (time * speed * 0.015) % (Math.PI * 2);
           const chariotX = 300 + Math.sin(cycle) * 150;
           const chariotAngle = Math.cos(cycle) * 30;
-          const body = svg.querySelector('#' + _id('chariotBody'));
+          const body = svg.querySelector('#chariotBody');
           if (body) body.setAttribute('transform', `translate(${chariotX},200) rotate(${chariotAngle})`);
           // Pointer stays pointing down (south)
-          const pointer = svg.querySelector('#' + _id('pointerFigure'));
+          const pointer = svg.querySelector('#pointerFigure');
           if (pointer) pointer.setAttribute('transform', `rotate(${-chariotAngle})`);
           // Wheels rotate
-          const leftWheel = svg.querySelector('#' + _id('leftWheel'));
-          const rightWheel = svg.querySelector('#' + _id('rightWheel'));
+          const leftWheel = svg.querySelector('#leftWheel');
+          const rightWheel = svg.querySelector('#rightWheel');
           const wheelRot = (time * speed * 3) % 360;
           if (leftWheel) leftWheel.setAttribute('transform', `translate(-85,0) rotate(${wheelRot})`);
           if (rightWheel) rightWheel.setAttribute('transform', `translate(85,0) rotate(${wheelRot + chariotAngle * 2})`);
@@ -612,11 +612,11 @@
             <rect x="210" y="50" width="10" height="200" fill="#8b6914"/>
             <rect x="380" y="50" width="10" height="200" fill="#8b6914"/>
             <!-- Treadwheel -->
-            <g id="\${_id('treadwheel')}" transform="translate(300,150)">
+            <g id="treadwheel" transform="translate(300,150)">
               <circle r="90" fill="none" stroke="#8b6914" stroke-width="6"/>
               <circle r="70" fill="none" stroke="#8b6914" stroke-width="4"/>
               <!-- Spokes -->
-              <g id="\${_id('wheelSpokes')}">
+              <g id="wheelSpokes">
                 <line x1="0" y1="-90" x2="0" y2="90" stroke="#8b6914" stroke-width="3"/>
                 <line x1="-90" y1="0" x2="90" y2="0" stroke="#8b6914" stroke-width="3"/>
                 <line x1="-64" y1="-64" x2="64" y2="64" stroke="#8b6914" stroke-width="2"/>
@@ -634,19 +634,19 @@
               <rect x="-20" y="-8" width="40" height="16" fill="#8b6914" rx="2"/>
             </g>
             <!-- Rope -->
-            <line id="\${_id('craneRope')}" x1="300" y1="50" x2="300" y2="200" stroke="#c4a060" stroke-width="3"/>
+            <line id="craneRope" x1="300" y1="50" x2="300" y2="200" stroke="#c4a060" stroke-width="3"/>
             <!-- Load -->
-            <g id="\${_id('craneLoad')}" transform="translate(300,200)">
+            <g id="craneLoad" transform="translate(300,200)">
               <rect x="-25" y="0" width="50" height="40" fill="#7a7a7a" stroke="#555" stroke-width="1" rx="2"/>
               <text x="0" y="25" text-anchor="middle" fill="#ccc" font-size="10">3 tons</text>
             </g>
             <!-- Workers (simplified) -->
-            <g id="\${_id('worker1')}" transform="translate(300,150)">
+            <g id="worker1" transform="translate(300,150)">
               <circle cx="-30" cy="-40" r="8" fill="#d4a574"/>
               <line x1="-30" y1="-32" x2="-30" y2="-10" stroke="#c4a060" stroke-width="3"/>
               <line x1="-40" y1="-20" x2="-20" y2="-20" stroke="#c4a060" stroke-width="2"/>
             </g>
-            <g id="\${_id('worker2')}" transform="translate(300,150)">
+            <g id="worker2" transform="translate(300,150)">
               <circle cx="30" cy="40" r="8" fill="#d4a574"/>
               <line x1="30" y1="48" x2="30" y2="70" stroke="#c4a060" stroke-width="3"/>
               <line x1="20" y1="58" x2="40" y2="58" stroke="#c4a060" stroke-width="2"/>
@@ -660,18 +660,18 @@
         animate: (time, speed, svg, idSuffix = "") => {
           const _id = (base) => base + idSuffix;
           const angle = (time * speed * 0.05) % 360;
-          const wheel = svg.querySelector('#' + _id('treadwheel'));
+          const wheel = svg.querySelector('#treadwheel');
           if (wheel) wheel.setAttribute('transform', `translate(300,150) rotate(${angle})`);
           // Workers counter-rotate to stay upright-ish
-          const w1 = svg.querySelector('#' + _id('worker1'));
-          const w2 = svg.querySelector('#' + _id('worker2'));
+          const w1 = svg.querySelector('#worker1');
+          const w2 = svg.querySelector('#worker2');
           if (w1) w1.setAttribute('transform', `translate(300,150) rotate(${-angle})`);
           if (w2) w2.setAttribute('transform', `translate(300,150) rotate(${-angle}) translate(0, ${Math.sin(time * speed * 0.1) * 5})`);
           // Load bobs slightly
           const loadY = 200 + Math.sin(time * speed * 0.08) * 3;
-          const load = svg.querySelector('#' + _id('craneLoad'));
+          const load = svg.querySelector('#craneLoad');
           if (load) load.setAttribute('transform', `translate(300,${loadY})`);
-          const rope = svg.querySelector('#' + _id('craneRope'));
+          const rope = svg.querySelector('#craneRope');
           if (rope) rope.setAttribute('y2', loadY);
         }
       },
@@ -689,7 +689,7 @@
             <!-- Ground -->
             <rect x="0" y="270" width="600" height="30" fill="#5a4a2a"/>
             <!-- Wind arrows -->
-            <g id="\${_id('windArrows')}"></g>
+            <g id="windArrows"></g>
             <!-- Building -->
             <rect x="220" y="120" width="160" height="150" fill="#8b7355" stroke="#6b5335" stroke-width="2"/>
             <!-- Wall openings -->
@@ -699,7 +699,7 @@
             <!-- Central axis -->
             <line x1="300" y1="120" x2="300" y2="60" stroke="#a08040" stroke-width="8"/>
             <!-- Rotor -->
-            <g id="\${_id('windRotor')}" transform="translate(300,90)">
+            <g id="windRotor" transform="translate(300,90)">
               <rect x="-80" y="-8" width="160" height="16" fill="#c4a060" rx="2"/>
               <rect x="-8" y="-80" width="16" height="160" fill="#c4a060" rx="2"/>
               <!-- Sails -->
@@ -719,10 +719,10 @@
         animate: (time, speed, svg, idSuffix = "") => {
           const _id = (base) => base + idSuffix;
           const angle = (time * speed * 0.06) % 360;
-          const rotor = svg.querySelector('#' + _id('windRotor'));
+          const rotor = svg.querySelector('#windRotor');
           if (rotor) rotor.setAttribute('transform', `translate(300,90) rotate(${angle})`);
           // Wind arrows
-          const arrows = svg.querySelector('#' + _id('windArrows'));
+          const arrows = svg.querySelector('#windArrows');
           if (!arrows) return;
           arrows.innerHTML = '';
           for (let i = 0; i < 4; i++) {
@@ -764,11 +764,9 @@
     let animFrame = null;
     let startTime = 0;
     let currentSpeed = 1;
-    let currentSvg = null;
-    let uniqueId = 0;
 
     function renderGallery(filter = 'all') {
-      const gallery = document.getElementById('gallery');
+      const gallery = svg.querySelector('#gallery');
       gallery.innerHTML = '';
       machines.forEach(m => {
         if (filter !== 'all' && m.era !== filter) return;
@@ -793,68 +791,61 @@
           miniSvg.setAttribute('height', '100%');
           miniSvg.style.background = '#0d1b2a';
           preview.appendChild(miniSvg);
-          m.setup(miniSvg, '-preview-' + m.id);
+          m.setup(miniSvg);
         }
       });
     }
 
     function openModal(machine) {
       currentMachine = machine;
-      document.getElementById('modalTitle').textContent = machine.title;
-      document.getElementById('modalEra').textContent = machine.eraLabel;
-      document.getElementById('modalDesc').textContent = machine.description;
-      document.getElementById('modalPrinciple').textContent = machine.principle;
-      const svg = document.getElementById('viewerSvg');
-      uniqueId++;
-      currentSvg = svg;
-      machine.setup(svg, '-modal-' + uniqueId);
-      document.getElementById('modal').classList.add('open');
+      svg.querySelector('#modalTitle').textContent = machine.title;
+      svg.querySelector('#modalEra').textContent = machine.eraLabel;
+      svg.querySelector('#modalDesc').textContent = machine.description;
+      svg.querySelector('#modalPrinciple').textContent = machine.principle;
+      const svg = svg.querySelector('#viewerSvg');
+      machine.setup(svg);
+      svg.querySelector('#modal').classList.add('open');
       animating = true;
-      document.getElementById('playBtn').textContent = 'Pause';
       startTime = performance.now();
-      currentSpeed = parseFloat(document.getElementById('speedSlider').value);
+      currentSpeed = parseFloat(svg.querySelector('#speedSlider').value);
       playAnimation();
     }
 
     function closeModal() {
-      document.getElementById('modal').classList.remove('open');
+      svg.querySelector('#modal').classList.remove('open');
       animating = false;
       if (animFrame) cancelAnimationFrame(animFrame);
       currentMachine = null;
-      currentSvg = null;
-      document.getElementById('playBtn').textContent = 'Play';
     }
 
     function playAnimation() {
       if (!animating || !currentMachine) return;
       const elapsed = (performance.now() - startTime) / 1000;
-      currentMachine.animate(elapsed, currentSpeed, currentSvg, '-modal-' + uniqueId);
+      currentMachine.animate(elapsed, currentSpeed);
       animFrame = requestAnimationFrame(playAnimation);
     }
 
     // Event listeners
-    document.getElementById('closeBtn').addEventListener('click', closeModal);
-    document.getElementById('modal').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('modal')) closeModal();
+    svg.querySelector('#closeBtn').addEventListener('click', closeModal);
+    svg.querySelector('#modal').addEventListener('click', (e) => {
+      if (e.target === svg.querySelector('#modal')) closeModal();
     });
 
-    document.getElementById('playBtn').addEventListener('click', () => {
+    svg.querySelector('#playBtn').addEventListener('click', () => {
       animating = !animating;
-      document.getElementById('playBtn').textContent = animating ? 'Pause' : 'Play';
+      svg.querySelector('#playBtn').textContent = animating ? 'Pause' : 'Play';
       if (animating) {
         startTime = performance.now();
         playAnimation();
-      } else {
-        if (animFrame) cancelAnimationFrame(animFrame);
       }
     });
 
-    document.getElementById('resetBtn').addEventListener('click', () => {
+    svg.querySelector('#resetBtn').addEventListener('click', () => {
       startTime = performance.now();
-      if (currentMachine) currentMachine.setup(currentSvg, '-modal-' + uniqueId);
+      if (currentMachine) currentMachine.setup(svg.querySelector('#viewerSvg'));
     });
 
-    document.getElementById('speedSlider').addEventListener('input', (e) => {
+    svg.querySelector('#speedSlider').addEventListener('input', (e) => {
       currentSpeed = parseFloat(e.target.value);
     });
 
