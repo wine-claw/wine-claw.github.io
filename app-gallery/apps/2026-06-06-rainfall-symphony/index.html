@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Rainfall Symphony — The Sound of Australian Wine Regions</title>
+<style>
+  :root {
+    --bg: #0d1b2a;
+    --bg2: #1b263b;
+    --panel: #14213d;
+    --accent: #00b4d8;
+    --accent2: #90e0ef;
+    --text: #e0e1dd;
+    --muted: #778da9;
+    --wet: #00b4d8;
+    --dry: #e9c46a;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .disclaimer {
+    background: #1a1a2e;
+    border-bottom: 1px solid #333;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: #aaa;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .disclaimer strong { color: #ff6b6b; }
+  header {
+    padding: 12px 20px;
+    background: var(--bg2);
+    border-bottom: 1px solid #2a3a55;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  header h1 .emoji { font-size: 22px; }
+  .controls-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  button {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .1s, opacity .2s;
+  }
+  button:hover { transform: scale(1.05); }
+  button:active { transform: scale(.95); }
+  button.secondary {
+    background: transparent;
+    color: var(--accent2);
+    border: 1px solid var(--accent);
+  }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .tempo-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .tempo-control input[type="range"] {
+    width: 100px;
+    accent-color: var(--accent);
+  }
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .visualizer-wrap {
+    flex: 1;
+    position: relative;
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    overflow: hidden;
+  }
+  #rainCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .overlay-info {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(13,27,42,.85);
+    border: 1px solid #2a3a55;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    pointer-events: none;
+    line-height: 1.5;
+    max-width: 260px;
+  }
+  .overlay-info .now-playing {
+    color: var(--accent2);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .overlay-info .detail { color: var(--muted); }
+  .region-panel {
+    background: var(--panel);
+    border-top: 1px solid #2a3a55;
+    padding: 14px 16px;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--bg);
+  }
+  .region-card {
+    min-width: 140px;
+    background: var(--bg2);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all .2s;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .region-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .region-card.active { border-color: var(--accent); background: #1e3a5f; }
+  .region-card .name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .region-card .climate {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .region-card .rain-bar {
+    height: 6px;
+    background: #2a3a55;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .region-card .rain-bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--dry), var(--wet));
+    border-radius: 3px;
+    transition: width .3s;
+  }
+  .region-card .stat {
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .region-card .mute-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0,0,0,.4);
+    border: 1px solid #444;
+    color: var(--text);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .region-card.muted .mute-btn { color: #ff6b6b; }
+  .region-card.muted { opacity: .5; }
+  .bottom-bar {
+    background: var(--bg2);
+    border-top: 1px solid #2a3a55;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .mode-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg);
+    border-radius: 20px;
+    padding: 3px;
+  }
+  .mode-tab {
+    padding: 5px 14px;
+    border-radius: 17px;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all .2s;
+  }
+  .mode-tab.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
+  }
+  .year-slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .year-slider-wrap input[type="range"] {
+    width: 120px;
+    accent-color: var(--accent);
+  }
+  .year-label {
+    color: var(--accent2);
+    font-weight: 600;
+    min-width: 36px;
+    text-align: center;
+  }
+  .volume-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .volume-wrap input[type="range"] {
+    width: 80px;
+    accent-color: var(--accent);
+  }
+  @media (max-width: 600px) {
+    header h1 { font-size: 15px; }
+    .region-card { min-width: 120px; padding: 8px 10px; }
+    .overlay-info { max-width: 180px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="disclaimer">
+  <strong>Unlisted OpenClaw AI mini-apps.</strong> Experimental and not professionally validated. Do not rely on them for any decisions. Rainfall data is approximate and illustrative only.
+</div>
+
+<header>
+  <h1><span class="emoji">🌧️</span> Rainfall Symphony</h1>
+  <div class="controls-top">
+    <button id="playBtn" onclick="togglePlay()">▶ Play</button>
+    <button class="secondary" id="randBtn" onclick="randomize()" title="Randomize year and regions">🎲 Random</button>
+    <div class="tempo-control">
+      <span>Tempo</span>
+      <input type="range" id="tempoSlider" min="0.3" max="2" step="0.1" value="1" oninput="setTempo(this.value)">
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="visualizer-wrap">
+    <canvas id="rainCanvas"></canvas>
+    <div class="overlay-info">
+      <div class="now-playing" id="nowPlaying">Press Play to begin</div>
+      <div class="detail" id="detailText">Hear how rainfall patterns across Australian wine regions translate into ambient soundscapes. Each region is a unique voice.</div>
+    </div>
+  </div>
+
+  <div class="region-panel" id="regionPanel"></div>
+
+  <div class="bottom-bar">
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="setMode('ensemble')" id="tab-ensemble">🎼 Ensemble</button>
+      <button class="mode-tab" onclick="setMode('solo')" id="tab-solo">🎵 Solo</button>
+      <button class="mode-tab" onclick="setMode('vintage')" id="tab-vintage">📅 Vintage</button>
+    </div>
+    <div class="year-slider-wrap" id="yearWrap">
+      <span>Year</span>
+      <input type="range" id="yearSlider" min="2005" max="2024" step="1" value="2020" oninput="setYear(this.value)">
+      <span class="year-label" id="yearLabel">2020</span>
+    </div>
+    <div class="volume-wrap">
+      <span>🔊</span>
+      <input type="range" id="volSlider" min="0" max="1" step="0.05" value="0.5" oninput="setVolume(this.value)">
+    </div>
+  </div>
+</main>
+
+<script>
+// ============================================================
+// RAINFALL DATA — Approximate monthly growing-season rainfall (mm)
+// Growing season = Oct-Apr for most regions, but we show full year
+// Data is illustrative, based on known climate patterns
+// ============================================================
+
+const REGIONS = {
+  barossa: {
+    name: 'Barossa Valley',
+    climate: 'Warm mediterranean',
+    color: '#e76f51',
+    octave: 3,
+    waveform: 'sine',
+    // Approximate monthly rainfall (Jan-Dec) — hot dry summers, cool wet winters
+    data: {
+      2005:[18,22,20,28,35,42,55,48,38,32,25,20], 2006:[15,18,22,25,30,38,50,45,40,28,22,18],
+      2007:[20,25,22,30,40,48,60,52,42,35,28,22], 2008:[12,15,18,22,28,35,45,42,35,25,18,15],
+      2009:[25,28,25,35,45,55,65,58,48,40,32,26], 2010:[30,35,32,42,52,62,75,68,55,45,38,32],
+      2011:[22,26,24,32,38,48,58,52,44,36,28,24], 2012:[16,20,18,25,32,40,48,44,38,28,22,18],
+      2013:[28,32,30,38,48,58,68,62,52,42,35,30], 2014:[14,18,16,22,28,35,42,38,32,24,18,16],
+      2015:[20,24,22,30,36,45,55,50,42,34,26,22], 2016:[35,40,38,48,58,70,82,75,62,52,42,36],
+      2017:[18,22,20,28,34,42,52,46,40,30,24,20], 2018:[24,28,26,35,42,52,62,56,48,38,30,26],
+      2019:[12,15,14,20,26,32,40,36,30,22,16,14], 2020:[22,26,24,32,40,50,60,54,46,36,28,24],
+      2021:[30,35,32,42,50,60,72,65,54,44,36,32], 2022:[16,20,18,26,32,40,48,44,36,28,22,18],
+      2023:[26,30,28,36,44,54,64,58,50,40,32,28], 2024:[20,24,22,30,38,46,56,50,42,34,26,22]
+    }
+  },
+  margaret: {
+    name: 'Margaret River',
+    climate: 'Moderate maritime',
+    color: '#2a9d8f',
+    octave: 4,
+    waveform: 'triangle',
+    data: {
+      2005:[22,20,28,45,95,145,180,155,95,55,38,28], 2006:[18,16,24,38,85,135,165,140,85,48,32,24],
+      2007:[25,22,32,52,105,160,195,170,105,62,42,32], 2008:[15,14,20,32,72,115,145,125,75,42,28,20],
+      2009:[28,26,36,58,112,170,210,185,115,68,46,36], 2010:[32,30,42,65,125,190,230,200,125,75,50,40],
+      2011:[24,22,30,48,92,140,175,150,92,55,38,28], 2012:[18,16,22,36,78,120,150,130,80,45,30,22],
+      2013:[30,28,38,60,118,180,220,195,120,70,48,38], 2014:[16,14,20,34,70,110,138,118,72,40,26,20],
+      2015:[22,20,28,46,88,132,165,142,88,52,35,26], 2016:[35,32,45,72,138,210,255,225,140,82,55,42],
+      2017:[20,18,26,42,82,125,158,135,82,48,32,24], 2018:[26,24,34,54,105,158,195,170,105,62,42,32],
+      2019:[14,12,18,30,62,98,125,108,65,36,24,18], 2020:[24,22,30,50,95,145,180,155,95,56,38,30],
+      2021:[32,30,42,68,128,195,238,210,130,78,52,40], 2022:[18,16,24,38,78,118,148,128,78,44,30,22],
+      2023:[28,26,36,56,110,168,208,182,112,66,44,34], 2024:[22,20,28,44,88,132,165,142,88,52,35,26]
+    }
+  },
+  coonawarra: {
+    name: 'Coonawarra',
+    climate: 'Cool maritime',
+    color: '#e9c46a',
+    octave: 3,
+    waveform: 'sine',
+    data: {
+      2005:[25,22,28,38,55,72,82,75,58,42,35,28], 2006:[20,18,24,32,48,62,72,65,52,36,28,22],
+      2007:[28,25,32,42,62,80,92,85,68,48,40,32], 2008:[18,16,22,28,42,55,65,58,45,32,24,20],
+      2009:[32,28,36,48,70,90,105,95,75,55,44,36], 2010:[38,34,44,58,82,105,122,110,88,65,52,42],
+      2011:[28,25,32,42,60,78,90,82,65,48,38,30], 2012:[22,20,26,34,50,65,75,68,55,38,30,24],
+      2013:[34,30,40,52,75,98,115,102,82,60,48,38], 2014:[20,18,24,30,45,58,68,62,48,34,26,22],
+      2015:[26,24,30,40,58,75,88,80,62,46,36,28], 2016:[42,38,48,64,92,118,138,122,100,72,58,46],
+      2017:[24,22,28,36,52,68,80,72,58,42,32,26], 2018:[30,28,35,46,68,88,102,92,75,54,42,34],
+      2019:[18,16,22,28,42,55,65,58,45,32,24,20], 2020:[28,25,32,42,62,82,95,85,68,50,38,30],
+      2021:[36,32,42,56,80,102,120,108,88,64,50,40], 2022:[22,20,26,34,52,68,78,70,56,40,30,24],
+      2023:[32,28,38,50,72,95,112,100,80,58,46,36], 2024:[26,24,30,40,58,76,90,80,64,46,36,28]
+    }
+  },
+  yarra: {
+    name: 'Yarra Valley',
+    climate: 'Cool continental',
+    color: '#9b5de5',
+    octave: 4,
+    waveform: 'triangle',
+    data: {
+      2005:[35,32,38,48,62,72,75,70,58,52,45,38], 2006:[30,28,34,42,55,65,68,62,52,46,38,32],
+      2007:[38,35,42,52,68,78,82,76,64,56,48,40], 2008:[28,26,32,38,50,58,62,56,48,42,34,28],
+      2009:[42,38,46,58,75,86,90,84,70,62,52,44], 2010:[48,44,52,65,82,95,100,92,78,68,58,48],
+      2011:[38,35,42,52,66,76,80,74,62,54,46,38], 2012:[32,30,36,44,58,68,72,66,55,48,40,34],
+      2013:[45,42,50,62,80,92,96,90,75,65,55,46], 2014:[30,28,34,40,54,62,66,60,50,44,36,30],
+      2015:[36,34,40,50,64,74,78,72,60,52,44,36], 2016:[52,48,56,72,92,106,110,102,86,74,62,52],
+      2017:[34,32,38,46,60,70,74,68,56,50,42,34], 2018:[40,38,44,56,72,82,86,80,68,58,48,40],
+      2019:[28,26,32,38,50,58,62,56,48,42,34,28], 2020:[38,35,42,52,68,78,82,76,64,56,46,38],
+      2021:[46,42,50,64,82,94,98,92,78,66,56,46], 2022:[32,30,36,44,58,68,72,66,54,48,40,32],
+      2023:[42,38,46,58,75,86,90,84,70,60,50,42], 2024:[36,34,40,50,64,74,78,72,60,52,44,36]
+    }
+  },
+  hunter: {
+    name: 'Hunter Valley',
+    climate: 'Warm humid',
+    color: '#f4a261',
+    octave: 3,
+    waveform: 'sine',
+    data: {
+      2005:[95,110,125,95,75,65,55,48,52,78,95,105], 2006:[88,102,115,88,70,58,50,44,48,72,88,98],
+      2007:[105,122,138,105,82,70,60,52,58,86,105,115], 2008:[82,95,108,82,65,54,46,40,44,66,82,92],
+      2009:[115,132,150,115,90,76,65,58,62,92,115,128], 2010:[128,148,168,128,100,85,72,64,68,102,128,142],
+      2011:[105,122,138,105,82,70,60,52,56,84,105,118], 2012:[92,106,120,92,72,60,52,46,50,74,92,102],
+      2013:[122,140,160,122,95,80,68,60,64,96,122,135], 2014:[88,102,115,88,68,58,48,42,46,68,88,98],
+      2015:[100,115,130,100,78,66,56,50,54,80,100,112], 2016:[138,160,182,138,108,92,78,70,74,110,138,152],
+      2017:[95,110,125,95,74,62,54,48,52,78,98,108], 2018:[112,130,148,112,88,74,63,56,60,90,112,125],
+      2019:[85,98,112,85,66,56,48,42,46,68,85,95], 2020:[105,122,138,105,82,70,60,52,56,84,105,118],
+      2021:[125,145,165,125,98,82,70,62,66,98,125,138], 2022:[92,106,120,92,72,60,52,46,50,74,92,102],
+      2023:[115,132,150,115,90,76,65,58,62,92,115,128], 2024:[100,115,130,100,78,66,56,50,54,80,100,112]
+    }
+  },
+  tasmania: {
+    name: 'Tasmania',
+    climate: 'Cool oceanic',
+    color: '#00b4d8',
+    octave: 5,
+    waveform: 'sine',
+    data: {
+      2005:[48,42,52,62,72,78,82,78,68,72,68,55], 2006:[44,38,48,58,68,72,76,72,62,66,62,50],
+      2007:[52,46,56,68,78,84,88,84,74,78,74,60], 2008:[40,36,44,54,62,68,72,68,58,62,58,46],
+      2009:[56,50,60,72,84,90,95,90,80,84,80,65], 2010:[62,56,68,80,92,100,105,100,88,92,88,72],
+      2011:[52,46,56,68,78,84,88,84,74,78,74,60], 2012:[46,40,50,60,70,76,80,76,66,70,66,54],
+      2013:[58,52,62,75,88,95,100,95,84,88,84,68], 2014:[44,38,48,58,68,74,78,74,64,68,64,52],
+      2015:[50,44,54,65,76,82,86,82,72,76,72,58], 2016:[68,62,74,88,102,110,115,110,98,102,98,80],
+      2017:[48,42,52,62,74,80,84,80,70,74,70,56], 2018:[54,48,58,70,82,88,92,88,78,82,78,64],
+      2019:[42,36,46,56,66,72,76,72,62,66,62,48], 2020:[52,46,56,68,80,86,90,86,76,80,76,62],
+      2021:[62,56,68,80,94,102,106,102,90,94,90,74], 2022:[46,40,50,60,72,78,82,78,68,72,68,54],
+      2023:[56,50,60,72,86,92,96,92,82,86,82,66], 2024:[50,44,54,65,78,84,88,84,74,78,74,60]
+    }
+  }
+};
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const PENTATONIC = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+
+// ============================================================
+// STATE
+// ============================================================
+let audioCtx = null;
+let isPlaying = false;
+let currentYear = 2020;
+let currentMonth = 0;
+let tempo = 1;
+let masterVolume = 0.5;
+let mode = 'ensemble';
+let activeRegions = new Set(['barossa','margaret','coonawarra']);
+let mutedRegions = new Set();
+let lastTick = 0;
+let noteTimer = 0;
+let raindrops = [];
+let waves = [];
+let regionOscillators = {};
+let regionGains = {};
+let noiseNode = null;
+let noiseGain = null;
+
+// ============================================================
+// UI INIT
+// ============================================================
+function initUI() {
+  const panel = document.getElementById('regionPanel');
+  panel.innerHTML = '';
+  Object.entries(REGIONS).forEach(([key, r]) => {
+    const avg = Math.round(r.data[currentYear].reduce((a,b)=>a+b,0)/12);
+    const max = Math.max(...Object.values(r.data).flat());
+    const card = document.createElement('div');
+    card.className = 'region-card' + (activeRegions.has(key)?' active':'') + (mutedRegions.has(key)?' muted':'');
+    card.dataset.key = key;
+    card.innerHTML = `
+      <div class="mute-btn" onclick="event.stopPropagation();toggleMute('${key}')">${mutedRegions.has(key)?'🔇':'🔊'}</div>
+      <div class="name">${r.name}</div>
+      <div class="climate">${r.climate}</div>
+      <div class="rain-bar"><div class="fill" style="width:${(avg/max*100).toFixed(0)}%"></div></div>
+      <div class="stat">~${avg} mm/yr</div>
+    `;
+    card.onclick = () => toggleRegion(key);
+    panel.appendChild(card);
+  });
+}
+
+function toggleRegion(key) {
+  if (mode === 'solo') {
+    activeRegions = new Set([key]);
+  } else {
+    if (activeRegions.has(key)) {
+      if (activeRegions.size > 1) activeRegions.delete(key);
+    } else {
+      activeRegions.add(key);
+    }
+  }
+  initUI();
+  updateAudio();
+}
+
+function toggleMute(key) {
+  if (mutedRegions.has(key)) mutedRegions.delete(key);
+  else mutedRegions.add(key);
+  initUI();
+  updateAudio();
+}
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+m).classList.add('active');
+  document.getElementById('yearWrap').style.display = (m==='vintage') ? 'flex' : 'none';
+  if (mode === 'solo' && activeRegions.size > 1) {
+    activeRegions = new Set([Array.from(activeRegions)[0]]);
+  }
+  initUI();
+  updateAudio();
+}
+
+function setYear(y) {
+  currentYear = parseInt(y);
+  document.getElementById('yearLabel').textContent = currentYear;
+  document.getElementById('yearSlider').value = currentYear;
+  initUI();
+  updateNowPlaying();
+}
+
+function setTempo(t) { tempo = parseFloat(t); }
+function setVolume(v) {
+  masterVolume = parseFloat(v);
+  if (audioCtx) {
+    const master = audioCtx.createGain();
+    // Re-routing not needed; we adjust each gain node
+    Object.values(regionGains).forEach(g => {
+      if (g) g.gain.setTargetAtTime(getRegionGain(g.regionKey), audioCtx.currentTime, 0.1);
+    });
+  }
+}
+
+function randomize() {
+  const years = Object.keys(REGIONS.barossa.data).map(Number);
+  currentYear = years[Math.floor(Math.random()*years.length)];
+  document.getElementById('yearSlider').value = currentYear;
+  document.getElementById('yearLabel').textContent = currentYear;
+  const keys = Object.keys(REGIONS);
+  activeRegions = new Set(keys.sort(()=>Math.random()-.5).slice(0,Math.floor(Math.random()*3)+2));
+  mutedRegions.clear();
+  tempo = 0.5 + Math.random()*1.2;
+  document.getElementById('tempoSlider').value = tempo.toFixed(1);
+  initUI();
+  updateNowPlaying();
+  updateAudio();
+}
+
+function updateNowPlaying() {
+  const names = Array.from(activeRegions).filter(k=>!mutedRegions.has(k)).map(k=>REGIONS[k].name);
+  const modeLabel = mode==='ensemble'?'Ensemble':mode==='solo'?'Solo':'Vintage '+currentYear;
+  document.getElementById('nowPlaying').textContent = `${modeLabel} — ${names.join(', ')}`;
+}
+
+// ============================================================
+// AUDIO ENGINE
+// ============================================================
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function getRegionGain(key) {
+  if (!activeRegions.has(key) || mutedRegions.has(key)) return 0;
+  const r = REGIONS[key];
+  const rain = r.data[currentYear][currentMonth];
+  const max = Math.max(...Object.values(r.data).flat());
+  const normalized = rain / max;
+  return normalized * masterVolume * 0.3;
+}
+
+function createNoiseBuffer() {
+  const len = audioCtx.sampleRate * 2;
+  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i=0;i<len;i++) data[i] = Math.random()*2-1;
+  return buf;
+}
+
+function updateAudio() {
+  if (!audioCtx) return;
+  Object.keys(REGIONS).forEach(key => {
+    const osc = regionOscillators[key];
+    const gain = regionGains[key];
+    if (!osc || !gain) return;
+    const targetGain = getRegionGain(key);
+    gain.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.15);
+  });
+  if (noiseGain) {
+    const anyActive = Array.from(activeRegions).some(k=>!mutedRegions.has(k));
+    noiseGain.gain.setTargetAtTime(anyActive?masterVolume*0.08:0, audioCtx.currentTime, 0.3);
+  }
+}
+
+function startAudio() {
+  ensureAudio();
+  Object.keys(REGIONS).forEach(key => {
+    const r = REGIONS[key];
+    const osc = audioCtx.createOscillator();
+    osc.type = r.waveform;
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0;
+    gain.regionKey = key;
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    regionOscillators[key] = osc;
+    regionGains[key] = gain;
+  });
+  // Rain noise background
+  noiseNode = audioCtx.createBufferSource();
+  noiseNode.buffer = createNoiseBuffer();
+  noiseNode.loop = true;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 800;
+  noiseGain = audioCtx.createGain();
+  noiseGain.gain.value = masterVolume * 0.08;
+  noiseNode.connect(filter).connect(noiseGain).connect(audioCtx.destination);
+  noiseNode.start();
+  updateAudio();
+}
+
+function stopAudio() {
+  Object.values(regionOscillators).forEach(osc => { try { osc.stop(); } catch(e){} });
+  regionOscillators = {};
+  regionGains = {};
+  if (noiseNode) { try { noiseNode.stop(); } catch(e){} noiseNode = null; }
+  noiseGain = null;
+}
+
+function scheduleNote() {
+  if (!audioCtx || !isPlaying) return;
+  const now = audioCtx.currentTime;
+  Object.keys(REGIONS).forEach(key => {
+    if (!activeRegions.has(key) || mutedRegions.has(key)) return;
+    const r = REGIONS[key];
+    const rain = r.data[currentYear][currentMonth];
+    const max = Math.max(...Object.values(r.data).flat());
+    const density = rain / max;
+    if (Math.random() > density) return; // Skip notes based on rainfall density
+    const osc = regionOscillators[key];
+    if (!osc) return;
+    const baseFreq = PENTATONIC[r.octave % PENTATONIC.length];
+    const noteIndex = Math.floor(density * (PENTATONIC.length - r.octave)) + Math.floor(Math.random()*3);
+    const freq = PENTATONIC[Math.min(noteIndex, PENTATONIC.length-1)] * (1 + (currentMonth/12)*0.1);
+    osc.frequency.setTargetAtTime(freq, now, 0.05);
+    const gain = regionGains[key];
+    if (gain) {
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(density * masterVolume * 0.25, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3 + density*0.5);
+    }
+  });
+}
+
+// ============================================================
+// VISUALS
+// ============================================================
+const canvas = document.getElementById('rainCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * (window.devicePixelRatio||1);
+  canvas.height = rect.height * (window.devicePixelRatio||1);
+  ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function spawnRaindrop() {
+  if (!isPlaying) return;
+  const w = canvas.width / (window.devicePixelRatio||1);
+  const h = canvas.height / (window.devicePixelRatio||1);
+  const active = Array.from(activeRegions).filter(k=>!mutedRegions.has(k));
+  if (active.length === 0) return;
+  const key = active[Math.floor(Math.random()*active.length)];
+  const r = REGIONS[key];
+  const rain = r.data[currentYear][currentMonth];
+  const max = Math.max(...Object.values(r.data).flat());
+  const intensity = rain / max;
+  const count = Math.ceil(intensity * 3);
+  for (let i=0;i<count;i++) {
+    raindrops.push({
+      x: Math.random()*w,
+      y: -10,
+      speed: 3 + intensity*8,
+      length: 5 + intensity*15,
+      alpha: 0.2 + intensity*0.5,
+      color: r.color
+    });
+  }
+}
+
+function spawnWave() {
+  if (!isPlaying) return;
+  const w = canvas.width / (window.devicePixelRatio||1);
+  const h = canvas.height / (window.devicePixelRatio||1);
+  const active = Array.from(activeRegions).filter(k=>!mutedRegions.has(k));
+  active.forEach(key => {
+    const r = REGIONS[key];
+    const rain = r.data[currentYear][currentMonth];
+    const max = Math.max(...Object.values(r.data).flat());
+    const intensity = rain / max;
+    waves.push({
+      x: w/2,
+      y: h * 0.7,
+      radius: 0,
+      maxRadius: 30 + intensity * 120,
+      speed: 1 + intensity * 2,
+      alpha: 0.4 + intensity * 0.4,
+      color: r.color,
+      lineWidth: 1 + intensity * 2
+    });
+  });
+}
+
+function draw() {
+  const w = canvas.width / (window.devicePixelRatio||1);
+  const h = canvas.height / (window.devicePixelRatio||1);
+  ctx.clearRect(0,0,w,h);
+
+  // Draw grid lines for months
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let i=0;i<=12;i++) {
+    const x = (i/12)*w;
+    ctx.beginPath();
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,h);
+    ctx.stroke();
+  }
+
+  // Draw rainfall bars as background glow
+  const active = Array.from(activeRegions).filter(k=>!mutedRegions.has(k));
+  const barW = w/12;
+  active.forEach((key, idx) => {
+    const r = REGIONS[key];
+    const rain = r.data[currentYear][currentMonth];
+    const max = Math.max(...Object.values(r.data).flat());
+    const intensity = rain / max;
+    const x = currentMonth * barW;
+    const barH = intensity * h * 0.5;
+    ctx.fillStyle = r.color + Math.floor(intensity*40).toString(16).padStart(2,'0');
+    ctx.fillRect(x, h-barH, barW, barH);
+  });
+
+  // Month labels
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.font = '11px '+getComputedStyle(document.body).fontFamily;
+  ctx.textAlign = 'center';
+  for (let i=0;i<12;i++) {
+    ctx.fillText(MONTHS[i], (i+0.5)*barW, h-8);
+  }
+
+  // Draw waves
+  waves = waves.filter(w => w.radius < w.maxRadius);
+  waves.forEach(w => {
+    w.radius += w.speed;
+    w.alpha *= 0.98;
+    ctx.strokeStyle = w.color + Math.floor(w.alpha*255).toString(16).padStart(2,'0');
+    ctx.lineWidth = w.lineWidth * (1 - w.radius/w.maxRadius);
+    ctx.beginPath();
+    ctx.ellipse(w.x, w.y, w.radius*2, w.radius*0.4, 0, 0, Math.PI*2);
+    ctx.stroke();
+  });
+
+  // Draw raindrops
+  raindrops = raindrops.filter(d => d.y < h+20);
+  raindrops.forEach(d => {
+    d.y += d.speed;
+    ctx.strokeStyle = d.color + Math.floor(d.alpha*255).toString(16).padStart(2,'0');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(d.x, d.y);
+    ctx.lineTo(d.x, d.y+d.length);
+    ctx.stroke();
+  });
+
+  // Year indicator
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = 'bold 14px '+getComputedStyle(document.body).fontFamily;
+  ctx.textAlign = 'left';
+  ctx.fillText(currentYear + ' — ' + MONTHS[currentMonth], 14, 24);
+
+  // Active region dots
+  let dotX = 14;
+  const dotY = 38;
+  active.forEach(key => {
+    const r = REGIONS[key];
+    const rain = r.data[currentYear][currentMonth];
+    const max = Math.max(...Object.values(r.data).flat());
+    const intensity = rain / max;
+    ctx.fillStyle = r.color;
+    ctx.globalAlpha = 0.3 + intensity*0.7;
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, 4, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    dotX += 14;
+  });
+
+  requestAnimationFrame(draw);
+}
+
+// ============================================================
+// MAIN LOOP
+// ============================================================
+function tick(timestamp) {
+  if (!isPlaying) return;
+  const dt = timestamp - lastTick;
+  lastTick = timestamp;
+
+  noteTimer += dt * tempo;
+  if (noteTimer > 400) {
+    noteTimer = 0;
+    scheduleNote();
+    spawnRaindrop();
+    if (Math.random() < 0.3) spawnWave();
+  }
+
+  // Advance month slowly
+  if (Math.random() < 0.003 * tempo) {
+    currentMonth = (currentMonth + 1) % 12;
+    updateAudio();
+    updateNowPlaying();
+  }
+
+  requestAnimationFrame(tick);
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  const btn = document.getElementById('playBtn');
+  if (isPlaying) {
+    btn.textContent = '⏸ Pause';
+    ensureAudio();
+    if (Object.keys(regionOscillators).length === 0) startAudio();
+    lastTick = performance.now();
+    requestAnimationFrame(tick);
+    updateNowPlaying();
+  } else {
+    btn.textContent = '▶ Play';
+    stopAudio();
+    document.getElementById('nowPlaying').textContent = 'Paused';
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+initUI();
+draw();
+updateNowPlaying();
+</script>
+</body>
+</html>

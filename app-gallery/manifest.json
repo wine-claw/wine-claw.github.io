@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-05",
-    "title": "Mycorrhizal Network Explorer",
-    "slug": "mycorrhizal-network-explorer",
-    "publishedSlug": "2026-06-05-mycorrhizal-network-explorer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-05-mycorrhizal-network-explorer/"
+    "date": "2026-06-06",
+    "title": "Rainfall Symphony",
+    "slug": "rainfall-symphony",
+    "publishedSlug": "2026-06-06-rainfall-symphony",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-06-rainfall-symphony/"
   },
   "apps": [
+    {
+      "date": "2026-06-06",
+      "title": "Rainfall Symphony",
+      "slug": "rainfall-symphony",
+      "publishedSlug": "2026-06-06-rainfall-symphony",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-06-rainfall-symphony/",
+      "description": "Generative music from Australian wine region rainfall — hear the sound of a vintage"
+    },
     {
       "date": "2026-06-05",
       "title": "Mycorrhizal Network Explorer",
