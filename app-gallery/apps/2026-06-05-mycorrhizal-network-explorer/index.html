@@ -1,282 +1,340 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
-<title>Mycorrhizal Network Explorer</title>
-<style>
-  :root {
-    --soil-dark: #1a1208;
-    --soil-mid: #2d1f11;
-    --soil-light: #3d2b18;
-    --root-brown: #6b4423;
-    --root-light: #8b6914;
-    --fungi-cream: #c4a77d;
-    --fungi-glow: #e8d5a3;
-    --carbon: #4ade80;
-    --nitrogen: #60a5fa;
-    --phosphorus: #fbbf24;
-    --water: #22d3ee;
-    --signal: #f472b6;
-    --warning: #ef4444;
-    --tree-canopy: #2d5a27;
-    --tree-trunk: #4a3728;
-    --text: #e8ddd0;
-    --text-dim: #a89a88;
-    --panel-bg: rgba(26, 18, 8, 0.92);
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    width: 100%; height: 100%; overflow: hidden;
-    background: var(--soil-dark); color: var(--text);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    touch-action: none;
-  }
-
-  /* Full-viewport canvas */
-  #networkCanvas {
-    position: fixed; inset: 0; z-index: 0;
-    width: 100%; height: 100%;
-    touch-action: none;
-  }
-
-  /* Top disclaimer */
-  .disclaimer {
-    position: fixed; top: 8px; left: 50%;
-    transform: translateX(-50%);
-    background: rgba(180, 30, 30, 0.85);
-    color: #fff; padding: 6px 14px; border-radius: 6px;
-    font-size: 11px; z-index: 100;
-    text-align: center; max-width: 90vw;
-    backdrop-filter: blur(4px); line-height: 1.4;
-    pointer-events: none;
-  }
-
-  /* ── MOBILE LAYOUT (default) ── */
-
-  /* Bottom action bar */
-  #bottom-bar {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
-    height: 56px;
-    display: flex; align-items: center; justify-content: space-around;
-    background: rgba(10, 10, 10, 0.92); backdrop-filter: blur(8px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-  }
-  #bottom-bar button {
-    flex: 1; height: 100%; border: none; background: transparent;
-    color: #ccc; font-size: 11px; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 3px;
-    cursor: pointer; -webkit-tap-highlight-color: transparent;
-  }
-  #bottom-bar button:active { color: #fff; }
-  #bottom-bar button .icon { font-size: 18px; }
-
-  /* Slide-up drawers */
-  .drawer {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-    max-height: 80vh; min-height: 200px;
-    transform: translateY(100%);
-    transition: transform .35s cubic-bezier(.4, 0, .2, 1);
-    background: #141414; border-radius: 16px 16px 0 0;
-    display: flex; flex-direction: column;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, .6);
-  }
-  .drawer.open { transform: translateY(0); }
-  .drawer-handle {
-    width: 100%; padding: 12px 0 4px;
-    display: flex; justify-content: center; cursor: pointer;
-  }
-  .drawer-handle::after {
-    content: ''; width: 40px; height: 4px; border-radius: 2px;
-    background: rgba(255, 255, 255, .2);
-  }
-  .drawer-content {
-    flex: 1; overflow-y: auto; padding: 8px 16px 24px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .drawer-content h3 {
-    font-size: 14px; margin-bottom: 8px; color: var(--fungi-glow);
-    text-transform: uppercase; letter-spacing: 1px;
-  }
-  .drawer-content h4 {
-    font-size: 13px; margin: 10px 0 6px; color: var(--fungi-glow);
-  }
-  .drawer-content p, .drawer-content label {
-    font-size: 13px; line-height: 1.5; color: var(--text-dim);
-  }
-
-  /* Drawer backdrop */
-  #backdrop {
-    position: fixed; inset: 0; z-index: 15;
-    background: rgba(0, 0, 0, .5); opacity: 0;
-    transition: opacity .3s ease; pointer-events: none;
-  }
-  #backdrop.show { opacity: 1; pointer-events: auto; }
-
-  /* Nutrient toggles inside drawer */
-  .nutrient-toggle {
-    display: flex; align-items: center; gap: 6px;
-    margin-bottom: 4px;
-  }
-  .nutrient-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-  }
-  .dot-carbon { background: var(--carbon); box-shadow: 0 0 6px var(--carbon); }
-  .dot-nitrogen { background: var(--nitrogen); box-shadow: 0 0 6px var(--nitrogen); }
-  .dot-phosphorus { background: var(--phosphorus); box-shadow: 0 0 6px var(--phosphorus); }
-  .dot-water { background: var(--water); box-shadow: 0 0 6px var(--water); }
-  .dot-signal { background: var(--signal); box-shadow: 0 0 6px var(--signal); }
-
-  .control-group { margin-bottom: 12px; }
-  .control-group label {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 12px; color: var(--text);
-    cursor: pointer; margin-bottom: 4px;
-  }
-  .control-group input[type="checkbox"] {
-    accent-color: var(--fungi-cream);
-    width: 14px; height: 14px;
-  }
-
-  .stress-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
-  .stress-btn {
-    background: rgba(180, 30, 30, 0.6);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    color: #fff; padding: 5px 10px; border-radius: 5px;
-    font-size: 11px; cursor: pointer; transition: all 0.2s;
-  }
-  .stress-btn:active { background: rgba(180, 30, 30, 0.9); }
-  .stress-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  /* Tree stats in drawer */
-  .tree-stats {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-    font-size: 11px; margin-top: 6px;
-  }
-  .tree-stat { display: flex; align-items: center; gap: 5px; }
-  .stat-bar {
-    flex: 1; height: 6px;
-    background: rgba(255, 255, 255, 0.1); border-radius: 3px;
-    overflow: hidden;
-  }
-  .stat-fill {
-    height: 100%; border-radius: 3px; transition: width 0.5s;
-  }
-
-  /* Legend row inside drawer */
-  .legend-item {
-    display: flex; align-items: center; gap: 6px;
-    margin-bottom: 3px; font-size: 11px;
-  }
-
-  /* Fact toast (centered, brief) */
-  .fact-toast {
-    position: fixed; bottom: 50%; left: 50%;
-    transform: translate(-50%, 50%);
-    background: var(--panel-bg); padding: 14px 20px;
-    border-radius: 10px;
-    border: 1px solid rgba(196, 167, 125, 0.3);
-    max-width: min(400px, 90vw); text-align: center;
-    font-size: 13px; z-index: 200;
-    opacity: 0; transition: opacity 0.4s, transform 0.4s;
-    pointer-events: none;
-  }
-  .fact-toast.show {
-    opacity: 1; transform: translate(-50%, 40%);
-  }
-
-  /* Reset floating action (mobile: small, bottom center above bar) */
-  .reset-btn {
-    position: fixed; bottom: 66px; left: 50%;
-    transform: translateX(-50%); z-index: 100;
-    background: rgba(196, 167, 125, 0.2);
-    border: 1px solid rgba(196, 167, 125, 0.3);
-    color: var(--fungi-glow); padding: 6px 16px;
-    border-radius: 6px; font-size: 12px;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .reset-btn:active { background: rgba(196, 167, 125, 0.4); }
-
-  /* Desktop-only floating panels */
-  @media (min-width: 769px) {
-    #bottom-bar { display: none; }
-    .drawer { display: none !important; }
-    #backdrop { display: none; }
-
-    .panel {
-      position: fixed; z-index: 10;
-      width: 260px; max-height: calc(100vh - 40px);
-      overflow-y: auto;
-      background: rgba(20, 20, 20, .95); backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, .08);
-      border-radius: 12px; padding: 14px;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+  <title>Mycorrhizal Network Explorer</title>
+  <style>
+    :root {
+      --soil-dark: #1a1208;
+      --soil-mid: #2d1f11;
+      --soil-light: #3d2b18;
+      --root-brown: #6b4423;
+      --root-light: #8b6914;
+      --fungi-cream: #c4a77d;
+      --fungi-glow: #e8d5a3;
+      --carbon: #4ade80;
+      --nitrogen: #60a5fa;
+      --phosphorus: #fbbf24;
+      --water: #22d3ee;
+      --signal: #f472b6;
+      --warning: #ef4444;
+      --tree-canopy: #2d5a27;
+      --tree-trunk: #4a3728;
+      --text: #e8ddd0;
+      --text-dim: #a89a88;
+      --panel-bg: rgba(26, 18, 8, 0.92);
     }
-    #panel-left  { top: 48px; left: 16px; }
-    #panel-right { top: 48px; right: 16px; }
 
-    .reset-btn { bottom: 16px; }
-  }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* Mobile: hide desktop panels */
-  @media (max-width: 768px) {
-    .panel { display: none !important; }
-  }
-</style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--soil-dark);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #canvas-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+
+    canvas { display: block; }
+
+    /* Disclaimer */
+    .disclaimer {
+      position: fixed;
+      top: 8px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(180, 30, 30, 0.85);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      z-index: 1000;
+      text-align: center;
+      max-width: 90vw;
+      backdrop-filter: blur(4px);
+      line-height: 1.4;
+      pointer-events: none;
+    }
+
+    /* Title overlay */
+    .title-overlay {
+      position: fixed;
+      top: 48px; left: 16px;
+      z-index: 100;
+      background: var(--panel-bg);
+      padding: 14px 18px;
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(196, 167, 125, 0.2);
+      max-width: 280px;
+      pointer-events: none;
+    }
+    .title-overlay * { pointer-events: auto; }
+
+    .title-overlay h1 {
+      font-size: 18px;
+      color: var(--fungi-glow);
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .title-overlay .subtitle {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    /* Controls panel */
+    .controls {
+      position: fixed;
+      top: 48px; right: 16px;
+      z-index: 100;
+      background: var(--panel-bg);
+      padding: 14px 16px;
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(196, 167, 125, 0.2);
+      width: 220px;
+      pointer-events: none;
+    }
+    .controls * { pointer-events: auto; }
+
+    .controls h3 {
+      font-size: 13px;
+      color: var(--fungi-glow);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .control-group {
+      margin-bottom: 12px;
+    }
+
+    .control-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      margin-bottom: 4px;
+    }
+
+    .control-group input[type="checkbox"] {
+      accent-color: var(--fungi-cream);
+      width: 14px; height: 14px;
+    }
+
+    .nutrient-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .nutrient-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-carbon { background: var(--carbon); box-shadow: 0 0 6px var(--carbon); }
+    .dot-nitrogen { background: var(--nitrogen); box-shadow: 0 0 6px var(--nitrogen); }
+    .dot-phosphorus { background: var(--phosphorus); box-shadow: 0 0 6px var(--phosphorus); }
+    .dot-water { background: var(--water); box-shadow: 0 0 6px var(--water); }
+    .dot-signal { background: var(--signal); box-shadow: 0 0 6px var(--signal); }
+
+    .stress-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .stress-btn {
+      background: rgba(180, 30, 30, 0.6);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .stress-btn:hover {
+      background: rgba(180, 30, 30, 0.9);
+      transform: translateY(-1px);
+    }
+
+    .stress-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Tree info panel */
+    .tree-info {
+      position: fixed;
+      bottom: 16px; left: 16px;
+      z-index: 100;
+      background: var(--panel-bg);
+      padding: 14px 18px;
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(196, 167, 125, 0.2);
+      max-width: 320px;
+      min-width: 280px;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .tree-info * { pointer-events: auto; }
+
+    .tree-info.hidden { opacity: 0; pointer-events: none; }
+
+    .tree-info h4 {
+      font-size: 14px;
+      color: var(--fungi-glow);
+      margin-bottom: 8px;
+    }
+
+    .tree-info p {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .tree-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .tree-stat {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .stat-bar {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .stat-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s;
+    }
+
+    /* Legend */
+    .legend {
+      position: fixed;
+      bottom: 16px; right: 16px;
+      z-index: 100;
+      background: var(--panel-bg);
+      padding: 10px 14px;
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(196, 167, 125, 0.2);
+      font-size: 11px;
+      pointer-events: none;
+    }
+    .legend * { pointer-events: auto; }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    /* Fact toast */
+    .fact-toast {
+      position: fixed;
+      bottom: 50%; left: 50%;
+      transform: translate(-50%, 50%);
+      background: var(--panel-bg);
+      padding: 14px 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(196, 167, 125, 0.3);
+      max-width: 400px;
+      text-align: center;
+      font-size: 13px;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.4s, transform 0.4s;
+      pointer-events: none;
+    }
+
+    .fact-toast.show {
+      opacity: 1;
+      transform: translate(-50%, 40%);
+    }
+
+    /* Reset button */
+    .reset-btn {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: rgba(196, 167, 125, 0.2);
+      border: 1px solid rgba(196, 167, 125, 0.3);
+      color: var(--fungi-glow);
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: rgba(196, 167, 125, 0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .title-overlay { max-width: 200px; padding: 10px 12px; }
+      .title-overlay h1 { font-size: 15px; }
+      .controls { width: 180px; padding: 10px 12px; top: 40px; }
+      .tree-info { max-width: 260px; min-width: 220px; }
+      .legend { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .controls { width: 160px; }
+      .title-overlay { max-width: 160px; }
+      .title-overlay h1 { font-size: 13px; }
+      .tree-info { max-width: 200px; min-width: 180px; }
+    }
+  </style>
 </head>
 <body>
-
-<!-- Disclaimer -->
-<div class="disclaimer">
-  Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
-</div>
-
-<!-- Full-viewport canvas -->
-<canvas id="networkCanvas"></canvas>
-
-<!-- Drawer backdrop -->
-<div id="backdrop"></div>
-
-<!-- Mobile bottom action bar -->
-<nav id="bottom-bar">
-  <button onclick="openDrawer('info')">
-    <span class="icon">ⓘ</span><span>About</span>
-  </button>
-  <button onclick="openDrawer('settings')">
-    <span class="icon">⚙</span><span>Controls</span>
-  </button>
-  <button onclick="openDrawer('tree')">
-    <span class="icon">🌲</span><span>Tree Info</span>
-  </button>
-</nav>
-
-<!-- Mobile slide-up drawers -->
-<div class="drawer" id="drawer-info">
-  <div class="drawer-handle" onclick="closeAllDrawers()"></div>
-  <div class="drawer-content">
-    <h3>About</h3>
-    <h4>Mycorrhizal Network Explorer</h4>
-    <p>The underground "wood wide web" — where trees share nutrients and warning signals through fungal networks.</p>
-    <p style="margin-top:8px; color:var(--text);">Tap any tree to explore its connections and nutrient flows.</p>
-    <h4>Research Facts</h4>
-    <p>• Mother trees can recognize their kin and preferentially send them more carbon.</p>
-    <p>• Fungal hyphae are only 1-2 micrometres wide — 50× thinner than a human hair.</p>
-    <p>• A single tree can be connected to hundreds of others through one fungal network.</p>
-    <p>• When a tree is attacked by insects, it sends chemical warning signals to neighbours.</p>
-    <p>• Older trees increase carbon transfer to seedlings as they become more shaded.</p>
-    <p>• Some fungi can transport nutrients up to 20 metres between trees.</p>
-    <p>• Networks are more active in summer when photosynthesis is high.</p>
-    <p>• Removing mother trees causes nearby seedlings to lose 30-40% of their carbon supply.</p>
-    <p>• Different tree species often share the same fungal species, enabling cross-species transfer.</p>
-    <p>• The mycorrhizal network is ancient — fungi have partnered with plant roots for 450 million years.</p>
+  <div class="disclaimer">
+    Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
   </div>
-</div>
 
-<div class="drawer" id="drawer-settings">
-  <div class="drawer-handle" onclick="closeAllDrawers()"></div>
-  <div class="drawer-content">
-    <h3>Nutrients</h3>
+  <div class="title-overlay">
+    <h1>🍄 Mycorrhizal Network Explorer</h1>
+    <p class="subtitle">The underground "wood wide web" — where trees share nutrients and warning signals through fungal networks. Click any tree to explore.</p>
+  </div>
+
+  <div class="controls">
+    <h3>Show Nutrients</h3>
     <div class="control-group">
       <label class="nutrient-toggle">
         <span class="nutrient-dot dot-carbon"></span>
@@ -309,726 +367,643 @@
 
     <h3>View</h3>
     <div class="control-group">
-      <label><input type="checkbox" id="showLabels" checked> Tree Labels</label>
-      <label><input type="checkbox" id="showRoots"> Root Detail</label>
-      <label><input type="checkbox" id="animatePulse" checked> Pulse Animation</label>
+      <label>
+        <input type="checkbox" id="showLabels" checked> Tree Labels
+      </label>
+      <label>
+        <input type="checkbox" id="showRoots"> Root Detail
+      </label>
+      <label>
+        <input type="checkbox" id="animatePulse" checked> Pulse Animation
+      </label>
     </div>
-
-    <h3>Legend</h3>
-    <div class="legend-item"><span class="nutrient-dot dot-carbon"></span> Carbon</div>
-    <div class="legend-item"><span class="nutrient-dot dot-nitrogen"></span> Nitrogen</div>
-    <div class="legend-item"><span class="nutrient-dot dot-phosphorus"></span> Phosphorus</div>
-    <div class="legend-item"><span class="nutrient-dot dot-water"></span> Water</div>
-    <div class="legend-item"><span class="nutrient-dot dot-signal"></span> Signal</div>
   </div>
-</div>
 
-<div class="drawer" id="drawer-tree">
-  <div class="drawer-handle" onclick="closeAllDrawers()"></div>
-  <div class="drawer-content">
-    <h3>Tree Info</h3>
+  <div class="tree-info hidden" id="treeInfo">
     <h4 id="treeName">Select a tree</h4>
-    <p id="treeDesc">Tap on any tree to see its connections and nutrient flows.</p>
+    <p id="treeDesc">Click on any tree to see its connections and nutrient flows.</p>
     <div class="tree-stats" id="treeStats"></div>
   </div>
-</div>
 
-<!-- Desktop floating panels -->
-<aside class="panel" id="panel-left">
-  <h3 style="font-size:14px;color:var(--fungi-glow);margin-bottom:8px;">🍄 Mycorrhizal Network Explorer</h3>
-  <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:8px;">
-    The underground "wood wide web" — where trees share nutrients and warning signals through fungal networks.
-  </p>
-  <p style="font-size:12px;color:var(--text);line-height:1.5;margin-bottom:8px;">Click any tree to explore.</p>
-  <div style="border-top:1px solid rgba(196,167,125,0.2);padding-top:10px;margin-top:10px;">
-    <h4 style="font-size:12px;color:var(--fungi-glow);margin-bottom:6px;">Legend</h4>
+  <div class="legend">
     <div class="legend-item"><span class="nutrient-dot dot-carbon"></span> Carbon</div>
     <div class="legend-item"><span class="nutrient-dot dot-nitrogen"></span> Nitrogen</div>
     <div class="legend-item"><span class="nutrient-dot dot-phosphorus"></span> Phosphorus</div>
     <div class="legend-item"><span class="nutrient-dot dot-water"></span> Water</div>
     <div class="legend-item"><span class="nutrient-dot dot-signal"></span> Signal</div>
   </div>
-</aside>
 
-<aside class="panel" id="panel-right">
-  <h3 style="font-size:14px;color:var(--fungi-glow);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Controls</h3>
+  <div class="fact-toast" id="factToast"></div>
 
-  <h4 style="font-size:12px;color:var(--fungi-glow);margin:10px 0 6px;">Show Nutrients</h4>
-  <div class="control-group">
-    <label class="nutrient-toggle">
-      <span class="nutrient-dot dot-carbon"></span>
-      <input type="checkbox" id="deskShowCarbon" checked> Carbon
-    </label>
-    <label class="nutrient-toggle">
-      <span class="nutrient-dot dot-nitrogen"></span>
-      <input type="checkbox" id="deskShowNitrogen" checked> Nitrogen
-    </label>
-    <label class="nutrient-toggle">
-      <span class="nutrient-dot dot-phosphorus"></span>
-      <input type="checkbox" id="deskShowPhosphorus" checked> Phosphorus
-    </label>
-    <label class="nutrient-toggle">
-      <span class="nutrient-dot dot-water"></span>
-      <input type="checkbox" id="deskShowWater" checked> Water
-    </label>
-    <label class="nutrient-toggle">
-      <span class="nutrient-dot dot-signal"></span>
-      <input type="checkbox" id="deskShowSignals" checked> Stress Signals
-    </label>
+  <button class="reset-btn" id="resetBtn">↻ Reset Forest</button>
+
+  <div id="canvas-container">
+    <canvas id="networkCanvas"></canvas>
   </div>
 
-  <h4 style="font-size:12px;color:var(--fungi-glow);margin:10px 0 6px;">Stress Events</h4>
-  <div class="control-group stress-buttons">
-    <button class="stress-btn" id="deskBtnDrought">🌵 Drought</button>
-    <button class="stress-btn" id="deskBtnPest">🐛 Pest Attack</button>
-    <button class="stress-btn" id="deskBtnShade">🌑 Shade Stress</button>
-  </div>
+  <script>
+    (function() {
+      const canvas = document.getElementById('networkCanvas');
+      const ctx = canvas.getContext('2d');
+      let W, H;
+      let animationId;
+      let time = 0;
+      let selectedTree = null;
+      let stressActive = null;
+      let stressTimer = 0;
 
-  <h4 style="font-size:12px;color:var(--fungi-glow);margin:10px 0 6px;">View</h4>
-  <div class="control-group">
-    <label><input type="checkbox" id="deskShowLabels" checked> Tree Labels</label>
-    <label><input type="checkbox" id="deskShowRoots"> Root Detail</label>
-    <label><input type="checkbox" id="deskAnimatePulse" checked> Pulse Animation</label>
-  </div>
+      // Nutrient types
+      const NUTRIENTS = {
+        carbon: { color: '#4ade80', glow: 'rgba(74,222,128,0.3)' },
+        nitrogen: { color: '#60a5fa', glow: 'rgba(96,165,250,0.3)' },
+        phosphorus: { color: '#fbbf24', glow: 'rgba(251,191,36,0.3)' },
+        water: { color: '#22d3ee', glow: 'rgba(34,211,238,0.3)' },
+        signal: { color: '#f472b6', glow: 'rgba(244,114,182,0.3)' }
+      };
 
-  <div style="border-top:1px solid rgba(196,167,125,0.2);padding-top:10px;margin-top:10px;">
-    <h4 style="font-size:12px;color:var(--fungi-glow);margin-bottom:6px;">Selected Tree</h4>
-    <p id="deskTreeName" style="font-size:12px;color:var(--text);margin-bottom:4px;">None selected</p>
-    <p id="deskTreeDesc" style="font-size:11px;color:var(--text-dim);line-height:1.4;margin-bottom:6px;">Click on any tree to see details.</p>
-    <div class="tree-stats" id="deskTreeStats"></div>
-  </div>
-</aside>
-
-<!-- Fact toast -->
-<div class="fact-toast" id="factToast"></div>
-
-<!-- Reset button -->
-<button class="reset-btn" id="resetBtn">↻ Reset Forest</button>
-
-<script>
-(function() {
-  const canvas = document.getElementById('networkCanvas');
-  const ctx = canvas.getContext('2d');
-  let W, H;
-  let animationId;
-  let time = 0;
-  let selectedTree = null;
-  let stressActive = null;
-  let stressTimer = 0;
-
-  /* ── Drawer helpers ── */
-  function openDrawer(name) {
-    closeAllDrawers();
-    document.getElementById('drawer-'+name).classList.add('open');
-    document.getElementById('backdrop').classList.add('show');
-  }
-  window.openDrawer = openDrawer;
-  function closeAllDrawers() {
-    document.querySelectorAll('.drawer').forEach(d=>d.classList.remove('open'));
-    document.getElementById('backdrop').classList.remove('show');
-  }
-  window.closeAllDrawers = closeAllDrawers;
-  document.getElementById('backdrop').addEventListener('click', closeAllDrawers);
-
-  /* ── Bi-directional sync mobile ↔ desktop ── */
-  const syncPairs = [
-    ['showCarbon',    'deskShowCarbon'],
-    ['showNitrogen',  'deskShowNitrogen'],
-    ['showPhosphorus','deskShowPhosphorus'],
-    ['showWater',     'deskShowWater'],
-    ['showSignals',   'deskShowSignals'],
-    ['showLabels',    'deskShowLabels'],
-    ['showRoots',     'deskShowRoots'],
-    ['animatePulse',  'deskAnimatePulse'],
-  ];
-  syncPairs.forEach(([mob,desk])=>{
-    const m=document.getElementById(mob), d=document.getElementById(desk);
-    if(!m||!d) return;
-    m.addEventListener('input',()=>{ d[m.type==='checkbox'?'checked':'value']=m[m.type==='checkbox'?'checked':'value']; });
-    d.addEventListener('input',()=>{ m[d.type==='checkbox'?'checked':'value']=d[d.type==='checkbox'?'checked':'value']; });
-  });
-
-  /* Stress button sync */
-  function syncStress(mobId, deskId, type) {
-    const mob = document.getElementById(mobId);
-    const desk = document.getElementById(deskId);
-    if (mob) mob.addEventListener('click', () => applyStress(type));
-    if (desk) desk.addEventListener('click', () => applyStress(type));
-  }
-  syncStress('btnDrought', 'deskBtnDrought', 'drought');
-  syncStress('btnPest',    'deskBtnPest',    'pest');
-  syncStress('btnShade',   'deskBtnShade',   'shade');
-
-  /* Read current state from either mobile or desktop */
-  function getState(id) {
-    const mob = document.getElementById(id);
-    if (mob) return mob.checked;
-    const desk = document.getElementById('desk' + id.charAt(0).toUpperCase() + id.slice(1));
-    return desk ? desk.checked : false;
-  }
-
-  /* ── Simulation constants ── */
-  const NUTRIENTS = {
-    carbon:     { color: '#4ade80', glow: 'rgba(74,222,128,0.3)' },
-    nitrogen:   { color: '#60a5fa', glow: 'rgba(96,165,250,0.3)' },
-    phosphorus: { color: '#fbbf24', glow: 'rgba(251,191,36,0.3)' },
-    water:      { color: '#22d3ee', glow: 'rgba(34,211,238,0.3)' },
-    signal:     { color: '#f472b6', glow: 'rgba(244,114,182,0.3)' }
-  };
-
-  const TREE_TYPES = [
-    {
-      name: 'Douglas Fir',
-      role: 'mother',
-      desc: 'A "mother tree" — older, larger trees that send carbon to seedlings through fungal networks. Research by Simard et al. shows they can subsidize up to 40% of nearby sapling carbon.',
-      canopyColor: '#2d5a27',
-      rootReach: 1.3
-    },
-    {
-      name: 'Paper Birch',
-      role: 'seasonal',
-      desc: 'Deciduous trees that receive carbon from conifers in summer, then reciprocate in autumn when their leaves photosynthesize strongly. A bidirectional seasonal exchange.',
-      canopyColor: '#4a7c3f',
-      rootReach: 1.0
-    },
-    {
-      name: 'Western Redcedar',
-      role: 'hub',
-      desc: 'A major network hub with extensive mycorrhizal connections. Studies show cedar roots host diverse fungal species, making them crucial connectors in the forest internet.',
-      canopyColor: '#3d6b30',
-      rootReach: 1.2
-    },
-    {
-      name: 'Seedling (Year 3)',
-      role: 'seedling',
-      desc: 'Young trees in deep shade receive up to 100% of their carbon from mycorrhizal network connections to mother trees. Without the network, survival in low light is near zero.',
-      canopyColor: '#5a8a4a',
-      rootReach: 0.6
-    },
-    {
-      name: 'Seedling (Year 1)',
-      role: 'seedling',
-      desc: 'First-year seedlings are entirely dependent on fungal carbon transfers. The hyphae effectively act as a lifeline until the seedling can photosynthesize enough on its own.',
-      canopyColor: '#6b9a5a',
-      rootReach: 0.5
-    },
-    {
-      name: 'Subalpine Fir',
-      role: 'receiver',
-      desc: 'Often found in stressful environments, these trees receive disproportionate nitrogen and water from the network. Stress amplifies the sharing response.',
-      canopyColor: '#345d28',
-      rootReach: 0.9
-    }
-  ];
-
-  const FACTS = [
-    'Mother trees can recognize their kin and preferentially send them more carbon.',
-    'Fungal hyphae are only 1-2 micrometres wide — 50× thinner than a human hair.',
-    'A single tree can be connected to hundreds of others through one fungal network.',
-    'When a tree is attacked by insects, it sends chemical warning signals to neighbours.',
-    'Older trees increase carbon transfer to seedlings as they become more shaded.',
-    'Some fungi can transport nutrients up to 20 metres between trees.',
-    'Networks are more active in summer when photosynthesis is high.',
-    'Removing mother trees causes nearby seedlings to lose 30-40% of their carbon supply.',
-    'Different tree species often share the same fungal species, enabling cross-species transfer.',
-    'The mycorrhizal network is ancient — fungi have partnered with plant roots for 450 million years.'
-  ];
-
-  let trees = [];
-  let connections = [];
-  let particles = [];
-
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-
-  function generateForest() {
-    trees = [];
-    connections = [];
-    particles = [];
-    selectedTree = null;
-    stressActive = null;
-    stressTimer = 0;
-
-    const positions = [
-      { x: W * 0.15, y: H * 0.25 },
-      { x: W * 0.35, y: H * 0.15 },
-      { x: W * 0.55, y: H * 0.28 },
-      { x: W * 0.75, y: H * 0.18 },
-      { x: W * 0.85, y: H * 0.32 },
-      { x: W * 0.25, y: H * 0.38 },
-      { x: W * 0.45, y: H * 0.42 },
-      { x: W * 0.65, y: H * 0.35 },
-      { x: W * 0.80, y: H * 0.40 }
-    ];
-
-    const usedPositions = [];
-    for (let i = 0; i < 6; i++) {
-      const idx = Math.floor(Math.random() * positions.length);
-      const pos = positions.splice(idx, 1)[0];
-      usedPositions.push(pos);
-    }
-
-    usedPositions.forEach((pos, i) => {
-      const type = TREE_TYPES[i % TREE_TYPES.length];
-      trees.push({
-        id: i,
-        x: pos.x + (Math.random() - 0.5) * 60,
-        y: pos.y + (Math.random() - 0.5) * 40,
-        ...type,
-        health: 1.0,
-        stress: 0,
-        size: type.role === 'mother' ? 1.3 : type.role === 'seedling' ? 0.5 : 0.9,
-        rootRadius: (type.role === 'mother' ? 140 : type.role === 'seedling' ? 60 : 100) * type.rootReach
-      });
-    });
-
-    for (let i = 0; i < trees.length; i++) {
-      for (let j = i + 1; j < trees.length; j++) {
-        const dx = trees[i].x - trees[j].x;
-        const dy = trees[i].y - trees[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = (trees[i].rootRadius + trees[j].rootRadius) * 0.7;
-
-        if (dist < maxDist) {
-          const strength = 1 - dist / maxDist;
-          connections.push({
-            from: i,
-            to: j,
-            strength: strength,
-            hyphae: generateHyphae(trees[i], trees[j], strength)
-          });
+      // Tree types with research-backed facts
+      const TREE_TYPES = [
+        {
+          name: 'Douglas Fir',
+          role: 'mother',
+          desc: 'A "mother tree" — older, larger trees that send carbon to seedlings through fungal networks. Research by Simard et al. shows they can subsidize up to 40% of nearby sapling carbon.',
+          canopyColor: '#2d5a27',
+          rootReach: 1.3
+        },
+        {
+          name: 'Paper Birch',
+          role: 'seasonal',
+          desc: 'Deciduous trees that receive carbon from conifers in summer, then reciprocate in autumn when their leaves photosynthesize strongly. A bidirectional seasonal exchange.',
+          canopyColor: '#4a7c3f',
+          rootReach: 1.0
+        },
+        {
+          name: 'Western Redcedar',
+          role: 'hub',
+          desc: 'A major network hub with extensive mycorrhizal connections. Studies show cedar roots host diverse fungal species, making them crucial connectors in the forest internet.',
+          canopyColor: '#3d6b30',
+          rootReach: 1.2
+        },
+        {
+          name: 'Seedling (Year 3)',
+          role: 'seedling',
+          desc: 'Young trees in deep shade receive up to 100% of their carbon from mycorrhizal network connections to mother trees. Without the network, survival in low light is near zero.',
+          canopyColor: '#5a8a4a',
+          rootReach: 0.6
+        },
+        {
+          name: 'Seedling (Year 1)',
+          role: 'seedling',
+          desc: 'First-year seedlings are entirely dependent on fungal carbon transfers. The hyphae effectively act as a lifeline until the seedling can photosynthesize enough on its own.',
+          canopyColor: '#6b9a5a',
+          rootReach: 0.5
+        },
+        {
+          name: 'Subalpine Fir',
+          role: 'receiver',
+          desc: 'Often found in stressful environments, these trees receive disproportionate nitrogen and water from the network. Stress amplifies the sharing response.',
+          canopyColor: '#345d28',
+          rootReach: 0.9
         }
-      }
-    }
+      ];
 
-    for (let i = 0; i < trees.length; i++) {
-      const hasConn = connections.some(c => c.from === i || c.to === i);
-      if (!hasConn && trees.length > 1) {
-        let closest = -1;
-        let closestDist = Infinity;
-        for (let j = 0; j < trees.length; j++) {
-          if (i === j) continue;
-          const dx = trees[i].x - trees[j].x;
-          const dy = trees[i].y - trees[j].y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < closestDist) {
-            closestDist = d;
-            closest = j;
+      // Research facts shown as toasts
+      const FACTS = [
+        'Mother trees can recognize their kin and preferentially send them more carbon.',
+        'Fungal hyphae are only 1-2 micrometres wide — 50x thinner than a human hair.',
+        'A single tree can be connected to hundreds of others through one fungal network.',
+        'When a tree is attacked by insects, it sends chemical warning signals to neighbours.',
+        'Older trees increase carbon transfer to seedlings as they become more shaded.',
+        'Some fungi can transport nutrients up to 20 metres between trees.',
+        'Networks are more active in summer when photosynthesis is high.',
+        'Removing mother trees causes nearby seedlings to lose 30-40% of their carbon supply.',
+        'Different tree species often share the same fungal species, enabling cross-species transfer.',
+        'The mycorrhizal network is ancient — fungi have partnered with plant roots for 450 million years.'
+      ];
+
+      // Generate forest
+      let trees = [];
+      let connections = [];
+      let particles = [];
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+
+      function generateForest() {
+        trees = [];
+        connections = [];
+        particles = [];
+        selectedTree = null;
+        stressActive = null;
+        stressTimer = 0;
+
+        // Place trees with some randomness
+        const positions = [
+          { x: W * 0.15, y: H * 0.25 },
+          { x: W * 0.35, y: H * 0.15 },
+          { x: W * 0.55, y: H * 0.28 },
+          { x: W * 0.75, y: H * 0.18 },
+          { x: W * 0.85, y: H * 0.32 },
+          { x: W * 0.25, y: H * 0.38 },
+          { x: W * 0.45, y: H * 0.42 },
+          { x: W * 0.65, y: H * 0.35 },
+          { x: W * 0.80, y: H * 0.40 }
+        ];
+
+        // Pick 6 trees from positions
+        const usedPositions = [];
+        for (let i = 0; i < 6; i++) {
+          const idx = Math.floor(Math.random() * positions.length);
+          const pos = positions.splice(idx, 1)[0];
+          usedPositions.push(pos);
+        }
+
+        usedPositions.forEach((pos, i) => {
+          const type = TREE_TYPES[i % TREE_TYPES.length];
+          trees.push({
+            id: i,
+            x: pos.x + (Math.random() - 0.5) * 60,
+            y: pos.y + (Math.random() - 0.5) * 40,
+            ...type,
+            health: 1.0,
+            stress: 0,
+            size: type.role === 'mother' ? 1.3 : type.role === 'seedling' ? 0.5 : 0.9,
+            rootRadius: (type.role === 'mother' ? 140 : type.role === 'seedling' ? 60 : 100) * type.rootReach
+          });
+        });
+
+        // Generate connections based on proximity
+        for (let i = 0; i < trees.length; i++) {
+          for (let j = i + 1; j < trees.length; j++) {
+            const dx = trees[i].x - trees[j].x;
+            const dy = trees[i].y - trees[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = (trees[i].rootRadius + trees[j].rootRadius) * 0.7;
+
+            if (dist < maxDist) {
+              const strength = 1 - dist / maxDist;
+              connections.push({
+                from: i,
+                to: j,
+                strength: strength,
+                hyphae: generateHyphae(trees[i], trees[j], strength)
+              });
+            }
           }
         }
-        if (closest >= 0) {
-          const strength = 0.4;
-          connections.push({
-            from: i,
-            to: closest,
-            strength: strength,
-            hyphae: generateHyphae(trees[i], trees[closest], strength)
+
+        // Ensure every tree has at least one connection
+        for (let i = 0; i < trees.length; i++) {
+          const hasConn = connections.some(c => c.from === i || c.to === i);
+          if (!hasConn && trees.length > 1) {
+            let closest = -1;
+            let closestDist = Infinity;
+            for (let j = 0; j < trees.length; j++) {
+              if (i === j) continue;
+              const dx = trees[i].x - trees[j].x;
+              const dy = trees[i].y - trees[j].y;
+              const d = Math.sqrt(dx * dx + dy * dy);
+              if (d < closestDist) {
+                closestDist = d;
+                closest = j;
+              }
+            }
+            if (closest >= 0) {
+              const strength = 0.4;
+              connections.push({
+                from: i,
+                to: closest,
+                strength: strength,
+                hyphae: generateHyphae(trees[i], trees[closest], strength)
+              });
+            }
+          }
+        }
+      }
+
+      function generateHyphae(t1, t2, strength) {
+        const hyphae = [];
+        const count = Math.floor(3 + strength * 8);
+        for (let i = 0; i < count; i++) {
+          const t = (i + 0.5) / count;
+          const midX = t1.x + (t2.x - t1.x) * t;
+          const midY = t1.y + (t2.y - t1.y) * t;
+          const offset = (Math.random() - 0.5) * 40 * (1 - Math.abs(t - 0.5) * 2);
+          hyphae.push({
+            x: midX + offset,
+            y: midY + offset * 0.5,
+            radius: 2 + Math.random() * 3,
+            pulsePhase: Math.random() * Math.PI * 2
           });
         }
+        return hyphae;
       }
-    }
-  }
 
-  function generateHyphae(t1, t2, strength) {
-    const hyphae = [];
-    const count = Math.floor(3 + strength * 8);
-    for (let i = 0; i < count; i++) {
-      const t = (i + 0.5) / count;
-      const midX = t1.x + (t2.x - t1.x) * t;
-      const midY = t1.y + (t2.y - t1.y) * t;
-      const offset = (Math.random() - 0.5) * 40 * (1 - Math.abs(t - 0.5) * 2);
-      hyphae.push({
-        x: midX + offset,
-        y: midY + offset * 0.5,
-        radius: 2 + Math.random() * 3,
-        pulsePhase: Math.random() * Math.PI * 2
-      });
-    }
-    return hyphae;
-  }
+      function spawnParticle(conn, nutrientType) {
+        const t1 = trees[conn.from];
+        const t2 = trees[conn.to];
+        const dir = Math.random() > 0.5 ? 1 : -1;
+        const fromTree = dir > 0 ? t1 : t2;
+        const toTree = dir > 0 ? t2 : t1;
 
-  function spawnParticle(conn, nutrientType) {
-    const t1 = trees[conn.from];
-    const t2 = trees[conn.to];
-    const dir = Math.random() > 0.5 ? 1 : -1;
-    const fromTree = dir > 0 ? t1 : t2;
-    const toTree = dir > 0 ? t2 : t1;
-
-    particles.push({
-      x: fromTree.x,
-      y: fromTree.y,
-      targetX: toTree.x,
-      targetY: toTree.y,
-      nutrient: nutrientType,
-      progress: 0,
-      speed: 0.003 + Math.random() * 0.004,
-      wobble: Math.random() * Math.PI * 2,
-      from: dir > 0 ? conn.from : conn.to,
-      to: dir > 0 ? conn.to : conn.from
-    });
-  }
-
-  function updateParticles() {
-    particles = particles.filter(p => {
-      p.progress += p.speed;
-      p.wobble += 0.05;
-      return p.progress < 1;
-    });
-
-    connections.forEach(conn => {
-      if (Math.random() < 0.02 * conn.strength) {
-        const types = [];
-        if (getState('showCarbon')) types.push('carbon');
-        if (getState('showNitrogen')) types.push('nitrogen');
-        if (getState('showPhosphorus')) types.push('phosphorus');
-        if (getState('showWater')) types.push('water');
-        if (getState('showSignals') && (stressActive || Math.random() < 0.1)) {
-          types.push('signal');
-        }
-        if (types.length > 0) {
-          const type = types[Math.floor(Math.random() * types.length)];
-          if (type === 'signal' && !stressActive && Math.random() > 0.1) return;
-          spawnParticle(conn, type);
-        }
+        particles.push({
+          x: fromTree.x,
+          y: fromTree.y,
+          targetX: toTree.x,
+          targetY: toTree.y,
+          nutrient: nutrientType,
+          progress: 0,
+          speed: 0.003 + Math.random() * 0.004,
+          wobble: Math.random() * Math.PI * 2,
+          from: dir > 0 ? conn.from : conn.to,
+          to: dir > 0 ? conn.to : conn.from
+        });
       }
-    });
-  }
 
-  function drawBackground() {
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#0f0a05');
-    grad.addColorStop(0.3, '#1a1208');
-    grad.addColorStop(0.7, '#251a0e');
-    grad.addColorStop(1, '#1a1208');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
+      function updateParticles() {
+        particles = particles.filter(p => {
+          p.progress += p.speed;
+          p.wobble += 0.05;
+          return p.progress < 1;
+        });
 
-    ctx.fillStyle = 'rgba(139, 105, 20, 0.03)';
-    for (let i = 0; i < 80; i++) {
-      const x = (Math.sin(i * 7.3 + time * 0.1) * 0.5 + 0.5) * W;
-      const y = (Math.cos(i * 5.7 + time * 0.07) * 0.5 + 0.5) * H;
-      ctx.beginPath();
-      ctx.arc(x, y, 1 + Math.random() * 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
+        // Spawn new particles periodically
+        connections.forEach(conn => {
+          if (Math.random() < 0.02 * conn.strength) {
+            const types = [];
+            if (document.getElementById('showCarbon').checked) types.push('carbon');
+            if (document.getElementById('showNitrogen').checked) types.push('nitrogen');
+            if (document.getElementById('showPhosphorus').checked) types.push('phosphorus');
+            if (document.getElementById('showWater').checked) types.push('water');
+            if (document.getElementById('showSignals').checked && (stressActive || Math.random() < 0.1)) {
+              types.push('signal');
+            }
+            if (types.length > 0) {
+              const type = types[Math.floor(Math.random() * types.length)];
+              if (type === 'signal' && !stressActive && Math.random() > 0.1) return;
+              spawnParticle(conn, type);
+            }
+          }
+        });
+      }
 
-  function drawRoots(tree) {
-    const showDetail = getState('showRoots');
-    const rootCount = showDetail ? 12 : 6;
+      function drawBackground() {
+        // Deep soil gradient
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, '#0f0a05');
+        grad.addColorStop(0.3, '#1a1208');
+        grad.addColorStop(0.7, '#251a0e');
+        grad.addColorStop(1, '#1a1208');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
 
-    ctx.strokeStyle = 'rgba(107, 68, 35, 0.4)';
-    ctx.lineWidth = showDetail ? 2 : 1.5;
-
-    for (let i = 0; i < rootCount; i++) {
-      const angle = (i / rootCount) * Math.PI * 2 + tree.id * 1.7;
-      const len = tree.rootRadius * (0.5 + Math.random() * 0.5);
-      const endX = tree.x + Math.cos(angle) * len;
-      const endY = tree.y + Math.sin(angle) * len * 0.7;
-
-      ctx.beginPath();
-      ctx.moveTo(tree.x, tree.y);
-      const cpX = tree.x + Math.cos(angle + 0.3) * len * 0.5;
-      const cpY = tree.y + Math.sin(angle + 0.3) * len * 0.5;
-      ctx.quadraticCurveTo(cpX, cpY, endX, endY);
-      ctx.stroke();
-
-      if (showDetail) {
-        ctx.strokeStyle = 'rgba(139, 105, 20, 0.2)';
-        ctx.lineWidth = 0.5;
-        for (let h = 0; h < 3; h++) {
-          const hairAngle = angle + (Math.random() - 0.5) * 0.5;
-          const hairLen = 15 + Math.random() * 20;
+        // Soil texture dots
+        ctx.fillStyle = 'rgba(139, 105, 20, 0.03)';
+        for (let i = 0; i < 80; i++) {
+          const x = (Math.sin(i * 7.3 + time * 0.1) * 0.5 + 0.5) * W;
+          const y = (Math.cos(i * 5.7 + time * 0.07) * 0.5 + 0.5) * H;
           ctx.beginPath();
-          ctx.moveTo(endX, endY);
-          ctx.lineTo(endX + Math.cos(hairAngle) * hairLen, endY + Math.sin(hairAngle) * hairLen);
+          ctx.arc(x, y, 1 + Math.random() * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function drawRoots(tree) {
+        const showDetail = document.getElementById('showRoots').checked;
+        const rootCount = showDetail ? 12 : 6;
+
+        ctx.strokeStyle = 'rgba(107, 68, 35, 0.4)';
+        ctx.lineWidth = showDetail ? 2 : 1.5;
+
+        for (let i = 0; i < rootCount; i++) {
+          const angle = (i / rootCount) * Math.PI * 2 + tree.id * 1.7;
+          const len = tree.rootRadius * (0.5 + Math.random() * 0.5);
+          const endX = tree.x + Math.cos(angle) * len;
+          const endY = tree.y + Math.sin(angle) * len * 0.7;
+
+          ctx.beginPath();
+          ctx.moveTo(tree.x, tree.y);
+          const cpX = tree.x + Math.cos(angle + 0.3) * len * 0.5;
+          const cpY = tree.y + Math.sin(angle + 0.3) * len * 0.5;
+          ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+          ctx.stroke();
+
+          // Root hairs
+          if (showDetail) {
+            ctx.strokeStyle = 'rgba(139, 105, 20, 0.2)';
+            ctx.lineWidth = 0.5;
+            for (let h = 0; h < 3; h++) {
+              const hairAngle = angle + (Math.random() - 0.5) * 0.5;
+              const hairLen = 15 + Math.random() * 20;
+              ctx.beginPath();
+              ctx.moveTo(endX, endY);
+              ctx.lineTo(endX + Math.cos(hairAngle) * hairLen, endY + Math.sin(hairAngle) * hairLen);
+              ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(107, 68, 35, 0.4)';
+            ctx.lineWidth = 2;
+          }
+        }
+
+        // Root zone glow
+        const glow = ctx.createRadialGradient(tree.x, tree.y, 0, tree.x, tree.y, tree.rootRadius);
+        glow.addColorStop(0, 'rgba(107, 68, 35, 0.08)');
+        glow.addColorStop(1, 'rgba(107, 68, 35, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(tree.x, tree.y, tree.rootRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawHyphae(conn) {
+        const pulse = document.getElementById('animatePulse').checked;
+
+        conn.hyphae.forEach(h => {
+          const phase = pulse ? Math.sin(time * 2 + h.pulsePhase) * 0.3 + 0.7 : 0.7;
+          const r = h.radius * phase * conn.strength;
+
+          const glow = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, r * 3);
+          glow.addColorStop(0, `rgba(196, 167, 125, ${0.15 * conn.strength})`);
+          glow.addColorStop(1, 'rgba(196, 167, 125, 0)');
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(h.x, h.y, r * 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = `rgba(196, 167, 125, ${0.4 * conn.strength * phase})`;
+          ctx.beginPath();
+          ctx.arc(h.x, h.y, r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Connection line
+        const t1 = trees[conn.from];
+        const t2 = trees[conn.to];
+        ctx.strokeStyle = `rgba(196, 167, 125, ${0.15 * conn.strength})`;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 6]);
+        ctx.beginPath();
+        ctx.moveTo(t1.x, t1.y);
+        ctx.lineTo(t2.x, t2.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      function drawTree(tree) {
+        // Trunk
+        const trunkW = 8 * tree.size;
+        const trunkH = 30 * tree.size;
+        ctx.fillStyle = tree.stress > 0 ? '#5a3a2a' : '#4a3728';
+        ctx.fillStyle = '#4a3728';
+        ctx.fillRect(tree.x - trunkW/2, tree.y - trunkH, trunkW, trunkH);
+
+        // Canopy
+        const canopyR = 25 * tree.size * (1 - tree.stress * 0.3);
+        const canopyGlow = ctx.createRadialGradient(tree.x, tree.y - trunkH - canopyR * 0.3, 0, tree.x, tree.y - trunkH - canopyR * 0.3, canopyR * 1.5);
+        canopyGlow.addColorStop(0, tree.canopyColor + 'cc');
+        canopyGlow.addColorStop(0.6, tree.canopyColor + '88');
+        canopyGlow.addColorStop(1, tree.canopyColor + '00');
+        ctx.fillStyle = canopyGlow;
+        ctx.beginPath();
+        ctx.arc(tree.x, tree.y - trunkH - canopyR * 0.3, canopyR * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Canopy circles
+        ctx.fillStyle = tree.canopyColor;
+        ctx.beginPath();
+        ctx.arc(tree.x, tree.y - trunkH - canopyR * 0.3, canopyR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner canopy detail
+        ctx.fillStyle = tree.canopyColor + '66';
+        ctx.beginPath();
+        ctx.arc(tree.x - canopyR * 0.3, tree.y - trunkH - canopyR * 0.5, canopyR * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stress indicator
+        if (tree.stress > 0) {
+          ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(tree.x, tree.y - trunkH - canopyR * 0.3, canopyR + 4, 0, Math.PI * 2);
           ctx.stroke();
         }
-        ctx.strokeStyle = 'rgba(107, 68, 35, 0.4)';
-        ctx.lineWidth = 2;
+
+        // Selected highlight
+        if (selectedTree === tree.id) {
+          ctx.strokeStyle = 'rgba(232, 213, 163, 0.8)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(tree.x, tree.y - trunkH - canopyR * 0.3, canopyR + 8, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Label
+        if (document.getElementById('showLabels').checked) {
+          ctx.fillStyle = 'rgba(232, 213, 163, 0.9)';
+          ctx.font = `11px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText(tree.name, tree.x, tree.y + 15);
+
+          if (tree.role === 'mother') {
+            ctx.font = '9px sans-serif';
+            ctx.fillStyle = 'rgba(232, 213, 163, 0.6)';
+            ctx.fillText('★ Mother Tree', tree.x, tree.y + 26);
+          }
+        }
       }
-    }
 
-    const glow = ctx.createRadialGradient(tree.x, tree.y, 0, tree.x, tree.y, tree.rootRadius);
-    glow.addColorStop(0, 'rgba(107, 68, 35, 0.08)');
-    glow.addColorStop(1, 'rgba(107, 68, 35, 0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(tree.x, tree.y, tree.rootRadius, 0, Math.PI * 2);
-    ctx.fill();
-  }
+      function drawParticles() {
+        particles.forEach(p => {
+          const t = p.progress;
+          const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          const x = p.x + (p.targetX - p.x) * ease + Math.sin(p.wobble) * 8;
+          const y = p.y + (p.targetY - p.y) * ease + Math.cos(p.wobble) * 5;
+          const nutrient = NUTRIENTS[p.nutrient];
 
-  function drawHyphae(conn) {
-    const pulse = getState('animatePulse');
+          // Glow
+          const glow = ctx.createRadialGradient(x, y, 0, x, y, 10);
+          glow.addColorStop(0, nutrient.glow);
+          glow.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(x, y, 10, 0, Math.PI * 2);
+          ctx.fill();
 
-    conn.hyphae.forEach(h => {
-      const phase = pulse ? Math.sin(time * 2 + h.pulsePhase) * 0.3 + 0.7 : 0.7;
-      const r = h.radius * phase * conn.strength;
-
-      const glow = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, r * 3);
-      glow.addColorStop(0, `rgba(196, 167, 125, ${0.15 * conn.strength})`);
-      glow.addColorStop(1, 'rgba(196, 167, 125, 0)');
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(h.x, h.y, r * 3, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = `rgba(196, 167, 125, ${0.4 * conn.strength * phase})`;
-      ctx.beginPath();
-      ctx.arc(h.x, h.y, r, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    const t1 = trees[conn.from];
-    const t2 = trees[conn.to];
-    ctx.strokeStyle = `rgba(196, 167, 125, ${0.15 * conn.strength})`;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 6]);
-    ctx.beginPath();
-    ctx.moveTo(t1.x, t1.y);
-    ctx.lineTo(t2.x, t2.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  function drawTree(tree) {
-    const trunkW = 8 * tree.size;
-    const trunkH = 30 * tree.size;
-    ctx.fillStyle = '#4a3728';
-    ctx.fillRect(tree.x - trunkW/2, tree.y - trunkH, trunkW, trunkH);
-
-    const canopyR = 25 * tree.size * (1 - tree.stress * 0.3);
-    const canopyGlow = ctx.createRadialGradient(tree.x, tree.y - trunkH - canopyR * 0.3, 0, tree.x, tree.y - trunkH - canopyR * 0.3, canopyR * 1.5);
-    canopyGlow.addColorStop(0, tree.canopyColor + 'cc');
-    canopyGlow.addColorStop(0.6, tree.canopyColor + '88');
-    canopyGlow.addColorStop(1, tree.canopyColor + '00');
-    ctx.fillStyle = canopyGlow;
-    ctx.beginPath();
-    ctx.arc(tree.x, tree.y - trunkH - canopyR * 0.3, canopyR * 1.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = tree.canopyColor;
-    ctx.beginPath();
-    ctx.arc(tree.x, tree.y - trunkH - canopyR * 0.3, canopyR, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = tree.canopyColor + '66';
-    ctx.beginPath();
-    ctx.arc(tree.x - canopyR * 0.3, tree.y - trunkH - canopyR * 0.5, canopyR * 0.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (tree.stress > 0) {
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(tree.x, tree.y - trunkH - canopyR * 0.3, canopyR + 4, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    if (selectedTree === tree.id) {
-      ctx.strokeStyle = 'rgba(232, 213, 163, 0.8)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(tree.x, tree.y - trunkH - canopyR * 0.3, canopyR + 8, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    if (getState('showLabels')) {
-      ctx.fillStyle = 'rgba(232, 213, 163, 0.9)';
-      ctx.font = '11px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(tree.name, tree.x, tree.y + 15);
-
-      if (tree.role === 'mother') {
-        ctx.font = '9px sans-serif';
-        ctx.fillStyle = 'rgba(232, 213, 163, 0.6)';
-        ctx.fillText('★ Mother Tree', tree.x, tree.y + 26);
+          // Core
+          ctx.fillStyle = nutrient.color;
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
       }
-    }
-  }
 
-  function drawParticles() {
-    particles.forEach(p => {
-      const t = p.progress;
-      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-      const x = p.x + (p.targetX - p.x) * ease + Math.sin(p.wobble) * 8;
-      const y = p.y + (p.targetY - p.y) * ease + Math.cos(p.wobble) * 5;
-      const nutrient = NUTRIENTS[p.nutrient];
+      function drawStressEffect() {
+        if (!stressActive) return;
 
-      const glow = ctx.createRadialGradient(x, y, 0, x, y, 10);
-      glow.addColorStop(0, nutrient.glow);
-      glow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(x, y, 10, 0, Math.PI * 2);
-      ctx.fill();
+        stressTimer += 0.016;
+        const alpha = Math.max(0, 1 - stressTimer * 0.3) * 0.15;
 
-      ctx.fillStyle = nutrient.color;
-      ctx.beginPath();
-      ctx.arc(x, y, 3, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
+        ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
+        ctx.fillRect(0, 0, W, H);
 
-  function drawStressEffect() {
-    if (!stressActive) return;
-    stressTimer += 0.016;
-    const alpha = Math.max(0, 1 - stressTimer * 0.3) * 0.15;
-
-    ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
-    ctx.fillRect(0, 0, W, H);
-
-    trees.forEach(tree => {
-      if (tree.stress > 0) {
-        const ringR = (stressTimer * 60) % 100;
-        ctx.strokeStyle = `rgba(239, 68, 68, ${Math.max(0, 0.4 - ringR/200)})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(tree.x, tree.y, ringR, 0, Math.PI * 2);
-        ctx.stroke();
+        // Pulsing warning rings from stressed trees
+        trees.forEach(tree => {
+          if (tree.stress > 0) {
+            const ringR = (stressTimer * 60) % 100;
+            ctx.strokeStyle = `rgba(239, 68, 68, ${Math.max(0, 0.4 - ringR/200)})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(tree.x, tree.y, ringR, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        });
       }
-    });
-  }
 
-  function render() {
-    time += 0.016;
-    ctx.clearRect(0, 0, W, H);
-    drawBackground();
-    trees.forEach(drawRoots);
-    connections.forEach(drawHyphae);
-    drawParticles();
-    trees.forEach(drawTree);
-    drawStressEffect();
-    updateParticles();
-    animationId = requestAnimationFrame(render);
-  }
+      function render() {
+        time += 0.016;
 
-  function buildTreeStatsHTML(tree) {
-    const connCount = connections.filter(c => c.from === tree.id || c.to === tree.id).length;
-    const outgoing = connections.filter(c => c.from === tree.id).length;
-    const incoming = connections.filter(c => c.to === tree.id).length;
-    return `
-      <div class="tree-stat"><span>Health</span>
-        <div class="stat-bar"><div class="stat-fill" style="width:${tree.health*100}%;background:${tree.health > 0.7 ? '#4ade80' : tree.health > 0.4 ? '#fbbf24' : '#ef4444'}"></div></div>
-      </div>
-      <div class="tree-stat"><span>Stress</span>
-        <div class="stat-bar"><div class="stat-fill" style="width:${tree.stress*100}%;background:#ef4444"></div></div>
-      </div>
-      <div class="tree-stat"><span>Links</span><span style="color:var(--fungi-glow)">${connCount}</span></div>
-      <div class="tree-stat"><span>Net Flow</span><span style="color:${outgoing > incoming ? 'var(--carbon)' : 'var(--nitrogen)'}">${outgoing > incoming ? 'Donor' : 'Receiver'}</span></div>
-    `;
-  }
+        ctx.clearRect(0, 0, W, H);
+        drawBackground();
 
-  function showTreeInfo(tree) {
-    document.getElementById('treeName').textContent = tree.name + (tree.role === 'mother' ? ' ★' : '');
-    document.getElementById('treeDesc').textContent = tree.desc;
-    document.getElementById('treeStats').innerHTML = buildTreeStatsHTML(tree);
+        // Draw roots first (underground)
+        trees.forEach(drawRoots);
 
-    document.getElementById('deskTreeName').textContent = tree.name + (tree.role === 'mother' ? ' ★' : '');
-    document.getElementById('deskTreeDesc').textContent = tree.desc;
-    document.getElementById('deskTreeStats').innerHTML = buildTreeStatsHTML(tree);
-  }
+        // Draw hyphae connections
+        connections.forEach(drawHyphae);
 
-  function showFact() {
-    const toast = document.getElementById('factToast');
-    const fact = FACTS[Math.floor(Math.random() * FACTS.length)];
-    toast.textContent = '💡 ' + fact;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 5000);
-  }
+        // Draw particles
+        drawParticles();
 
-  function applyStress(type) {
-    if (stressActive) return;
-    stressActive = type;
-    stressTimer = 0;
+        // Draw trees (above ground)
+        trees.forEach(drawTree);
 
-    const stressedIdx = Math.floor(Math.random() * trees.length);
-    trees[stressedIdx].stress = 1;
-    if (trees.length > 2) {
-      const secondIdx = Math.floor(Math.random() * trees.length);
-      if (secondIdx !== stressedIdx) trees[secondIdx].stress = 0.6;
-    }
+        // Draw stress overlay
+        drawStressEffect();
 
-    setTimeout(showFact, 500);
+        updateParticles();
 
-    setTimeout(() => {
-      trees.forEach(t => t.stress = 0);
-      stressActive = null;
-    }, 10000);
-  }
-
-  /* Touch/mouse interaction */
-  let dragging = false;
-  function getPos(e) {
-    const t = e.touches ? e.touches[0] : e;
-    return { x: t.clientX, y: t.clientY };
-  }
-
-  canvas.addEventListener('mousedown', () => dragging = true);
-  canvas.addEventListener('touchstart', (e) => { dragging = true; }, { passive: false });
-  canvas.addEventListener('mousemove', (e) => { if (!dragging) return; const p = getPos(e); });
-  canvas.addEventListener('touchmove', (e) => { if (!dragging) return; e.preventDefault(); const p = getPos(e); }, { passive: false });
-  window.addEventListener('mouseup', () => dragging = false);
-  canvas.addEventListener('touchend', () => dragging = false);
-
-  /* Click / tap to select tree */
-  canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-
-    let clicked = null;
-    for (const tree of trees) {
-      const trunkH = 30 * tree.size;
-      const canopyR = 25 * tree.size;
-      const cy = tree.y - trunkH - canopyR * 0.3;
-      const dx = mx - tree.x;
-      const dy = my - cy;
-      if (Math.sqrt(dx*dx + dy*dy) < canopyR + 10) {
-        clicked = tree;
-        break;
+        animationId = requestAnimationFrame(render);
       }
-    }
 
-    if (clicked) {
-      selectedTree = clicked.id;
-      showTreeInfo(clicked);
-      showFact();
-    } else {
-      selectedTree = null;
-      document.getElementById('treeName').textContent = 'Select a tree';
-      document.getElementById('treeDesc').textContent = 'Tap on any tree to see its connections and nutrient flows.';
-      document.getElementById('treeStats').innerHTML = '';
-      document.getElementById('deskTreeName').textContent = 'None selected';
-      document.getElementById('deskTreeDesc').textContent = 'Click on any tree to see details.';
-      document.getElementById('deskTreeStats').innerHTML = '';
-    }
-  });
+      function showTreeInfo(tree) {
+        const panel = document.getElementById('treeInfo');
+        document.getElementById('treeName').textContent = tree.name + (tree.role === 'mother' ? ' ★' : '');
+        document.getElementById('treeDesc').textContent = tree.desc;
 
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    generateForest();
-    selectedTree = null;
-    document.getElementById('treeName').textContent = 'Select a tree';
-    document.getElementById('treeDesc').textContent = 'Tap on any tree to see its connections and nutrient flows.';
-    document.getElementById('treeStats').innerHTML = '';
-    document.getElementById('deskTreeName').textContent = 'None selected';
-    document.getElementById('deskTreeDesc').textContent = 'Click on any tree to see details.';
-    document.getElementById('deskTreeStats').innerHTML = '';
-    showFact();
-  });
+        const statsEl = document.getElementById('treeStats');
+        const connCount = connections.filter(c => c.from === tree.id || c.to === tree.id).length;
+        const outgoing = connections.filter(c => c.from === tree.id).length;
+        const incoming = connections.filter(c => c.to === tree.id).length;
 
-  window.addEventListener('resize', () => {
-    resize();
-    generateForest();
-  });
+        statsEl.innerHTML = `
+          <div class="tree-stat">
+            <span>Health</span>
+            <div class="stat-bar"><div class="stat-fill" style="width:${tree.health*100}%; background:${tree.health > 0.7 ? '#4ade80' : tree.health > 0.4 ? '#fbbf24' : '#ef4444'}"></div></div>
+          </div>
+          <div class="tree-stat">
+            <span>Stress</span>
+            <div class="stat-bar"><div class="stat-fill" style="width:${tree.stress*100}%; background:#ef4444"></div></div>
+          </div>
+          <div class="tree-stat">
+            <span>Links</span>
+            <span style="color:var(--fungi-glow)">${connCount}</span>
+          </div>
+          <div class="tree-stat">
+            <span>Net Flow</span>
+            <span style="color:${outgoing > incoming ? 'var(--carbon)' : 'var(--nitrogen)'}">${outgoing > incoming ? 'Donor' : 'Receiver'}</span>
+          </div>
+        `;
 
-  resize();
-  generateForest();
-  render();
-  setTimeout(showFact, 2000);
-})();
-</script>
+        panel.classList.remove('hidden');
+      }
+
+      function showFact() {
+        const toast = document.getElementById('factToast');
+        const fact = FACTS[Math.floor(Math.random() * FACTS.length)];
+        toast.textContent = '💡 ' + fact;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 5000);
+      }
+
+      function applyStress(type) {
+        if (stressActive) return;
+        stressActive = type;
+        stressTimer = 0;
+
+        // Pick 1-2 random trees to stress
+        const stressedIdx = Math.floor(Math.random() * trees.length);
+        trees[stressedIdx].stress = 1;
+        if (trees.length > 2) {
+          const secondIdx = Math.floor(Math.random() * trees.length);
+          if (secondIdx !== stressedIdx) trees[secondIdx].stress = 0.6;
+        }
+
+        // Show fact about stress signaling
+        setTimeout(showFact, 500);
+
+        // Clear stress after 10 seconds
+        setTimeout(() => {
+          trees.forEach(t => t.stress = 0);
+          stressActive = null;
+        }, 10000);
+      }
+
+      // Event handlers
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        let clicked = null;
+        for (const tree of trees) {
+          const trunkH = 30 * tree.size;
+          const canopyR = 25 * tree.size;
+          const cy = tree.y - trunkH - canopyR * 0.3;
+          const dx = mx - tree.x;
+          const dy = my - cy;
+          if (Math.sqrt(dx*dx + dy*dy) < canopyR + 10) {
+            clicked = tree;
+            break;
+          }
+        }
+
+        if (clicked) {
+          selectedTree = clicked.id;
+          showTreeInfo(clicked);
+          showFact();
+        } else {
+          selectedTree = null;
+          document.getElementById('treeInfo').classList.add('hidden');
+        }
+      });
+
+      document.getElementById('btnDrought').addEventListener('click', () => applyStress('drought'));
+      document.getElementById('btnPest').addEventListener('click', () => applyStress('pest'));
+      document.getElementById('btnShade').addEventListener('click', () => applyStress('shade'));
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        generateForest();
+        selectedTree = null;
+        document.getElementById('treeInfo').classList.add('hidden');
+        showFact();
+      });
+
+      window.addEventListener('resize', () => {
+        resize();
+        generateForest();
+      });
+
+      // Initialize
+      resize();
+      generateForest();
+      render();
+
+      // Show initial fact after 2 seconds
+      setTimeout(showFact, 2000);
+    })();
+  </script>
 </body>
 </html>
