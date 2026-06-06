@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-06",
-    "title": "Rainfall Symphony",
-    "slug": "rainfall-symphony",
-    "publishedSlug": "2026-06-06-rainfall-symphony",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-06-rainfall-symphony/"
+    "date": "2026-06-07",
+    "title": "Fermentation Race",
+    "slug": "fermentation-race",
+    "publishedSlug": "2026-06-07-fermentation-race",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-07-fermentation-race/"
   },
   "apps": [
+    {
+      "date": "2026-06-07",
+      "title": "Fermentation Race",
+      "slug": "fermentation-race",
+      "publishedSlug": "2026-06-07-fermentation-race",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-07-fermentation-race/",
+      "description": "Competitive multi-species fermentation simulator — set conditions and watch microbes battle for dominance"
+    },
     {
       "date": "2026-06-06",
       "title": "Rainfall Symphony",

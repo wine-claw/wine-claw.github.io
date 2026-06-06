@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Fermentation Race</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --panel:#181b21;
+    --accent:#e8c547;
+    --text:#d0d4dc;
+    --muted:#7a8194;
+    --yeast:#f4d03f;
+    --lacto:#58d68d;
+    --aceto:#e74c3c;
+    --brett:#9b59b6;
+    --track:#23262e;
+    --border:#2a2e38;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;overflow-x:hidden;}
+  #app{max-width:1100px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px;min-height:100%;}
+
+  /* Disclaimer */
+  .disclaimer{font-size:11px;color:#8a7a5a;background:#1a1710;border:1px solid #3a3020;border-radius:6px;padding:8px 12px;line-height:1.5;text-align:center;}
+
+  /* Header */
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  h1{font-size:22px;font-weight:700;color:var(--accent);letter-spacing:-0.5px;}
+  .subtitle{font-size:12px;color:var(--muted);}
+
+  /* Race Track */
+  .race-container{background:var(--panel);border-radius:12px;border:1px solid var(--border);padding:14px;}
+  .race-title{font-size:13px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;}
+  .track{position:relative;height:220px;background:linear-gradient(180deg,#1a1d24 0%,#14161c 100%);border-radius:8px;border:1px solid var(--border);overflow:hidden;}
+  .track-grid{position:absolute;inset:0;pointer-events:none;}
+  .track-grid line{stroke:#2a2e38;stroke-width:1;}
+  .finish-line{position:absolute;right:40px;top:0;bottom:0;width:3px;background:repeating-linear-gradient(0deg,transparent,transparent 8px,var(--accent) 8px,var(--accent) 16px);opacity:0.6;}
+  .microbe-lane{position:absolute;left:10px;right:10px;height:42px;display:flex;align-items:center;gap:8px;}
+  .microbe-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;box-shadow:0 0 12px currentColor;transition:transform .15s;}
+  .microbe-name{position:absolute;left:50px;font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none;white-space:nowrap;}
+  .microbe-pop{position:absolute;right:8px;font-size:10px;color:var(--muted);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:4px;pointer-events:none;}
+  .trail-dot{position:absolute;width:4px;height:4px;border-radius:50%;opacity:.25;pointer-events:none;}
+
+  /* Controls */
+  .controls-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  @media(min-width:700px){.controls-grid{grid-template-columns:repeat(4,1fr);}}
+  .control-group{background:var(--panel);border-radius:10px;border:1px solid var(--border);padding:12px;}
+  .control-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .control-label span{font-size:12px;font-weight:600;color:var(--text);}
+  .control-value{font-size:12px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;}
+  input[type=range]{width:100%;height:6px;border-radius:3px;background:var(--track);-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px rgba(232,197,71,.4);cursor:pointer;border:none;}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;box-shadow:0 0 8px rgba(232,197,71,.4);}
+  .env-readout{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .env-chip{font-size:10px;padding:3px 8px;border-radius:12px;background:var(--track);color:var(--muted);font-weight:500;}
+  .env-chip.warn{background:#3a2018;color:#e8a050;}
+  .env-chip.good{background:#1a3020;color:#58d68d;}
+
+  /* Stats & Graph */
+  .bottom-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+  @media(min-width:700px){.bottom-grid{grid-template-columns:1fr 1fr;}}
+  .stats-panel, .graph-panel{background:var(--panel);border-radius:10px;border:1px solid var(--border);padding:12px;}
+  .panel-title{font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+  .stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-name{display:flex;align-items:center;gap:6px;}
+  .stat-dot{width:8px;height:8px;border-radius:50%;}
+  .stat-bar-bg{flex:1;height:6px;background:var(--track);border-radius:3px;margin:0 10px;overflow:hidden;}
+  .stat-bar-fill{height:100%;border-radius:3px;transition:width .3s ease;}
+  .stat-value{font-weight:700;font-variant-numeric:tabular-nums;min-width:50px;text-align:right;}
+
+  canvas.graph-canvas{width:100%;height:160px;border-radius:6px;background:var(--bg);}
+
+  /* Winner Banner */
+  .winner-banner{display:none;text-align:center;padding:14px;border-radius:10px;margin-top:4px;font-size:15px;font-weight:700;animation:bannerIn .4s ease;}
+  .winner-banner.show{display:block;}
+  @keyframes bannerIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+
+  /* Buttons */
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+  button{border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-primary{background:var(--accent);color:#1a1508;}
+  .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px rgba(232,197,71,.25);}
+  .btn-secondary{background:var(--track);color:var(--text);border:1px solid var(--border);}
+  .btn-secondary:hover:not(:disabled){background:var(--border);}
+  .btn-reset{background:#3a1f1f;color:#e8a0a0;border:1px solid #5a3030;}
+  .btn-reset:hover:not(:disabled){background:#4a2828;}
+
+  /* Legend */
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;font-size:11px;}
+  .legend-item{display:flex;align-items:center;gap:4px;}
+  .legend-dot{width:10px;height:10px;border-radius:50%;}
+
+  /* Timer */
+  .timer{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+
+  /* Substrate particles */
+  .substrate-particle{position:absolute;width:3px;height:3px;border-radius:50%;background:#3a4a5a;opacity:.4;pointer-events:none;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="disclaimer">
+    Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.
+  </div>
+
+  <header>
+    <div>
+      <h1>🦠 Fermentation Race</h1>
+      <div class="subtitle">Which microbe dominates your substrate?</div>
+    </div>
+    <div class="timer" id="timer">00:00:00</div>
+  </header>
+
+  <div class="race-container">
+    <div class="race-title">🏁 Race Track — First to 90% dominance wins</div>
+    <div class="track" id="track">
+      <svg class="track-grid" id="trackGrid"></svg>
+      <div class="finish-line"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="winner-banner" id="winnerBanner"></div>
+  </div>
+
+  <div class="controls-grid">
+    <div class="control-group">
+      <div class="control-label"><span>Temperature</span><span class="control-value" id="tempVal">25°C</span></div>
+      <input type="range" id="tempSlider" min="5" max="50" value="25" step="1">
+      <div class="env-readout" id="tempReadout"></div>
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>pH</span><span class="control-value" id="phVal">4.5</span></div>
+      <input type="range" id="phSlider" min="2" max="8.5" value="4.5" step="0.1">
+      <div class="env-readout" id="phReadout"></div>
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Sugar %</span><span class="control-value" id="sugarVal">15%</span></div>
+      <input type="range" id="sugarSlider" min="0" max="35" value="15" step="1">
+      <div class="env-readout" id="sugarReadout"></div>
+    </div>
+    <div class="control-group">
+      <div class="control-label"><span>Salt %</span><span class="control-value" id="saltVal">0%</span></div>
+      <input type="range" id="saltSlider" min="0" max="15" value="0" step="0.5">
+      <div class="env-readout" id="saltReadout"></div>
+    </div>
+  </div>
+
+  <div class="bottom-grid">
+    <div class="stats-panel">
+      <div class="panel-title">📊 Live Population</div>
+      <div id="statsRows"></div>
+    </div>
+    <div class="graph-panel">
+      <div class="panel-title">📈 Population Over Time</div>
+      <canvas class="graph-canvas" id="graphCanvas" width="500" height="160"></canvas>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-primary" id="startBtn">▶ Start Race</button>
+    <button class="btn-secondary" id="pauseBtn" disabled>⏸ Pause</button>
+    <button class="btn-secondary" id="stepBtn">⏭ Step</button>
+    <button class="btn-reset" id="resetBtn">↺ Reset</button>
+  </div>
+
+  <div class="legend" style="margin-top:4px;font-size:10px;color:var(--muted);">
+    <span>🍷 Saccharomyces — Alcohol tolerance · 🥬 Lactobacillus — Acid producer · 🍎 Acetobacter — Needs oxygen · 🍇 Brettanomyces — Slow but persistent</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ===== Microbe Definitions =====
+  const MICROBES = [
+    {
+      id:'sacc', name:'Saccharomyces', emoji:'🍷', color:'#f4d03f',
+      tempOpt:[20,32], tempTol:[8,42], phOpt:[3.5,5.5], phTol:[2.8,8.0],
+      sugarNeed:true, sugarOpt:[10,30], alcoholTol:16, saltTol:3,
+      growthRate:1.0, outcompete:0.7, product:'Ethanol',
+      desc:'Wine yeast. Loves sugar, tolerates alcohol, hates high salt.'
+    },
+    {
+      id:'lacto', name:'Lactobacillus', emoji:'🥬', color:'#58d68d',
+      tempOpt:[30,42], tempTol:[10,50], phOpt:[5.0,6.5], phTol:[3.0,8.0],
+      sugarNeed:true, sugarOpt:[2,15], acidTol:2.0, saltTol:8,
+      growthRate:0.85, outcompete:0.9, product:'Lactic Acid',
+      desc:'Lactic acid bacteria. Loves warmth, tolerates salt, makes sour.'
+    },
+    {
+      id:'aceto', name:'Acetobacter', emoji:'🍎', color:'#e74c3c',
+      tempOpt:[25,35], tempTol:[15,40], phOpt:[5.0,6.5], phTol:[3.0,8.0],
+      sugarNeed:false, oxygenNeed:true, alcoholTol:0, saltTol:2,
+      growthRate:0.7, outcompete:0.6, product:'Acetic Acid',
+      desc:'Vinegar bacteria. Needs oxygen, converts ethanol to acetic acid.'
+    },
+    {
+      id:'brett', name:'Brettanomyces', emoji:'🍇', color:'#9b59b6',
+      tempOpt:[22,30], tempTol:[12,35], phOpt:[3.0,5.0], phTol:[2.5,7.0],
+      sugarNeed:true, sugarOpt:[0.5,10], alcoholTol:14, saltTol:4,
+      growthRate:0.4, outcompete:0.5, product:'Volatile Phenols',
+      desc:'Wild yeast. Slow grower, survives harsh conditions, earthy flavours.'
+    }
+  ];
+
+  // ===== State =====
+  let running = false;
+  let finished = false;
+  let time = 0;
+  let animId = null;
+  let lastTs = 0;
+  const DT = 0.5; // simulation timestep in seconds
+  const WIN_THRESHOLD = 0.90;
+  const MAX_TIME = 300; // 5 min max
+
+  let env = { temp:25, ph:4.5, sugar:15, salt:0, oxygen:true };
+  let microbes = [];
+  let history = []; // array of {t, pops:{id:count}}
+  let trails = []; // {x,y,color,age}
+  let substrateParticles = [];
+
+  // ===== DOM refs =====
+  const track = document.getElementById('track');
+  const trackGrid = document.getElementById('trackGrid');
+  const legendEl = document.getElementById('legend');
+  const winnerBanner = document.getElementById('winnerBanner');
+  const timerEl = document.getElementById('timer');
+  const statsRows = document.getElementById('statsRows');
+  const graphCanvas = document.getElementById('graphCanvas');
+  const gCtx = graphCanvas.getContext('2d');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const stepBtn = document.getElementById('stepBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  // ===== Init =====
+  function init(){
+    microbes = MICROBES.map(m => ({
+      ...m,
+      pop: 1.0,
+      alive: true,
+      pos: 0, // 0-1 track position
+      product: 0,
+      stress: 0
+    }));
+    history = [];
+    trails = [];
+    time = 0;
+    running = false;
+    finished = false;
+    if(animId){cancelAnimationFrame(animId);animId=null;}
+    lastTs = 0;
+    buildTrack();
+    buildLegend();
+    buildStats();
+    buildSubstrate();
+    updateReadouts();
+    updateTimer();
+    updateGraph();
+    winnerBanner.classList.remove('show');
+    winnerBanner.textContent = '';
+    startBtn.textContent = '▶ Start Race';
+    pauseBtn.disabled = true;
+    // Clear trails from DOM
+    document.querySelectorAll('.trail-dot').forEach(el => el.remove());
+  }
+
+  function buildTrack(){
+    trackGrid.innerHTML = '';
+    const w = track.clientWidth || 600;
+    const h = track.clientHeight || 220;
+    // Grid lines
+    for(let x=0;x<=w;x+=60){
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x);line.setAttribute('y1',0);
+      line.setAttribute('x2',x);line.setAttribute('y2',h);
+      trackGrid.appendChild(line);
+    }
+    for(let y=0;y<=h;y+=44){
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',0);line.setAttribute('y1',y);
+      line.setAttribute('x2',w);line.setAttribute('y2',y);
+      trackGrid.appendChild(line);
+    }
+    // Microbe lanes
+    microbes.forEach((m,i) => {
+      let lane = document.getElementById('lane-'+m.id);
+      if(!lane){
+        lane = document.createElement('div');
+        lane.id = 'lane-'+m.id;
+        lane.className = 'microbe-lane';
+        track.appendChild(lane);
+      }
+      lane.style.top = (12 + i * 50) + 'px';
+      lane.innerHTML = `
+        <div class="microbe-icon" id="icon-${m.id}" style="color:${m.color};background:${m.color}15;border:2px solid ${m.color}40;">${m.emoji}</div>
+        <span class="microbe-name">${m.name}</span>
+        <span class="microbe-pop" id="pop-${m.id}">1.0M</span>
+      `;
+    });
+  }
+
+  function buildLegend(){
+    legendEl.innerHTML = microbes.map(m => `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${m.color}"></div>
+        <span>${m.emoji} ${m.name}</span>
+      </div>
+    `).join('');
+  }
+
+  function buildStats(){
+    statsRows.innerHTML = microbes.map(m => `
+      <div class="stat-row" id="stat-${m.id}">
+        <div class="stat-name">
+          <div class="stat-dot" style="background:${m.color}"></div>
+          <span>${m.emoji} ${m.name}</span>
+        </div>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-${m.id}" style="width:25%;background:${m.color}"></div></div>
+        <div class="stat-value" id="val-${m.id}">25%</div>
+      </div>
+    `).join('');
+  }
+
+  function buildSubstrate(){
+    document.querySelectorAll('.substrate-particle').forEach(el => el.remove());
+    substrateParticles = [];
+    const w = track.clientWidth || 600;
+    const h = track.clientHeight || 220;
+    for(let i=0;i<60;i++){
+      const p = document.createElement('div');
+      p.className = 'substrate-particle';
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      track.appendChild(p);
+      substrateParticles.push({el:p, x, y, vx:(Math.random()-.5)*0.3, vy:(Math.random()-.5)*0.3});
+    }
+  }
+
+  // ===== Environment scoring =====
+  function envScore(m){
+    let score = 1.0;
+    // Temperature factor (gaussian-ish)
+    const t = env.temp;
+    if(t < m.tempTol[0] || t > m.tempTol[1]) return 0;
+    const tCenter = (m.tempOpt[0]+m.tempOpt[1])/2;
+    const tRange = (m.tempOpt[1]-m.tempOpt[0])/2 + 3;
+    const tDist = Math.abs(t - tCenter) / tRange;
+    score *= Math.max(0, 1 - tDist*tDist);
+
+    // pH factor
+    const p = env.ph;
+    if(p < m.phTol[0] || p > m.phTol[1]) return 0;
+    const pCenter = (m.phOpt[0]+m.phOpt[1])/2;
+    const pRange = (m.phOpt[1]-m.phOpt[0])/2 + 1;
+    const pDist = Math.abs(p - pCenter) / pRange;
+    score *= Math.max(0, 1 - pDist*pDist);
+
+    // Salt stress
+    if(env.salt > m.saltTol){
+      score *= Math.max(0, 1 - (env.salt - m.saltTol) / 5);
+    }
+
+    // Sugar
+    if(m.sugarNeed){
+      if(env.sugar < 0.5) score *= 0.1;
+      else {
+        const sCenter = (m.sugarOpt[0]+m.sugarOpt[1])/2;
+        const sRange = (m.sugarOpt[1]-m.sugarOpt[0])/2 + 5;
+        const sDist = Math.abs(env.sugar - sCenter) / sRange;
+        score *= Math.max(0.3, 1 - sDist);
+      }
+    }
+
+    // Oxygen
+    if(m.oxygenNeed && !env.oxygen) score *= 0.3;
+
+    return Math.max(0, score);
+  }
+
+  // ===== Simulation Step =====
+  function step(){
+    if(finished) return;
+    time += DT;
+    if(time > MAX_TIME){finishRace(null); return;}
+
+    const totalPop = microbes.reduce((s,m) => s + m.pop, 0);
+
+    microbes.forEach(m => {
+      if(!m.alive) return;
+      const envF = envScore(m);
+      // Growth: logistic-ish with competition
+      const carrying = 100 * envF;
+      const competition = totalPop > 0 ? (m.pop / totalPop) : 0.25;
+      const growth = m.growthRate * envF * m.pop * (1 - m.pop/carrying) * 0.08;
+      m.pop = Math.max(0.01, m.pop + growth * DT);
+      m.stress = 1 - envF;
+
+      // Alcohol toxicity for non-tolerant species
+      if(m.alcoholTol !== undefined && m.alcoholTol > 0){
+        const ethanol = microbes.find(x => x.id==='sacc')?.product || 0;
+        if(ethanol > m.alcoholTol){
+          m.pop *= Math.max(0, 1 - (ethanol - m.alcoholTol)*0.02*DT);
+        }
+      }
+      // Acid toxicity
+      if(m.acidTol !== undefined){
+        const acid = microbes.find(x => x.id==='lacto')?.product || 0;
+        if(acid > m.acidTol){
+          m.pop *= Math.max(0, 1 - (acid - m.acidTol)*0.03*DT);
+        }
+      }
+      // Acetobacter needs ethanol to grow
+      if(m.id==='aceto'){
+        const ethanol = microbes.find(x => x.id==='sacc')?.product || 0;
+        if(ethanol < 0.5) m.pop *= 0.98;
+        else m.pop *= Math.min(1.05, 1 + ethanol*0.005);
+      }
+
+      // Product accumulation
+      if(m.pop > 1){
+        m.product += m.pop * envF * 0.01 * DT;
+      }
+
+      // Position on track = market share
+      m.pos = totalPop > 0 ? m.pop / totalPop : 0.25;
+
+      // Death check
+      if(m.pop < 0.05) m.alive = false;
+    });
+
+    // Record history
+    const snap = {t:time};
+    microbes.forEach(m => snap[m.id] = m.pop);
+    history.push(snap);
+    if(history.length > 300) history.shift();
+
+    // Win check
+    const maxPop = Math.max(...microbes.map(m => m.pop));
+    const leader = microbes.find(m => m.pop === maxPop);
+    if(leader && leader.pos >= WIN_THRESHOLD && time > 20){
+      finishRace(leader);
+    }
+  }
+
+  function finishRace(winner){
+    finished = true;
+    running = false;
+    pauseBtn.disabled = true;
+    startBtn.textContent = '▶ Start Race';
+    if(winner){
+      winnerBanner.innerHTML = `🏆 <span style="color:${winner.color}">${winner.emoji} ${winner.name}</span> wins with ${(winner.pos*100).toFixed(1)}% dominance in ${formatTime(time)}!`;
+    } else {
+      const max = microbes.reduce((a,b) => a.pop>b.pop?a:b);
+      winnerBanner.innerHTML = `⏱ Race timed out. <span style="color:${max.color}">${max.emoji} ${max.name}</span> leads with ${(max.pos*100).toFixed(1)}%.`;
+    }
+    winnerBanner.classList.add('show');
+    winnerBanner.style.background = winner ? (winner.color + '18') : '#2a2e38';
+    winnerBanner.style.border = winner ? `1px solid ${winner.color}40` : '1px solid var(--border)';
+    winnerBanner.style.color = winner ? winner.color : 'var(--text)';
+  }
+
+  function formatTime(t){
+    const m = Math.floor(t/60), s = Math.floor(t%60), ms = Math.floor((t%1)*10);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${ms}`;
+  }
+
+  // ===== Rendering =====
+  function render(){
+    const w = track.clientWidth || 600;
+    const trackW = w - 60; // padding
+
+    microbes.forEach(m => {
+      const icon = document.getElementById('icon-'+m.id);
+      const popEl = document.getElementById('pop-'+m.id);
+      if(icon){
+        const x = 10 + m.pos * trackW;
+        icon.style.transform = `translateX(${x}px) scale(${m.alive ? 1 : 0.6})`;
+        icon.style.opacity = m.alive ? (0.5 + 0.5*(1-m.stress)) : 0.3;
+      }
+      if(popEl){
+        popEl.textContent = m.alive ? m.pop.toFixed(1) + 'M' : '💀';
+      }
+      // Stats bar
+      const total = microbes.reduce((s,x) => s + x.pop, 0);
+      const share = total > 0 ? (m.pop/total)*100 : 25;
+      const bar = document.getElementById('bar-'+m.id);
+      const val = document.getElementById('val-'+m.id);
+      if(bar) bar.style.width = share + '%';
+      if(val) val.textContent = share.toFixed(1) + '%';
+    });
+
+    // Animate substrate particles
+    substrateParticles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      const tw = track.clientWidth || 600;
+      const th = track.clientHeight || 220;
+      if(p.x < 0 || p.x > tw) p.vx *= -1;
+      if(p.y < 0 || p.y > th) p.vy *= -1;
+      p.el.style.left = p.x + 'px';
+      p.el.style.top = p.y + 'px';
+    });
+
+    // Render trails as small fading dots
+    trails.forEach(t => {
+      t.age++;
+      if(t.el) t.el.style.opacity = Math.max(0, 0.3 - t.age * 0.008);
+    });
+    trails = trails.filter(t => t.age < 40);
+    microbes.forEach((m, idx) => {
+      if(!m.alive) return;
+      const x = 10 + m.pos * trackW + 14;
+      const y = 12 + idx * 50 + 14;
+      const dot = document.createElement('div');
+      dot.className = 'trail-dot';
+      dot.style.left = x + 'px';
+      dot.style.top = y + 'px';
+      dot.style.background = m.color;
+      track.appendChild(dot);
+      trails.push({x, y, color:m.color, age:0, el:dot});
+    });
+  }
+
+  function updateTimer(){
+    timerEl.textContent = formatTime(time);
+  }
+
+  function updateGraph(){
+    const w = graphCanvas.width = graphCanvas.clientWidth || 500;
+    const h = graphCanvas.height = 160;
+    gCtx.clearRect(0,0,w,h);
+    if(history.length < 2) return;
+
+    // Grid
+    gCtx.strokeStyle = '#2a2e38';
+    gCtx.lineWidth = 1;
+    for(let y=0;y<=h;y+=40){gCtx.beginPath();gCtx.moveTo(0,y);gCtx.lineTo(w,y);gCtx.stroke();}
+
+    const tMax = Math.max(history[history.length-1].t, 30);
+    const pMax = 120; // max population scale
+
+    MICROBES.forEach(m => {
+      gCtx.strokeStyle = m.color;
+      gCtx.lineWidth = 2;
+      gCtx.beginPath();
+      history.forEach((pt,i) => {
+        const x = (pt.t / tMax) * w;
+        const y = h - (pt[m.id] / pMax) * h;
+        if(i===0) gCtx.moveTo(x,y); else gCtx.lineTo(x,y);
+      });
+      gCtx.stroke();
+    });
+
+    // Labels
+    gCtx.fillStyle = 'var(--muted)';
+    gCtx.font = '10px sans-serif';
+    gCtx.fillText('0', 4, h-4);
+    gCtx.fillText('2m', 4, 12);
+  }
+
+  function updateReadouts(){
+    env.temp = parseFloat(document.getElementById('tempSlider').value);
+    env.ph = parseFloat(document.getElementById('phSlider').value);
+    env.sugar = parseFloat(document.getElementById('sugarSlider').value);
+    env.salt = parseFloat(document.getElementById('saltSlider').value);
+
+    document.getElementById('tempVal').textContent = env.temp.toFixed(0) + '°C';
+    document.getElementById('phVal').textContent = env.ph.toFixed(1);
+    document.getElementById('sugarVal').textContent = env.sugar.toFixed(0) + '%';
+    document.getElementById('saltVal').textContent = env.salt.toFixed(1) + '%';
+
+    // Chips
+    const tR = document.getElementById('tempReadout');
+    const pR = document.getElementById('phReadout');
+    const sR = document.getElementById('sugarReadout');
+    const saR = document.getElementById('saltReadout');
+
+    const tCls = env.temp > 40 || env.temp < 10 ? 'warn' : (env.temp >= 20 && env.temp <= 35 ? 'good' : '');
+    tR.innerHTML = `<span class="env-chip ${tCls}">${env.temp < 15 ? '❄ Cold' : env.temp > 38 ? '🔥 Hot' : '✓ Temperate'}</span>`;
+
+    const pCls = env.ph < 3 ? 'warn' : (env.ph >= 4 && env.ph <= 6 ? 'good' : '');
+    pR.innerHTML = `<span class="env-chip ${pCls}">${env.ph < 3.5 ? '🍋 Acidic' : env.ph > 7 ? '🧪 Alkaline' : '✓ Balanced'}</span>`;
+
+    const sugCls = env.sugar > 25 ? 'good' : (env.sugar < 2 ? 'warn' : '');
+    sR.innerHTML = `<span class="env-chip ${sugCls}">${env.sugar < 2 ? '⚠ Starved' : env.sugar > 25 ? '🍬 Rich' : '✓ Moderate'}</span>`;
+
+    const salCls = env.salt > 6 ? 'warn' : '';
+    saR.innerHTML = `<span class="env-chip ${salCls}">${env.salt > 5 ? '🧂 Salty' : '✓ Fresh'}</span>`;
+  }
+
+  // ===== Animation Loop =====
+  function loop(ts){
+    if(!running) return;
+    if(!lastTs) lastTs = ts;
+    const elapsed = (ts - lastTs) / 1000;
+    lastTs = ts;
+
+    // Run multiple sim steps per frame for stability
+    const steps = Math.min(10, Math.ceil(elapsed / (DT/10)));
+    for(let i=0;i<steps;i++) step();
+
+    render();
+    updateTimer();
+    updateGraph();
+
+    animId = requestAnimationFrame(loop);
+  }
+
+  // ===== Events =====
+  ['tempSlider','phSlider','sugarSlider','saltSlider'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateReadouts);
+  });
+
+  startBtn.addEventListener('click', () => {
+    if(finished) init();
+    running = !running;
+    if(running){
+      startBtn.textContent = '⏹ Stop';
+      pauseBtn.disabled = false;
+      lastTs = 0;
+      animId = requestAnimationFrame(loop);
+    } else {
+      startBtn.textContent = '▶ Start Race';
+      pauseBtn.disabled = true;
+      if(animId){cancelAnimationFrame(animId);animId=null;}
+    }
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    if(running){
+      running = false;
+      if(animId){cancelAnimationFrame(animId);animId=null;}
+      pauseBtn.textContent = '▶ Resume';
+    } else {
+      running = true;
+      lastTs = 0;
+      animId = requestAnimationFrame(loop);
+      pauseBtn.textContent = '⏸ Pause';
+    }
+  });
+
+  stepBtn.addEventListener('click', () => {
+    if(finished) return;
+    step();
+    render();
+    updateTimer();
+    updateGraph();
+  });
+
+  resetBtn.addEventListener('click', init);
+
+  window.addEventListener('resize', () => {
+    buildTrack();
+    updateGraph();
+  });
+
+  // ===== Start =====
+  init();
+})();
+</script>
+</body>
+</html>
