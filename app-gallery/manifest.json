@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-07",
-    "title": "Fermentation Race",
-    "slug": "fermentation-race",
-    "publishedSlug": "2026-06-07-fermentation-race",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-07-fermentation-race/"
+    "date": "2026-06-08",
+    "title": "Canopy Sculptor",
+    "slug": "canopy-sculptor",
+    "publishedSlug": "2026-06-08-canopy-sculptor",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-08-canopy-sculptor/"
   },
   "apps": [
+    {
+      "date": "2026-06-08",
+      "title": "Canopy Sculptor",
+      "slug": "canopy-sculptor",
+      "publishedSlug": "2026-06-08-canopy-sculptor",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-08-canopy-sculptor/",
+      "description": "Interactive vineyard canopy management simulator — shape your canopy and see sunlight, airflow, and fruit quality respond in real time"
+    },
     {
       "date": "2026-06-07",
       "title": "Fermentation Race",

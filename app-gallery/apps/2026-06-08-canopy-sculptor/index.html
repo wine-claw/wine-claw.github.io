@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Canopy Sculptor — Vineyard Canopy Simulator</title>
+<style>
+  :root{
+    --bg:#0c1410;
+    --panel:#15201a;
+    --accent:#7cb342;
+    --accent2:#ffb74d;
+    --danger:#ef5350;
+    --text:#e8f5e9;
+    --muted:#8faa8a;
+    --vine:#5d4037;
+    --leaf-dark:#2e7d32;
+    --leaf-mid:#43a047;
+    --leaf-light:#66bb6a;
+    --fruit:#e53935;
+    --sky-top:#1a237e;
+    --sky-mid:#3949ab;
+    --sky-horizon:#5c6bc0;
+    --soil:#3e2723;
+    --soil-top:#5d4037;
+    --border:#2a3a30;
+    --shadow:rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow-x:hidden;}
+  #app{max-width:1200px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px;min-height:100%;}
+
+  .disclaimer{font-size:11px;color:#9e8a5a;background:#1c1810;border:1px solid #3a3020;border-radius:6px;padding:8px 12px;line-height:1.5;text-align:center;}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  h1{font-size:22px;font-weight:700;color:var(--accent);letter-spacing:-0.5px;}
+  .subtitle{font-size:12px;color:var(--muted);}
+
+  .main-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  @media(min-width:900px){.main-grid{grid-template-columns:320px 1fr;}}
+
+  /* Controls sidebar */
+  .sidebar{display:flex;flex-direction:column;gap:10px;}
+  .control-group{background:var(--panel);border-radius:12px;border:1px solid var(--border);padding:14px;}
+  .control-group h3{font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .control-group h3 .icon{font-size:14px;}
+  .slider-wrap{margin-bottom:14px;}
+  .slider-wrap:last-child{margin-bottom:0;}
+  .slider-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+  .slider-label .name{font-size:12px;color:var(--text);font-weight:500;}
+  .slider-label .val{font-size:11px;color:var(--accent);font-weight:600;background:rgba(124,179,66,0.15);padding:2px 7px;border-radius:10px;}
+  input[type="range"]{width:100%;height:6px;-webkit-appearance:none;appearance:none;background:var(--border);border-radius:3px;outline:none;cursor:pointer;}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 8px rgba(124,179,66,0.4);}
+  input[type="range"]::-moz-range-thumb{width:16px;height:16px;background:var(--accent);border-radius:50%;border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 8px rgba(124,179,66,0.4);}
+
+  .season-tabs{display:flex;gap:4px;margin-bottom:10px;}
+  .season-tab{flex:1;padding:6px 0;font-size:11px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;text-align:center;}
+  .season-tab:hover{color:var(--text);}
+  .season-tab.active{background:rgba(124,179,66,0.2);color:var(--accent);border-color:var(--accent);}
+
+  .action-btns{display:flex;gap:6px;margin-top:10px;}
+  .btn{flex:1;padding:8px 0;font-size:12px;font-weight:600;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer;transition:all .2s;text-align:center;}
+  .btn:hover{background:rgba(124,179,66,0.15);border-color:var(--accent);}
+  .btn-primary{background:var(--accent);color:#0c1410;border-color:var(--accent);}
+  .btn-primary:hover{background:#8bc34a;}
+
+  /* Canvas area */
+  .canvas-wrap{background:var(--panel);border-radius:12px;border:1px solid var(--border);overflow:hidden;position:relative;}
+  .canvas-label{position:absolute;top:8px;left:10px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;z-index:5;pointer-events:none;}
+  .canvas-wrap canvas{display:block;width:100%;height:auto;}
+
+  /* Metrics */
+  .metrics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;}
+  @media(min-width:500px){.metrics-grid{grid-template-columns:repeat(4,1fr);}}
+  .metric{background:rgba(0,0,0,0.3);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border);}
+  .metric .val{font-size:20px;font-weight:700;color:var(--accent);}
+  .metric .val.warn{color:var(--accent2);}
+  .metric .val.danger{color:var(--danger);}
+  .metric .label{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;}
+  .metric .bar{height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden;}
+  .metric .bar-fill{height:100%;border-radius:2px;transition:width .3s,background .3s;}
+
+  /* Legend */
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:11px;color:var(--muted);}
+  .legend-item{display:flex;align-items:center;gap:5px;}
+  .legend-dot{width:10px;height:10px;border-radius:50%;}
+
+  /* Tooltip */
+  .tooltip{position:absolute;background:rgba(21,32,26,0.95);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--text);pointer-events:none;z-index:20;opacity:0;transition:opacity .2s;max-width:200px;line-height:1.4;}
+  .tooltip.show{opacity:1;}
+  .tooltip strong{color:var(--accent);display:block;margin-bottom:2px;}
+
+  /* Responsive */
+  @media(max-width:500px){
+    h1{font-size:18px;}
+    .metric .val{font-size:16px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="disclaimer">Unlisted OpenClaw AI mini-apps. Experimental and not professionally validated. Do not rely on them for any decisions.</div>
+
+  <header>
+    <div>
+      <h1>🍇 Canopy Sculptor</h1>
+      <div class="subtitle">Shape your vineyard canopy. See the light, feel the airflow, understand the fruit.</div>
+    </div>
+  </header>
+
+  <div class="main-grid">
+    <div class="sidebar">
+      <div class="control-group">
+        <h3><span class="icon">🌿</span> Canopy Structure</h3>
+        <div class="slider-wrap">
+          <div class="slider-label"><span class="name">Shoot Density</span><span class="val" id="densityVal">12 shoots/m</span></div>
+          <input type="range" id="density" min="4" max="30" value="12" step="1">
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-label"><span class="name">Leaf Layers</span><span class="val" id="layersVal">3.5 layers</span></div>
+          <input type="range" id="layers" min="1" max="8" value="3.5" step="0.5">
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-label"><span class="name">Vine Spacing</span><span class="val" id="spacingVal">2.0 m</span></div>
+          <input type="range" id="spacing" min="1.0" max="4.0" value="2.0" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3><span class="icon">☀️</span> Light &amp; Air</h3>
+        <div class="slider-wrap">
+          <div class="slider-label"><span class="name">Row Orientation</span><span class="val" id="orientVal">N-S (0°)</span></div>
+          <input type="range" id="orientation" min="0" max="90" value="0" step="5">
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-label"><span class="name">Sun Angle</span><span class="val" id="sunVal">45° midday</span></div>
+          <input type="range" id="sunAngle" min="15" max="75" value="45" step="5">
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-label"><span class="name">Wind Speed</span><span class="val" id="windVal">8 km/h</span></div>
+          <input type="range" id="windSpeed" min="0" max="40" value="8" step="1">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3><span class="icon">📅</span> Growth Stage</h3>
+        <div class="season-tabs" id="seasonTabs">
+          <div class="season-tab active" data-stage="0">Bud Break</div>
+          <div class="season-tab" data-stage="1">Flowering</div>
+          <div class="season-tab" data-stage="2">Fruit Set</div>
+          <div class="season-tab" data-stage="3">Veraison</div>
+          <div class="season-tab" data-stage="4">Pre-Harvest</div>
+        </div>
+        <div class="action-btns">
+          <button class="btn" id="animBtn">▶ Animate Season</button>
+          <button class="btn" id="resetBtn">↺ Reset</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3><span class="icon">📊</span> Live Metrics</h3>
+        <div class="metrics-grid" id="metricsGrid">
+          <div class="metric">
+            <div class="val" id="laiVal">1.8</div>
+            <div class="label">Leaf Area Index</div>
+            <div class="bar"><div class="bar-fill" id="laiBar" style="width:45%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="val" id="parVal">42%</div>
+            <div class="label">Fruit Zone PAR</div>
+            <div class="bar"><div class="bar-fill" id="parBar" style="width:42%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="val" id="airflowVal">Good</div>
+            <div class="label">Airflow</div>
+            <div class="bar"><div class="bar-fill" id="airflowBar" style="width:60%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="val" id="diseaseVal">Low</div>
+            <div class="label">Disease Risk</div>
+            <div class="bar"><div class="bar-fill" id="diseaseBar" style="width:20%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3><span class="icon">🔍</span> What You See</h3>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div> Sunlight ray</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#66bb6a"></div> Leaf canopy</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ef5350"></div> Fruit zone</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ffb74d"></div> Airflow</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#5d4037"></div> Trunk/wire</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <div class="canvas-label">Cross-section view — one vine + canopy</div>
+      <canvas id="canopyCanvas" width="800" height="520"></canvas>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const canvas=document.getElementById('canopyCanvas');
+  const ctx=canvas.getContext('2d');
+  const tooltip=document.getElementById('tooltip');
+  const DPR=typeof window!=='undefined'?window.devicePixelRatio||1:1;
+
+  // Parameters
+  const state={
+    density:12,
+    layers:3.5,
+    spacing:2.0,
+    orientation:0,
+    sunAngle:45,
+    windSpeed:8,
+    season:0, // 0-4
+    animating:false,
+    animTime:0,
+    time:0,
+    fruitQuality:0.5,
+  };
+
+  const seasonNames=['Bud Break','Flowering','Fruit Set','Veraison','Pre-Harvest'];
+  const seasonLeafMultipliers=[0.15,0.45,0.85,0.95,0.9];
+  const seasonFruitSizes=[0,0.05,0.3,0.65,0.9];
+  const seasonFruitColors=['#8bc34a','#8bc34a','#cddc39','#e53935','#b71c1c'];
+
+  // Input bindings
+  function bindSlider(id,key,formatFn){
+    const el=document.getElementById(id);
+    const valEl=document.getElementById(id+'Val');
+    if(!el)return;
+    el.addEventListener('input',()=>{
+      const v=parseFloat(el.value);
+      state[key]=v;
+      valEl.textContent=formatFn(v);
+      draw();
+    });
+  }
+  bindSlider('density','density',v=>v+' shoots/m');
+  bindSlider('layers','layers',v=>v+' layers');
+  bindSlider('spacing','spacing',v=>v.toFixed(1)+' m');
+  bindSlider('orientation','orientation',v=>{
+    const labels=['N-S','NE-SW','E-W'];
+    const idx=Math.round(v/45);
+    return labels[Math.min(idx,2)]||v+'°';
+  });
+  bindSlider('sunAngle','sunAngle',v=>v+'° midday');
+  bindSlider('windSpeed','windSpeed',v=>v+' km/h');
+
+  // Season tabs
+  const tabs=document.querySelectorAll('.season-tab');
+  tabs.forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      state.season=parseInt(tab.dataset.stage);
+      draw();
+    });
+  });
+
+  // Buttons
+  let animFrame;
+  document.getElementById('animBtn').addEventListener('click',()=>{
+    state.animating=!state.animating;
+    document.getElementById('animBtn').textContent=state.animating?'⏸ Pause':'▶ Animate Season';
+    if(state.animating)animateSeason();
+  });
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    state.density=12;state.layers=3.5;state.spacing=2.0;state.orientation=0;state.sunAngle=45;state.windSpeed=8;state.season=0;
+    document.getElementById('density').value=12;document.getElementById('densityVal').textContent='12 shoots/m';
+    document.getElementById('layers').value=3.5;document.getElementById('layersVal').textContent='3.5 layers';
+    document.getElementById('spacing').value=2.0;document.getElementById('spacingVal').textContent='2.0 m';
+    document.getElementById('orientation').value=0;document.getElementById('orientVal').textContent='N-S (0°)';
+    document.getElementById('sunAngle').value=45;document.getElementById('sunVal').textContent='45° midday';
+    document.getElementById('windSpeed').value=8;document.getElementById('windVal').textContent='8 km/h';
+    tabs.forEach(t=>t.classList.remove('active'));tabs[0].classList.add('active');
+    state.animating=false;document.getElementById('animBtn').textContent='▶ Animate Season';
+    draw();
+  });
+
+  function animateSeason(){
+    if(!state.animating)return;
+    state.animTime+=0.008;
+    const s=state.animTime%5;
+    const idx=Math.floor(s);
+    const frac=s-idx;
+    state.season=idx;
+    tabs.forEach(t=>t.classList.remove('active'));
+    tabs[idx].classList.add('active');
+    // Interpolate leaf multiplier for smooth animation
+    const nextIdx=(idx+1)%5;
+    const mult=seasonLeafMultipliers[idx]+(seasonLeafMultipliers[nextIdx]-seasonLeafMultipliers[idx])*frac;
+    // Override draw multiplier
+    state._animMult=mult;
+    draw();
+    animFrame=requestAnimationFrame(animateSeason);
+  }
+
+  // Mouse/touch tooltip
+  function getCanvasPos(e){
+    const rect=canvas.getBoundingClientRect();
+    const clientX=e.touches?e.touches[0].clientX:e.clientX;
+    const clientY=e.touches?e.touches[0].clientY:e.clientY;
+    return{
+      x:(clientX-rect.left)*(canvas.width/rect.width),
+      y:(clientY-rect.top)*(canvas.height/rect.height)
+    };
+  }
+  function showTooltip(x,y,title,text){
+    tooltip.innerHTML='<strong>'+title+'</strong>'+text;
+    tooltip.style.left=Math.min(x+12,canvas.width-200)+'px';
+    tooltip.style.top=Math.max(y-40,0)+'px';
+    tooltip.classList.add('show');
+  }
+  function hideTooltip(){tooltip.classList.remove('show');}
+
+  canvas.addEventListener('mousemove',e=>{
+    const p=getCanvasPos(e);
+    // Check if over fruit zone
+    const fruitY=280,cx=400;
+    const dx=p.x-cx,dy=p.y-fruitY;
+    if(Math.abs(dx)<80&&Math.abs(dy)<25){
+      showTooltip(p.x,p.y,'Fruit Zone','Where grape clusters develop. Sunlight here drives colour, flavour, and phenolics. Shade = green flavours. Too much sun = sunburn.');
+    }else if(Math.abs(dx)<120&&p.y>180&&p.y<350){
+      showTooltip(p.x,p.y,'Canopy Interior','The leaf wall. More layers = more photosynthesis but less light to fruit. "Leaf Area Index" measures total leaf surface per ground area.');
+    }else if(Math.abs(dx)<20&&p.y>350&&p.y<430){
+      showTooltip(p.x,p.y,'Cordon / Trunk','Permanent wood. Shoots emerge from buds on the cordon. Spacing between vines affects shoot density and competition.');
+    }else if(p.y>430){
+      showTooltip(p.x,p.y,'Soil &amp; Roots','Water and nutrients travel up through the vine. Root health depends on soil structure, water availability, and competition.');
+    }else{
+      hideTooltip();
+    }
+  });
+  canvas.addEventListener('mouseleave',hideTooltip);
+
+  // ===== DRAWING =====
+  function draw(){
+    const w=canvas.width,h=canvas.height;
+    ctx.clearRect(0,0,w,h);
+    state.time+=0.016;
+    const t=state.time;
+
+    const seasonMult=state._animMult!==undefined?state._animMult:seasonLeafMultipliers[state.season];
+    const effectiveLayers=Math.max(0.2,state.layers*seasonMult);
+    const effectiveDensity=Math.max(4,state.density*seasonMult);
+    const fruitSize=seasonFruitSizes[state.season];
+    const fruitColor=seasonFruitColors[state.season];
+
+    // Sky gradient
+    const skyGrad=ctx.createLinearGradient(0,0,0,430);
+    skyGrad.addColorStop(0,'#0d1b2a');
+    skyGrad.addColorStop(0.3,'#1b3a5c');
+    skyGrad.addColorStop(0.6,'#2e5c8a');
+    skyGrad.addColorStop(1,'#4a7c9b');
+    ctx.fillStyle=skyGrad;
+    ctx.fillRect(0,0,w,430);
+
+    // Sun
+    const sunX=120+Math.sin(t*0.3)*30;
+    const sunY=60+Math.cos(t*0.2)*10;
+    const sunGrad=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,40);
+    sunGrad.addColorStop(0,'rgba(255,235,120,0.9)');
+    sunGrad.addColorStop(0.3,'rgba(255,200,80,0.5)');
+    sunGrad.addColorStop(1,'rgba(255,150,50,0)');
+    ctx.fillStyle=sunGrad;
+    ctx.beginPath();ctx.arc(sunX,sunY,40,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffeb78';
+    ctx.beginPath();ctx.arc(sunX,sunY,12,0,Math.PI*2);ctx.fill();
+
+    // Ground / soil
+    ctx.fillStyle='var(--soil-top)';
+    ctx.fillRect(0,430,w,5);
+    ctx.fillStyle='var(--soil)';
+    ctx.fillRect(0,435,w,h-435);
+
+    // Wire line
+    ctx.strokeStyle='#78909c';
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(0,300);ctx.lineTo(w,300);ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Row line (suggesting vineyard row perspective)
+    ctx.strokeStyle='rgba(120,144,156,0.3)';
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(350,435);ctx.lineTo(280,520);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(450,435);ctx.lineTo(520,520);ctx.stroke();
+
+    // Vine trunk and cordon
+    const cx=400;
+    ctx.fillStyle='var(--vine)';
+    ctx.fillRect(cx-10,350,20,85);
+    // Cordon arm
+    ctx.fillRect(cx-70,340,140,14);
+    // Posts
+    ctx.fillStyle='#4a3428';
+    ctx.fillRect(cx-100,280,6,155);
+    ctx.fillRect(cx+94,280,6,155);
+    // Post caps
+    ctx.fillStyle='#5d4037';
+    ctx.fillRect(cx-102,275,10,8);
+    ctx.fillRect(cx+92,275,10,8);
+
+    // Draw canopy leaves
+    drawCanopy(cx,effectiveLayers,effectiveDensity,fruitSize,fruitColor,t);
+
+    // Sunlight rays
+    drawSunlightRays(sunX,sunY,cx,effectiveLayers,t);
+
+    // Airflow
+    drawAirflow(cx,effectiveLayers,t);
+
+    // Labels on canvas
+    ctx.font='11px system-ui,sans-serif';
+    ctx.fillStyle='rgba(200,220,200,0.7)';
+    ctx.fillText('Sun',sunX-12,sunY+25);
+    ctx.fillText('Fruit Zone',cx-25,305);
+    ctx.fillText('Wire',10,295);
+    ctx.fillText('Soil',10,450);
+
+    // Reset anim mult
+    state._animMult=undefined;
+
+    // Update metrics
+    updateMetrics(effectiveLayers,effectiveDensity,fruitSize);
+  }
+
+  function drawCanopy(cx,layers,density,fruitSize,fruitColor,t){
+    const leafCount=Math.floor(density*2.5);
+    const canopyWidth=180+(density*3);
+    const canopyHeight=90+(layers*22);
+    const canopyTop=300-canopyHeight;
+
+    // Seedable random
+    function seededRand(seed){return function(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646;};}
+    const rng=seededRand(42);
+
+    // Draw leaf clusters
+    for(let i=0;i<leafCount;i++){
+      const sx=rng();const sy=rng();const sz=rng();
+      const lx=cx-canopyWidth/2+sx*canopyWidth;
+      const ly=canopyTop+sy*canopyHeight;
+      const size=12+sz*20;
+      const sway=Math.sin(t*1.5+i*0.7)*3;
+      const alpha=0.6+sz*0.3;
+
+      const leafGrad=ctx.createRadialGradient(lx+sway,ly,0,lx+sway,ly,size);
+      const greenVar=sz>0.5?'#388e3c':'#2e7d32';
+      leafGrad.addColorStop(0,'rgba(102,187,106,'+alpha+')');
+      leafGrad.addColorStop(0.6,'rgba(76,175,80,'+alpha*0.8+')');
+      leafGrad.addColorStop(1,'rgba(46,125,50,'+alpha*0.3+')');
+      ctx.fillStyle=leafGrad;
+      ctx.beginPath();
+      ctx.ellipse(lx+sway,ly,size,size*0.6,sway*0.05,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // Draw fruit clusters if present
+    if(fruitSize>0.05){
+      const bunchCount=Math.floor(density/4);
+      const rng2=seededRand(99);
+      for(let i=0;i<bunchCount;i++){
+        const sx=rng2();const sy=rng2();
+        const fx=cx-60+sx*120;
+        const fy=305+sy*25;
+        const bSize=8+fruitSize*18;
+        const sway=Math.sin(t*2+i)*2;
+
+        // Bunch shape - multiple berries
+        ctx.fillStyle=fruitColor;
+        for(let b=0;b<7;b++){
+          const bx=fx+sway+Math.cos(b*0.9)*bSize*0.5;
+          const by=fy+Math.sin(b*0.9)*bSize*0.4+b*2;
+          ctx.beginPath();ctx.arc(bx,by,bSize*0.35,0,Math.PI*2);ctx.fill();
+        }
+        // Stem
+        ctx.strokeStyle='#5d4037';
+        ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(fx+sway,fy-bSize*0.3);ctx.lineTo(fx+sway,300);ctx.stroke();
+
+        // Highlight
+        ctx.fillStyle='rgba(255,255,255,0.2)';
+        ctx.beginPath();ctx.arc(fx+sway-2,fy-2,bSize*0.2,0,Math.PI*2);ctx.fill();
+      }
+    }
+
+    // Canopy outline (subtle)
+    ctx.strokeStyle='rgba(102,187,106,0.15)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(cx-canopyWidth/2,300);
+    ctx.quadraticCurveTo(cx-canopyWidth/2-20,canopyTop+20,cx,canopyTop);
+    ctx.quadraticCurveTo(cx+canopyWidth/2+20,canopyTop+20,cx+canopyWidth/2,300);
+    ctx.stroke();
+  }
+
+  function drawSunlightRays(sunX,sunY,cx,layers,t){
+    const rayCount=8;
+    const rayOpacity=Math.max(0.1,1-layers*0.08);
+    for(let i=0;i<rayCount;i++){
+      const angle=((i/rayCount)-0.5)*0.6+0.1;
+      const endX=sunX+Math.cos(angle)*500;
+      const endY=sunY+Math.sin(angle)*500;
+      const midX=(sunX+endX)/2+Math.sin(t+i)*5;
+      const midY=(sunY+endY)/2;
+
+      // Ray gradient
+      const rayGrad=ctx.createLinearGradient(sunX,sunY,endX,endY);
+      rayGrad.addColorStop(0,'rgba(255,235,120,'+rayOpacity*0.4+')');
+      rayGrad.addColorStop(0.5,'rgba(255,220,100,'+rayOpacity*0.2+')');
+      rayGrad.addColorStop(1,'rgba(255,200,80,0)');
+
+      ctx.strokeStyle=rayGrad;
+      ctx.lineWidth=2+Math.sin(t*2+i)*0.5;
+      ctx.beginPath();
+      ctx.moveTo(sunX,sunY);
+      ctx.quadraticCurveTo(midX,midY,endX,endY);
+      ctx.stroke();
+    }
+
+    // Light hitting fruit zone indicator
+    const fruitZoneOpacity=Math.max(0.1,0.8-layers*0.15);
+    ctx.fillStyle='rgba(255,235,120,'+fruitZoneOpacity*0.15+')';
+    ctx.fillRect(cx-70,280,140,50);
+  }
+
+  function drawAirflow(cx,layers,t){
+    if(state.windSpeed<1)return;
+    const particleCount=Math.floor(state.windSpeed/1.5);
+    const speed=state.windSpeed*0.3;
+    const windDir=state.orientation>45?-1:1;
+    const baseY=310;
+
+    for(let i=0;i<particleCount;i++){
+      const offset=(t*speed+i*47)%600;
+      const px=cx-300+offset*windDir;
+      const py=baseY+Math.sin(t*3+i*1.3)*8+Math.sin(t*1.5+i*0.7)*5;
+      const alpha=0.3+Math.sin(t*2+i)*0.2;
+      const size=1.5+Math.sin(t+i)*0.5;
+
+      // Penetration through canopy
+      const distFromCenter=Math.abs(px-cx);
+      const canopyEdge=80+(state.density*2);
+      let penetrated=false;
+      if(distFromCenter<canopyEdge&&py<baseY-10){
+        // Inside canopy - airflow reduced
+        if(layers>4)continue; // Blocked
+        ctx.globalAlpha=alpha*0.3;
+      }else{
+        ctx.globalAlpha=alpha;
+      }
+
+      ctx.fillStyle='#81c784';
+      ctx.beginPath();ctx.arc(px,py,size,0,Math.PI*2);ctx.fill();
+
+      // Trail
+      ctx.globalAlpha=ctx.globalAlpha*0.3;
+      ctx.beginPath();ctx.arc(px-windDir*8,py,size*0.6,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+  }
+
+  function updateMetrics(layers,density,fruitSize){
+    // LAI calculation: leaves per shoot * shoots per m * layer factor
+    const lai=(density/10)*(layers/3)*2.5;
+    const laiClamped=Math.min(lai,6).toFixed(1);
+    document.getElementById('laiVal').textContent=laiClamped;
+    document.getElementById('laiBar').style.width=Math.min(lai/6*100,100)+'%';
+    document.getElementById('laiBar').style.background=lai>3.5?'#ef5350':(lai>2.2?'#ffb74d':'#7cb342');
+    document.getElementById('laiVal').className='val'+(lai>3.5?' danger':(lai>2.2?' warn':''));
+
+    // PAR: photosynthetically active radiation reaching fruit zone
+    const parBase=80;
+    const parReduction=layers*12+density*0.8+state.sunAngle*0.2;
+    let par=Math.max(5,parBase-parReduction+state.sunAngle*0.4);
+    if(state.orientation>30)par*=0.85; // Angled rows catch less midday sun
+    par=Math.min(par,100);
+    document.getElementById('parVal').textContent=Math.round(par)+'%';
+    document.getElementById('parBar').style.width=par+'%';
+    document.getElementById('parBar').style.background=par<20?'#ef5350':(par<40?'#ffb74d':'#7cb342');
+    document.getElementById('parVal').className='val'+(par<20?' danger':(par<40?' warn':''));
+
+    // Airflow: reduced by dense canopy
+    const airflowBase=state.windSpeed*2.5;
+    const airflowReduction=layers*6+density*0.5;
+    const airflow=Math.max(0,airflowBase-airflowReduction);
+    const airflowPct=Math.min(airflow,100);
+    let airflowLabel='Poor';
+    if(airflowPct>60)airflowLabel='Good';
+    else if(airflowPct>30)airflowLabel='Moderate';
+    document.getElementById('airflowVal').textContent=airflowLabel;
+    document.getElementById('airflowBar').style.width=airflowPct+'%';
+    document.getElementById('airflowBar').style.background=airflowPct<30?'#ef5350':(airflowPct<60?'#ffb74d':'#7cb342');
+    document.getElementById('airflowVal').className='val'+(airflowPct<30?' danger':(airflowPct<60?' warn':''));
+
+    // Disease risk: high when humidity + poor airflow + dense canopy
+    const humidityRisk=layers*8;
+    const airflowRisk=Math.max(0,50-airflowPct);
+    const diseaseScore=(humidityRisk+airflowRisk)/1.5;
+    const diseasePct=Math.min(diseaseScore,100);
+    let diseaseLabel='Low';
+    if(diseasePct>60)diseaseLabel='High';
+    else if(diseasePct>35)diseaseLabel='Moderate';
+    document.getElementById('diseaseVal').textContent=diseaseLabel;
+    document.getElementById('diseaseBar').style.width=diseasePct+'%';
+    document.getElementById('diseaseBar').style.background=diseasePct>60?'#ef5350':(diseasePct>35?'#ffb74d':'#7cb342');
+    document.getElementById('diseaseVal').className='val'+(diseasePct>60?' danger':(diseasePct>35?' warn':''));
+  }
+
+  // Animation loop
+  function loop(){
+    if(!state.animating){
+      state.time+=0.016;
+      draw();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // Handle resize
+  function resize(){
+    const wrap=document.querySelector('.canvas-wrap');
+    const rect=wrap.getBoundingClientRect();
+    const targetW=Math.min(800,rect.width-4);
+    const targetH=Math.min(520,Math.max(350,targetW*0.65));
+    canvas.width=targetW*DPR;
+    canvas.height=targetH*DPR;
+    canvas.style.width=targetW+'px';
+    canvas.style.height=targetH+'px';
+    ctx.scale(DPR,DPR);
+    draw();
+  }
+  window.addEventListener('resize',resize);
+
+  // Init
+  resize();
+  loop();
+})();
+</script>
+</body>
+</html>
