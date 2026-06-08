@@ -14,6 +14,13 @@
       "title": "IK Toy",
       "slug": "ik-toy",
       "publishedSlug": "2026-06-09-ik-toy",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-09-ik-toy/"
+    },
+    {
+      "date": "2026-06-09",
+      "title": "IK Toy",
+      "slug": "ik-toy",
+      "publishedSlug": "2026-06-09-ik-toy",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-09-ik-toy/",
       "description": "Interactive inverse kinematics playground — build multi-segment arms, drag targets, and watch real-time CCD solver with motion trails, ghost arms, and presets"
     },
