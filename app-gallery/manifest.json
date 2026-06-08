@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-08",
-    "title": "Canopy Sculptor",
-    "slug": "canopy-sculptor",
-    "publishedSlug": "2026-06-08-canopy-sculptor",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-08-canopy-sculptor/"
+    "date": "2026-06-09",
+    "title": "IK Toy",
+    "slug": "ik-toy",
+    "publishedSlug": "2026-06-09-ik-toy",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-09-ik-toy/"
   },
   "apps": [
+    {
+      "date": "2026-06-09",
+      "title": "IK Toy",
+      "slug": "ik-toy",
+      "publishedSlug": "2026-06-09-ik-toy",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-09-ik-toy/",
+      "description": "Interactive inverse kinematics playground — build multi-segment arms, drag targets, and watch real-time CCD solver with motion trails, ghost arms, and presets"
+    },
     {
       "date": "2026-06-08",
       "title": "Canopy Sculptor",
