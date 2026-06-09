@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-09",
-    "title": "IK Toy",
-    "slug": "ik-toy",
-    "publishedSlug": "2026-06-09-ik-toy",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-09-ik-toy/"
+    "date": "2026-06-10",
+    "title": "Reaction-Diffusion Explorer",
+    "slug": "reaction-diffusion-explorer",
+    "publishedSlug": "2026-06-10-reaction-diffusion-explorer",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-10-reaction-diffusion-explorer/"
   },
   "apps": [
+    {
+      "date": "2026-06-10",
+      "title": "Reaction-Diffusion Explorer",
+      "slug": "reaction-diffusion-explorer",
+      "publishedSlug": "2026-06-10-reaction-diffusion-explorer",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-10-reaction-diffusion-explorer/",
+      "description": "Interactive Gray-Scott reaction-diffusion simulation with live parameter exploration"
+    },
     {
       "date": "2026-06-09",
       "title": "IK Toy",
