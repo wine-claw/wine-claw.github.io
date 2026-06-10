@@ -152,11 +152,34 @@ main { display:flex; flex:1; overflow:hidden; }
 .disclaimer strong { color:#4a3f1a; }
 /* Mobile */
 @media (max-width:720px) {
-  main { flex-direction:column; }
-  #palette { width:100%; min-width:auto; max-height:180px; border-right:none; border-bottom:1px solid #e8e4dc; }
-  #hud { width:100%; min-width:auto; border-left:none; border-top:1px solid #e8e4dc; }
-  #hud .presets { flex-direction:row; flex-wrap:wrap; }
-  #hud .preset { flex:1; min-width:120px; }
+  body { overflow:auto; }
+  main { flex-direction:column; overflow:auto; }
+  #palette {
+    width:100%; min-width:auto; max-height:120px; border-right:none; border-bottom:1px solid #e8e4dc;
+    flex-shrink:0; overflow:hidden;
+  }
+  #palette .plant-list { max-height:80px; padding:2px 8px 6px; }
+  #palette .plant { padding:4px 6px; font-size:0.75rem; }
+  #palette .plant .icon { font-size:1rem; width:20px; }
+  #palette .cat-title { padding:4px 10px; font-size:0.65rem; }
+  #canvas-wrap { min-height:45vh; flex:1; }
+  #hud {
+    width:100%; min-width:auto; border-left:none; border-top:1px solid #e8e4dc;
+    max-height:35vh; overflow-y:auto; flex-shrink:0;
+  }
+  #hud .hud-section { padding:8px 10px; }
+  #hud .hud-title { cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  #hud .hud-title::after { content:"▼"; font-size:0.6rem; color:var(--muted); margin-left:4px; }
+  #hud .hud-section.collapsed .hud-title::after { content:"▶"; }
+  #hud .hud-section.collapsed > *:not(.hud-title) { display:none; }
+  #hud .presets { flex-direction:row; flex-wrap:wrap; gap:4px; }
+  #hud .preset { flex:1; min-width:100px; padding:4px 8px; font-size:0.72rem; }
+  #hud .metrics { grid-template-columns:repeat(3, 1fr); gap:4px; }
+  #hud .metric { padding:4px 6px; }
+  #hud .metric .val { font-size:0.85rem; }
+  #hud .legend { gap:4px; }
+  #hud .legend-item { font-size:0.65rem; }
+  .disclaimer { margin:6px 10px; padding:6px 10px; font-size:0.68rem; }
 }
 </style>
 </head>
@@ -539,7 +562,12 @@ function bindEvents() {
   });
   wrap.addEventListener('contextmenu', e => { e.preventDefault(); });
 
-  // Touch: two-finger drag doesn't apply here; single finger works via pointer events
+  // HUD section collapse on mobile
+  document.querySelectorAll('.hud-title').forEach(t => {
+    t.addEventListener('click', () => {
+      t.closest('.hud-section').classList.toggle('collapsed');
+    });
+  });
 
   document.getElementById('clearBtn').addEventListener('click', () => {
     placed = []; selected = null; computeRelationships(); updateHUD();
