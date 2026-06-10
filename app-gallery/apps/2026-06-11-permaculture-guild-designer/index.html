@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+<title>Permaculture Guild Designer</title>
+<style>
+:root {
+  --bg:#f5f1ea;
+  --panel:#fffdf7;
+  --text:#2d2a26;
+  --muted:#8a847a;
+  --accent:#5a7c4b;
+  --accent2:#c27d3a;
+  --accent3:#8a6f4e;
+  --danger:#b44;
+  --good:#3a8;
+  --line:rgba(90,124,75,0.55);
+  --warn-line:rgba(180,68,68,0.55);
+  --shadow:0 2px 8px rgba(45,42,38,0.08);
+  --radius:10px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+header {
+  background:var(--panel);
+  border-bottom:1px solid #e8e4dc;
+  padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:100;
+}
+header h1 { font-size:1.1rem; font-weight:600; color:var(--accent); }
+header .subtitle { font-size:0.75rem; color:var(--muted); margin-left:4px; }
+header .actions { display:flex; gap:8px; }
+.btn {
+  border:none; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;
+  background:var(--accent); color:#fff; font-weight:500;
+  transition:opacity 0.2s;
+}
+.btn:hover { opacity:0.85; }
+.btn.secondary { background:var(--accent2); }
+.btn.ghost { background:transparent; color:var(--muted); border:1px solid #ddd8cf; }
+main { display:flex; flex:1; overflow:hidden; }
+/* Palette */
+#palette {
+  width:220px; min-width:220px; background:var(--panel); border-right:1px solid #e8e4dc;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+#palette .search {
+  padding:10px 12px; border-bottom:1px solid #e8e4dc;
+}
+#palette .search input {
+  width:100%; padding:6px 10px; border:1px solid #ddd8cf; border-radius:6px;
+  font-size:0.8rem; background:#fff;
+}
+#palette .cat-group { border-bottom:1px solid #e8e4dc; }
+#palette .cat-title {
+  padding:6px 12px; font-size:0.7rem; font-weight:600; text-transform:uppercase;
+  color:var(--muted); background:#f9f7f2; cursor:pointer; user-select:none;
+  display:flex; justify-content:space-between; align-items:center;
+}
+#palette .cat-title::after { content:"▼"; font-size:0.6rem; }
+#palette .cat-title.collapsed::after { content:"▶"; }
+#palette .plant-list { max-height:240px; overflow-y:auto; padding:4px 8px 8px; }
+#palette .plant-list.hidden { display:none; }
+#palette .plant {
+  display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px;
+  cursor:grab; user-select:none; font-size:0.82rem;
+  transition:background 0.15s;
+}
+#palette .plant:hover { background:#f0ece4; }
+#palette .plant .icon { font-size:1.2rem; width:24px; text-align:center; }
+#palette .plant .name { flex:1; }
+#palette .plant .tags { display:flex; gap:3px; }
+#palette .tag {
+  width:7px; height:7px; border-radius:50%; display:inline-block;
+}
+.tag-nf { background:#6b8e6b; }
+.tag-pa { background:#d4a045; }
+.tag-pr { background:#b44; }
+.tag-gc { background:#4a8a9e; }
+.tag-da { background:#7a5ea0; }
+.tag-ed { background:#e8c96a; }
+/* Canvas area */
+#canvas-wrap {
+  flex:1; position:relative; background:var(--bg);
+  overflow:hidden; cursor:crosshair;
+}
+#garden-canvas { width:100%; height:100%; display:block; }
+/* Sidebar / HUD */
+#hud {
+  width:240px; min-width:240px; background:var(--panel); border-left:1px solid #e8e4dc;
+  display:flex; flex-direction:column; overflow-y:auto;
+}
+#hud .hud-section { padding:12px 14px; border-bottom:1px solid #e8e4dc; }
+#hud .hud-title { font-size:0.7rem; font-weight:600; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+#hud .score-ring { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+#hud .ring {
+  width:48px; height:48px; border-radius:50%; position:relative;
+  background:#e8e4dc; flex-shrink:0;
+}
+#hud .ring svg { position:absolute; inset:0; transform:rotate(-90deg); }
+#hud .ring circle { fill:none; stroke-width:5; }
+#hud .ring .bg { stroke:#e8e4dc; }
+#hud .ring .fg { stroke:var(--accent); stroke-linecap:round; transition:stroke-dasharray 0.4s; }
+#hud .ring .fg.warn { stroke:var(--danger); }
+#hud .score-label { font-size:0.8rem; font-weight:600; }
+#hud .score-desc { font-size:0.7rem; color:var(--muted); }
+#hud .metrics { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+#hud .metric {
+  background:#f9f7f2; border-radius:6px; padding:6px 8px; text-align:center;
+}
+#hud .metric .val { font-size:1rem; font-weight:700; color:var(--accent); }
+#hud .metric .val.warn { color:var(--danger); }
+#hud .metric .label { font-size:0.65rem; color:var(--muted); }
+#hud .presets { display:flex; flex-direction:column; gap:4px; }
+#hud .preset {
+  padding:6px 10px; border-radius:6px; border:1px solid #ddd8cf;
+  font-size:0.78rem; cursor:pointer; background:#fff;
+  transition:background 0.15s;
+}
+#hud .preset:hover { background:#f0ece4; }
+#hud .legend { display:flex; flex-wrap:wrap; gap:6px; }
+#hud .legend-item { display:flex; align-items:center; gap:4px; font-size:0.7rem; }
+#hud .legend-dot { width:8px; height:8px; border-radius:50%; }
+/* Tooltip */
+#tooltip {
+  position:fixed; pointer-events:none; z-index:200;
+  background:#fff; border:1px solid #ddd8cf; border-radius:8px;
+  padding:10px 12px; max-width:220px; font-size:0.78rem;
+  box-shadow:var(--shadow); opacity:0; transition:opacity 0.15s;
+}
+#tooltip.visible { opacity:1; }
+#tooltip .tt-title { font-weight:600; font-size:0.85rem; margin-bottom:4px; }
+#tooltip .tt-role { display:inline-block; padding:1px 5px; border-radius:4px; font-size:0.65rem; margin:1px; }
+#tooltip .tt-pos { color:var(--good); }
+#tooltip .tt-neg { color:var(--danger); }
+/* Disclaimer */
+.disclaimer {
+  background:#fff8e8; border:1px solid #e8dca8; border-radius:6px;
+  padding:8px 12px; font-size:0.72rem; color:#6b5e2e;
+  margin:10px 14px;
+}
+.disclaimer strong { color:#4a3f1a; }
+/* Mobile */
+@media (max-width:720px) {
+  main { flex-direction:column; }
+  #palette { width:100%; min-width:auto; max-height:180px; border-right:none; border-bottom:1px solid #e8e4dc; }
+  #hud { width:100%; min-width:auto; border-left:none; border-top:1px solid #e8e4dc; }
+  #hud .presets { flex-direction:row; flex-wrap:wrap; }
+  #hud .preset { flex:1; min-width:120px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🌿 Permaculture Guild Designer</h1>
+    <span class="subtitle">Drag plants to build companion guilds</span>
+  </div>
+  <div class="actions">
+    <button class="btn ghost" id="clearBtn">Clear</button>
+    <button class="btn secondary" id="demoBtn">Play Demo</button>
+  </div>
+</header>
+<main>
+  <aside id="palette">
+    <div class="search"><input type="text" id="searchPlants" placeholder="Search plants..."></div>
+    <div id="plantGroups"></div>
+  </aside>
+  <div id="canvas-wrap">
+    <canvas id="garden-canvas"></canvas>
+  </div>
+  <aside id="hud">
+    <div class="hud-section">
+      <div class="hud-title">Guild Health</div>
+      <div class="score-ring">
+        <div class="ring"><svg viewBox="0 0 48 48"><circle class="bg" cx="24" cy="24" r="20"/><circle class="fg" id="scoreCircle" cx="24" cy="24" r="20" stroke-dasharray="0 126"/></svg></div>
+        <div>
+          <div class="score-label" id="scoreLabel">0%</div>
+          <div class="score-desc">Guild balance</div>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="val" id="mNitrogen">0</div><div class="label">Nitrogen</div></div>
+        <div class="metric"><div class="val" id="mPollinator">0</div><div class="label">Pollinators</div></div>
+        <div class="metric"><div class="val" id="mPest">0</div><div class="label">Pest Defense</div></div>
+        <div class="metric"><div class="val" id="mGround">0</div><div class="label">Ground Cover</div></div>
+        <div class="metric"><div class="val" id="mAccum">0</div><div class="label">Accumulators</div></div>
+        <div class="metric"><div class="val" id="mEdible">0</div><div class="label">Edible</div></div>
+      </div>
+    </div>
+    <div class="hud-section">
+      <div class="hud-title">Presets</div>
+      <div class="presets">
+        <div class="preset" data-preset="apple">🍎 Classic Apple Guild</div>
+        <div class="preset" data-preset="sisters">🌽 Three Sisters</div>
+        <div class="preset" data-preset="tomato">🍅 Tomato Guild</div>
+        <div class="preset" data-preset="pollinator">🦋 Pollinator Patch</div>
+        <div class="preset" data-preset="berry">🫐 Berry Guild</div>
+      </div>
+    </div>
+    <div class="hud-section">
+      <div class="hud-title">Legend</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot tag-nf"></div>Nitrogen Fixer</div>
+        <div class="legend-item"><div class="legend-dot tag-pa"></div>Pollinator</div>
+        <div class="legend-item"><div class="legend-dot tag-pr"></div>Pest Repellent</div>
+        <div class="legend-item"><div class="legend-dot tag-gc"></div>Ground Cover</div>
+        <div class="legend-item"><div class="legend-dot tag-da"></div>Accumulator</div>
+        <div class="legend-item"><div class="legend-dot tag-ed"></div>Edible</div>
+      </div>
+    </div>
+    <div class="hud-section">
+      <div class="disclaimer">
+        <strong>This app was made by AI.</strong> Plant relationships are simplified. Always verify companion planting advice for your climate and soil. Not a substitute for professional agricultural advice.
+      </div>
+    </div>
+  </aside>
+</main>
+<div id="tooltip"></div>
+<script>
+/* ================= DATA ================= */
+const PLANTS = [
+  {id:"apple", name:"Apple Tree", icon:"🍎", roles:["pa","ed"], group:"Central"},
+  {id:"comfrey", name:"Comfrey", icon:"🌱", roles:["da","gc"], group:"Understory"},
+  {id:"chives", name:"Chives", icon:"🌿", roles:["pr","pa"], group:"Understory"},
+  {id:"daffodil", name:"Daffodil", icon:"🌼", roles:["pr"], group:"Understory"},
+  {id:"clover", name:"Clover", icon:"☘️", roles:["nf","gc","pa"], group:"Ground Cover"},
+  {id:"dill", name:"Dill", icon:"🌾", roles:["pr","pa"], group:"Understory"},
+  {id:"yarrow", name:"Yarrow", icon:"🌸", roles:["pa","da"], group:"Understory"},
+  {id:"nasturtium", name:"Nasturtium", icon:"🌺", roles:["pr","gc","ed"], group:"Ground Cover"},
+  {id:"fennel", name:"Fennel", icon:"🌿", roles:["pr","pa"], group:"Understory"},
+  {id:"borage", name:"Borage", icon:"🌼", roles:["pa","da","ed"], group:"Understory"},
+  {id:"strawberry", name:"Strawberry", icon:"🍓", roles:["gc","ed","pa"], group:"Ground Cover"},
+  {id:"garlic", name:"Garlic", icon:"🧄", roles:["pr"], group:"Understory"},
+  {id:"oregano", name:"Oregano", icon:"🌿", roles:["pr","gc"], group:"Ground Cover"},
+  {id:"marigold", name:"Marigold", icon:"🌻", roles:["pr","pa"], group:"Ground Cover"},
+  {id:"alyssum", name:"Sweet Alyssum", icon:"🌸", roles:["pa","gc"], group:"Ground Cover"},
+  {id:"sunflower", name:"Sunflower", icon:"🌻", roles:["pa","ed"], group:"Central"},
+  {id:"beans", name:"Beans", icon:"🫘", roles:["nf","ed"], group:"Vine"},
+  {id:"corn", name:"Corn", icon:"🌽", roles:["ed"], group:"Central"},
+  {id:"squash", name:"Squash", icon:"🎃", roles:["gc","ed"], group:"Ground Cover"},
+  {id:"tomato", name:"Tomato", icon:"🍅", roles:["ed","pa"], group:"Central"},
+  {id:"basil", name:"Basil", icon:"🌿", roles:["pr","ed"], group:"Understory"},
+  {id:"carrot", name:"Carrot", icon:"🥕", roles:["gc","ed"], group:"Understory"},
+  {id:"onion", name:"Onion", icon:"🧅", roles:["pr"], group:"Understory"},
+  {id:"pepper", name:"Pepper", icon:"🌶️", roles:["ed","pa"], group:"Central"},
+  {id:"spinach", name:"Spinach", icon:"🍃", roles:["gc","ed"], group:"Ground Cover"},
+  {id:"cucumber", name:"Cucumber", icon:"🥒", roles:["gc","ed"], group:"Ground Cover"},
+  {id:"radish", name:"Radish", icon:"🍠", roles:["gc","ed","pr"], group:"Understory"},
+  {id:"lettuce", name:"Lettuce", icon:"🥬", roles:["gc","ed"], group:"Ground Cover"},
+  {id:"thyme", name:"Thyme", icon:"🌿", roles:["pr","gc"], group:"Ground Cover"},
+  {id:"mint", name:"Mint", icon:"🌿", roles:["pr","gc","ed"], group:"Ground Cover"},
+  {id:"blueberry", name:"Blueberry", icon:"🫐", roles:["ed","pa"], group:"Central"},
+  {id:"rhubarb", name:"Rhubarb", icon:"🥬", roles:["ed","da"], group:"Understory"},
+  {id:"lavender", name:"Lavender", icon:"🪻", roles:["pa","pr","gc"], group:"Understory"}
+];
+
+/* Positive relationships: [a,b,label] */
+const POSITIVE = [
+  ["apple","clover","Nitrogen boost"],
+  ["apple","comfrey","Nutrient cycle"],
+  ["apple","chives","Pest shield"],
+  ["apple","daffodil","Root pest guard"],
+  ["apple","dill","Pollinator draw"],
+  ["apple","yarrow","Beneficial insects"],
+  ["apple","nasturtium","Aphid trap"],
+  ["apple","borage","Pollinator magnet"],
+  ["apple","strawberry","Living mulch"],
+  ["apple","garlic","Fungal repel"],
+  ["apple","oregano","Ground pest guard"],
+  ["apple","marigold","Nematode trap"],
+  ["apple","alyssum","Predator insect food"],
+  ["tomato","basil","Companion classic"],
+  ["tomato","marigold","Root knot trap"],
+  ["tomato","onion","Pest barrier"],
+  ["tomato","carrot","Soil aeration"],
+  ["tomato","nasturtium","Whitefly trap"],
+  ["tomato","borage","Pollinator support"],
+  ["tomato","spinach","Shade & mulch"],
+  ["corn","beans","Nitrogen + climb"],
+  ["corn","squash","Living mulch"],
+  ["beans","squash","Shade & weed"],
+  ["sunflower","beans","Living trellis"],
+  ["basil","pepper","Companion boost"],
+  ["basil","tomato","Companion classic"],
+  ["carrot","onion","Carrot fly mask"],
+  ["onion","carrot","Onion fly mask"],
+  ["onion","lettuce","Pest confusion"],
+  ["lettuce","radish","Trap crop"],
+  ["radish","lettuce","Quick cover"],
+  ["cucumber","beans","Nitrogen + shade"],
+  ["cucumber","nasturtium","Beetle trap"],
+  ["cucumber","sunflower","Partial shade"],
+  ["spinach","tomato","Summer shade"],
+  ["spinach","beans","Living mulch"],
+  ["blueberry","rhubarb","Soil acidifier"],
+  ["blueberry","strawberry","Ground cover"],
+  ["blueberry","thyme","Mycorrhizal boost"],
+  ["blueberry","clover","Nitrogen + acid"],
+  ["blueberry","mint","Ground pest guard"],
+  ["blueberry","lavender","Pollinator draw"],
+  ["pepper","basil","Pest repel"],
+  ["pepper","onion","Pest barrier"],
+  ["pepper","marigold","Nematode trap"],
+  ["garlic","rose","Fungal shield"],
+  ["dill","cabbage","Predator draw"],
+  ["dill","corn","Predator draw"],
+  ["yarrow","lavender","Pollinator hub"],
+  ["borage","strawberry","Pollinator draw"],
+  ["thyme","strawberry","Ground pest guard"],
+  ["mint","tomato","Hornworm repel"],
+  ["marigold","beans","Nematode trap"],
+  ["marigold","tomato","Root knot trap"],
+  ["marigold","squash","Squash bug trap"],
+  ["alyssum","lettuce","Aphid predator food"],
+  ["sunflower","cucumber","Living trellis"]
+];
+
+/* Negative: avoid planting together */
+const NEGATIVE = [
+  ["fennel","apple","Allelopathy"],
+  ["fennel","beans","Growth inhibitor"],
+  ["fennel","tomato","Growth inhibitor"],
+  ["fennel","corn","Growth inhibitor"],
+  ["fennel","pepper","Growth inhibitor"],
+  ["onion","beans","Nitrogen interference"],
+  ["garlic","beans","Growth inhibitor"],
+  ["garlic","peas","Growth inhibitor"],
+  ["corn","tomato","Shared pest risk"],
+  ["corn","sunflower","Shade competition"],
+  ["dill","carrot","Cross attraction"],
+  ["potato","tomato","Shared blight"],
+  ["cabbage","strawberry","Stunted growth"],
+  ["broccoli","tomato","Growth inhibitor"]
+];
+
+const PRESETS = {
+  apple:[
+    {id:"apple",x:0.5,y:0.4},
+    {id:"clover",x:0.35,y:0.55},
+    {id:"comfrey",x:0.65,y:0.55},
+    {id:"chives",x:0.5,y:0.2},
+    {id:"daffodil",x:0.2,y:0.4},
+    {id:"dill",x:0.8,y:0.4},
+    {id:"yarrow",x:0.35,y:0.25},
+    {id:"nasturtium",x:0.65,y:0.25},
+    {id:"strawberry",x:0.5,y:0.7},
+    {id:"borage",x:0.2,y:0.6}
+  ],
+  sisters:[
+    {id:"corn",x:0.5,y:0.35},
+    {id:"beans",x:0.4,y:0.55},
+    {id:"beans",x:0.6,y:0.55},
+    {id:"squash",x:0.5,y:0.75},
+    {id:"sunflower",x:0.25,y:0.3},
+    {id:"nasturtium",x:0.75,y:0.3}
+  ],
+  tomato:[
+    {id:"tomato",x:0.5,y:0.35},
+    {id:"basil",x:0.35,y:0.2},
+    {id:"marigold",x:0.65,y:0.2},
+    {id:"carrot",x:0.25,y:0.5},
+    {id:"onion",x:0.75,y:0.5},
+    {id:"nasturtium",x:0.5,y:0.65},
+    {id:"spinach",x:0.4,y:0.75},
+    {id:"borage",x:0.6,y:0.75}
+  ],
+  pollinator:[
+    {id:"sunflower",x:0.5,y:0.25},
+    {id:"lavender",x:0.3,y:0.45},
+    {id:"borage",x:0.7,y:0.45},
+    {id:"yarrow",x:0.2,y:0.65},
+    {id:"dill",x:0.5,y:0.65},
+    {id:"alyssum",x:0.8,y:0.65},
+    {id:"marigold",x:0.35,y:0.85},
+    {id:"nasturtium",x:0.65,y:0.85}
+  ],
+  berry:[
+    {id:"blueberry",x:0.5,y:0.3},
+    {id:"rhubarb",x:0.3,y:0.5},
+    {id:"strawberry",x:0.7,y:0.5},
+    {id:"thyme",x:0.25,y:0.7},
+    {id:"clover",x:0.5,y:0.7},
+    {id:"mint",x:0.75,y:0.7},
+    {id:"lavender",x:0.4,y:0.85}
+  ]
+};
+
+const ROLE_NAMES = {
+  nf:"Nitrogen Fixer", pa:"Pollinator Attractor", pr:"Pest Repellent",
+  gc:"Ground Cover", da:"Dynamic Accumulator", ed:"Edible"
+};
+const ROLE_COLORS = {
+  nf:"#6b8e6b", pa:"#d4a045", pr:"#b44", gc:"#4a8a9e", da:"#7a5ea0", ed:"#e8c96a"
+};
+
+/* ================= STATE ================= */
+const canvas = document.getElementById('garden-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, DPR;
+let placed = []; // {id,x,y,uid}
+let dragItem = null; // {uid, offsetX, offsetY, source:'palette'|'canvas'}
+let hovered = null; // uid
+let selected = null; // uid
+let animFrame = 0;
+let relCache = []; // recomputed positive/negative relationships
+let nextUid = 1;
+const PLANT_RADIUS = 28;
+const SNAP_DIST = 90;
+const DEMO_DURATION = 8000;
+let demoMode = false;
+let demoStart = 0;
+let demoQueue = [];
+
+/* ================= INIT ================= */
+function init() {
+  buildPalette();
+  resize();
+  window.addEventListener('resize', resize);
+  bindEvents();
+  requestAnimationFrame(loop);
+  computeRelationships();
+  updateHUD();
+}
+
+function resize() {
+  const wrap = document.getElementById('canvas-wrap');
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = W * DPR; canvas.height = H * DPR;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+
+/* ================= PALETTE ================= */
+function buildPalette() {
+  const groups = {};
+  PLANTS.forEach(p => {
+    if (!groups[p.group]) groups[p.group] = [];
+    groups[p.group].push(p);
+  });
+  const order = ["Central","Vine","Understory","Ground Cover"];
+  const container = document.getElementById('plantGroups');
+  container.innerHTML = '';
+  order.forEach(g => {
+    if (!groups[g]) return;
+    const div = document.createElement('div'); div.className = 'cat-group';
+    const title = document.createElement('div'); title.className = 'cat-title';
+    title.textContent = g;
+    const list = document.createElement('div'); list.className = 'plant-list';
+    groups[g].forEach(p => {
+      const row = document.createElement('div'); row.className = 'plant';
+      row.dataset.id = p.id;
+      row.innerHTML = `<span class="icon">${p.icon}</span><span class="name">${p.name}</span><span class="tags">${p.roles.map(r => `<span class="tag tag-${r}"></span>`).join('')}</span>`;
+      row.addEventListener('pointerdown', e => startDragPalette(e, p));
+      list.appendChild(row);
+    });
+    title.addEventListener('click', () => {
+      title.classList.toggle('collapsed');
+      list.classList.toggle('hidden');
+    });
+    div.appendChild(title); div.appendChild(list); container.appendChild(div);
+  });
+}
+
+document.getElementById('searchPlants').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.plant').forEach(el => {
+    const p = PLANTS.find(x => x.id === el.dataset.id);
+    const match = p.name.toLowerCase().includes(q) || p.group.toLowerCase().includes(q) || p.roles.some(r => ROLE_NAMES[r].toLowerCase().includes(q));
+    el.style.display = match ? 'flex' : 'none';
+  });
+});
+
+/* ================= DRAG ================= */
+function startDragPalette(e, plant) {
+  e.preventDefault();
+  dragItem = { source:'palette', plant, uid: null, startX:e.clientX, startY:e.clientY };
+}
+
+function startDragCanvas(e, item) {
+  e.preventDefault();
+  dragItem = { source:'canvas', uid: item.uid, offsetX: e.clientX - item.x * W, offsetY: e.clientY - item.y * H };
+  selected = item.uid;
+}
+
+function bindEvents() {
+  const wrap = document.getElementById('canvas-wrap');
+  wrap.addEventListener('pointermove', e => {
+    if (!dragItem) { handleHover(e); return; }
+    if (dragItem.source === 'palette') {
+      // Dragging from palette — show ghost at pointer
+    } else {
+      const it = placed.find(x => x.uid === dragItem.uid);
+      if (it) { it.x = Math.max(0, Math.min(1, (e.clientX - dragItem.offsetX) / W)); it.y = Math.max(0, Math.min(1, (e.clientY - dragItem.offsetY) / H)); }
+    }
+    computeRelationships();
+    updateHUD();
+  });
+  wrap.addEventListener('pointerup', e => {
+    if (!dragItem) return;
+    if (dragItem.source === 'palette') {
+      const rect = wrap.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / W;
+      const y = (e.clientY - rect.top) / H;
+      if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
+        placed.push({ id: dragItem.plant.id, x, y, uid: nextUid++ });
+        selected = nextUid - 1;
+      }
+    }
+    dragItem = null;
+    computeRelationships();
+    updateHUD();
+  });
+  wrap.addEventListener('pointerleave', () => { dragItem = null; hovered = null; });
+  wrap.addEventListener('click', e => {
+    if (e.target === canvas) { selected = null; }
+  });
+  wrap.addEventListener('dblclick', e => {
+    const rect = wrap.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    const hit = placed.find(p => dist(px(p.x), py(p.y), cx, cy) < PLANT_RADIUS);
+    if (hit) {
+      placed = placed.filter(p => p.uid !== hit.uid);
+      selected = null;
+      computeRelationships();
+      updateHUD();
+    }
+  });
+  wrap.addEventListener('contextmenu', e => { e.preventDefault(); });
+
+  // Touch: two-finger drag doesn't apply here; single finger works via pointer events
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    placed = []; selected = null; computeRelationships(); updateHUD();
+  });
+  document.getElementById('demoBtn').addEventListener('click', startDemo);
+  document.querySelectorAll('.preset').forEach(el => {
+    el.addEventListener('click', () => loadPreset(el.dataset.preset));
+  });
+}
+
+function handleHover(e) {
+  const rect = document.getElementById('canvas-wrap').getBoundingClientRect();
+  const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+  const hit = placed.find(p => dist(px(p.x), py(p.y), cx, cy) < PLANT_RADIUS);
+  hovered = hit ? hit.uid : null;
+  updateTooltip(e.clientX, e.clientY, hit);
+}
+
+function updateTooltip(x, y, item) {
+  const tt = document.getElementById('tooltip');
+  if (!item) { tt.classList.remove('visible'); return; }
+  const p = PLANTS.find(z => z.id === item.id);
+  if (!p) return;
+  let html = `<div class="tt-title">${p.icon} ${p.name}</div>`;
+  html += `<div>${p.roles.map(r => `<span class="tt-role" style="background:${ROLE_COLORS[r]}22;color:${ROLE_COLORS[r]}">${ROLE_NAMES[r]}</span>`).join('')}</div>`;
+  // Show relationships for this plant
+  const pos = relCache.filter(r => r.type==='pos' && (r.a===item.uid || r.b===item.uid));
+  const neg = relCache.filter(r => r.type==='neg' && (r.a===item.uid || r.b===item.uid));
+  if (pos.length) html += `<div class="tt-pos" style="margin-top:4px">✓ ${pos.length} good neighbor${pos.length>1?'s':''}</div>`;
+  if (neg.length) html += `<div class="tt-neg">✗ ${neg.length} conflict${neg.length>1?'s':''}</div>`;
+  tt.innerHTML = html;
+  tt.style.left = Math.min(x + 14, window.innerWidth - 240) + 'px';
+  tt.style.top = Math.min(y + 14, window.innerHeight - 140) + 'px';
+  tt.classList.add('visible');
+}
+
+/* ================= DRAWING ================= */
+function px(x) { return x * W; }
+function py(y) { return y * H; }
+function dist(a,b,c,d) { const dx=a-c, dy=b-d; return Math.sqrt(dx*dx+dy*dy); }
+
+function loop() {
+  animFrame++;
+  ctx.clearRect(0, 0, W, H);
+  drawBackground();
+  drawRelationships();
+  drawPlants();
+  if (demoMode) updateDemo();
+  requestAnimationFrame(loop);
+}
+
+function drawBackground() {
+  // Soft grid dots
+  ctx.fillStyle = '#e0dcd4';
+  const step = 40;
+  for (let x = step; x < W; x += step) {
+    for (let y = step; y < H; y += step) {
+      ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI*2); ctx.fill();
+    }
+  }
+}
+
+function drawRelationships() {
+  const t = animFrame * 0.02;
+  relCache.forEach(r => {
+    const a = placed.find(p => p.uid === r.a);
+    const b = placed.find(p => p.uid === r.b);
+    if (!a || !b) return;
+    const x1 = px(a.x), y1 = py(a.y);
+    const x2 = px(b.x), y2 = py(b.y);
+    const d = dist(x1,y1,x2,y2);
+    if (d > 220) return; // Don't draw if too far
+    if (r.type === 'pos') {
+      ctx.strokeStyle = 'rgba(90,124,75,0.35)';
+      ctx.lineWidth = 2 + Math.sin(t + r.a) * 0.5;
+      ctx.setLineDash([6, 6]);
+      ctx.lineDashOffset = -animFrame * 0.5;
+    } else {
+      ctx.strokeStyle = 'rgba(180,68,68,0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 5]);
+      ctx.lineDashOffset = 0;
+    }
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.setLineDash([]);
+    // Midpoint label
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    ctx.fillStyle = r.type==='pos' ? 'rgba(90,124,75,0.8)' : 'rgba(180,68,68,0.8)';
+    ctx.font = '600 10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const bgW = ctx.measureText(r.label).width + 8;
+    ctx.fillStyle = r.type==='pos' ? 'rgba(245,241,234,0.92)' : 'rgba(255,240,240,0.92)';
+    ctx.beginPath(); ctx.roundRect(mx - bgW/2, my - 9, bgW, 18, 4); ctx.fill();
+    ctx.fillStyle = r.type==='pos' ? '#5a7c4b' : '#b44';
+    ctx.fillText(r.label, mx, my);
+  });
+}
+
+function drawPlants() {
+  placed.forEach(p => {
+    const plantDef = PLANTS.find(z => z.id === p.id);
+    if (!plantDef) return;
+    const x = px(p.x), y = py(p.y);
+    const isSel = selected === p.uid;
+    const isHov = hovered === p.uid;
+    const r = PLANT_RADIUS + (isHov ? 2 : 0);
+
+    // Shadow
+    ctx.fillStyle = 'rgba(45,42,38,0.08)';
+    ctx.beginPath(); ctx.ellipse(x, y + r - 4, r * 0.8, r * 0.3, 0, 0, Math.PI*2); ctx.fill();
+
+    // Ring
+    ctx.strokeStyle = isSel ? '#c27d3a' : (isHov ? '#8a6f4e' : '#d5cfc5');
+    ctx.lineWidth = isSel ? 3 : 2;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.stroke();
+
+    // Fill
+    ctx.fillStyle = '#fffdf7';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+
+    // Emoji
+    ctx.font = `${r*0.9}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(plantDef.icon, x, y + 1);
+
+    // Tags (small dots below)
+    const tagR = 4;
+    const gap = 10;
+    const totalW = plantDef.roles.length * gap - (gap - tagR*2);
+    let tx = x - totalW/2 + tagR;
+    plantDef.roles.forEach(role => {
+      ctx.fillStyle = ROLE_COLORS[role];
+      ctx.beginPath(); ctx.arc(tx, y + r + 6, tagR, 0, Math.PI*2); ctx.fill();
+      tx += gap;
+    });
+  });
+}
+
+/* ================= LOGIC ================= */
+function computeRelationships() {
+  relCache = [];
+  // Positive
+  for (let i = 0; i < placed.length; i++) {
+    for (let j = i+1; j < placed.length; j++) {
+      const a = placed[i], b = placed[j];
+      const found = POSITIVE.find(r => (r[0]===a.id && r[1]===b.id) || (r[0]===b.id && r[1]===a.id));
+      if (found) relCache.push({ type:'pos', a:a.uid, b:b.uid, label:found[2] });
+    }
+  }
+  // Negative
+  for (let i = 0; i < placed.length; i++) {
+    for (let j = i+1; j < placed.length; j++) {
+      const a = placed[i], b = placed[j];
+      const found = NEGATIVE.find(r => (r[0]===a.id && r[1]===b.id) || (r[0]===b.id && r[1]===a.id));
+      if (found) relCache.push({ type:'neg', a:a.uid, b:b.uid, label:found[2] });
+    }
+  }
+}
+
+function updateHUD() {
+  const counts = { nf:0, pa:0, pr:0, gc:0, da:0, ed:0 };
+  placed.forEach(p => {
+    const def = PLANTS.find(z => z.id === p.id);
+    if (def) def.roles.forEach(r => { if (counts[r] !== undefined) counts[r]++; });
+  });
+  document.getElementById('mNitrogen').textContent = counts.nf;
+  document.getElementById('mPollinator').textContent = counts.pa;
+  document.getElementById('mPest').textContent = counts.pr;
+  document.getElementById('mGround').textContent = counts.gc;
+  document.getElementById('mAccum').textContent = counts.da;
+  document.getElementById('mEdible').textContent = counts.ed;
+
+  const totalRoles = counts.nf + counts.pa + counts.pr + counts.gc + counts.da + counts.ed;
+  const uniquePlants = new Set(placed.map(p => p.id)).size;
+  // Score: penalise conflicts, reward diversity + positive relationships
+  const posCount = relCache.filter(r => r.type==='pos').length;
+  const negCount = relCache.filter(r => r.type==='neg').length;
+  let score = Math.min(100, Math.round((uniquePlants * 6 + posCount * 8 + totalRoles * 1.5) / 2));
+  score = Math.max(0, score - negCount * 12);
+  score = Math.min(100, score);
+
+  const circ = document.getElementById('scoreCircle');
+  const maxDash = 126;
+  circ.style.strokeDasharray = `${Math.round(score/100 * maxDash)} ${maxDash}`;
+  circ.classList.toggle('warn', score < 40);
+  document.getElementById('scoreLabel').textContent = score + '%';
+}
+
+/* ================= PRESETS & DEMO ================= */
+function loadPreset(name) {
+  const list = PRESETS[name];
+  if (!list) return;
+  placed = list.map(p => ({ ...p, uid: nextUid++ }));
+  selected = null;
+  computeRelationships();
+  updateHUD();
+}
+
+function startDemo() {
+  placed = []; selected = null; demoMode = true; demoStart = performance.now();
+  demoQueue = [];
+  // Build a sequence: add each preset plant with delay
+  const all = [];
+  Object.keys(PRESETS).forEach(k => {
+    PRESETS[k].forEach((p,i) => all.push({ ...p, preset:k, delay: all.length * 600 }));
+  });
+  demoQueue = all;
+}
+
+function updateDemo() {
+  const now = performance.now();
+  const elapsed = now - demoStart;
+  let changed = false;
+  while (demoQueue.length && elapsed > demoQueue[0].delay) {
+    const next = demoQueue.shift();
+    placed.push({ id: next.id, x: next.x, y: next.y, uid: nextUid++ });
+    changed = true;
+  }
+  if (changed) { computeRelationships(); updateHUD(); }
+  if (demoQueue.length === 0 && elapsed > DEMO_DURATION + allPresetCount() * 600) {
+    demoMode = false;
+  }
+}
+function allPresetCount() {
+  let c = 0; Object.values(PRESETS).forEach(a => c += a.length); return c;
+}
+
+/* ================= START ================= */
+init();
+</script>
+</body>
+</html>
