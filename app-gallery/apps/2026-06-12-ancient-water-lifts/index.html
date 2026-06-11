@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Ancient Water Lifts Explorer</title>
+<style>
+  :root {
+    --bg: #1a1814;
+    --panel: #25221e;
+    --card: #2e2a25;
+    --border: #3d3830;
+    --text: #e8e2d8;
+    --muted: #a09888;
+    --accent: #c9a86c;
+    --accent2: #8b9a6b;
+    --warn: #c97b5a;
+    --water: #5b9bd5;
+    --waterDark: #3a7ab5;
+    --sand: #c4a882;
+    --stone: #7a7569;
+    --wood: #8b6b4a;
+    --earth: #6b5a4a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .banner {
+    background: linear-gradient(90deg, #3a2a1a, #2a1e12);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    color: #c9a86c;
+    text-align: center;
+  }
+  .banner strong { color: #d4a050; }
+  header {
+    padding: 16px 20px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  h1 { font-size: 1.3rem; font-weight: 500; letter-spacing: 0.5px; color: var(--accent); }
+  .subtitle { font-size: 0.78rem; color: var(--muted); }
+  .era-badge {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 0.72rem;
+    color: var(--accent);
+  }
+  .machine-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 20px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .machine-tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 0.82rem;
+    color: var(--muted);
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .tab:hover { border-color: var(--accent); color: var(--text); }
+  .tab.active {
+    background: var(--card);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 8px rgba(201,168,108,0.15);
+  }
+  .main-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 16px;
+    padding: 0 20px 20px;
+    min-height: 0;
+  }
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+  }
+  .stage-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .stage-title { font-size: 0.9rem; color: var(--accent); font-weight: 500; }
+  .play-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 12px;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 0.78rem;
+    transition: all 0.2s;
+  }
+  .play-btn:hover { border-color: var(--accent); }
+  .svg-container {
+    flex: 1;
+    position: relative;
+    background: #1e1c18;
+  }
+  .svg-container svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .panel-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .panel-box h3 {
+    font-size: 0.82rem;
+    color: var(--accent);
+    margin-bottom: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+  }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-label { color: var(--muted); }
+  .metric-value { color: var(--text); font-weight: 500; }
+  .metric-value.highlight { color: var(--accent); }
+  .slider-group {
+    margin-bottom: 12px;
+  }
+  .slider-group:last-child { margin-bottom: 0; }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .slider-label span:last-child { color: var(--accent); }
+  input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .history-text {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+  .history-text strong { color: var(--text); }
+  .history-text em { color: var(--accent); font-style: normal; }
+  .water-particle {
+    fill: var(--water);
+    opacity: 0.85;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+  .flow-indicator {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .tooltip {
+    position: absolute;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.72rem;
+    color: var(--text);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .tooltip.visible { opacity: 1; }
+  .comparison-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .comparison-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  <strong>Experimental AI mini-app</strong> — Untested, not professionally validated. Do not rely on any values for real decisions.
+</div>
+
+<header>
+  <div>
+    <h1>Ancient Water Lifts Explorer</h1>
+    <div class="subtitle">Interactive engineering history — 5 machines, 3000+ years of water technology</div>
+  </div>
+  <div class="era-badge" id="eraDisplay">~3000 BCE — Egypt</div>
+</header>
+
+<div class="machine-tabs" id="machineTabs"></div>
+
+<div class="main-grid">
+  <div class="stage">
+    <div class="stage-header">
+      <div class="stage-title" id="stageTitle">Shadoof</div>
+      <button class="play-btn" id="playBtn" onclick="togglePlay()">Pause</button>
+    </div>
+    <div class="svg-container" id="svgContainer">
+      <svg id="mainSvg" viewBox="0 0 700 420" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1e2838"/>
+            <stop offset="100%" stop-color="#2a3a4a"/>
+          </linearGradient>
+          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#5b9bd5"/>
+            <stop offset="100%" stop-color="#3a7ab5"/>
+          </linearGradient>
+          <linearGradient id="sandGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#c4a882"/>
+            <stop offset="100%" stop-color="#a08862"/>
+          </linearGradient>
+          <linearGradient id="woodGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#6b4e32"/>
+            <stop offset="50%" stop-color="#8b6b4a"/>
+            <stop offset="100%" stop-color="#6b4e32"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect width="700" height="420" fill="url(#skyGrad)"/>
+        <g id="sceneGroup"></g>
+      </svg>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="panel-box">
+      <h3>Live Output</h3>
+      <div class="metric-row">
+        <span class="metric-label">Flow rate</span>
+        <span class="metric-value highlight" id="flowRate">0 L/hr</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Lift height</span>
+        <span class="metric-value" id="liftHeight">0 m</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Efficiency</span>
+        <span class="metric-value" id="efficiency">0%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Power source</span>
+        <span class="metric-value" id="powerSource">Human</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Typical scale</span>
+        <span class="metric-value" id="typicalScale">1–2 operators</span>
+      </div>
+      <div style="margin-top:8px;">
+        <div class="slider-label"><span>Relative throughput</span><span id="throughputLabel">Low</span></div>
+        <div class="comparison-bar"><div class="comparison-fill" id="throughputBar" style="width:15%"></div></div>
+      </div>
+    </div>
+
+    <div class="panel-box">
+      <h3>Parameters</h3>
+      <div id="slidersContainer"></div>
+    </div>
+
+    <div class="panel-box">
+      <h3>History & Context</h3>
+      <div class="history-text" id="historyText"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const machines = {
+  shadoof: {
+    name: 'Shadoof',
+    era: '~3000 BCE — Egypt',
+    power: 'Human (counterpoise)',
+    scale: '1 operator',
+    history: `The <em>shadoof</em> is one of the oldest water-lifting devices known, appearing in Egypt and Mesopotamia by the 3rd millennium BCE. A long wooden beam pivots on a vertical post: a clay bucket hangs at one end, counterbalanced by a stone or mud weight at the other. The operator pulls the rope to dip the bucket, then releases — the counterweight does the lifting work. A single shadoof can irrigate about <strong>0.5 hectares</strong> and was the backbone of Egyptian basin irrigation for over 4,000 years. It is still used in parts of Africa and South Asia today.`,
+    defaults: { boomLength: 5, counterWeight: 25, bucketSize: 15, speed: 1 },
+    params: [
+      { key: 'boomLength', label: 'Boom length', min: 3, max: 8, step: 0.1, unit: 'm' },
+      { key: 'counterWeight', label: 'Counterweight', min: 10, max: 50, step: 1, unit: 'kg' },
+      { key: 'bucketSize', label: 'Bucket volume', min: 5, max: 30, step: 1, unit: 'L' },
+      { key: 'speed', label: 'Operator speed', min: 0.2, max: 3, step: 0.1, unit: 'x' }
+    ]
+  },
+  archimedes: {
+    name: 'Archimedes Screw',
+    era: '~250 BCE — Greece/Egypt',
+    power: 'Human / animal / water',
+    scale: '1–4 operators',
+    history: `Attributed to <em>Archimedes of Syracuse</em> (though possibly known earlier in Egypt), the Archimedes screw is a helical blade inside a cylindrical casing, tilted at ~30°. As the screw turns, water is trapped in each helical chamber and carried upward. It is still used worldwide for irrigation, drainage, and even modern <strong>Archimedes screw turbines</strong> for low-head hydropower. A 3 m diameter screw at 20 RPM can lift over <strong>1,000 L/min</strong>. Its efficiency is remarkable for such an ancient design — up to 80% in modern implementations.`,
+    defaults: { diameter: 0.5, length: 4, pitch: 1.5, rpm: 15 },
+    params: [
+      { key: 'diameter', label: 'Screw diameter', min: 0.2, max: 2, step: 0.05, unit: 'm' },
+      { key: 'length', label: 'Screw length', min: 1, max: 10, step: 0.5, unit: 'm' },
+      { key: 'pitch', label: 'Pitch (turn spacing)', min: 0.5, max: 3, step: 0.1, unit: 'm' },
+      { key: 'rpm', label: 'Rotation speed', min: 5, max: 40, step: 1, unit: 'RPM' }
+    ]
+  },
+  qanat: {
+    name: 'Qanat',
+    era: '~1000 BCE — Persia',
+    power: 'Gravity (passive)',
+    scale: 'Village / region',
+    history: `The <em>qanat</em> (or karez) is an underground channel that taps into an aquifer at a mountain foothill and delivers water by gravity alone over distances of <strong>10–30 km</strong> to villages and fields. Vertical shafts every 20–50 m provide ventilation and access for maintenance. A single qanat can supply water for centuries — some Iranian qanats are over <strong>3,000 years old</strong> and still flowing. The UNESCO-listed <em>Gohariz qanat</em> in Iran has 430 shafts and runs 15 km. The total qanat network in Iran once exceeded <strong>170,000 km</strong>.`,
+    defaults: { gradient: 0.5, depth: 20, length: 5, shaftSpacing: 30 },
+    params: [
+      { key: 'gradient', label: 'Channel gradient', min: 0.1, max: 2, step: 0.1, unit: '‰' },
+      { key: 'depth', label: 'Mother well depth', min: 5, max: 80, step: 1, unit: 'm' },
+      { key: 'length', label: 'Channel length', min: 1, max: 30, step: 0.5, unit: 'km' },
+      { key: 'shaftSpacing', label: 'Shaft spacing', min: 15, max: 60, step: 1, unit: 'm' }
+    ]
+  },
+  noria: {
+    name: 'Noria',
+    era: '~200 BCE — Syria/Roman East',
+    power: 'River current',
+    scale: 'Village',
+    history: `The <em>noria</em> is a large water-powered scoop wheel that sits in a flowing river. Paddles on the rim catch the current, turning the wheel; attached buckets scoop water from the river and tip it into an aqueduct at the top. The <strong>norias of Hama</strong>, Syria, built between the 12th and 13th centuries, are among the most impressive — the largest, <em>Noria al-Muhammadiyya</em>, is 21 m in diameter and still turns today. A typical noria could lift <strong>10,000+ L/hr</strong> without any fuel or animal labour.`,
+    defaults: { diameter: 6, flowRate: 2, buckets: 12, bladeWidth: 0.4 },
+    params: [
+      { key: 'diameter', label: 'Wheel diameter', min: 2, max: 22, step: 0.5, unit: 'm' },
+      { key: 'flowRate', label: 'River flow', min: 0.5, max: 8, step: 0.1, unit: 'm/s' },
+      { key: 'buckets', label: 'Number of buckets', min: 6, max: 24, step: 1, unit: '' },
+      { key: 'bladeWidth', label: 'Paddle width', min: 0.2, max: 1, step: 0.05, unit: 'm' }
+    ]
+  },
+  saqiya: {
+    name: 'Saqiya (Persian Wheel)',
+    era: '~300 BCE — Egypt / Persia',
+    power: 'Animal (ox/donkey)',
+    scale: '2–4 animals',
+    history: `The <em>saqiya</em> (also called the Persian wheel) is a vertical wheel with a continuous chain of clay pots or buckets around its rim. An animal (ox, buffalo, or donkey) walks in a circle, turning a horizontal shaft connected via wooden gears to the vertical wheel. Each pot dips into the water, is carried to the top, and tips into a trough. A pair of oxen could drive a saqiya lifting <strong>2,000–5,000 L/hr</strong> from depths of 5–15 m. It spread across the Islamic world, India, and eventually to the Americas via Spanish colonisation.`,
+    defaults: { wheelDia: 4, potSize: 8, animalSpeed: 1, gearRatio: 4 },
+    params: [
+      { key: 'wheelDia', label: 'Wheel diameter', min: 1.5, max: 8, step: 0.25, unit: 'm' },
+      { key: 'potSize', label: 'Pot volume', min: 3, max: 20, step: 1, unit: 'L' },
+      { key: 'animalSpeed', label: 'Animal pace', min: 0.3, max: 2.5, step: 0.1, unit: 'm/s' },
+      { key: 'gearRatio', label: 'Gear ratio', min: 2, max: 10, step: 0.5, unit: ':1' }
+    ]
+  }
+};
+
+let current = 'shadoof';
+let playing = true;
+let animFrame;
+let time = 0;
+let params = {};
+let particles = [];
+
+function init() {
+  buildTabs();
+  loadMachine('shadoof');
+  loop();
+}
+
+function buildTabs() {
+  const container = document.getElementById('machineTabs');
+  Object.keys(machines).forEach(key => {
+    const btn = document.createElement('div');
+    btn.className = 'tab' + (key === current ? ' active' : '');
+    btn.textContent = machines[key].name;
+    btn.onclick = () => loadMachine(key);
+    container.appendChild(btn);
+  });
+}
+
+function loadMachine(key) {
+  current = key;
+  const m = machines[key];
+  params = { ...m.defaults };
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent === m.name));
+  document.getElementById('stageTitle').textContent = m.name;
+  document.getElementById('eraDisplay').textContent = m.era;
+  document.getElementById('powerSource').textContent = m.power;
+  document.getElementById('typicalScale').textContent = m.scale;
+  document.getElementById('historyText').innerHTML = m.history;
+  buildSliders(m);
+  updateMetrics();
+  particles = [];
+}
+
+function buildSliders(m) {
+  const container = document.getElementById('slidersContainer');
+  container.innerHTML = '';
+  m.params.forEach(p => {
+    const group = document.createElement('div');
+    group.className = 'slider-group';
+    group.innerHTML = `
+      <div class="slider-label"><span>${p.label}</span><span id="val-${p.key}">${params[p.key]}${p.unit}</span></div>
+      <input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${params[p.key]}"
+        oninput="updateParam('${p.key}', this.value)">
+    `;
+    container.appendChild(group);
+  });
+}
+
+function updateParam(key, value) {
+  params[key] = parseFloat(value);
+  const m = machines[current];
+  const p = m.params.find(x => x.key === key);
+  document.getElementById(`val-${key}`).textContent = params[key] + (p ? p.unit : '');
+  updateMetrics();
+}
+
+function updateMetrics() {
+  const m = machines[current];
+  let flow = 0, lift = 0, eff = 0, throughput = 0, throughputLabel = 'Low';
+
+  switch (current) {
+    case 'shadoof': {
+      const cycleTime = 8 / params.speed;
+      flow = Math.round((params.bucketSize / cycleTime) * 3600);
+      lift = Math.round(params.boomLength * 0.6 * 10) / 10;
+      eff = Math.round((params.counterWeight / (params.counterWeight + params.bucketSize * 0.5)) * 60);
+      throughput = Math.min(flow / 500, 1);
+      break;
+    }
+    case 'archimedes': {
+      const volPerTurn = Math.PI * Math.pow(params.diameter / 2, 2) * params.pitch * 0.5;
+      flow = Math.round(volPerTurn * params.rpm * 60 * 1000);
+      lift = Math.round(params.length * Math.sin(30 * Math.PI / 180) * 10) / 10;
+      eff = Math.round(50 + params.diameter * 10 + (params.rpm / 40) * 20);
+      throughput = Math.min(flow / 30000, 1);
+      break;
+    }
+    case 'qanat': {
+      const crossSection = 1.5;
+      const velocity = Math.sqrt(params.gradient * 0.001 * 2 * 9.81 * params.length * 1000);
+      flow = Math.round(crossSection * velocity * 3600);
+      lift = params.depth;
+      eff = 85;
+      throughput = Math.min(flow / 50000, 1);
+      break;
+    }
+    case 'noria': {
+      const bucketVol = params.diameter * 0.15;
+      const rpm = params.flowRate * params.bladeWidth * 5;
+      flow = Math.round(bucketVol * params.buckets * rpm * 60);
+      lift = Math.round(params.diameter * 0.85 * 10) / 10;
+      eff = Math.round(40 + params.flowRate * 5 + params.bladeWidth * 10);
+      throughput = Math.min(flow / 20000, 1);
+      break;
+    }
+    case 'saqiya': {
+      const circumference = Math.PI * params.wheelDia;
+      const potsPerMin = (params.animalSpeed * 60) / (circumference / params.gearRatio);
+      flow = Math.round(potsPerMin * params.potSize);
+      lift = Math.round(params.wheelDia * 0.7 * 10) / 10;
+      eff = Math.round(30 + params.gearRatio * 4 + params.animalSpeed * 8);
+      throughput = Math.min(flow / 10000, 1);
+      break;
+    }
+  }
+
+  if (throughput < 0.15) throughputLabel = 'Very low';
+  else if (throughput < 0.35) throughputLabel = 'Low';
+  else if (throughput < 0.6) throughputLabel = 'Moderate';
+  else if (throughput < 0.8) throughputLabel = 'High';
+  else throughputLabel = 'Very high';
+
+  document.getElementById('flowRate').textContent = flow.toLocaleString() + ' L/hr';
+  document.getElementById('liftHeight').textContent = lift + ' m';
+  document.getElementById('efficiency').textContent = Math.min(eff, 95) + '%';
+  document.getElementById('throughputBar').style.width = (throughput * 100) + '%';
+  document.getElementById('throughputLabel').textContent = throughputLabel;
+}
+
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('playBtn').textContent = playing ? 'Pause' : 'Play';
+}
+
+function loop() {
+  if (playing) {
+    time += 0.016;
+    drawScene();
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+function drawScene() {
+  const svg = document.getElementById('sceneGroup');
+  svg.innerHTML = '';
+
+  switch (current) {
+    case 'shadoof': drawShadoof(svg); break;
+    case 'archimedes': drawArchimedes(svg); break;
+    case 'qanat': drawQanat(svg); break;
+    case 'noria': drawNoria(svg); break;
+    case 'saqiya': drawSaqiya(svg); break;
+  }
+}
+
+function drawGround(svg, y) {
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', 0); rect.setAttribute('y', y);
+  rect.setAttribute('width', 700); rect.setAttribute('height', 420 - y);
+  rect.setAttribute('fill', 'url(#sandGrad)');
+  svg.appendChild(rect);
+  // Surface line
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', 0); line.setAttribute('y1', y);
+  line.setAttribute('x2', 700); line.setAttribute('y2', y);
+  line.setAttribute('stroke', '#8b7355');
+  line.setAttribute('stroke-width', 2);
+  svg.appendChild(line);
+}
+
+function drawWater(svg, x, y, w, h) {
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('fill', 'url(#waterGrad)');
+  rect.setAttribute('opacity', 0.7);
+  svg.appendChild(rect);
+  // Water surface shimmer
+  const shimmer = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const waveY = y;
+  let d = `M ${x} ${waveY}`;
+  for (let i = 0; i <= w; i += 10) {
+    d += ` Q ${x + i + 5} ${waveY - 2 + Math.sin(time * 3 + i * 0.1) * 2} ${x + i + 10} ${waveY}`;
+  }
+  shimmer.setAttribute('d', d);
+  shimmer.setAttribute('stroke', '#7ab8e8');
+  shimmer.setAttribute('stroke-width', 1.5);
+  shimmer.setAttribute('fill', 'none');
+  shimmer.setAttribute('opacity', 0.5);
+  svg.appendChild(shimmer);
+}
+
+function drawShadoof(svg) {
+  const groundY = 340;
+  const postX = 350;
+  const boomLen = params.boomLength * 25;
+  const counterW = params.counterWeight;
+  const bucketV = params.bucketSize;
+  const speed = params.speed;
+
+  drawGround(svg, groundY);
+  // Canal
+  drawWater(svg, 200, groundY - 30, 300, 35);
+
+  // Post
+  const post = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  post.setAttribute('x', postX - 4); post.setAttribute('y', groundY - 80);
+  post.setAttribute('width', 8); post.setAttribute('height', 80);
+  post.setAttribute('fill', 'url(#woodGrad)');
+  post.setAttribute('rx', 2);
+  svg.appendChild(post);
+
+  // Boom pivot
+  const pivot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  pivot.setAttribute('cx', postX); pivot.setAttribute('cy', groundY - 75);
+  pivot.setAttribute('r', 5); pivot.setAttribute('fill', '#a08862');
+  svg.appendChild(pivot);
+
+  // Boom oscillation
+  const angle = Math.sin(time * speed) * 0.35;
+  const bucketX = postX + Math.sin(angle) * boomLen;
+  const bucketY = groundY - 75 + Math.cos(angle) * boomLen;
+  const weightX = postX - Math.sin(angle) * boomLen * 0.6;
+  const weightY = groundY - 75 - Math.cos(angle) * boomLen * 0.6;
+
+  // Boom beam
+  const beam = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  beam.setAttribute('x1', weightX); beam.setAttribute('y1', weightY);
+  beam.setAttribute('x2', bucketX); beam.setAttribute('y2', bucketY);
+  beam.setAttribute('stroke', 'url(#woodGrad)');
+  beam.setAttribute('stroke-width', 5);
+  beam.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(beam);
+
+  // Counterweight
+  const weight = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  const wSize = 8 + counterW * 0.3;
+  weight.setAttribute('x', weightX - wSize / 2); weight.setAttribute('y', weightY - wSize);
+  weight.setAttribute('width', wSize); weight.setAttribute('height', wSize);
+  weight.setAttribute('fill', '#5a5a5a'); weight.setAttribute('rx', 3);
+  svg.appendChild(weight);
+
+  // Rope
+  const rope = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  rope.setAttribute('x1', bucketX); rope.setAttribute('y1', bucketY);
+  rope.setAttribute('x2', bucketX); rope.setAttribute('y2', bucketY + 20);
+  rope.setAttribute('stroke', '#8b6b4a'); rope.setAttribute('stroke-width', 2);
+  svg.appendChild(rope);
+
+  // Bucket
+  const bucket = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const bW = 12 + bucketV * 0.3;
+  bucket.setAttribute('d', `M ${bucketX - bW / 2} ${bucketY + 20} Q ${bucketX} ${bucketY + 30 + bW * 0.3} ${bucketX + bW / 2} ${bucketY + 20} Z`);
+  bucket.setAttribute('fill', '#a07850');
+  svg.appendChild(bucket);
+
+  // Water in bucket when near water surface
+  const isDipping = bucketY + 25 > groundY - 30 && Math.sin(time * speed) > 0.3;
+  if (isDipping || (Math.sin(time * speed) > 0 && bucketY + 25 < groundY - 20)) {
+    const waterInBucket = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+    waterInBucket.setAttribute('cx', bucketX); waterInBucket.setAttribute('cy', bucketY + 24);
+    waterInBucket.setAttribute('rx', bW * 0.35); waterInBucket.setAttribute('ry', 4);
+    waterInBucket.setAttribute('fill', '#5b9bd5'); waterInBucket.setAttribute('opacity', 0.7);
+    svg.appendChild(waterInBucket);
+  }
+
+  // Water pour at peak
+  const isPouring = Math.sin(time * speed) < -0.5 && bucketY < groundY - 100;
+  if (isPouring) {
+    for (let i = 0; i < 5; i++) {
+      const drop = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      const dropY = bucketY + 25 + (time * 50 + i * 15) % 60;
+      drop.setAttribute('cx', bucketX + (Math.random() - 0.5) * 8);
+      drop.setAttribute('cy', dropY);
+      drop.setAttribute('r', 2);
+      drop.setAttribute('fill', '#5b9bd5');
+      drop.setAttribute('opacity', 0.6);
+      svg.appendChild(drop);
+    }
+    // Trough
+    const trough = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    trough.setAttribute('d', `M ${postX + 40} ${groundY - 120} L ${postX + 100} ${groundY - 120} L ${postX + 100} ${groundY - 110} L ${postX + 40} ${groundY - 110} Z`);
+    trough.setAttribute('fill', '#8b6b4a');
+    svg.appendChild(trough);
+    // Water in trough
+    const troughWater = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    troughWater.setAttribute('x', postX + 42); troughWater.setAttribute('y', groundY - 115);
+    troughWater.setAttribute('width', 56); troughWater.setAttribute('height', 3);
+    troughWater.setAttribute('fill', '#5b9bd5'); troughWater.setAttribute('opacity', 0.6);
+    svg.appendChild(troughWater);
+  }
+
+  // Operator silhouette
+  const op = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  op.innerHTML = `
+    <circle cx="${postX - 60}" cy="${groundY - 90}" r="8" fill="#6b5a4a"/>
+    <line x1="${postX - 60}" y1="${groundY - 82}" x2="${postX - 60}" y2="${groundY - 50}" stroke="#6b5a4a" stroke-width="6" stroke-linecap="round"/>
+    <line x1="${postX - 60}" y1="${groundY - 65}" x2="${bucketX - 30}" y2="${bucketY + 10}" stroke="#6b5a4a" stroke-width="4" stroke-linecap="round"/>
+    <line x1="${postX - 60}" y1="${groundY - 50}" x2="${postX - 70}" y2="${groundY - 30}" stroke="#6b5a4a" stroke-width="4" stroke-linecap="round"/>
+    <line x1="${postX - 60}" y1="${groundY - 50}" x2="${postX - 50}" y2="${groundY - 30}" stroke="#6b5a4a" stroke-width="4" stroke-linecap="round"/>
+  `;
+  svg.appendChild(op);
+
+  // Labels
+  addLabel(svg, postX, groundY - 95, 'Pivot');
+  addLabel(svg, weightX, weightY - wSize - 5, 'Counterweight');
+}
+
+function drawArchimedes(svg) {
+  const groundY = 340;
+  const centerX = 350;
+  const screwLen = params.length * 35;
+  const screwDia = params.diameter * 50;
+  const pitch = params.pitch * 15;
+  const rpm = params.rpm;
+
+  drawGround(svg, groundY);
+  // Water source
+  drawWater(svg, 80, groundY - 40, 200, 50);
+
+  // Screw casing
+  const casing = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const angle = -30 * Math.PI / 180;
+  const x1 = 120, y1 = groundY - 50;
+  const x2 = x1 + screwLen * Math.cos(angle);
+  const y2 = y1 + screwLen * Math.sin(angle);
+  const hw = screwDia / 2;
+  casing.setAttribute('d', `M ${x1} ${y1 - hw} L ${x2} ${y2 - hw} L ${x2} ${y2 + hw} L ${x1} ${y1 + hw} Z`);
+  casing.setAttribute('fill', 'none');
+  casing.setAttribute('stroke', '#7a7569');
+  casing.setAttribute('stroke-width', 3);
+  svg.appendChild(casing);
+
+  // Screw shaft
+  const shaft = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  shaft.setAttribute('x1', x1); shaft.setAttribute('y1', y1);
+  shaft.setAttribute('x2', x2); shaft.setAttribute('y2', y2);
+  shaft.setAttribute('stroke', '#8b6b4a');
+  shaft.setAttribute('stroke-width', 6);
+  svg.appendChild(shaft);
+
+  // Helix blades
+  const turns = Math.ceil(screwLen / pitch);
+  const rotation = (time * rpm * 6) % 360;
+  for (let t = 0; t < turns; t++) {
+    for (let s = 0; s < 8; s++) {
+      const phase = (t * 360 / turns + s * 45 + rotation) * Math.PI / 180;
+      const along = (t + s / 8) * pitch;
+      if (along > screwLen) continue;
+      const sx = x1 + along * Math.cos(angle);
+      const sy = y1 + along * Math.sin(angle);
+      const perpX = -Math.sin(angle);
+      const perpY = Math.cos(angle);
+      const rx = sx + Math.cos(phase) * hw * 0.85 * perpX;
+      const ry = sy + Math.cos(phase) * hw * 0.85 * perpY;
+      const blade = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      blade.setAttribute('cx', rx); blade.setAttribute('cy', ry);
+      blade.setAttribute('r', 3);
+      blade.setAttribute('fill', '#c4a882');
+      blade.setAttribute('opacity', 0.5 + Math.sin(phase) * 0.3);
+      svg.appendChild(blade);
+
+      // Water trapped in chambers
+      if (Math.sin(phase) > 0.2 && s < 6) {
+        const water = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        water.setAttribute('cx', rx + perpX * 5);
+        water.setAttribute('cy', ry + perpY * 5);
+        water.setAttribute('r', 2.5);
+        water.setAttribute('fill', '#5b9bd5');
+        water.setAttribute('opacity', 0.6);
+        svg.appendChild(water);
+      }
+    }
+  }
+
+  // Discharge at top
+  const discharge = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  discharge.setAttribute('d', `M ${x2 - 10} ${y2 + hw} Q ${x2 + 20} ${y2 + hw + 20} ${x2 + 40} ${y2 + hw + 10}`);
+  discharge.setAttribute('stroke', '#5b9bd5');
+  discharge.setAttribute('stroke-width', 3);
+  discharge.setAttribute('fill', 'none');
+  discharge.setAttribute('stroke-dasharray', '4,4');
+  discharge.setAttribute('opacity', 0.6);
+  svg.appendChild(discharge);
+
+  // Crank handle
+  const crankAngle = rotation * Math.PI / 180;
+  const crankX = x2 + Math.cos(crankAngle) * 20;
+  const crankY = y2 + Math.sin(crankAngle) * 20;
+  const handle = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  handle.setAttribute('x1', x2); handle.setAttribute('y1', y2);
+  handle.setAttribute('x2', crankX); handle.setAttribute('y2', crankY);
+  handle.setAttribute('stroke', '#a08862');
+  handle.setAttribute('stroke-width', 3);
+  svg.appendChild(handle);
+  const knob = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  knob.setAttribute('cx', crankX); knob.setAttribute('cy', crankY);
+  knob.setAttribute('r', 5); knob.setAttribute('fill', '#8b6b4a');
+  svg.appendChild(knob);
+
+  // Delivery trough
+  const trough = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  trough.setAttribute('d', `M ${x2 + 30} ${y2 + hw + 5} L ${x2 + 150} ${y2 + hw + 5} L ${x2 + 150} ${y2 + hw + 15} L ${x2 + 30} ${y2 + hw + 15} Z`);
+  trough.setAttribute('fill', '#7a7569');
+  trough.setAttribute('opacity', 0.5);
+  svg.appendChild(trough);
+
+  addLabel(svg, x1, y1 + hw + 20, 'Water source');
+  addLabel(svg, x2 + 60, y2 + hw, 'Delivery');
+}
+
+function drawQanat(svg) {
+  const groundY = 360;
+  const startX = 50;
+  const endX = 650;
+  const motherDepth = params.depth * 2.5;
+  const gradient = params.gradient * 0.001;
+  const shaftSpacing = params.shaftSpacing * 8;
+  const numShafts = Math.floor((endX - startX) / shaftSpacing);
+
+  // Sky
+  const sky = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  sky.setAttribute('x', 0); sky.setAttribute('y', 0);
+  sky.setAttribute('width', 700); sky.setAttribute('height', groundY);
+  sky.setAttribute('fill', 'url(#skyGrad)');
+  svg.appendChild(sky);
+
+  // Ground surface
+  const surface = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  surface.setAttribute('x', 0); surface.setAttribute('y', groundY - 40);
+  surface.setAttribute('width', 700); surface.setAttribute('height', 40);
+  surface.setAttribute('fill', 'url(#sandGrad)');
+  svg.appendChild(surface);
+
+  // Mountain/hills in background
+  const hill = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  hill.setAttribute('d', `M 0 ${groundY - 40} L 80 ${groundY - 120} L 160 ${groundY - 80} L 240 ${groundY - 140} L 320 ${groundY - 60} L 700 ${groundY - 40} Z`);
+  hill.setAttribute('fill', '#3a3528');
+  hill.setAttribute('opacity', 0.4);
+  svg.appendChild(hill);
+
+  // Underground cross-section
+  const underground = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  underground.setAttribute('x', 0); underground.setAttribute('y', groundY);
+  underground.setAttribute('width', 700); underground.setAttribute('height', 60);
+  underground.setAttribute('fill', '#3a3528');
+  svg.appendChild(underground);
+
+  // Aquifer layer
+  const aquifer = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  aquifer.setAttribute('x', 0); aquifer.setAttribute('y', groundY + 40);
+  aquifer.setAttribute('width', 180); aquifer.setAttribute('height', 20);
+  aquifer.setAttribute('fill', '#3a7ab5');
+  aquifer.setAttribute('opacity', 0.4);
+  svg.appendChild(aquifer);
+  const aqLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  aqLabel.setAttribute('x', 90); aqLabel.setAttribute('y', groundY + 53);
+  aqLabel.setAttribute('text-anchor', 'middle');
+  aqLabel.setAttribute('fill', '#7ab8e8');
+  aqLabel.setAttribute('font-size', '10');
+  aqLabel.textContent = 'Aquifer';
+  svg.appendChild(aqLabel);
+
+  // Mother well
+  const motherWell = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  motherWell.setAttribute('cx', startX + 40); motherWell.setAttribute('cy', groundY + 30);
+  motherWell.setAttribute('rx', 25); motherWell.setAttribute('ry', 8);
+  motherWell.setAttribute('fill', '#2a2520');
+  motherWell.setAttribute('stroke', '#5a5040');
+  motherWell.setAttribute('stroke-width', 2);
+  svg.appendChild(motherWell);
+
+  // Mother well depth indicator
+  const depthLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  depthLine.setAttribute('x1', startX + 10); depthLine.setAttribute('y1', groundY - 40);
+  depthLine.setAttribute('x2', startX + 10); depthLine.setAttribute('y2', groundY + 30);
+  depthLine.setAttribute('stroke', '#c9a86c');
+  depthLine.setAttribute('stroke-width', 1);
+  depthLine.setAttribute('stroke-dasharray', '3,3');
+  svg.appendChild(depthLine);
+  addLabel(svg, startX + 10, groundY - 50, `Depth: ${params.depth}m`);
+
+  // Channel
+  const channelY = groundY + 25;
+  const channelPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  let d = `M ${startX + 40} ${channelY}`;
+  for (let i = 0; i <= numShafts; i++) {
+    const x = startX + 40 + i * shaftSpacing;
+    const y = channelY + i * gradient * shaftSpacing * 5;
+    d += ` L ${x} ${y}`;
+  }
+  channelPath.setAttribute('d', d);
+  channelPath.setAttribute('stroke', '#5b9bd5');
+  channelPath.setAttribute('stroke-width', 4);
+  channelPath.setAttribute('fill', 'none');
+  channelPath.setAttribute('opacity', 0.7);
+  svg.appendChild(channelPath);
+
+  // Flowing water particles along channel
+  const flowPos = (time * 30) % (numShafts * shaftSpacing);
+  for (let i = 0; i < 6; i++) {
+    const along = flowPos + i * (numShafts * shaftSpacing / 6);
+    const shaftIdx = Math.floor(along / shaftSpacing);
+    if (shaftIdx >= 0 && shaftIdx <= numShafts) {
+      const x = startX + 40 + along;
+      const y = channelY + shaftIdx * gradient * shaftSpacing * 5;
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      p.setAttribute('cx', x); p.setAttribute('cy', y);
+      p.setAttribute('r', 2.5);
+      p.setAttribute('fill', '#7ab8e8');
+      p.setAttribute('opacity', 0.7);
+      svg.appendChild(p);
+    }
+  }
+
+  // Vertical shafts
+  for (let i = 0; i <= numShafts; i++) {
+    const x = startX + 40 + i * shaftSpacing;
+    const y = channelY + i * gradient * shaftSpacing * 5;
+    const shaftDepth = groundY - 40 - y + 20;
+
+    // Shaft circle on surface
+    const shaftTop = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+    shaftTop.setAttribute('cx', x); shaftTop.setAttribute('cy', groundY - 40);
+    shaftTop.setAttribute('rx', 6); shaftTop.setAttribute('ry', 3);
+    shaftTop.setAttribute('fill', '#4a4035');
+    shaftTop.setAttribute('stroke', '#6b5a4a');
+    shaftTop.setAttribute('stroke-width', 1);
+    svg.appendChild(shaftTop);
+
+    // Shaft line
+    const shaftLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    shaftLine.setAttribute('x1', x); shaftLine.setAttribute('y1', groundY - 40);
+    shaftLine.setAttribute('x2', x); shaftLine.setAttribute('y2', y);
+    shaftLine.setAttribute('stroke', '#4a4035');
+    shaftLine.setAttribute('stroke-width', 2);
+    shaftLine.setAttribute('stroke-dasharray', '3,2');
+    svg.appendChild(shaftLine);
+
+    // Shaft label (every 3rd)
+    if (i % 3 === 0 || i === numShafts) {
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', x); label.setAttribute('y', groundY - 50);
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('fill', '#a09888');
+      label.setAttribute('font-size', '9');
+      label.textContent = i === 0 ? 'Mother' : i === numShafts ? 'Outfall' : `S${i}`;
+      svg.appendChild(label);
+    }
+  }
+
+  // Outfall
+  const outfallX = startX + 40 + numShafts * shaftSpacing;
+  const outfallY = channelY + numShafts * gradient * shaftSpacing * 5;
+  const outfall = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  outfall.setAttribute('cx', outfallX); outfall.setAttribute('cy', outfallY);
+  outfall.setAttribute('rx', 15); outfall.setAttribute('ry', 5);
+  outfall.setAttribute('fill', '#5b9bd5');
+  outfall.setAttribute('opacity', 0.5);
+  svg.appendChild(outfall);
+
+  // Destination fields
+  const fields = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  fields.setAttribute('x', outfallX + 10); fields.setAttribute('y', groundY - 30);
+  fields.setAttribute('width', 60); fields.setAttribute('height', 25);
+  fields.setAttribute('fill', '#5a7a3a');
+  fields.setAttribute('opacity', 0.4);
+  svg.appendChild(fields);
+  const fLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  fLabel.setAttribute('x', outfallX + 40); fLabel.setAttribute('y', groundY - 15);
+  fLabel.setAttribute('text-anchor', 'middle');
+  fLabel.setAttribute('fill', '#8b9a6b');
+  fLabel.setAttribute('font-size', '9');
+  fLabel.textContent = 'Fields';
+  svg.appendChild(fLabel);
+
+  // Distance label
+  addLabel(svg, (startX + outfallX) / 2, groundY + 55, `Length: ${params.length} km | ${numShafts + 1} shafts`);
+}
+
+function drawNoria(svg) {
+  const groundY = 340;
+  const centerX = 350;
+  const radius = params.diameter * 8;
+  const bucketCount = params.buckets;
+  const flowSpeed = params.flowRate;
+  const bladeW = params.bladeWidth;
+
+  drawGround(svg, groundY);
+  // River
+  drawWater(svg, 100, groundY - 25, 500, 30);
+
+  // Wheel rim
+  const rim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  rim.setAttribute('cx', centerX); rim.setAttribute('cy', groundY - radius);
+  rim.setAttribute('r', radius);
+  rim.setAttribute('fill', 'none');
+  rim.setAttribute('stroke', '#7a7569');
+  rim.setAttribute('stroke-width', 3);
+  svg.appendChild(rim);
+
+  // Hub
+  const hub = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  hub.setAttribute('cx', centerX); hub.setAttribute('cy', groundY - radius);
+  hub.setAttribute('r', 8); hub.setAttribute('fill', '#5a5040');
+  svg.appendChild(hub);
+
+  // Spokes
+  const rpm = flowSpeed * bladeW * 8;
+  const rotation = (time * rpm * 6) % 360;
+  for (let i = 0; i < bucketCount; i++) {
+    const angle = (i * 360 / bucketCount + rotation) * Math.PI / 180;
+    const sx = centerX + Math.cos(angle) * radius;
+    const sy = groundY - radius + Math.sin(angle) * radius;
+
+    // Spoke
+    const spoke = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    spoke.setAttribute('x1', centerX); spoke.setAttribute('y1', groundY - radius);
+    spoke.setAttribute('x2', sx); spoke.setAttribute('y2', sy);
+    spoke.setAttribute('stroke', '#7a7569');
+    spoke.setAttribute('stroke-width', 1.5);
+    spoke.setAttribute('opacity', 0.6);
+    svg.appendChild(spoke);
+
+    // Bucket
+    const bucket = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const bw = 10;
+    bucket.setAttribute('d', `M ${sx - bw / 2} ${sy} L ${sx + bw / 2} ${sy} L ${sx + bw / 2} ${sy + 12} Q ${sx} ${sy + 16} ${sx - bw / 2} ${sy + 12} Z`);
+    bucket.setAttribute('fill', '#8b6b4a');
+    svg.appendChild(bucket);
+
+    // Water in bucket when in river
+    const inRiver = sy > groundY - 30;
+    const atTop = sy < groundY - radius * 1.5;
+    if (inRiver) {
+      const w = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      w.setAttribute('cx', sx); w.setAttribute('cy', sy + 8);
+      w.setAttribute('rx', 4); w.setAttribute('ry', 3);
+      w.setAttribute('fill', '#5b9bd5'); w.setAttribute('opacity', 0.6);
+      svg.appendChild(w);
+    }
+    // Pour at top-right
+    if (angle > -0.5 && angle < 0.5 && !inRiver) {
+      for (let d = 0; d < 3; d++) {
+        const drop = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        drop.setAttribute('cx', sx + d * 4);
+        drop.setAttribute('cy', sy + 12 + (time * 30 + d * 10) % 25);
+        drop.setAttribute('r', 2);
+        drop.setAttribute('fill', '#5b9bd5');
+        drop.setAttribute('opacity', 0.5);
+        svg.appendChild(drop);
+      }
+    }
+  }
+
+  // Paddles
+  for (let i = 0; i < bucketCount; i++) {
+    const angle = (i * 360 / bucketCount + rotation + 180) * Math.PI / 180;
+    const px = centerX + Math.cos(angle) * radius;
+    const py = groundY - radius + Math.sin(angle) * radius;
+    const paddle = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    paddle.setAttribute('x', px - 2); paddle.setAttribute('y', py - bladeW * 15);
+    paddle.setAttribute('width', 4); paddle.setAttribute('height', bladeW * 30);
+    paddle.setAttribute('fill', '#6b5a4a');
+    paddle.setAttribute('opacity', 0.5);
+    svg.appendChild(paddle);
+  }
+
+  // Aqueduct
+  const aqueduct = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  aqueduct.setAttribute('d', `M ${centerX + radius - 10} ${groundY - radius * 2 - 10} L ${centerX + radius + 120} ${groundY - radius * 2 - 10} L ${centerX + radius + 120} ${groundY - radius * 2} L ${centerX + radius - 10} ${groundY - radius * 2} Z`);
+  aqueduct.setAttribute('fill', '#7a7569');
+  aqueduct.setAttribute('opacity', 0.5);
+  svg.appendChild(aqueduct);
+
+  // Supports
+  for (let i = 0; i < 3; i++) {
+    const support = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    support.setAttribute('x1', centerX + radius + i * 40);
+    support.setAttribute('y1', groundY - radius * 2);
+    support.setAttribute('x2', centerX + radius + i * 40);
+    support.setAttribute('y2', groundY);
+    support.setAttribute('stroke', '#5a5040');
+    support.setAttribute('stroke-width', 3);
+    svg.appendChild(support);
+  }
+
+  addLabel(svg, centerX, groundY - radius * 2 - 25, `Noria — ${params.diameter}m diameter`);
+}
+
+function drawSaqiya(svg) {
+  const groundY = 340;
+  const centerX = 350;
+  const wheelR = params.wheelDia * 12;
+  const potVol = params.potSize;
+  const animalV = params.animalSpeed;
+  const gearR = params.gearRatio;
+
+  drawGround(svg, groundY);
+  // Well
+  drawWater(svg, centerX - 60, groundY - 40, 120, 45);
+
+  // Wheel
+  const rim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  rim.setAttribute('cx', centerX); rim.setAttribute('cy', groundY - wheelR);
+  rim.setAttribute('r', wheelR);
+  rim.setAttribute('fill', 'none');
+  rim.setAttribute('stroke', '#7a7569');
+  rim.setAttribute('stroke-width', 3);
+  svg.appendChild(rim);
+
+  // Hub
+  const hub = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  hub.setAttribute('cx', centerX); hub.setAttribute('cy', groundY - wheelR);
+  hub.setAttribute('r', 10); hub.setAttribute('fill', '#5a5040');
+  svg.appendChild(hub);
+
+  // Gear on hub
+  const gearTeeth = 12;
+  const rpm = (animalV * 10) / gearR;
+  const rotation = (time * rpm * 6) % 360;
+  for (let i = 0; i < gearTeeth; i++) {
+    const a = (i * 360 / gearTeeth + rotation) * Math.PI / 180;
+    const gx = centerX + Math.cos(a) * 14;
+    const gy = groundY - wheelR + Math.sin(a) * 14;
+    const tooth = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    tooth.setAttribute('x', gx - 2); tooth.setAttribute('y', gy - 3);
+    tooth.setAttribute('width', 4); tooth.setAttribute('height', 6);
+    tooth.setAttribute('fill', '#a08862');
+    tooth.setAttribute('transform', `rotate(${i * 360 / gearTeeth + rotation} ${gx} ${gy})`);
+    svg.appendChild(tooth);
+  }
+
+  // Pots
+  const potCount = Math.max(8, Math.floor(wheelR / 8));
+  for (let i = 0; i < potCount; i++) {
+    const angle = (i * 360 / potCount + rotation) * Math.PI / 180;
+    const px = centerX + Math.cos(angle) * wheelR;
+    const py = groundY - wheelR + Math.sin(angle) * wheelR;
+
+    // Chain link
+    const link = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    link.setAttribute('cx', px); link.setAttribute('cy', py);
+    link.setAttribute('r', 2); link.setAttribute('fill', '#8b6b4a');
+    svg.appendChild(link);
+
+    // Pot
+    const pot = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const pw = 8 + potVol * 0.2;
+    const ph = 10 + potVol * 0.25;
+    pot.setAttribute('d', `M ${px - pw / 2} ${py} L ${px + pw / 2} ${py} L ${px + pw / 2 - 2} ${py + ph} L ${px - pw / 2 + 2} ${py + ph} Z`);
+    pot.setAttribute('fill', '#a07850');
+    svg.appendChild(pot);
+
+    // Water in pot
+    const inWater = py > groundY - 35;
+    const atTrough = py < groundY - wheelR * 1.6 && px > centerX + wheelR * 0.5;
+    if (inWater) {
+      const w = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      w.setAttribute('cx', px); w.setAttribute('cy', py + ph - 3);
+      w.setAttribute('rx', pw * 0.35); w.setAttribute('ry', 3);
+      w.setAttribute('fill', '#5b9bd5'); w.setAttribute('opacity', 0.6);
+      svg.appendChild(w);
+    }
+    if (atTrough) {
+      // Pour
+      for (let d = 0; d < 2; d++) {
+        const drop = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        drop.setAttribute('cx', px + d * 3);
+        drop.setAttribute('cy', py + ph + (time * 25 + d * 8) % 20);
+        drop.setAttribute('r', 1.5);
+        drop.setAttribute('fill', '#5b9bd5');
+        drop.setAttribute('opacity', 0.5);
+        svg.appendChild(drop);
+      }
+    }
+  }
+
+  // Horizontal drive shaft
+  const driveX = centerX - wheelR - 30;
+  const driveY = groundY - wheelR;
+  const driveShaft = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  driveShaft.setAttribute('x1', driveX); driveShaft.setAttribute('y1', driveY);
+  driveShaft.setAttribute('x2', centerX - 20); driveShaft.setAttribute('y2', driveY);
+  driveShaft.setAttribute('stroke', '#7a7569');
+  driveShaft.setAttribute('stroke-width', 4);
+  svg.appendChild(driveShaft);
+
+  // Drive gear meshing
+  const driveGear = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  driveGear.setAttribute('cx', driveX); driveGear.setAttribute('cy', driveY);
+  driveGear.setAttribute('r', 18); driveGear.setAttribute('fill', 'none');
+  driveGear.setAttribute('stroke', '#a08862');
+  driveGear.setAttribute('stroke-width', 2);
+  driveGear.setAttribute('stroke-dasharray', '4,4');
+  svg.appendChild(driveGear);
+
+  // Animal path (circle)
+  const pathR = 35;
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  path.setAttribute('cx', driveX); path.setAttribute('cy', groundY - 15);
+  path.setAttribute('rx', pathR); path.setAttribute('ry', pathR * 0.25);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', '#5a5040');
+  path.setAttribute('stroke-width', 2);
+  path.setAttribute('stroke-dasharray', '4,3');
+  path.setAttribute('opacity', 0.5);
+  svg.appendChild(path);
+
+  // Animal
+  const animalAngle = (time * animalV * 2) % (Math.PI * 2);
+  const ax = driveX + Math.cos(animalAngle) * pathR;
+  const ay = groundY - 15 + Math.sin(animalAngle) * pathR * 0.25;
+
+  // Ox body
+  const body = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  body.setAttribute('cx', ax); body.setAttribute('cy', ay - 8);
+  body.setAttribute('rx', 14); body.setAttribute('ry', 8);
+  body.setAttribute('fill', '#6b5a4a');
+  svg.appendChild(body);
+  // Head
+  const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  head.setAttribute('cx', ax + 12); head.setAttribute('cy', ay - 12);
+  head.setAttribute('r', 5); head.setAttribute('fill', '#5a4a3a');
+  svg.appendChild(head);
+  // Legs
+  for (let l = 0; l < 4; l++) {
+    const leg = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    const lx = ax - 8 + l * 6;
+    const ly = ay + Math.sin(time * 4 + l) * 2;
+    leg.setAttribute('x1', lx); leg.setAttribute('y1', ay);
+    leg.setAttribute('x2', lx); leg.setAttribute('y2', groundY);
+    leg.setAttribute('stroke', '#5a4a3a');
+    leg.setAttribute('stroke-width', 3);
+    leg.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(leg);
+  }
+
+  // Yoke connecting animal to drive shaft
+  const yoke = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  yoke.setAttribute('x1', ax - 5); yoke.setAttribute('y1', ay - 5);
+  yoke.setAttribute('x2', driveX); yoke.setAttribute('y2', driveY);
+  yoke.setAttribute('stroke', '#7a7569');
+  yoke.setAttribute('stroke-width', 2);
+  yoke.setAttribute('opacity', 0.4);
+  svg.appendChild(yoke);
+
+  // Delivery trough
+  const trough = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  trough.setAttribute('d', `M ${centerX + wheelR - 5} ${groundY - wheelR * 1.7} L ${centerX + wheelR + 100} ${groundY - wheelR * 1.7} L ${centerX + wheelR + 100} ${groundY - wheelR * 1.7 + 10} L ${centerX + wheelR - 5} ${groundY - wheelR * 1.7 + 10} Z`);
+  trough.setAttribute('fill', '#7a7569');
+  trough.setAttribute('opacity', 0.4);
+  svg.appendChild(trough);
+
+  addLabel(svg, driveX, groundY + 15, 'Animal drive');
+  addLabel(svg, centerX + wheelR + 50, groundY - wheelR * 1.7 - 10, 'Delivery trough');
+}
+
+function addLabel(svg, x, y, text) {
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', x); label.setAttribute('y', y);
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('fill', '#a09888');
+  label.setAttribute('font-size', '10');
+  label.setAttribute('font-family', 'Segoe UI, sans-serif');
+  label.textContent = text;
+  svg.appendChild(label);
+}
+
+// Tooltip handling
+const svgContainer = document.getElementById('svgContainer');
+const tooltip = document.getElementById('tooltip');
+svgContainer.addEventListener('mousemove', e => {
+  const rect = svgContainer.getBoundingClientRect();
+  tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+  tooltip.style.top = (e.clientY - rect.top - 20) + 'px';
+});
+
+init();
+</script>
+</body>
+</html>

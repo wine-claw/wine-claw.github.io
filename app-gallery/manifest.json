@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-11",
-    "title": "Permaculture Guild Designer",
-    "slug": "permaculture-guild-designer",
-    "publishedSlug": "2026-06-11-permaculture-guild-designer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-11-permaculture-guild-designer/"
+    "date": "2026-06-12",
+    "title": "Ancient Water Lifts Explorer",
+    "slug": "ancient-water-lifts",
+    "publishedSlug": "2026-06-12-ancient-water-lifts",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-12-ancient-water-lifts/"
   },
   "apps": [
+    {
+      "date": "2026-06-12",
+      "title": "Ancient Water Lifts Explorer",
+      "slug": "ancient-water-lifts",
+      "publishedSlug": "2026-06-12-ancient-water-lifts",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-12-ancient-water-lifts/",
+      "description": "Interactive animated engineering history — 5 ancient water-lifting machines with live parameter sandbox, flowing water particles, and side-by-side comparison"
+    },
     {
       "date": "2026-06-11",
       "title": "Permaculture Guild Designer",
