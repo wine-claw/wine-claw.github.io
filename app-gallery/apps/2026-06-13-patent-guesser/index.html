@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Patent Guesser — Guess the Invention</title>
+<style>
+  :root {
+    --paper: #f7f4ec;
+    --ink: #1a1a1a;
+    --blue: #1e3a5f;
+    --blue-light: #2e5a8a;
+    --accent: #c45c3e;
+    --accent-soft: #d97b5f;
+    --grid: rgba(30,58,95,0.06);
+    --shadow: rgba(30,58,95,0.15);
+    --radius: 8px;
+    --font-tech: 'Courier New', Courier, monospace;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body {
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 18px 48px; }
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 {
+    font-family: var(--font-tech);
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+  header .sub {
+    font-size: 0.85rem;
+    color: var(--blue-light);
+    font-family: var(--font-tech);
+  }
+  .banner {
+    background: var(--blue);
+    color: #fff;
+    font-size: 0.72rem;
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    text-align: center;
+    margin-bottom: 18px;
+    font-family: var(--font-tech);
+    letter-spacing: 0.5px;
+  }
+  .scorebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-family: var(--font-tech);
+    font-size: 0.85rem;
+  }
+  .scorebar .streak { color: var(--accent); font-weight: 700; }
+  .filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    justify-content: center;
+  }
+  .filters button {
+    background: #fff;
+    border: 1.5px solid var(--blue);
+    color: var(--blue);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    font-family: var(--font-tech);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .filters button:hover, .filters button.active {
+    background: var(--blue);
+    color: #fff;
+  }
+  .card-wrap {
+    perspective: 1200px;
+    margin-bottom: 18px;
+  }
+  .card {
+    position: relative;
+    width: 100%;
+    background: #fff;
+    border: 2px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 18px;
+    transition: transform .5s, box-shadow .3s;
+    box-shadow: 0 4px 16px var(--shadow);
+    transform-style: preserve-3d;
+  }
+  .card.revealed { transform: rotateY(180deg); }
+  .card-front, .card-back {
+    backface-visibility: hidden;
+  }
+  .card-back {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    transform: rotateY(180deg);
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .card-back h3 {
+    font-family: var(--font-tech);
+    font-size: 1.2rem;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+  .card-back .year { font-size: 0.9rem; color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+  .card-back .how {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 520px;
+  }
+  .card-back .how-label {
+    font-family: var(--font-tech);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--blue-light);
+    margin-bottom: 4px;
+  }
+  .svg-stage {
+    width: 100%;
+    height: 220px;
+    background: #faf9f6;
+    border: 1px solid var(--blue);
+    border-radius: var(--radius);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .svg-stage svg { max-width: 100%; max-height: 100%; }
+  .hint-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    justify-content: center;
+  }
+  .hint-chip {
+    background: #eef2f7;
+    border: 1px solid var(--blue);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: var(--font-tech);
+    font-size: 0.7rem;
+    color: var(--blue);
+  }
+  .hint-chip.locked { opacity: .35; border-style: dashed; }
+  .guess-area {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .guess-area input {
+    flex: 1;
+    border: 2px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 1rem;
+    font-family: var(--font-body);
+    background: #fff;
+    color: var(--ink);
+  }
+  .guess-area input:focus { outline: none; border-color: var(--accent); }
+  .guess-area button {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .guess-area button:hover { background: var(--blue-light); }
+  .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .actions button {
+    background: #fff;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    font-family: var(--font-tech);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .actions button:hover { background: var(--accent); color: #fff; }
+  .feedback {
+    text-align: center;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-height: 22px;
+  }
+  .feedback.correct { color: #2a7a2a; }
+  .feedback.wrong { color: var(--accent); }
+  .history {
+    margin-top: 24px;
+    background: #fff;
+    border: 1.5px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .history h4 {
+    font-family: var(--font-tech);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px dashed rgba(30,58,95,0.12);
+    font-size: 0.82rem;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-item .res { font-family: var(--font-tech); font-size: 0.75rem; }
+  .history-item .res.ok { color: #2a7a2a; }
+  .history-item .res.fail { color: var(--accent); }
+  .end-screen {
+    text-align: center;
+    padding: 28px 18px;
+    background: #fff;
+    border: 2px solid var(--blue);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 24px var(--shadow);
+    margin-bottom: 20px;
+  }
+  .end-screen h2 { font-family: var(--font-tech); color: var(--blue); margin-bottom: 10px; }
+  .end-screen .big-score { font-size: 2.2rem; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
+  .end-screen .stats { font-size: 0.9rem; color: var(--blue-light); margin-bottom: 18px; }
+  .end-screen button {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 12px 22px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .end-screen button:hover { background: var(--blue-light); }
+  .hidden { display: none !important; }
+  @media (max-width: 520px) {
+    header h1 { font-size: 1.25rem; }
+    .svg-stage { height: 180px; }
+    .guess-area { flex-direction: column; }
+    .guess-area button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Patent Guesser</h1>
+    <div class="sub">Guess the invention from its patent drawing &amp; clues</div>
+  </header>
+  <div class="banner">⚠ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for decisions.</div>
+
+  <div class="scorebar">
+    <span>Score: <b id="score">0</b></span>
+    <span class="streak">Streak: <b id="streak">0</b></span>
+    <span>Round: <b id="round">1</b>/10</span>
+  </div>
+
+  <div class="filters" id="filters"></div>
+
+  <div id="game">
+    <div class="card-wrap">
+      <div class="card" id="card">
+        <div class="card-front" id="cardFront">
+          <div class="svg-stage" id="svgStage"></div>
+          <div class="hint-row" id="hintRow"></div>
+          <div class="guess-area">
+            <input type="text" id="guessInput" placeholder="Type your guess..." autocomplete="off" autocorrect="off" spellcheck="false">
+            <button id="guessBtn">Guess</button>
+          </div>
+          <div class="feedback" id="feedback"></div>
+          <div class="actions">
+            <button id="hintBtn">Reveal Next Hint</button>
+            <button id="skipBtn">Skip / Give Up</button>
+            <button id="dailyBtn">Daily Challenge</button>
+          </div>
+        </div>
+        <div class="card-back hidden" id="cardBack">
+          <h3 id="revealName"></h3>
+          <div class="year" id="revealYear"></div>
+          <div class="how-label">How it works</div>
+          <div class="how" id="revealHow"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="end-screen hidden" id="endScreen">
+    <h2>Round Complete</h2>
+    <div class="big-score" id="endScore">0</div>
+    <div class="stats" id="endStats"></div>
+    <button id="restartBtn">Play Again</button>
+  </div>
+
+  <div class="history" id="historyBox">
+    <h4>Session Log</h4>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<script>
+const INVENTIONS = [
+  { name: "Zipper", year: 1913, category: "Fashion/Textiles", how: "Two rows of metal teeth interlock via a sliding Y-shaped channel. The slider pushes teeth together in a staggered pattern so they hook into one another, forming a continuous closure.", svg: drawZipper },
+  { name: "Ballpoint Pen", year: 1938, category: "Office", how: "A tiny freely-rotating steel ball sits in a conical socket at the tip. As the ball rolls across paper, it picks up viscous ink from an internal reservoir and deposits it in a thin, even layer.", svg: drawBallpoint },
+  { name: "Safety Razor", year: 1901, category: "Personal Care", how: "A thin, sharp blade is held at a fixed angle by a protective guard plate. The guard limits blade exposure to skin, while the blade shears hair at the optimal cutting angle without deep penetration.", svg: drawRazor },
+  { name: "Velcro", year: 1941, category: "Fashion/Textiles", how: "Two strips — one with tiny hooks, one with loops — press together so hooks catch loops. A firm pull parallel to the surface releases them. Inspired by burrs sticking to dog fur.", svg: drawVelcro },
+  { name: "Refrigerator", year: 1913, category: "Home Appliances", how: "A compressor circulates refrigerant through evaporation and condensation coils. The refrigerant absorbs heat inside the cabinet during evaporation, then releases it outside during condensation.", svg: drawFridge },
+  { name: "Phonograph", year: 1877, category: "Audio", how: "A needle traces grooves cut into a rotating cylinder or disc. The groove variations vibrate the needle, which transfers those vibrations to a diaphragm, reproducing sound waves.", svg: drawPhonograph },
+  { name: "Light Bulb", year: 1879, category: "Lighting", how: "An electric current passes through a thin tungsten filament inside an evacuated glass bulb. The filament's resistance heats it to white-hot temperatures, emitting visible light via incandescence.", svg: drawBulb },
+  { name: "Sewing Machine", year: 1846, category: "Fashion/Textiles", how: "A needle pushes thread through fabric to a bobbin below. The bobbin thread interlocks with the needle thread via a shuttle or rotary hook, creating a lockstitch that holds fabric layers together.", svg: drawSewing },
+  { name: "Bicycle", year: 1885, category: "Transport", how: "Pedals drive a chain connected to the rear wheel. The diamond-shaped frame distributes rider weight. Two wheels in line create dynamic stability through gyroscopic precession and trail geometry.", svg: drawBike },
+  { name: "Barbed Wire", year: 1874, category: "Agriculture", how: "Twisted steel strands hold sharp barbs at intervals. The barbs snag animal hides or clothing, creating a psychological and physical barrier without requiring heavy timber or stone fencing.", svg: drawBarbedWire },
+  { name: "Windshield Wiper", year: 1903, category: "Transport", how: "An electric motor drives an articulated arm sweeping a rubber blade across glass. The blade squeegees water and debris off the curved windshield surface, restoring driver visibility.", svg: drawWiper },
+  { name: "Escalator", year: 1892, category: "Transport", how: "A motor-driven chain loop pulls a continuous series of steps along a guide track. Each step remains level via a linked truss system, while comb plates at each end mesh with step grooves for safe entry and exit.", svg: drawEscalator },
+  { name: "Paperclip", year: 1899, category: "Office", how: "A single piece of wire is bent into a double-loop shape with inner and outer tongues. The spring tension of the wire grips multiple sheets between the loops without piercing or marking the paper.", svg: drawPaperclip },
+  { name: "Zip Fastener", year: 1913, category: "Fashion/Textiles", how: "Interlocking scoops on two tapes mesh via a sliding wedge. The wedge forces scoops from a V-position into an interlocked straight line; reversing opens by cam action separating the teeth.", svg: drawZipper }, // alias
+  { name: "Vacuum Cleaner", year: 1901, category: "Home Appliances", how: "A motor-driven fan creates low pressure inside a canister. Atmospheric pressure pushes air (and dust) through a hose into the canister, where a filter bag traps particles before exhausting clean air.", svg: drawVacuum },
+  { name: "Thermos Flask", year: 1892, category: "Home Appliances", how: "A double-walled glass vessel with a vacuum between the walls minimizes heat transfer by conduction and convection. A silvered reflective coating on the inner wall reduces radiative heat loss.", svg: drawThermos },
+  { name: "Dishwasher", year: 1886, category: "Home Appliances", how: "A motor-driven pump sprays pressurized hot water and detergent through rotating arms. The arms distribute jets onto dishes arranged in racks, while a heating element dries residual moisture.", svg: drawDishwasher },
+  { name: "Microwave Oven", year: 1945, category: "Home Appliances", how: "A magnetron generates high-frequency electromagnetic waves (2.45 GHz). These polarize water molecules in food; the molecules rotate to align with the oscillating field, generating heat through molecular friction.", svg: drawMicrowave },
+  { name: "Jet Engine", year: 1939, category: "Transport", how: "Air is compressed by rotating fan blades, mixed with fuel in a combustion chamber, and ignited. The expanding exhaust gases shoot backward through a nozzle, producing forward thrust by Newton's third law.", svg: drawJet },
+  { name: "Cotton Gin", year: 1794, category: "Agriculture", how: "Rotating saw-toothed cylinders pull cotton fibers through narrow wire slots, leaving seeds (too large to pass) behind. A brush then strips the lint from the saws, producing cleaned cotton.", svg: drawCottonGin }
+];
+
+// Deduplicate by name
+const uniqueInventions = [];
+const seen = new Set();
+for (const inv of INVENTIONS) {
+  if (!seen.has(inv.name)) { seen.add(inv.name); uniqueInventions.push(inv); }
+}
+
+const CATEGORIES = [...new Set(uniqueInventions.map(i => i.category))];
+
+let state = {
+  score: 0, streak: 0, round: 1, maxRounds: 10,
+  history: [], daily: false, filter: 'All',
+  pool: [], current: null, hintsRevealed: 0, guessed: false
+};
+
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function getDailyPool() {
+  const today = new Date();
+  const seed = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
+  const rng = seededRandom(seed);
+  const shuffled = [...uniqueInventions].sort(() => rng() - 0.5);
+  return shuffled.slice(0, state.maxRounds);
+}
+
+function getPool() {
+  let pool = state.filter === 'All' ? [...uniqueInventions] : uniqueInventions.filter(i => i.category === state.filter);
+  pool = pool.sort(() => Math.random() - 0.5);
+  return pool.slice(0, state.maxRounds);
+}
+
+function init() {
+  renderFilters();
+  startGame();
+  document.getElementById('guessBtn').addEventListener('click', doGuess);
+  document.getElementById('guessInput').addEventListener('keydown', e => { if (e.key === 'Enter') doGuess(); });
+  document.getElementById('hintBtn').addEventListener('click', revealHint);
+  document.getElementById('skipBtn').addEventListener('click', giveUp);
+  document.getElementById('dailyBtn').addEventListener('click', startDaily);
+  document.getElementById('restartBtn').addEventListener('click', () => { state.daily = false; startGame(); });
+}
+
+function renderFilters() {
+  const box = document.getElementById('filters');
+  box.innerHTML = '';
+  const all = document.createElement('button');
+  all.textContent = 'All';
+  all.className = state.filter === 'All' ? 'active' : '';
+  all.onclick = () => { state.filter = 'All'; state.daily = false; startGame(); renderFilters(); };
+  box.appendChild(all);
+  for (const cat of CATEGORIES) {
+    const b = document.createElement('button');
+    b.textContent = cat;
+    b.className = state.filter === cat ? 'active' : '';
+    b.onclick = () => { state.filter = cat; state.daily = false; startGame(); renderFilters(); };
+    box.appendChild(b);
+  }
+}
+
+function startDaily() {
+  state.daily = true;
+  state.filter = 'All';
+  renderFilters();
+  startGame();
+}
+
+function startGame() {
+  state.score = 0; state.streak = 0; state.round = 1; state.history = []; state.guessed = false; state.hintsRevealed = 0;
+  state.pool = state.daily ? getDailyPool() : getPool();
+  if (state.pool.length < state.maxRounds) state.maxRounds = state.pool.length || 1;
+  else state.maxRounds = 10;
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  document.getElementById('historyBox').classList.remove('hidden');
+  updateScorebar();
+  loadRound();
+}
+
+function updateScorebar() {
+  document.getElementById('score').textContent = state.score;
+  document.getElementById('streak').textContent = state.streak;
+  document.getElementById('round').textContent = state.round;
+}
+
+function loadRound() {
+  if (state.round > state.maxRounds || state.round > state.pool.length) { endGame(); return; }
+  state.current = state.pool[state.round - 1];
+  state.hintsRevealed = 0;
+  state.guessed = false;
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('guessInput').value = '';
+  document.getElementById('guessInput').disabled = false;
+  document.getElementById('guessBtn').disabled = false;
+  document.getElementById('hintBtn').disabled = false;
+  document.getElementById('skipBtn').disabled = false;
+  document.getElementById('card').classList.remove('revealed');
+  document.getElementById('cardFront').classList.remove('hidden');
+  document.getElementById('cardBack').classList.add('hidden');
+  renderSVG();
+  renderHints();
+}
+
+function renderSVG() {
+  const stage = document.getElementById('svgStage');
+  stage.innerHTML = '';
+  const svg = state.current.svg();
+  stage.appendChild(svg);
+}
+
+function renderHints() {
+  const row = document.getElementById('hintRow');
+  row.innerHTML = '';
+  const inv = state.current;
+  const hints = [
+    `Year: ${Math.floor(inv.year/10)*10}s`,
+    `Category: ${inv.category}`,
+    `First letter: ${inv.name[0]}`,
+    `Length: ${inv.name.length} letters`
+  ];
+  for (let i = 0; i < hints.length; i++) {
+    const chip = document.createElement('span');
+    chip.className = 'hint-chip' + (i < state.hintsRevealed ? '' : ' locked');
+    chip.textContent = i < state.hintsRevealed ? hints[i] : `Hint ${i+1}`;
+    row.appendChild(chip);
+  }
+}
+
+function revealHint() {
+  if (state.hintsRevealed < 4) { state.hintsRevealed++; renderHints(); }
+}
+
+function normalize(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function doGuess() {
+  if (state.guessed) return;
+  const raw = document.getElementById('guessInput').value.trim();
+  if (!raw) return;
+  const input = normalize(raw);
+  const target = normalize(state.current.name);
+  const fb = document.getElementById('feedback');
+  if (input === target || (input.length > 3 && target.includes(input)) || (target.length > 3 && input.includes(target))) {
+    state.guessed = true;
+    fb.textContent = 'Correct!';
+    fb.className = 'feedback correct';
+    const bonus = Math.max(0, 4 - state.hintsRevealed) * 10;
+    const points = 20 + bonus + (state.streak >= 2 ? 5 : 0);
+    state.score += points;
+    state.streak++;
+    updateScorebar();
+    logHistory(true, points);
+    showReveal(true);
+  } else {
+    fb.textContent = 'Not quite — try again or take a hint.';
+    fb.className = 'feedback wrong';
+    state.streak = 0;
+    updateScorebar();
+  }
+}
+
+function giveUp() {
+  if (state.guessed) return;
+  state.guessed = true;
+  state.streak = 0;
+  updateScorebar();
+  logHistory(false, 0);
+  showReveal(false);
+}
+
+function showReveal(success) {
+  document.getElementById('guessInput').disabled = true;
+  document.getElementById('guessBtn').disabled = true;
+  document.getElementById('hintBtn').disabled = true;
+  document.getElementById('skipBtn').textContent = 'Next Invention';
+  document.getElementById('skipBtn').disabled = false;
+  document.getElementById('skipBtn').onclick = nextRound;
+  document.getElementById('revealName').textContent = state.current.name;
+  document.getElementById('revealYear').textContent = `Invented ~${state.current.year}`;
+  document.getElementById('revealHow').textContent = state.current.how;
+  document.getElementById('cardFront').classList.add('hidden');
+  document.getElementById('cardBack').classList.remove('hidden');
+}
+
+function nextRound() {
+  state.round++;
+  updateScorebar();
+  // reset skip button
+  const skip = document.getElementById('skipBtn');
+  skip.textContent = 'Skip / Give Up';
+  skip.onclick = giveUp;
+  loadRound();
+}
+
+function logHistory(success, points) {
+  state.history.push({ name: state.current.name, success, points });
+  const list = document.getElementById('historyList');
+  const item = document.createElement('div');
+  item.className = 'history-item';
+  item.innerHTML = `<span>${state.current.name}</span><span class="res ${success ? 'ok' : 'fail'}">${success ? '+'+points+' ✓' : '✗'}</span>`;
+  list.prepend(item);
+}
+
+function endGame() {
+  document.getElementById('game').classList.add('hidden');
+  const end = document.getElementById('endScreen');
+  end.classList.remove('hidden');
+  document.getElementById('endScore').textContent = state.score;
+  const correct = state.history.filter(h => h.success).length;
+  document.getElementById('endStats').textContent = `${correct}/${state.history.length} correct · Best streak: ${bestStreak()} · ${state.daily ? 'Daily Challenge' : state.filter + ' mode'}`;
+}
+
+function bestStreak() {
+  let best = 0, cur = 0;
+  for (const h of state.history) {
+    if (h.success) { cur++; best = Math.max(best, cur); }
+    else { cur = 0; }
+  }
+  return best;
+}
+
+// ================= SVG DRAWING FUNCTIONS (Patent style) =================
+
+function svgEl(tag, attrs = {}) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+function makeStage() {
+  const svg = svgEl('svg', { width: '100%', height: '100%', viewBox: '0 0 400 300', preserveAspectRatio: 'xMidYMid meet' });
+  // Grid background
+  for (let x = 0; x <= 400; x += 20) {
+    svg.appendChild(svgEl('line', { x1: x, y1: 0, x2: x, y2: 300, stroke: 'rgba(30,58,95,0.08)', 'stroke-width': 0.5 }));
+  }
+  for (let y = 0; y <= 300; y += 20) {
+    svg.appendChild(svgEl('line', { x1: 0, y1: y, x2: 400, y2: y, stroke: 'rgba(30,58,95,0.08)', 'stroke-width': 0.5 }));
+  }
+  return svg;
+}
+
+function hatchPath(d, color = '#1e3a5f', spacing = 6) {
+  const g = svgEl('g', { fill: 'none', stroke: color, 'stroke-width': 0.6 });
+  // simple cross-hatch for patent look
+  for (let i = -100; i < 500; i += spacing) {
+    g.appendChild(svgEl('line', { x1: i, y1: -10, x2: i + 120, y2: 310, stroke: color, 'stroke-width': 0.5, opacity: 0.25 }));
+  }
+  return g;
+}
+
+function drawZipper() {
+  const svg = makeStage();
+  // Two zipper halves with teeth
+  for (let side = -1; side <= 1; side += 2) {
+    const tape = svgEl('rect', { x: 185 + side * 35, y: 40, width: 12, height: 220, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1.2 });
+    svg.appendChild(tape);
+    for (let i = 0; i < 18; i++) {
+      const y = 50 + i * 12;
+      const tooth = svgEl('rect', { x: 185 + side * 28, y: y, width: 14, height: 6, rx: 2, fill: '#8a9ab0', stroke: '#1e3a5f', 'stroke-width': 0.8 });
+      svg.appendChild(tooth);
+    }
+  }
+  // Slider
+  const slider = svgEl('path', { d: 'M175 130 L225 130 L225 170 L175 170 Z', fill: '#c45c3e', stroke: '#1e3a5f', 'stroke-width': 1.5 });
+  svg.appendChild(slider);
+  // Slider pull tab
+  svg.appendChild(svgEl('rect', { x: 195, y: 110, width: 10, height: 20, rx: 3, fill: '#1e3a5f' }));
+  // Dimension lines
+  svg.appendChild(svgEl('line', { x1: 150, y1: 260, x2: 250, y2: 260, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  svg.appendChild(svgEl('line', { x1: 150, y1: 255, x2: 150, y2: 265, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  svg.appendChild(svgEl('line', { x1: 250, y1: 255, x2: 250, y2: 265, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 1 — FASTENER');
+  return svg;
+}
+
+function drawBallpoint() {
+  const svg = makeStage();
+  // Barrel
+  svg.appendChild(svgEl('rect', { x: 120, y: 135, width: 160, height: 30, rx: 4, fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Tip cone
+  svg.appendChild(svgEl('path', { d: 'M120 140 L80 150 L80 150 L120 160 Z', fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1.2 }));
+  // Ball
+  svg.appendChild(svgEl('circle', { cx: 78, cy: 150, r: 5, fill: '#666', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Ink line
+  svg.appendChild(svgEl('line', { x1: 78, y1: 150, x2: 78, y2: 170, stroke: '#1e3a5f', 'stroke-width': 1.5, 'stroke-dasharray': '3,2' }));
+  // Cap clip
+  svg.appendChild(svgEl('rect', { x: 260, y: 125, width: 8, height: 50, rx: 2, fill: '#c45c3e', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Cross-section indicator
+  svg.appendChild(svgEl('line', { x1: 180, y1: 135, x2: 180, y2: 165, stroke: '#1e3a5f', 'stroke-width': 0.6, 'stroke-dasharray': '4,3' }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 2 — WRITING INSTRUMENT');
+  return svg;
+}
+
+function drawRazor() {
+  const svg = makeStage();
+  // Handle
+  svg.appendChild(svgEl('rect', { x: 220, y: 130, width: 120, height: 40, rx: 6, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Guard plate
+  svg.appendChild(svgEl('rect', { x: 80, y: 135, width: 130, height: 30, rx: 2, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1.2 }));
+  // Blade edge
+  svg.appendChild(svgEl('line', { x1: 80, y1: 140, x2: 80, y2: 160, stroke: '#1e3a5f', 'stroke-width': 2.5 }));
+  // Guard teeth
+  for (let i = 0; i < 8; i++) {
+    svg.appendChild(svgEl('line', { x1: 90 + i*14, y1: 135, x2: 90 + i*14, y2: 145, stroke: '#1e3a5f', 'stroke-width': 1 }));
+  }
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 3 — SAFETY RAZOR');
+  return svg;
+}
+
+function drawVelcro() {
+  const svg = makeStage();
+  // Hook side
+  svg.appendChild(svgEl('rect', { x: 60, y: 60, width: 120, height: 80, fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 1.2 }));
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 4; j++) {
+      const hx = 75 + i * 22;
+      const hy = 75 + j * 18;
+      const hook = svgEl('path', { d: `M${hx} ${hy} Q${hx+4} ${hy-8} ${hx+8} ${hy} Q${hx+4} ${hy-4} ${hx} ${hy}`, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 1.2 });
+      svg.appendChild(hook);
+    }
+  }
+  // Loop side
+  svg.appendChild(svgEl('rect', { x: 220, y: 60, width: 120, height: 80, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1.2 }));
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 4; j++) {
+      const lx = 235 + i * 22;
+      const ly = 75 + j * 18;
+      svg.appendChild(svgEl('ellipse', { cx: lx, cy: ly, rx: 6, ry: 4, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 1 }));
+    }
+  }
+  // Arrows showing press
+  svg.appendChild(svgEl('path', { d: 'M200 100 L210 95 M200 100 L210 105', stroke: '#c45c3e', 'stroke-width': 1.5, fill: 'none' }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 4 — VELCRO FASTENER');
+  return svg;
+}
+
+function drawFridge() {
+  const svg = makeStage();
+  // Cabinet
+  svg.appendChild(svgEl('rect', { x: 100, y: 40, width: 200, height: 220, rx: 4, fill: '#f0ece3', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Door line
+  svg.appendChild(svgEl('line', { x1: 100, y1: 150, x2: 300, y2: 150, stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Compressor at bottom back
+  svg.appendChild(svgEl('rect', { x: 120, y: 230, width: 60, height: 20, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Coils representation
+  svg.appendChild(svgEl('path', { d: 'M130 50 Q160 80 130 110 Q160 140 130 170', fill: 'none', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Evaporator
+  svg.appendChild(svgEl('rect', { x: 260, y: 60, width: 30, height: 80, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Piping
+  svg.appendChild(svgEl('path', { d: 'M150 240 L150 260 L270 260 L270 140', fill: 'none', stroke: '#c45c3e', 'stroke-width': 2, 'stroke-dasharray': '5,3' }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 5 — REFRIGERATOR');
+  return svg;
+}
+
+function drawPhonograph() {
+  const svg = makeStage();
+  // Base
+  svg.appendChild(svgEl('rect', { x: 80, y: 200, width: 240, height: 40, rx: 4, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Turntable
+  svg.appendChild(svgEl('circle', { cx: 200, cy: 160, r: 70, fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 1.2 }));
+  svg.appendChild(svgEl('circle', { cx: 200, cy: 160, r: 10, fill: '#1e3a5f' }));
+  // Tone arm
+  svg.appendChild(svgEl('path', { d: 'M260 200 L240 160 L200 160', fill: 'none', stroke: '#1e3a5f', 'stroke-width': 3 }));
+  // Needle
+  svg.appendChild(svgEl('line', { x1: 200, y1: 160, x2: 200, y2: 175, stroke: '#c45c3e', 'stroke-width': 1.5 }));
+  // Horn (simplified)
+  svg.appendChild(svgEl('path', { d: 'M260 200 Q300 180 320 140 Q310 180 260 190', fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 6 — PHONOGRAPH');
+  return svg;
+}
+
+function drawBulb() {
+  const svg = makeStage();
+  // Glass bulb
+  svg.appendChild(svgEl('circle', { cx: 200, cy: 130, r: 70, fill: 'rgba(255,240,180,0.2)', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Filament
+  svg.appendChild(svgEl('path', { d: 'M180 140 Q190 100 200 140 Q210 100 220 140', fill: 'none', stroke: '#c45c3e', 'stroke-width': 2 }));
+  // Base screw
+  svg.appendChild(svgEl('rect', { x: 175, y: 200, width: 50, height: 40, rx: 2, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1.2 }));
+  for (let i = 0; i < 4; i++) {
+    svg.appendChild(svgEl('line', { x1: 175, y1: 208 + i*8, x2: 225, y2: 208 + i*8, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  }
+  // Support wires
+  svg.appendChild(svgEl('line', { x1: 190, y1: 200, x2: 190, y2: 160, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  svg.appendChild(svgEl('line', { x1: 210, y1: 200, x2: 210, y2: 160, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 7 — INCANDESCENT LAMP');
+  return svg;
+}
+
+function drawSewing() {
+  const svg = makeStage();
+  // Arm
+  svg.appendChild(svgEl('path', { d: 'M120 80 L120 160 L200 160 L240 120', fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Needle
+  svg.appendChild(svgEl('line', { x1: 200, y1: 160, x2: 200, y2: 210, stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Fabric
+  svg.appendChild(svgEl('rect', { x: 140, y: 210, width: 120, height: 30, fill: '#f0ece3', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Bobbin below
+  svg.appendChild(svgEl('circle', { cx: 200, cy: 230, r: 12, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Thread path
+  svg.appendChild(svgEl('path', { d: 'M200 160 L200 210 L200 230', fill: 'none', stroke: '#c45c3e', 'stroke-width': 1.2, 'stroke-dasharray': '3,2' }));
+  // Hand crank
+  svg.appendChild(svgEl('circle', { cx: 260, cy: 140, r: 20, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  svg.appendChild(svgEl('line', { x1: 260, y1: 140, x2: 275, y2: 140, stroke: '#1e3a5f', 'stroke-width': 2 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 8 — SEWING MACHINE');
+  return svg;
+}
+
+function drawBike() {
+  const svg = makeStage();
+  // Wheels
+  svg.appendChild(svgEl('circle', { cx: 110, cy: 180, r: 55, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  svg.appendChild(svgEl('circle', { cx: 290, cy: 180, r: 55, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Frame diamond
+  svg.appendChild(svgEl('path', { d: 'M110 180 L170 100 L250 100 L290 180 L170 180 Z', fill: 'none', stroke: '#1e3a5f', 'stroke-width': 2.5 }));
+  // Seat post
+  svg.appendChild(svgEl('line', { x1: 170, y1: 100, x2: 160, y2: 70, stroke: '#1e3a5f', 'stroke-width': 2 }));
+  svg.appendChild(svgEl('ellipse', { cx: 160, cy: 65, rx: 18, ry: 6, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Handlebars
+  svg.appendChild(svgEl('path', { d: 'M250 100 L250 70 L270 60', fill: 'none', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Pedal crank
+  svg.appendChild(svgEl('circle', { cx: 170, cy: 180, r: 15, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  svg.appendChild(svgEl('line', { x1: 170, y1: 180, x2: 190, y2: 200, stroke: '#c45c3e', 'stroke-width': 2 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 9 — BICYCLE');
+  return svg;
+}
+
+function drawBarbedWire() {
+  const svg = makeStage();
+  // Two twisted strands
+  for (let y of [120, 180]) {
+    svg.appendChild(svgEl('line', { x1: 50, y1: y, x2: 350, y2: y, stroke: '#1e3a5f', 'stroke-width': 2 }));
+  }
+  // Barbs
+  for (let x = 80; x < 340; x += 35) {
+    const g = svgEl('g');
+    g.appendChild(svgEl('line', { x1: x, y1: 120, x2: x - 8, y2: 100, stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+    g.appendChild(svgEl('line', { x1: x, y1: 120, x2: x + 8, y2: 100, stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+    g.appendChild(svgEl('line', { x1: x, y1: 180, x2: x - 8, y2: 200, stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+    g.appendChild(svgEl('line', { x1: x, y1: 180, x2: x + 8, y2: 200, stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+    svg.appendChild(g);
+  }
+  // Posts
+  svg.appendChild(svgEl('rect', { x: 70, y: 60, width: 8, height: 180, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('rect', { x: 322, y: 60, width: 8, height: 180, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 10 — BARBED WIRE FENCE');
+  return svg;
+}
+
+function drawWiper() {
+  const svg = makeStage();
+  // Windshield arc
+  svg.appendChild(svgEl('path', { d: 'M60 200 Q200 80 340 200', fill: 'rgba(200,220,240,0.15)', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Wiper arm pivot
+  svg.appendChild(svgEl('circle', { cx: 200, cy: 200, r: 8, fill: '#1e3a5f' }));
+  // Arm
+  svg.appendChild(svgEl('path', { d: 'M200 200 L160 140', fill: 'none', stroke: '#1e3a5f', 'stroke-width': 3 }));
+  // Blade
+  svg.appendChild(svgEl('rect', { x: 130, y: 125, width: 80, height: 8, rx: 2, fill: '#333', stroke: '#1e3a5f', 'stroke-width': 1, transform: 'rotate(-35 170 129)' }));
+  // Motor
+  svg.appendChild(svgEl('rect', { x: 260, y: 190, width: 40, height: 30, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Linkage rod
+  svg.appendChild(svgEl('line', { x1: 240, y1: 205, x2: 260, y2: 205, stroke: '#c45c3e', 'stroke-width': 2, 'stroke-dasharray': '3,2' }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 11 — WINDSHIELD WIPER');
+  return svg;
+}
+
+function drawEscalator() {
+  const svg = makeStage();
+  // Incline
+  svg.appendChild(svgEl('path', { d: 'M80 240 L320 60 L340 60 L100 240 Z', fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Steps
+  for (let i = 0; i < 12; i++) {
+    const x = 100 + i * 20;
+    const y = 220 - i * 16;
+    svg.appendChild(svgEl('rect', { x: x, y: y, width: 22, height: 14, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  }
+  // Handrail
+  svg.appendChild(svgEl('path', { d: 'M90 210 L330 50', fill: 'none', stroke: '#1e3a5f', 'stroke-width': 3 }));
+  // Combs
+  svg.appendChild(svgEl('rect', { x: 70, y: 235, width: 50, height: 8, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('rect', { x: 300, y: 55, width: 50, height: 8, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 12 — ESCALATOR');
+  return svg;
+}
+
+function drawPaperclip() {
+  const svg = makeStage();
+  // Paper
+  svg.appendChild(svgEl('rect', { x: 100, y: 80, width: 200, height: 140, fill: '#faf9f6', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Paperclip shape
+  svg.appendChild(svgEl('path', {
+    d: 'M180 200 L180 110 Q180 90 200 90 Q220 90 220 110 L220 180 Q220 195 210 195 Q200 195 200 180 L200 120',
+    fill: 'none', stroke: '#1e3a5f', 'stroke-width': 4, 'stroke-linecap': 'round'
+  }));
+  // Fold lines on paper
+  svg.appendChild(svgEl('line', { x1: 100, y1: 130, x2: 300, y2: 130, stroke: 'rgba(30,58,95,0.1)', 'stroke-width': 0.5 }));
+  svg.appendChild(svgEl('line', { x1: 100, y1: 180, x2: 300, y2: 180, stroke: 'rgba(30,58,95,0.1)', 'stroke-width': 0.5 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 13 — PAPER CLIP');
+  return svg;
+}
+
+function drawVacuum() {
+  const svg = makeStage();
+  // Canister body
+  svg.appendChild(svgEl('circle', { cx: 200, cy: 160, r: 80, fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Hose inlet
+  svg.appendChild(svgEl('rect', { x: 260, y: 140, width: 50, height: 20, rx: 4, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1.2 }));
+  // Hose curve
+  svg.appendChild(svgEl('path', { d: 'M310 150 Q350 150 360 120 Q370 90 340 80', fill: 'none', stroke: '#1e3a5f', 'stroke-width': 3 }));
+  // Wand
+  svg.appendChild(svgEl('line', { x1: 340, y1: 80, x2: 360, y2: 40, stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Motor/fan symbol inside
+  svg.appendChild(svgEl('path', { d: 'M190 160 L210 160 M200 150 L200 170', stroke: '#c45c3e', 'stroke-width': 2 }));
+  svg.appendChild(svgEl('circle', { cx: 200, cy: 160, r: 18, fill: 'none', stroke: '#c45c3e', 'stroke-width': 1.5 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 14 — VACUUM CLEANER');
+  return svg;
+}
+
+function drawThermos() {
+  const svg = makeStage();
+  // Outer wall
+  svg.appendChild(svgEl('rect', { x: 150, y: 60, width: 100, height: 180, rx: 8, fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Inner wall (double wall indicator)
+  svg.appendChild(svgEl('rect', { x: 160, y: 70, width: 80, height: 160, rx: 6, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 1, 'stroke-dasharray': '4,3' }));
+  // Vacuum gap arrows
+  svg.appendChild(svgEl('line', { x1: 155, y1: 100, x2: 155, y2: 120, stroke: '#c45c3e', 'stroke-width': 1.5 }));
+  svg.appendChild(svgEl('polygon', { points: '152,118 155,124 158,118', fill: '#c45c3e' }));
+  svg.appendChild(svgEl('line', { x1: 245, y1: 100, x2: 245, y2: 120, stroke: '#c45c3e', 'stroke-width': 1.5 }));
+  svg.appendChild(svgEl('polygon', { points: '242,118 245,124 248,118', fill: '#c45c3e' }));
+  // Stopper
+  svg.appendChild(svgEl('rect', { x: 165, y: 50, width: 70, height: 16, rx: 3, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Silvering indicator
+  svg.appendChild(svgEl('rect', { x: 162, y: 74, width: 76, height: 4, fill: 'rgba(180,200,220,0.4)', stroke: 'none' }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 15 — THERMOS FLASK');
+  return svg;
+}
+
+function drawDishwasher() {
+  const svg = makeStage();
+  // Cabinet
+  svg.appendChild(svgEl('rect', { x: 100, y: 50, width: 200, height: 200, rx: 4, fill: '#f0ece3', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Door line
+  svg.appendChild(svgEl('line', { x1: 100, y1: 150, x2: 300, y2: 150, stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Spray arm (rotating)
+  svg.appendChild(svgEl('line', { x1: 200, y1: 120, x2: 160, y2: 110, stroke: '#1e3a5f', 'stroke-width': 3 }));
+  svg.appendChild(svgEl('line', { x1: 200, y1: 120, x2: 240, y2: 110, stroke: '#1e3a5f', 'stroke-width': 3 }));
+  svg.appendChild(svgEl('circle', { cx: 200, cy: 120, r: 6, fill: '#c45c3e' }));
+  // Racks
+  svg.appendChild(svgEl('line', { x1: 120, y1: 90, x2: 280, y2: 90, stroke: '#1e3a5f', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('line', { x1: 120, y1: 170, x2: 280, y2: 170, stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Dish symbols
+  svg.appendChild(svgEl('ellipse', { cx: 150, cy: 85, rx: 20, ry: 6, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  svg.appendChild(svgEl('ellipse', { cx: 210, cy: 165, rx: 18, ry: 5, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  // Water spray dots
+  for (let i = 0; i < 6; i++) {
+    svg.appendChild(svgEl('circle', { cx: 140 + i * 25, cy: 100 + (i%2)*10, r: 2, fill: '#1e3a5f', opacity: 0.4 }));
+  }
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 16 — DISHWASHER');
+  return svg;
+}
+
+function drawMicrowave() {
+  const svg = makeStage();
+  // Oven box
+  svg.appendChild(svgEl('rect', { x: 100, y: 60, width: 200, height: 160, rx: 4, fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Door window
+  svg.appendChild(svgEl('rect', { x: 120, y: 80, width: 120, height: 100, fill: 'rgba(200,220,240,0.2)', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  // Control panel
+  svg.appendChild(svgEl('rect', { x: 250, y: 80, width: 40, height: 120, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('circle', { cx: 270, cy: 110, r: 10, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('rect', { x: 255, y: 140, width: 30, height: 8, rx: 2, fill: '#1e3a5f' }));
+  svg.appendChild(svgEl('rect', { x: 255, y: 155, width: 30, height: 8, rx: 2, fill: '#1e3a5f' }));
+  // Magnetron wave symbol
+  svg.appendChild(svgEl('path', { d: 'M160 130 Q180 110 200 130 Q220 150 240 130', fill: 'none', stroke: '#c45c3e', 'stroke-width': 1.5 }));
+  // Food plate
+  svg.appendChild(svgEl('ellipse', { cx: 180, cy: 140, rx: 25, ry: 8, fill: '#f0ece3', stroke: '#1e3a5f', 'stroke-width': 0.8 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 17 — MICROWAVE OVEN');
+  return svg;
+}
+
+function drawJet() {
+  const svg = makeStage();
+  // Casing
+  svg.appendChild(svgEl('path', { d: 'M80 150 L120 130 L320 130 L360 150 L320 170 L120 170 Z', fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 2 }));
+  // Fan / compressor blades
+  for (let i = 0; i < 5; i++) {
+    const x = 140 + i * 15;
+    svg.appendChild(svgEl('line', { x1: x, y1: 130, x2: x, y2: 170, stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  }
+  // Combustion chamber
+  svg.appendChild(svgEl('rect', { x: 220, y: 138, width: 50, height: 24, fill: '#c45c3e', stroke: '#1e3a5f', 'stroke-width': 1, opacity: 0.3 }));
+  // Flame
+  svg.appendChild(svgEl('path', { d: 'M230 150 Q240 140 250 150 Q260 160 270 150', fill: 'none', stroke: '#c45c3e', 'stroke-width': 2 }));
+  // Exhaust
+  svg.appendChild(svgEl('path', { d: 'M360 140 L390 130 M360 150 L400 150 M360 160 L390 170', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Air intake
+  svg.appendChild(svgEl('path', { d: 'M80 140 L50 135 M80 150 L40 150 M80 160 L50 165', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 18 — TURBOJET ENGINE');
+  return svg;
+}
+
+function drawCottonGin() {
+  const svg = makeStage();
+  // Hopper
+  svg.appendChild(svgEl('path', { d: 'M140 60 L180 60 L170 100 L150 100 Z', fill: '#e8e4db', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  // Cylinder with saw teeth
+  svg.appendChild(svgEl('rect', { x: 130, y: 110, width: 140, height: 60, rx: 4, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  for (let i = 0; i < 10; i++) {
+    const x = 140 + i * 13;
+    svg.appendChild(svgEl('path', { d: `M${x} 110 L${x+4} 100 L${x+8} 110`, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 1.2 }));
+  }
+  // Wire grid (slots)
+  for (let i = 0; i < 6; i++) {
+    const x = 150 + i * 20;
+    svg.appendChild(svgEl('line', { x1: x, y1: 110, x2: x, y2: 170, stroke: '#1e3a5f', 'stroke-width': 1.5 }));
+  }
+  // Brush cylinder
+  svg.appendChild(svgEl('circle', { cx: 300, cy: 140, r: 30, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1.2 }));
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const x1 = 300 + Math.cos(angle) * 18;
+    const y1 = 140 + Math.sin(angle) * 18;
+    const x2 = 300 + Math.cos(angle) * 28;
+    const y2 = 140 + Math.sin(angle) * 28;
+    svg.appendChild(svgEl('line', { x1, y1, x2, y2, stroke: '#1e3a5f', 'stroke-width': 1 }));
+  }
+  // Crank
+  svg.appendChild(svgEl('line', { x1: 300, y1: 140, x2: 340, y2: 140, stroke: '#1e3a5f', 'stroke-width': 2 }));
+  svg.appendChild(svgEl('circle', { cx: 345, cy: 140, r: 6, fill: '#c45c3e', stroke: '#1e3a5f', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 19 — COTTON GIN');
+  return svg;
+}
+
+init();
+</script>
+</body>
+</html>

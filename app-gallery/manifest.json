@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-12",
-    "title": "Ancient Water Lifts Explorer",
-    "slug": "ancient-water-lifts",
-    "publishedSlug": "2026-06-12-ancient-water-lifts",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-12-ancient-water-lifts/"
+    "date": "2026-06-13",
+    "title": "Patent Guesser",
+    "slug": "patent-guesser",
+    "publishedSlug": "2026-06-13-patent-guesser",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-13-patent-guesser/"
   },
   "apps": [
+    {
+      "date": "2026-06-13",
+      "title": "Patent Guesser",
+      "slug": "patent-guesser",
+      "publishedSlug": "2026-06-13-patent-guesser",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-13-patent-guesser/",
+      "description": "Guess the invention from its patent drawing and clues"
+    },
     {
       "date": "2026-06-12",
       "title": "Ancient Water Lifts Explorer",
