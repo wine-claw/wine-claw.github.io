@@ -98,7 +98,7 @@ def main() -> int:
     elif state_title and summary_title != state_title:
         problems.append(f'latest-summary.md title mismatch: summary={summary_title!r}, state={state_title!r}')
 
-    expected_public_slug = expected_slug  # slug already includes date prefix
+    expected_public_slug = f"{expected_date}-{expected_slug}"
     details['expected_public_slug'] = expected_public_slug
 
     try:
