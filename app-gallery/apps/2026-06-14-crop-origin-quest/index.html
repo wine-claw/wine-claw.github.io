@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Crop Origin Quest — Guess where crops were domesticated</title>
+<style>
+  :root {
+    --paper: #f7f3e8;
+    --paper-dark: #ede6d4;
+    --ink: #2b2518;
+    --green: #4a6b3e;
+    --green-light: #6b8e5e;
+    --accent: #b85c38;
+    --accent-soft: #d68c6e;
+    --gold: #c9a227;
+    --shadow: rgba(43,37,24,.12);
+    --radius: 14px;
+    --font-head: Georgia, 'Times New Roman', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    min-height: 100vh;
+  }
+  body {
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(201,162,39,.10) 0%, transparent 35%),
+      radial-gradient(circle at 80% 90%, rgba(74,107,62,.10) 0%, transparent 40%);
+  }
+  .banner {
+    background: #3d3223;
+    color: #f0e8d8;
+    font-size: .82rem;
+    padding: 10px 16px;
+    text-align: center;
+    line-height: 1.35;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 22px 16px 40px; }
+  header { text-align: center; margin-bottom: 22px; }
+  header h1 { font-family: var(--font-head); font-size: 1.9rem; letter-spacing: -.02em; margin-bottom: 6px; }
+  header p { color: #5c5241; font-size: .98rem; max-width: 560px; margin: 0 auto; }
+  .scorebar {
+    display: flex; justify-content: center; gap: 18px; flex-wrap: wrap;
+    margin-bottom: 18px; font-size: .92rem; font-weight: 600; color: #4a4a3a;
+  }
+  .scorebar span { background: var(--paper-dark); padding: 6px 12px; border-radius: 999px; }
+  .card {
+    background: #fffef9;
+    border-radius: var(--radius);
+    box-shadow: 0 8px 28px var(--shadow);
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .crop-header {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .crop-emoji {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--paper-dark);
+    display: grid; place-items: center;
+    font-size: 2.1rem; flex: 0 0 auto;
+  }
+  .crop-title { flex: 1 1 200px; }
+  .crop-title h2 { font-family: var(--font-head); font-size: 1.55rem; }
+  .crop-title .clue {
+    color: #6b614f; font-size: .94rem; margin-top: 4px; line-height: 1.4;
+  }
+  .map-wrap {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #e8f0f8;
+    border: 2px solid #d4dde6;
+    margin-bottom: 12px;
+  }
+  .map-wrap svg { display: block; width: 100%; height: auto; }
+  .map-wrap .land { fill: #bfcab8; transition: fill .3s ease; }
+  .map-wrap .land:hover { fill: #a8b8a0; }
+  .marker {
+    fill: var(--accent);
+    stroke: #fff; stroke-width: 1.5;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.25));
+    cursor: pointer;
+    transition: transform .15s ease;
+  }
+  .marker:hover { transform: scale(1.25); }
+  .marker.correct { fill: var(--green-light); }
+  .marker.wrong { fill: #c94b4b; }
+  .centre-label {
+    position: absolute;
+    font-size: .7rem;
+    color: rgba(43,37,24,.65);
+    background: rgba(255,254,249,.75);
+    padding: 1px 5px;
+    border-radius: 4px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+  }
+  .hint-bar {
+    display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0;
+  }
+  .hint-pill {
+    background: var(--paper-dark);
+    border: 1px solid #d8d0bc;
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: .82rem;
+    color: #5c5241;
+  }
+  .controls {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 14px;
+  }
+  button {
+    border: none; border-radius: 999px; padding: 11px 18px;
+    font-size: .95rem; font-weight: 600; cursor: pointer;
+    transition: transform .08s ease, box-shadow .15s ease, background .15s ease;
+  }
+  button:active { transform: translateY(1px); }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-primary:hover { background: var(--green-light); }
+  .btn-secondary { background: var(--paper-dark); color: var(--ink); }
+  .btn-secondary:hover { background: #e0d9c8; }
+  .btn-skip { background: #d6cfc0; color: #4a4233; }
+  .centre-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .centre-btn {
+    text-align: left;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: #fffef9;
+    border: 1px solid #ded8c8;
+    box-shadow: 0 2px 6px var(--shadow);
+    cursor: pointer;
+    transition: transform .08s ease, border-color .15s ease;
+  }
+  .centre-btn:hover { border-color: var(--green-light); transform: translateY(-1px); }
+  .centre-btn .name { font-weight: 700; font-size: .9rem; display: block; }
+  .centre-btn .sub { font-size: .78rem; color: #7a6f5a; }
+  .result {
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 14px;
+    background: var(--paper-dark);
+  }
+  .result.correct { background: #e7f2e3; border: 1px solid #c2d9b8; }
+  .result.wrong { background: #f9e8e3; border: 1px solid #e8c4b8; }
+  .result h3 { font-family: var(--font-head); margin-bottom: 6px; }
+  .result p { font-size: .95rem; line-height: 1.5; }
+  .history {
+    margin-top: 18px;
+    font-size: .9rem;
+  }
+  .history h3 { font-family: var(--font-head); font-size: 1.1rem; margin-bottom: 8px; }
+  .history-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0; border-bottom: 1px dashed #ded8c8;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-item .badge { font-size: 1rem; }
+  .history-item .crop-name { flex: 1; }
+  .history-item .crop-centre { color: #6b614f; font-size: .85rem; }
+  @media (max-width: 520px) {
+    header h1 { font-size: 1.55rem; }
+    .crop-emoji { width: 54px; height: 54px; font-size: 1.7rem; }
+    .crop-title h2 { font-size: 1.3rem; }
+    .centre-list { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  ⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Don't rely on it for decisions.
+</div>
+<div class="wrap">
+  <header>
+    <h1>Crop Origin Quest</h1>
+    <p>Guess which Vavilov centre of origin each crop was domesticated in. Tap a region on the map or choose from the list.</p>
+  </header>
+
+  <div class="scorebar">
+    <span>Round <span id="round">1</span>/<span id="total">10</span></span>
+    <span>Score <span id="score">0</span></span>
+    <span>Streak <span id="streak">0</span></span>
+  </div>
+
+  <div class="card" id="game-card">
+    <div class="crop-header">
+      <div class="crop-emoji" id="crop-emoji">🌾</div>
+      <div class="crop-title">
+        <h2 id="crop-name">Crop</h2>
+        <div class="clue" id="crop-clue">Clue text goes here.</div>
+      </div>
+    </div>
+
+    <div class="hint-bar" id="hint-bar"></div>
+
+    <div class="map-wrap" id="map-wrap">
+      <!-- world map svg injected here -->
+    </div>
+
+    <div class="centre-list" id="centre-list"></div>
+
+    <div class="controls">
+      <button class="btn-secondary" id="hint-btn">Reveal hint</button>
+      <button class="btn-skip" id="skip-btn">Skip crop</button>
+    </div>
+
+    <div id="result-area"></div>
+  </div>
+
+  <div class="card history">
+    <h3>Session log</h3>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<script>
+// Vavilov centre data: rough centroids on a 360x180 equirectangular map.
+const centres = [
+  { id:'china', name:'Chinese centre', sub:'East Asia', x:103, y:35, desc:'One of the earliest and largest independent centres. Gave the world soybeans, peaches, plums, tea, buckwheat and many citrus fruits.' },
+  { id:'himalayan', name:'Himalayan / Indian centre', sub:'South & South-East Asia', x:78, y:23, desc:'Includes Assam, Burma, Indo-China and the Malayan archipelago. Home to rice, sugarcane, chickpea, mung bean, black pepper and turmeric.' },
+  { id:'mediterranean', name:'Mediterranean centre', sub:'Europe / North Africa', x:15, y:38, desc:'Borders of the Mediterranean Sea. Domesticated durum wheat, emmer, oats, barley, lentils, peas, cabbage and asparagus.' },
+  { id:'abyssinian', name:'Abyssinian centre', sub:'Ethiopia / Horn of Africa', x:40, y:9, desc:'Ethiopia and parts of Somalia. Source of coffee, sorghum, finger millet, safflower, castor and okra.' },
+  { id:'central-asian', name:'Central Asian centre', sub:'Inner Asia', x:63, y:38, desc:'North-west India, Afghanistan, Uzbekistan and western China. Bread wheat, carrots, onions, garlic, melons, grapes, apricots and hemp.' },
+  { id:'asia-minor', name:'Asia Minor / Near East centre', sub:'Middle East', x:40, y:36, desc:'Iran, Turkmenistan and the Near East. Wheat, rye, almonds, figs, cherries, walnuts, pomegranate and alfalfa.' },
+  { id:'central-american', name:'Central American centre', sub:'Mesoamerica', x:-94, y:17, desc:'Southern Mexico, Guatemala, Costa Rica and Honduras. Maize, common beans, lima beans, pumpkin, sweet potato, chilli, cotton and avocado.' },
+  { id:'south-american', name:'South American centre', sub:'Andes & lowlands', x:-65, y:-12, desc:'Peru, Bolivia, Chile, Brazil and Paraguay. Potato, tomato, sweet potato, peanut, cacao, tobacco, pineapple and quinoa.' }
+];
+
+const crops = [
+  { name:'Common wheat', emoji:'🌾', centre:'central-asian', centreAlt:'asia-minor', clue:'A grass that became the staff of life across Europe and Asia.', hints:['Hexaploid bread wheat', 'Gluten makes dough elastic', 'Staple from the Fertile Crescent and Inner Asia'] },
+  { name:'Rice', emoji:'🍚', centre:'himalayan', clue:'A semi-aquatic grass that feeds more people than any other crop.', hints:['Paddy field cultivation', 'Oryza sativa', 'South and South-East Asian staple'] },
+  { name:'Potato', emoji:'🥔', centre:'south-american', clue:'A high-altitude tuber that fuelled empires and later European populations.', hints:['Solanum tuberosum', 'Andean highlands', 'Domesticated around Lake Titicaca region'] },
+  { name:'Maize', emoji:'🌽', centre:'central-american', clue:'A giant grass with wrapped ears, bred from a much smaller wild ancestor.', hints:['Teosinte ancestor', 'Mesoamerican staple', 'Zea mays'] },
+  { name:'Tomato', emoji:'🍅', centre:'south-american', clue:'A berry treated as a vegetable, now central to cuisines worldwide.', hints:['Solanum lycopersicum', 'First domesticated in the Andes', 'Spread via Mesoamerica to Europe'] },
+  { name:'Soybean', emoji:'🫘', centre:'china', clue:'A legume turned into oil, sauce, tofu and animal feed.', hints:['Glycine max', 'East Asian origin', 'Nitrogen-fixing roots'] },
+  { name:'Coffee', emoji:'☕', centre:'abyssinian', clue:'A tree whose seeds became one of the world’s most traded commodities.', hints:['Coffea arabica', 'Ethiopian highlands', 'Discovered wild forests before cultivation'] },
+  { name:'Grape', emoji:'🍇', centre:'central-asian', clue:'A vine cultivated for fresh fruit, raisins, juice and wine.', hints:['Vitis vinifera', 'Transcaucasia and Central Asia', 'Oldest archaeological evidence from the Caucasus'] },
+  { name:'Barley', emoji:'🌾', centre:'mediterranean', centreAlt:'asia-minor', clue:'A tough, early-maturing cereal that thrives where wheat struggles.', hints:['Hordeum vulgare', 'Mediterranean and Near East', 'One of the first domesticated grains'] },
+  { name:'Black pepper', emoji:'🧂', centre:'himalayan', clue:'A vine whose dried berries became "black gold" and drove global trade.', hints:['Piper nigrum', 'Malabar coast and South-East Asia', 'Historic spice-route cargo'] },
+  { name:'Carrot', emoji:'🥕', centre:'central-asian', clue:'A taproot originally purple or yellow, later selected for orange.', hints:['Daucus carota', 'Afghanistan and Central Asia', 'Cultivated for millennia in the Hindu Kush region'] },
+  { name:'Tea', emoji:'🍵', centre:'china', clue:'A camellia whose leaves became the world’s favourite brewed drink.', hints:['Camellia sinensis', 'South-west China and bordering regions', 'First cultivated in Yunnan / Sichuan area'] },
+  { name:'Cacao', emoji:'🍫', centre:'south-american', clue:'A tropical tree whose seeds are the basis of chocolate.', hints:['Theobroma cacao', 'Amazon-Orinoco lowlands', 'Cultivated from wild South American populations'] },
+  { name:'Chilli pepper', emoji:'🌶️', centre:'central-american', clue:'A Capsicum fruit that added heat to cuisines across the world.', hints:['Capsicum annuum origin', 'Mesoamerica', 'Spread globally after Columbus'] },
+  { name:'Olive', emoji:'🫒', centre:'mediterranean', clue:'A long-lived tree cultivated for oil and cured fruit.', hints:['Olea europaea', 'Eastern Mediterranean', 'Domesticated in the Levant region'] },
+  { name:'Peach', emoji:'🍑', centre:'china', clue:'A sweet stone fruit symbolising longevity in its homeland.', hints:['Prunus persica', 'North-west China', 'Spread along the Silk Road'] },
+  { name:'Sorghum', emoji:'🌾', centre:'abyssinian', centreAlt:'central-african', clue:'A drought-hardy cereal grown across semi-arid Africa and Asia.', hints:['Sorghum bicolor', 'Northeastern African origin', 'Abyssinian centre'] },
+  { name:'Sweet potato', emoji:'🍠', centre:'south-american', centreAlt:'central-american', clue:'A storage root that spread across the Pacific before European contact.', hints:['Ipomoea batatas', 'Tropical America', 'Domesticated in northern South America / Central America'] },
+  { name:'Cabbage', emoji:'🥬', centre:'mediterranean', clue:'A leafy Brassica bred into kale, broccoli, cauliflower and Brussels sprouts.', hints:['Brassica oleracea', 'Mediterranean coastal wild ancestor', 'Domesticated around the Mediterranean'] },
+  { name:'Almond', emoji:'🌰', centre:'asia-minor', clue:'A nut tree whose bitter wild ancestors were selected for sweetness.', hints:['Prunus dulcis', 'Central Asia / Asia Minor', 'Cultivated in the Near East'] },
+  { name:'Cotton', emoji:'🧵', centre:'himalayan', centreAlt:'central-asian', clue:'A shrub whose seed fibres became the world’s most important textile plant.', hints:['Gossypium arboreum / herbaceum in Old World', 'Indian subcontinent and Arabia', 'Spun and woven for thousands of years'] },
+  { name:'Avocado', emoji:'🥑', centre:'central-american', clue:'A fruit with a single large seed and a creamy, oil-rich flesh.', hints:['Persea americana', 'Central American origin', 'Cultivated from southern Mexico to Central America'] },
+  { name:'Quinoa', emoji:'🌾', centre:'south-american', clue:'A pseudocereal from the Andes prized for protein-rich seeds.', hints:['Chenopodium quinoa', 'Andean highlands', 'Domesticated in the Lake Titicaca basin'] },
+  { name:'Fig', emoji:'🌳', centre:'asia-minor', clue:'One of the first cultivated plants, with a unique inside-out flower.', hints:['Ficus carica', 'Western Asia', 'Early domesticate of the Near East'] },
+  { name:'Turmeric', emoji:'🟡', centre:'himalayan', clue:'A rhizome that colours and flavours food, also used as dye and medicine.', hints:['Curcuma longa', 'Indian subcontinent / South-East Asia', 'Tropical monsoon origin'] },
+  { name:'Sunflower', emoji:'🌻', centre:'central-american', centreAlt:'north-american', clue:'A tall composite turned toward the sun, cultivated for oil and seeds.', hints:['Helianthus annuus', 'Eastern North America / Mesoamerica', 'Later bred for oilseed in Russia and elsewhere'] },
+  { name:'Tobacco', emoji:'🚬', centre:'south-american', clue:'A Nicotiana plant whose leaves were smoked, chewed and sniffed.', hints:['Nicotiana tabacum', 'Andes / Amazon', 'Spread from South America to the world'] },
+  { name:'Pea', emoji:'🫛', centre:'mediterranean', clue:'A cool-season legume whose wrinkled seeds helped Mendel unlock heredity.', hints:['Pisum sativum', 'Mediterranean and Near East', 'One of the oldest European crops'] }
+];
+
+let rounds = [];
+let current = 0;
+let score = 0;
+let streak = 0;
+let history = [];
+let revealedHints = 0;
+let answered = false;
+
+function shuffle(arr) {
+  return arr.slice().sort(() => Math.random() - 0.5);
+}
+
+function seedDaily() {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+}
+
+function seededShuffle(arr, seed) {
+  let a = arr.slice();
+  let s = seed;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (s * 9301 + 49297) % 233280;
+    const j = Math.floor((s / 233280) * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function loadMap() {
+  fetch('assets/world-map.svg')
+    .then(r => r.text())
+    .then(svgText => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgText, 'image/svg+xml');
+      const svg = doc.querySelector('svg');
+      svg.setAttribute('id', 'world-map');
+      svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      svg.style.width = '100%';
+      svg.style.height = 'auto';
+      // Make land hoverable
+      const land = svg.querySelectorAll('path');
+      land.forEach(p => { if(!p.classList.length) p.classList.add('land'); });
+      document.getElementById('map-wrap').innerHTML = '';
+      document.getElementById('map-wrap').appendChild(svg);
+      placeMarkers(svg);
+    })
+    .catch(err => {
+      console.error('Map load failed', err);
+      document.getElementById('map-wrap').innerHTML = '<p style="padding:20px;text-align:center;color:#7a6f5a">Map could not load. Use the centre list below.</p>';
+      renderCentreButtons();
+    });
+}
+
+function mapXY(lon, lat) {
+  const wrap = document.getElementById('map-wrap');
+  const svg = document.getElementById('world-map');
+  if (!svg) return null;
+  const vb = svg.viewBox.baseVal;
+  const rect = wrap.getBoundingClientRect();
+  const scaleX = rect.width / vb.width;
+  const scaleY = rect.height / vb.height;
+  const x = ((lon + 180) / 360) * vb.width * scaleX;
+  const y = ((90 - lat) / 180) * vb.height * scaleY;
+  return { x, y, scaleX, scaleY };
+}
+
+function placeMarkers(svg) {
+  // Add SVG markers on top of map
+  const vb = svg.viewBox.baseVal || { width:800, height:386 };
+  centres.forEach(c => {
+    const mx = ((c.x + 180) / 360) * vb.width;
+    const my = ((90 - c.y) / 180) * vb.height;
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'marker');
+    g.setAttribute('data-centre', c.id);
+    g.setAttribute('transform', `translate(${mx},${my})`);
+    g.style.cursor = 'pointer';
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('r', '5');
+    g.appendChild(circle);
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.textContent = c.name.split(' ')[0];
+    label.setAttribute('y', '-9');
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('font-size', '7');
+    label.setAttribute('fill', '#4a4233');
+    label.setAttribute('font-family', 'sans-serif');
+    g.appendChild(label);
+    g.addEventListener('click', () => submitGuess(c.id));
+    svg.appendChild(g);
+  });
+  renderCentreButtons();
+}
+
+function renderCentreButtons() {
+  const list = document.getElementById('centre-list');
+  list.innerHTML = '';
+  centres.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'centre-btn';
+    btn.innerHTML = `<span class="name">${c.name}</span><span class="sub">${c.sub}</span>`;
+    btn.addEventListener('click', () => submitGuess(c.id));
+    list.appendChild(btn);
+  });
+}
+
+function startGame() {
+  rounds = seededShuffle(crops, seedDaily()).slice(0, 10);
+  current = 0; score = 0; streak = 0; history = [];
+  document.getElementById('total').textContent = rounds.length;
+  updateScoreboard();
+  loadRound();
+}
+
+function loadRound() {
+  answered = false;
+  revealedHints = 0;
+  const crop = rounds[current];
+  document.getElementById('round').textContent = current + 1;
+  document.getElementById('crop-emoji').textContent = crop.emoji;
+  document.getElementById('crop-name').textContent = crop.name;
+  document.getElementById('crop-clue').textContent = crop.clue;
+  document.getElementById('result-area').innerHTML = '';
+  document.getElementById('hint-btn').disabled = false;
+  document.getElementById('skip-btn').disabled = false;
+  renderHints();
+  resetMarkers();
+}
+
+function renderHints() {
+  const bar = document.getElementById('hint-bar');
+  bar.innerHTML = '';
+  const crop = rounds[current];
+  for (let i = 0; i < revealedHints; i++) {
+    if (crop.hints[i]) {
+      const pill = document.createElement('span');
+      pill.className = 'hint-pill';
+      pill.textContent = crop.hints[i];
+      bar.appendChild(pill);
+    }
+  }
+}
+
+function resetMarkers() {
+  document.querySelectorAll('.marker').forEach(m => {
+    m.classList.remove('correct','wrong');
+  });
+}
+
+function submitGuess(centreId) {
+  if (answered) return;
+  answered = true;
+  const crop = rounds[current];
+  const correctIds = [crop.centre, crop.centreAlt].filter(Boolean);
+  const isCorrect = correctIds.includes(centreId);
+  const chosen = centres.find(c => c.id === centreId);
+  const actual = centres.find(c => c.id === crop.centre);
+
+  document.querySelectorAll('.marker').forEach(m => {
+    if (correctIds.includes(m.dataset.centre)) m.classList.add('correct');
+    else if (m.dataset.centre === centreId) m.classList.add('wrong');
+  });
+
+  if (isCorrect) {
+    streak++;
+    const base = 100;
+    const bonus = Math.max(0, 3 - revealedHints) * 25;
+    const streakBonus = Math.min(streak * 10, 50);
+    score += base + bonus + streakBonus;
+  } else {
+    streak = 0;
+  }
+  updateScoreboard();
+
+  history.push({ crop: crop.name, emoji: crop.emoji, correct: isCorrect, chosen: chosen ? chosen.name : '—', actual: actual.name });
+  renderHistory();
+
+  const result = document.createElement('div');
+  result.className = 'result ' + (isCorrect ? 'correct' : 'wrong');
+  result.innerHTML = `
+    <h3>${isCorrect ? '✅ Correct!' : '❌ Not quite'}</h3>
+    <p><strong>${crop.name}</strong> was domesticated in the <strong>${actual.name}</strong>.</p>
+    <p>${actual.desc}</p>
+    ${isCorrect ? '' : `<p style="margin-top:6px">You guessed ${chosen ? chosen.name : '—'}.</p>`}
+  `;
+  document.getElementById('result-area').innerHTML = '';
+  document.getElementById('result-area').appendChild(result);
+
+  document.getElementById('hint-btn').disabled = true;
+  document.getElementById('skip-btn').disabled = true;
+
+  setTimeout(() => {
+    current++;
+    if (current < rounds.length) {
+      loadRound();
+    } else {
+      endGame();
+    }
+  }, 2400);
+}
+
+function updateScoreboard() {
+  document.getElementById('score').textContent = score;
+  document.getElementById('streak').textContent = streak;
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '';
+  [...history].reverse().forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.innerHTML = `<span class="badge">${h.emoji}</span><span class="crop-name">${h.crop}</span><span class="crop-centre">${h.correct ? '✅' : '❌'} ${h.actual}</span>`;
+    list.appendChild(div);
+  });
+}
+
+function endGame() {
+  const card = document.getElementById('game-card');
+  const correctCount = history.filter(h => h.correct).length;
+  const max = rounds.length * (100 + 3*25 + 50); // generous max
+  const percent = Math.round((score / (rounds.length * 175)) * 100);
+  card.innerHTML = `
+    <div style="text-align:center;padding:24px 10px">
+      <div style="font-size:3rem;margin-bottom:8px">🌍</div>
+      <h2 style="font-family:var(--font-head);font-size:1.7rem;margin-bottom:10px">Round complete</h2>
+      <p style="font-size:1.1rem;margin-bottom:18px">You got <strong>${correctCount}/${rounds.length}</strong> correct and scored <strong>${score}</strong> points.</p>
+      <p style="color:#6b614f;margin-bottom:22px">${percent >= 80 ? 'Outstanding plant-geography intuition!' : percent >= 50 ? 'Solid grounding in crop origins.' : 'A good excuse to explore Vavilov’s centres.'}</p>
+      <button class="btn-primary" id="restart-btn" style="font-size:1rem">Play again</button>
+    </div>
+  `;
+  document.getElementById('restart-btn').addEventListener('click', () => {
+    location.reload();
+  });
+}
+
+function skipCrop() {
+  if (answered) return;
+  answered = true;
+  const crop = rounds[current];
+  const actual = centres.find(c => c.id === crop.centre);
+  history.push({ crop: crop.name, emoji: crop.emoji, correct: false, chosen: 'Skipped', actual: actual.name });
+  renderHistory();
+  const result = document.createElement('div');
+  result.className = 'result wrong';
+  result.innerHTML = `<h3>Skipped</h3><p><strong>${crop.name}</strong> was domesticated in the <strong>${actual.name}</strong>.</p><p>${actual.desc}</p>`;
+  document.getElementById('result-area').innerHTML = '';
+  document.getElementById('result-area').appendChild(result);
+  streak = 0; updateScoreboard();
+  setTimeout(() => { current++; if (current < rounds.length) loadRound(); else endGame(); }, 1800);
+}
+
+function revealHint() {
+  if (answered) return;
+  const crop = rounds[current];
+  if (revealedHints < crop.hints.length) {
+    revealedHints++;
+    renderHints();
+  }
+}
+
+document.getElementById('hint-btn').addEventListener('click', revealHint);
+document.getElementById('skip-btn').addEventListener('click', skipCrop);
+
+startGame();
+</script>
+</body>
+</html>
