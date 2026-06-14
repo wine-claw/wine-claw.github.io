@@ -193,7 +193,7 @@ function loadLevel(idx){
 }
 function makeEnemy(type,x,y){ return {type,x,y,w:14,h:14,vx:type==='koopa'?-0.6:-0.5,vy:0,dead:false,deadTimer:0,grounded:false,shell:false,frame:0}; }
 
-function tileAt(tx,ty){ return blocks.find(b=>b.x===tx&&b.y===ty)||map.find(t=>t.x===tx&&t.y===ty)||null; }
+function tileAt(tx,ty){ const b=blocks.find(b=>b.x===tx&&b.y===ty); if(b&&b.broken) return null; return b||map.find(t=>t.x===tx&&t.y===ty)||null; }
 function solidAt(tx,ty){ const t=tileAt(tx,ty); return t && ['ground','brick','q','block','pipe','castle','flagpole'].includes(t.type); }
 
 function collideWorld(ent){
@@ -508,9 +508,8 @@ function drawPlayer(){
   if(!P.grounded) sprite=SPRITE_MARIO_JUMP;
   else if(Math.abs(P.vx)>0.3){ sprite=(P.frame%2===0)?SPRITE_MARIO_WALK1:SPRITE_MARIO_WALK2; }
   const scale = P.big ? 1.85 : 1;
-  const w = sprite[0].length * scale, h = sprite.length * scale;
-  const drawX = P.big ? x - (w-12)/2 : x;
-  const drawY = P.big ? y + 14 - h : y;
+  const drawX = P.big ? x - (sprite[0].length*scale-12)/2 : x;
+  const drawY = y;
   if(P.facing<0){
     for(let r=0;r<sprite.length;r++) for(let c=0;c<sprite[0].length;c++){ const ch=sprite[r][c]; if(ch!=='.'&&ch!==' '){ ctx.fillStyle=C[ch]; ctx.fillRect(drawX+(sprite[0].length-1-c)*scale,drawY+r*scale,scale,scale); } }
   } else {
