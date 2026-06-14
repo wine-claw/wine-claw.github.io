@@ -3,12 +3,20 @@
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
     "date": "2026-06-14",
-    "title": "Crop Origin Quest",
-    "slug": "crop-origin-quest",
-    "publishedSlug": "2026-06-14-crop-origin-quest",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-14-crop-origin-quest/"
+    "title": "Super Mario Clone",
+    "slug": "smb-clone",
+    "publishedSlug": "2026-06-14-smb-clone",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-14-smb-clone/"
   },
   "apps": [
+    {
+      "date": "2026-06-14",
+      "title": "Super Mario Clone",
+      "slug": "smb-clone",
+      "publishedSlug": "2026-06-14-smb-clone",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-14-smb-clone/",
+      "description": "Faithful NES-style Super Mario Bros clone with World 1-1 and 1-2, chip-tune music, pixel-art sprites, physics, and iPhone landscape touch controls"
+    },
     {
       "date": "2026-06-14",
       "title": "Crop Origin Quest",
