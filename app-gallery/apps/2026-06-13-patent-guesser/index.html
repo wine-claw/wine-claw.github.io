@@ -649,7 +649,9 @@ function drawZipper() {
   svg.appendChild(svgEl('line', { x1: 150, y1: 260, x2: 250, y2: 260, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
   svg.appendChild(svgEl('line', { x1: 150, y1: 255, x2: 150, y2: 265, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
   svg.appendChild(svgEl('line', { x1: 250, y1: 255, x2: 250, y2: 265, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 1 — FASTENER');
+  const t1 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t1.textContent = 'FIG. 1 — FASTENER';
+  svg.appendChild(t1);
   return svg;
 }
 
@@ -667,7 +669,9 @@ function drawBallpoint() {
   svg.appendChild(svgEl('rect', { x: 260, y: 125, width: 8, height: 50, rx: 2, fill: '#c45c3e', stroke: '#1e3a5f', 'stroke-width': 1 }));
   // Cross-section indicator
   svg.appendChild(svgEl('line', { x1: 180, y1: 135, x2: 180, y2: 165, stroke: '#1e3a5f', 'stroke-width': 0.6, 'stroke-dasharray': '4,3' }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 2 — WRITING INSTRUMENT');
+  const t2 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t2.textContent = 'FIG. 2 — WRITING INSTRUMENT';
+  svg.appendChild(t2);
   return svg;
 }
 
@@ -683,7 +687,9 @@ function drawRazor() {
   for (let i = 0; i < 8; i++) {
     svg.appendChild(svgEl('line', { x1: 90 + i*14, y1: 135, x2: 90 + i*14, y2: 145, stroke: '#1e3a5f', 'stroke-width': 1 }));
   }
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 3 — SAFETY RAZOR');
+  const t3 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t3.textContent = 'FIG. 3 — SAFETY RAZOR';
+  svg.appendChild(t3);
   return svg;
 }
 
@@ -710,7 +716,9 @@ function drawVelcro() {
   }
   // Arrows showing press
   svg.appendChild(svgEl('path', { d: 'M200 100 L210 95 M200 100 L210 105', stroke: '#c45c3e', 'stroke-width': 1.5, fill: 'none' }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 4 — VELCRO FASTENER');
+  const t4 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t4.textContent = 'FIG. 4 — VELCRO FASTENER';
+  svg.appendChild(t4);
   return svg;
 }
 
@@ -728,7 +736,9 @@ function drawFridge() {
   svg.appendChild(svgEl('rect', { x: 260, y: 60, width: 30, height: 80, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1 }));
   // Piping
   svg.appendChild(svgEl('path', { d: 'M150 240 L150 260 L270 260 L270 140', fill: 'none', stroke: '#c45c3e', 'stroke-width': 2, 'stroke-dasharray': '5,3' }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 5 — REFRIGERATOR');
+  const t5 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t5.textContent = 'FIG. 5 — REFRIGERATOR';
+  svg.appendChild(t5);
   return svg;
 }
 
@@ -745,7 +755,9 @@ function drawPhonograph() {
   svg.appendChild(svgEl('line', { x1: 200, y1: 160, x2: 200, y2: 175, stroke: '#c45c3e', 'stroke-width': 1.5 }));
   // Horn (simplified)
   svg.appendChild(svgEl('path', { d: 'M260 200 Q300 180 320 140 Q310 180 260 190', fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 6 — PHONOGRAPH');
+  const t6 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t6.textContent = 'FIG. 6 — PHONOGRAPH';
+  svg.appendChild(t6);
   return svg;
 }
 
@@ -763,7 +775,9 @@ function drawBulb() {
   // Support wires
   svg.appendChild(svgEl('line', { x1: 190, y1: 200, x2: 190, y2: 160, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
   svg.appendChild(svgEl('line', { x1: 210, y1: 200, x2: 210, y2: 160, stroke: '#1e3a5f', 'stroke-width': 0.8 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 7 — INCANDESCENT LAMP');
+  const t7 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t7.textContent = 'FIG. 7 — INCANDESCENT LAMP';
+  svg.appendChild(t7);
   return svg;
 }
 
@@ -782,7 +796,9 @@ function drawSewing() {
   // Hand crank
   svg.appendChild(svgEl('circle', { cx: 260, cy: 140, r: 20, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 2 }));
   svg.appendChild(svgEl('line', { x1: 260, y1: 140, x2: 275, y2: 140, stroke: '#1e3a5f', 'stroke-width': 2 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 8 — SEWING MACHINE');
+  const t8 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t8.textContent = 'FIG. 8 — SEWING MACHINE';
+  svg.appendChild(t8);
   return svg;
 }
 
@@ -801,7 +817,9 @@ function drawBike() {
   // Pedal crank
   svg.appendChild(svgEl('circle', { cx: 170, cy: 180, r: 15, fill: 'none', stroke: '#1e3a5f', 'stroke-width': 2 }));
   svg.appendChild(svgEl('line', { x1: 170, y1: 180, x2: 190, y2: 200, stroke: '#c45c3e', 'stroke-width': 2 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 9 — BICYCLE');
+  const t9 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t9.textContent = 'FIG. 9 — BICYCLE';
+  svg.appendChild(t9);
   return svg;
 }
 
@@ -823,7 +841,9 @@ function drawBarbedWire() {
   // Posts
   svg.appendChild(svgEl('rect', { x: 70, y: 60, width: 8, height: 180, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
   svg.appendChild(svgEl('rect', { x: 322, y: 60, width: 8, height: 180, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 10 — BARBED WIRE FENCE');
+  const t10 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t10.textContent = 'FIG. 10 — BARBED WIRE FENCE';
+  svg.appendChild(t10);
   return svg;
 }
 
@@ -841,7 +861,9 @@ function drawWiper() {
   svg.appendChild(svgEl('rect', { x: 260, y: 190, width: 40, height: 30, fill: '#d4cfc5', stroke: '#1e3a5f', 'stroke-width': 1 }));
   // Linkage rod
   svg.appendChild(svgEl('line', { x1: 240, y1: 205, x2: 260, y2: 205, stroke: '#c45c3e', 'stroke-width': 2, 'stroke-dasharray': '3,2' }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 11 — WINDSHIELD WIPER');
+  const t11 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t11.textContent = 'FIG. 11 — WINDSHIELD WIPER';
+  svg.appendChild(t11);
   return svg;
 }
 
@@ -860,7 +882,9 @@ function drawEscalator() {
   // Combs
   svg.appendChild(svgEl('rect', { x: 70, y: 235, width: 50, height: 8, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
   svg.appendChild(svgEl('rect', { x: 300, y: 55, width: 50, height: 8, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 12 — ESCALATOR');
+  const t12 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t12.textContent = 'FIG. 12 — ESCALATOR';
+  svg.appendChild(t12);
   return svg;
 }
 
@@ -876,7 +900,9 @@ function drawPaperclip() {
   // Fold lines on paper
   svg.appendChild(svgEl('line', { x1: 100, y1: 130, x2: 300, y2: 130, stroke: 'rgba(30,58,95,0.1)', 'stroke-width': 0.5 }));
   svg.appendChild(svgEl('line', { x1: 100, y1: 180, x2: 300, y2: 180, stroke: 'rgba(30,58,95,0.1)', 'stroke-width': 0.5 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 13 — PAPER CLIP');
+  const t13 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t13.textContent = 'FIG. 13 — PAPER CLIP';
+  svg.appendChild(t13);
   return svg;
 }
 
@@ -893,7 +919,9 @@ function drawVacuum() {
   // Motor/fan symbol inside
   svg.appendChild(svgEl('path', { d: 'M190 160 L210 160 M200 150 L200 170', stroke: '#c45c3e', 'stroke-width': 2 }));
   svg.appendChild(svgEl('circle', { cx: 200, cy: 160, r: 18, fill: 'none', stroke: '#c45c3e', 'stroke-width': 1.5 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 14 — VACUUM CLEANER');
+  const t14 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t14.textContent = 'FIG. 14 — VACUUM CLEANER';
+  svg.appendChild(t14);
   return svg;
 }
 
@@ -912,7 +940,9 @@ function drawThermos() {
   svg.appendChild(svgEl('rect', { x: 165, y: 50, width: 70, height: 16, rx: 3, fill: '#b0aba0', stroke: '#1e3a5f', 'stroke-width': 1 }));
   // Silvering indicator
   svg.appendChild(svgEl('rect', { x: 162, y: 74, width: 76, height: 4, fill: 'rgba(180,200,220,0.4)', stroke: 'none' }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 15 — THERMOS FLASK');
+  const t15 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t15.textContent = 'FIG. 15 — THERMOS FLASK';
+  svg.appendChild(t15);
   return svg;
 }
 
@@ -936,7 +966,9 @@ function drawDishwasher() {
   for (let i = 0; i < 6; i++) {
     svg.appendChild(svgEl('circle', { cx: 140 + i * 25, cy: 100 + (i%2)*10, r: 2, fill: '#1e3a5f', opacity: 0.4 }));
   }
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 16 — DISHWASHER');
+  const t16 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t16.textContent = 'FIG. 16 — DISHWASHER';
+  svg.appendChild(t16);
   return svg;
 }
 
@@ -955,7 +987,9 @@ function drawMicrowave() {
   svg.appendChild(svgEl('path', { d: 'M160 130 Q180 110 200 130 Q220 150 240 130', fill: 'none', stroke: '#c45c3e', 'stroke-width': 1.5 }));
   // Food plate
   svg.appendChild(svgEl('ellipse', { cx: 180, cy: 140, rx: 25, ry: 8, fill: '#f0ece3', stroke: '#1e3a5f', 'stroke-width': 0.8 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 17 — MICROWAVE OVEN');
+  const t17 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t17.textContent = 'FIG. 17 — MICROWAVE OVEN';
+  svg.appendChild(t17);
   return svg;
 }
 
@@ -976,7 +1010,9 @@ function drawJet() {
   svg.appendChild(svgEl('path', { d: 'M360 140 L390 130 M360 150 L400 150 M360 160 L390 170', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
   // Air intake
   svg.appendChild(svgEl('path', { d: 'M80 140 L50 135 M80 150 L40 150 M80 160 L50 165', stroke: '#1e3a5f', 'stroke-width': 1.5 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 18 — TURBOJET ENGINE');
+  const t18 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t18.textContent = 'FIG. 18 — TURBOJET ENGINE';
+  svg.appendChild(t18);
   return svg;
 }
 
@@ -1008,7 +1044,9 @@ function drawCottonGin() {
   // Crank
   svg.appendChild(svgEl('line', { x1: 300, y1: 140, x2: 340, y2: 140, stroke: '#1e3a5f', 'stroke-width': 2 }));
   svg.appendChild(svgEl('circle', { cx: 345, cy: 140, r: 6, fill: '#c45c3e', stroke: '#1e3a5f', 'stroke-width': 1 }));
-  svg.appendChild(svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' }).textContent = 'FIG. 19 — COTTON GIN');
+  const t19 = svgEl('text', { x: 200, y: 275, 'text-anchor': 'middle', fill: '#1e3a5f', 'font-size': 10, 'font-family': 'Courier New' });
+  t19.textContent = 'FIG. 19 — COTTON GIN';
+  svg.appendChild(t19);
   return svg;
 }
 
