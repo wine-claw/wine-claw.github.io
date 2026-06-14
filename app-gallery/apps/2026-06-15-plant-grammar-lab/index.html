@@ -179,7 +179,7 @@
     #canvas:active { cursor: grabbing; }
     #overlay {
       position: absolute;
-      top: 0.8rem; left: 0.8rem;
+      top: 0.8rem; right: 0.8rem;
       background: rgba(15,20,16,0.82);
       border: 1px solid var(--line);
       border-radius: 0.55rem;
@@ -188,7 +188,8 @@
       color: var(--muted);
       backdrop-filter: blur(4px);
       pointer-events: none;
-      max-width: min(260px, calc(100vw - 1.6rem));
+      max-width: min(240px, calc(100vw - 1.6rem));
+      text-align: right;
     }
     #overlay b { color: var(--text); }
     .zoom-controls {
@@ -670,7 +671,7 @@
       return { minX, maxX, minY, maxY };
     }
 
-    function fitView(padding = 40) {
+    function fitView(padding = 60) {
       if (!segments.length) return;
       const b = computeBounds(segments);
       const cw = canvas.width / window.devicePixelRatio;
@@ -680,7 +681,7 @@
       const scale = Math.min((cw - padding * 2) / bw, (ch - padding * 2) / bh, 40);
       view.scale = Math.max(0.05, scale);
       view.x = cw / 2 - (b.minX + b.maxX) / 2 * view.scale;
-      view.y = ch / 2 - (b.minY + b.maxY) / 2 * view.scale;
+      view.y = ch / 2 - (b.minY + b.maxY) / 2 * view.scale + padding * 0.2;
     }
 
     function render() {
@@ -782,7 +783,7 @@
         ui.preset.value = 'custom';
         ui.ovTitle.textContent = 'Custom Grammar';
         ui.ovDesc.textContent = 'Your own rules — edit the grammar below.';
-        ui.presetTags.innerHTML = '<span class="preset-chip">✏️ Custom</span>';
+        ui.presetTags.textContent = '';
         syncUIFromState();
         build();
         fitView();
@@ -793,11 +794,7 @@
       state.preset = key;
       ui.ovTitle.textContent = p.name;
       ui.ovDesc.textContent = p.desc;
-      ui.presetTags.innerHTML = '';
-      const tag = document.createElement('span');
-      tag.className = 'preset-chip';
-      tag.textContent = `${p.emoji} ${p.name}`;
-      ui.presetTags.appendChild(tag);
+      ui.presetTags.textContent = '';
 
       if (key === 'random') {
         randomizeGrammar();
