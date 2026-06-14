@@ -152,7 +152,7 @@ function makeLevel1_1(){
   tiles.push(...makePipe(2,10));
   tiles.push(...qAt(9,[16,21,22,23,78,79,80,93,94,95,109,112],'mushroom'));
   tiles.push(...bricksAt(9,[17,18,19,35,36,37,38,39,40,41,45,46,47,48,49,50,51,67,68,69,70,71,72,73,100,101,102,103,104,124,125,126,127,128,129,160,161,162,163,164,165,166,167,168,169,170]));
-  tiles.push(...makePipe(3,42), ...makePipe(4,58), ...makePipe(4,78));
+  tiles.push(...makePipe(2,10), ...makePipe(3,42), ...makePipe(2,58), ...makePipe(3,78));
   tiles.push(...stairs(13,180,12));
   tiles.push({x:198,y:3,type:'flagpole'});
   for(let x=204;x<=208;x++) for(let y=8;y<=13;y++) tiles.push({x,y,type:'castle'});
@@ -199,9 +199,9 @@ function solidAt(tx,ty){ const t=tileAt(tx,ty); return t && ['ground','brick','q
 function collideWorld(ent){
   const h = ent===P ? (P.big?26:14) : ent.h;
   ent.grounded=false;
-  // Horizontal pass — ignore floor tiles by insetting 2px from top/bottom
-  const l=Math.floor((ent.x+0.01)/TILE), r=Math.floor((ent.x+ent.w-0.01)/TILE);
-  const ty=Math.floor((ent.y+2)/TILE), by=Math.floor((ent.y+h-2)/TILE);
+  // Horizontal sensor: full width, height inset 4px from top/bottom (avoids floor/ceiling)
+  const l=Math.floor(ent.x/TILE), r=Math.floor((ent.x+ent.w)/TILE);
+  const ty=Math.floor((ent.y+4)/TILE), by=Math.floor((ent.y+h-4)/TILE);
   for(let tx=l; tx<=r; tx++) for(let y=ty; y<=by; y++){
     if(solidAt(tx,y)){
       const cx=tx*TILE;
@@ -210,8 +210,8 @@ function collideWorld(ent){
       break;
     }
   }
-  // Vertical pass — ignore wall tiles by insetting 2px from left/right
-  const l2=Math.floor((ent.x+2)/TILE), r2=Math.floor((ent.x+ent.w-2)/TILE);
+  // Vertical sensor: width inset 4px from left/right (avoids walls), full height
+  const l2=Math.floor((ent.x+4)/TILE), r2=Math.floor((ent.x+ent.w-4)/TILE);
   const t2=Math.floor(ent.y/TILE), b2=Math.floor((ent.y+h)/TILE);
   for(let tx=l2; tx<=r2; tx++) for(let y=t2; y<=b2; y++){
     if(solidAt(tx,y)){
