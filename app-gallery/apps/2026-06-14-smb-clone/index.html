@@ -198,19 +198,25 @@ function solidAt(tx,ty){ const t=tileAt(tx,ty); return t && ['ground','brick','q
 
 function collideWorld(ent){
   const h = ent===P ? (P.big?26:14) : ent.h;
-  const l=Math.floor(ent.x/TILE), r=Math.floor((ent.x+ent.w)/TILE);
-  const t=Math.floor(ent.y/TILE), b=Math.floor((ent.y+h)/TILE);
   ent.grounded=false;
-  for(let tx=l; tx<=r; tx++) for(let ty=t; ty<=b; ty++){
-    if(solidAt(tx,ty)){
-      const cx=tx*TILE, cy=ty*TILE;
-      const overlapL=(ent.x+ent.w)-cx, overlapR=(cx+TILE)-ent.x;
-      const overlapT=(ent.y+h)-cy, overlapB=(cy+TILE)-ent.y;
-      const min=Math.min(overlapL,overlapR,overlapT,overlapB);
-      if(min===overlapT){ ent.y=cy-h; ent.vy=0; ent.grounded=true; }
-      else if(min===overlapB){ ent.y=cy+TILE; ent.vy=0; if(ent===P) hitBlock(tx,ty); }
-      else if(min===overlapL){ ent.x=cx-ent.w; ent.vx=0; if(ent.type==='goomba'||ent.type==='koopa') ent.vx*=-1; }
-      else if(min===overlapR){ ent.x=cx+TILE; ent.vx=0; if(ent.type==='goomba'||ent.type==='koopa') ent.vx*=-1; }
+  // Horizontal pass: only resolve if currently overlapping and moving into the tile
+  const l=Math.floor(ent.x/TILE), r=Math.floor((ent.x+ent.w)/TILE);
+  const ty=Math.floor(ent.y/TILE), by=Math.floor((ent.y+h-0.01)/TILE);
+  for(let tx=l; tx<=r; tx++) for(let y=ty; y<=by; y++){
+    if(solidAt(tx,y)){
+      const cx=tx*TILE;
+      if(ent.vx>0 && ent.x+ent.w>=cx && ent.x<cx){ ent.x=cx-ent.w; ent.vx=0; if(ent.type==='goomba'||ent.type==='koopa') ent.vx*=-1; }
+      else if(ent.vx<0 && ent.x<cx+TILE && ent.x+ent.w>cx+TILE){ ent.x=cx+TILE; ent.vx=0; if(ent.type==='goomba'||ent.type==='koopa') ent.vx*=-1; }
+    }
+  }
+  // Vertical pass
+  const l2=Math.floor(ent.x/TILE), r2=Math.floor((ent.x+ent.w-0.01)/TILE);
+  const t2=Math.floor(ent.y/TILE), b2=Math.floor((ent.y+h)/TILE);
+  for(let tx=l2; tx<=r2; tx++) for(let y=t2; y<=b2; y++){
+    if(solidAt(tx,y)){
+      const cy=y*TILE;
+      if(ent.vy>0 && ent.y+h>=cy && ent.y<cy){ ent.y=cy-h; ent.vy=0; ent.grounded=true; }
+      else if(ent.vy<0 && ent.y<cy+TILE && ent.y+h>cy+TILE){ ent.y=cy+TILE; ent.vy=0; if(ent===P) hitBlock(tx,y); }
     }
   }
 }
