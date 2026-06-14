@@ -150,9 +150,9 @@ function makeLevel1_1(){
   const width=220, tiles=[];
   tiles.push(...makeGround(13,0,width));
   tiles.push(...makePipe(2,10));
-  tiles.push(...qAt(9,[16,21,22,23,78,79,80,93,94,95,109,112],'mushroom'));
+  tiles.push(...qAt(9,[16,21,22,23,93,94,95,109,112],'mushroom'));
   tiles.push(...bricksAt(9,[17,18,19,35,36,37,38,39,40,41,45,46,47,48,49,50,51,67,68,69,70,71,72,73,100,101,102,103,104,124,125,126,127,128,129,160,161,162,163,164,165,166,167,168,169,170]));
-  tiles.push(...makePipe(2,10), ...makePipe(3,42), ...makePipe(2,58), ...makePipe(3,78));
+  tiles.push(...makePipe(2,10), ...makePipe(2,42), ...makePipe(2,58), ...makePipe(2,78));
   tiles.push(...stairs(13,180,12));
   tiles.push({x:198,y:3,type:'flagpole'});
   for(let x=204;x<=208;x++) for(let y=8;y<=13;y++) tiles.push({x,y,type:'castle'});
@@ -244,13 +244,15 @@ function updatePlayer(){
   if(KEYS.right){ P.vx+=acc; P.facing=1; }
   if(!KEYS.left&&!KEYS.right) P.vx*=P.grounded?0.82:0.96;
   P.vx=clamp(P.vx,-max,max);
-  if(KEYS.a && P.grounded && !P.jump){ P.vy=-5.3; P.grounded=false; P.jump=true; playJump(); }
+  if(KEYS.a && P.grounded && !P.jump){ P.vy=-5.6; P.grounded=false; P.jump=true; playJump(); }
   if(!KEYS.a) P.jump=false;
   P.vy+=0.23; if(P.vy>5) P.vy=5;
   P.x+=P.vx; P.y+=P.vy;
   collideWorld(P);
   if(P.y>H+40){ if(P.big){P.big=false;P.h=14;P.y+=12;P.invuln=60;P.y=H+20;P.vy=-2;} else playerDie(); }
-  camX=clamp(P.x-80,0,levelWidth*TILE-W);
+  const targetCamX=clamp(P.x-80,0,levelWidth*TILE-W);
+  camX += (targetCamX-camX)*0.12;
+  if(Math.abs(targetCamX-camX)<0.5) camX=targetCamX;
   const fp=map.find(t=>t.type==='flagpole');
   if(fp && !P.reachedFlag && P.x+10>fp.x*TILE){ P.reachedFlag=true; P.vx=0.8; P.vy=0; playFlag(); P.score+=P.time*50; }
   if(P.invuln>0) P.invuln--;
