@@ -241,7 +241,7 @@ function updatePlayer(){
   P.vy+=0.23; if(P.vy>5) P.vy=5;
   P.x+=P.vx; P.y+=P.vy;
   collideWorld(P);
-  if(P.y>H+40){ if(P.big){P.big=false;P.h=14;P.invuln=60;P.y=H+20;P.vy=-2;} else playerDie(); }
+  if(P.y>H+40){ if(P.big){P.big=false;P.h=14;P.y+=12;P.invuln=60;P.y=H+20;P.vy=-2;} else playerDie(); }
   camX=clamp(P.x-80,0,levelWidth*TILE-W);
   const fp=map.find(t=>t.type==='flagpole');
   if(fp && !P.reachedFlag && P.x+10>fp.x*TILE){ P.reachedFlag=true; P.vx=0.8; P.vy=0; playFlag(); P.score+=P.time*50; }
@@ -250,7 +250,7 @@ function updatePlayer(){
   else if(Math.abs(P.vx)<0.1) P.frame=0;
   for(let i=items.length-1;i>=0;i--){
     const it=items[i]; it.vy+=0.2; it.x+=it.vx; it.y+=it.vy; collideWorld(it);
-    if(rectIntersect(P,it)){ if(it.type==='mushroom'){ P.big=true; P.h=26; P.score+=1000; play1Up(); } items.splice(i,1); }
+    if(rectIntersect(P,it)){ if(it.type==='mushroom'){ P.big=true; P.h=26; P.y-=12; P.score+=1000; play1Up(); } items.splice(i,1); }
   }
   for(let e of enemies) updateEnemy(e);
   for(let i=fireballs.length-1;i>=0;i--){
@@ -285,7 +285,7 @@ function enemyPlayerCollide(){
     }
   }
 }
-function playerDie(){ if(P.dead) return; if(P.big){P.big=false;P.h=14;P.invuln=90;playBump();return;} P.dead=true; P.deadTimer=0; P.vx=0; P.vy=-4; playDie(); stopMusic(); }
+function playerDie(){ if(P.dead) return; if(P.big){P.big=false;P.h=14;P.y+=12;P.invuln=90;playBump();return;} P.dead=true; P.deadTimer=0; P.vx=0; P.vy=-4; playDie(); stopMusic(); }
 function restartLevel(){ P.big=false; P.h=14; P.dead=false; loadLevel(P.levelIndex); }
 function levelComplete(){ playWin(); if(P.levelIndex+1<LEVELS.length){P.levelIndex++; loadLevel(P.levelIndex);} else showWin(); }
 function showGameOver(){ stopMusic(); document.getElementById('gameover-screen').classList.remove('hidden'); paused=true; }
