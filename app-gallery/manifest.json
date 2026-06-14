@@ -26,6 +26,14 @@
       "description": "Interactive Lindenmayer-system sandbox for growing procedural plants and fractals from tiny rule strings"
     },
     {
+      "date": "2026-06-15",
+      "title": "Plant Grammar Lab",
+      "slug": "plant-grammar-lab",
+      "publishedSlug": "2026-06-15-plant-grammar-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-15-plant-grammar-lab/",
+      "description": "Interactive Lindenmayer-system sandbox for growing procedural plants and fractals from tiny rule strings"
+    },
+    {
       "date": "2026-06-14",
       "title": "Super Mario Clone",
       "slug": "smb-clone",
