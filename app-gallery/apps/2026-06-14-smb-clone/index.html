@@ -150,8 +150,8 @@ function makeLevel1_1(){
   const width=220, tiles=[];
   tiles.push(...makeGround(13,0,width));
   tiles.push(...makePipe(2,10));
-  tiles.push(...qAt(9,[16,21,22,23,78,79,80,93,94,95,109,112]));
-  tiles.push(...bricksAt(9,[11,12,13,14,15,17,35,36,37,38,39,40,41,45,46,47,48,49,50,51,67,68,69,70,71,72,73,100,101,102,103,104,124,125,126,127,128,129,160,161,162,163,164,165,166,167,168,169,170]));
+  tiles.push(...qAt(9,[16,21,22,23,78,79,80,93,94,95,109,112],'mushroom'));
+  tiles.push(...bricksAt(9,[17,18,19,35,36,37,38,39,40,41,45,46,47,48,49,50,51,67,68,69,70,71,72,73,100,101,102,103,104,124,125,126,127,128,129,160,161,162,163,164,165,166,167,168,169,170]));
   tiles.push(...makePipe(3,42), ...makePipe(4,58), ...makePipe(4,78));
   tiles.push(...stairs(13,180,12));
   tiles.push({x:198,y:3,type:'flagpole'});
@@ -197,16 +197,17 @@ function tileAt(tx,ty){ return blocks.find(b=>b.x===tx&&b.y===ty)||map.find(t=>t
 function solidAt(tx,ty){ const t=tileAt(tx,ty); return t && ['ground','brick','q','block','pipe','castle','flagpole'].includes(t.type); }
 
 function collideWorld(ent){
+  const h = ent===P ? (P.big?26:14) : ent.h;
   const l=Math.floor(ent.x/TILE), r=Math.floor((ent.x+ent.w)/TILE);
-  const t=Math.floor(ent.y/TILE), b=Math.floor((ent.y+ent.h)/TILE);
+  const t=Math.floor(ent.y/TILE), b=Math.floor((ent.y+h)/TILE);
   ent.grounded=false;
   for(let tx=l; tx<=r; tx++) for(let ty=t; ty<=b; ty++){
     if(solidAt(tx,ty)){
       const cx=tx*TILE, cy=ty*TILE;
       const overlapL=(ent.x+ent.w)-cx, overlapR=(cx+TILE)-ent.x;
-      const overlapT=(ent.y+ent.h)-cy, overlapB=(cy+TILE)-ent.y;
+      const overlapT=(ent.y+h)-cy, overlapB=(cy+TILE)-ent.y;
       const min=Math.min(overlapL,overlapR,overlapT,overlapB);
-      if(min===overlapT){ ent.y=cy-ent.h; ent.vy=0; ent.grounded=true; }
+      if(min===overlapT){ ent.y=cy-h; ent.vy=0; ent.grounded=true; }
       else if(min===overlapB){ ent.y=cy+TILE; ent.vy=0; if(ent===P) hitBlock(tx,ty); }
       else if(min===overlapL){ ent.x=cx-ent.w; ent.vx=0; if(ent.type==='goomba'||ent.type==='koopa') ent.vx*=-1; }
       else if(min===overlapR){ ent.x=cx+TILE; ent.vx=0; if(ent.type==='goomba'||ent.type==='koopa') ent.vx*=-1; }
@@ -235,12 +236,12 @@ function updatePlayer(){
   if(KEYS.right){ P.vx+=acc; P.facing=1; }
   if(!KEYS.left&&!KEYS.right) P.vx*=P.grounded?0.82:0.96;
   P.vx=clamp(P.vx,-max,max);
-  if(KEYS.a && P.grounded && !P.jump){ P.vy=-4.6; P.grounded=false; P.jump=true; playJump(); }
+  if(KEYS.a && P.grounded && !P.jump){ P.vy=-5.3; P.grounded=false; P.jump=true; playJump(); }
   if(!KEYS.a) P.jump=false;
   P.vy+=0.23; if(P.vy>5) P.vy=5;
   P.x+=P.vx; P.y+=P.vy;
   collideWorld(P);
-  if(P.y>H+40) playerDie();
+  if(P.y>H+40){ if(P.big){P.big=false;P.h=14;P.invuln=60;P.y=H+20;P.vy=-2;} else playerDie(); }
   camX=clamp(P.x-80,0,levelWidth*TILE-W);
   const fp=map.find(t=>t.type==='flagpole');
   if(fp && !P.reachedFlag && P.x+10>fp.x*TILE){ P.reachedFlag=true; P.vx=0.8; P.vy=0; playFlag(); P.score+=P.time*50; }
@@ -249,7 +250,7 @@ function updatePlayer(){
   else if(Math.abs(P.vx)<0.1) P.frame=0;
   for(let i=items.length-1;i>=0;i--){
     const it=items[i]; it.vy+=0.2; it.x+=it.vx; it.y+=it.vy; collideWorld(it);
-    if(rectIntersect(P,it)){ if(it.type==='mushroom'){ P.big=true; P.score+=1000; play1Up(); } items.splice(i,1); }
+    if(rectIntersect(P,it)){ if(it.type==='mushroom'){ P.big=true; P.h=26; P.score+=1000; play1Up(); } items.splice(i,1); }
   }
   for(let e of enemies) updateEnemy(e);
   for(let i=fireballs.length-1;i>=0;i--){
@@ -284,8 +285,8 @@ function enemyPlayerCollide(){
     }
   }
 }
-function playerDie(){ if(P.dead) return; P.dead=true; P.deadTimer=0; P.vx=0; P.vy=-4; playDie(); stopMusic(); }
-function restartLevel(){ P.big=false; P.dead=false; loadLevel(P.levelIndex); }
+function playerDie(){ if(P.dead) return; if(P.big){P.big=false;P.h=14;P.invuln=90;playBump();return;} P.dead=true; P.deadTimer=0; P.vx=0; P.vy=-4; playDie(); stopMusic(); }
+function restartLevel(){ P.big=false; P.h=14; P.dead=false; loadLevel(P.levelIndex); }
 function levelComplete(){ playWin(); if(P.levelIndex+1<LEVELS.length){P.levelIndex++; loadLevel(P.levelIndex);} else showWin(); }
 function showGameOver(){ stopMusic(); document.getElementById('gameover-screen').classList.remove('hidden'); paused=true; }
 function showWin(){ stopMusic(); document.getElementById('win-msg').textContent=`Score: ${pad6(P.score)}  Lives: ${P.lives}`; document.getElementById('win-screen').classList.remove('hidden'); paused=true; }
@@ -506,17 +507,14 @@ function drawPlayer(){
   let sprite=SPRITE_MARIO_SMALL;
   if(!P.grounded) sprite=SPRITE_MARIO_JUMP;
   else if(Math.abs(P.vx)>0.3){ sprite=(P.frame%2===0)?SPRITE_MARIO_WALK1:SPRITE_MARIO_WALK2; }
+  const scale = P.big ? 1.85 : 1;
+  const w = sprite[0].length * scale, h = sprite.length * scale;
+  const drawX = P.big ? x - (w-12)/2 : x;
+  const drawY = P.big ? y + 14 - h : y;
   if(P.facing<0){
-    // flip horizontally by drawing to offscreen not practical; just offset and use pre-flip is hard. Draw simple mirror by pixel loop.
-    const h=sprite.length, w=sprite[0].length;
-    for(let r=0;r<h;r++) for(let c=0;c<w;c++){ const ch=sprite[r][c]; if(ch!=='.'&&ch!==' '){ ctx.fillStyle=C[ch]; ctx.fillRect(x+(w-1-c),y+r,1,1); } }
+    for(let r=0;r<sprite.length;r++) for(let c=0;c<sprite[0].length;c++){ const ch=sprite[r][c]; if(ch!=='.'&&ch!==' '){ ctx.fillStyle=C[ch]; ctx.fillRect(drawX+(sprite[0].length-1-c)*scale,drawY+r*scale,scale,scale); } }
   } else {
-    drawPixels(x,y,sprite,C);
-  }
-  if(P.big){
-    // draw big mario overlay roughly
-    ctx.fillStyle='#0000ff'; ctx.fillRect(x-1,y+14,14,10);
-    ctx.fillStyle='#ff0000'; ctx.fillRect(x-1,y+14,14,3);
+    for(let r=0;r<sprite.length;r++) for(let c=0;c<sprite[0].length;c++){ const ch=sprite[r][c]; if(ch!=='.'&&ch!==' '){ ctx.fillStyle=C[ch]; ctx.fillRect(drawX+c*scale,drawY+r*scale,scale,scale); } }
   }
 }
 
