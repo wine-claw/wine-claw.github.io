@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mechanism Lab — 2am Mini App</title>
+  <style>
+    :root {
+      --bg: #0c0f12;
+      --panel: #11171c;
+      --panel-2: #151d23;
+      --text: #e2ebf1;
+      --muted: #8fa3b0;
+      --accent: #5fa8d3;
+      --accent-2: #3d8ab8;
+      --highlight: #ff9f43;
+      --danger: #ff6b6b;
+      --ok: #58d68d;
+      --grid: #1a2229;
+      --grid-strong: #253038;
+      --border: #202b33;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.45;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .warning {
+      background: repeating-linear-gradient(45deg, rgba(255,159,67,0.12), rgba(255,159,67,0.12) 10px, rgba(255,159,67,0.05) 10px, rgba(255,159,67,0.05) 20px);
+      border-bottom: 1px solid rgba(255,159,67,0.35);
+      color: #ffe4c7;
+      padding: 8px 14px;
+      font-size: 13px;
+      text-align: center;
+      flex: 0 0 auto;
+    }
+    .warning strong { color: var(--highlight); }
+
+    .wrap {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+
+    .controls {
+      flex: 0 0 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 14px;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .stage {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg);
+      position: relative;
+    }
+
+    .stage-header {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stage-title { font-weight: 600; color: var(--accent); }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status.ok { color: var(--ok); }
+    .status.bad { color: var(--danger); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+    .svg-wrap {
+      flex: 1 1 auto;
+      position: relative;
+      overflow: hidden;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .card h2 { margin: 0 0 8px; font-size: 15px; color: var(--accent); }
+    .card p { margin: 0; font-size: 13px; color: var(--muted); }
+    .card ul { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+    .card li { margin-bottom: 3px; }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tab {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      transition: .12s;
+    }
+    .tab:hover { border-color: var(--accent-2); color: var(--text); }
+    .tab.active { background: rgba(95,168,211,0.16); border-color: var(--accent); color: var(--accent); }
+
+    .ctrl-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .ctrl-row label { font-size: 13px; color: var(--text); min-width: 110px; }
+    .value { font-size: 13px; color: var(--accent); min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+
+    input[type=range] {
+      flex: 1 1 auto;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: var(--grid-strong);
+      border-radius: 2px;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid var(--bg);
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid var(--bg);
+    }
+
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    button {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 7px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: .12s;
+    }
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    button.primary { background: rgba(95,168,211,0.18); border-color: var(--accent); color: var(--accent); }
+    button.warn { background: rgba(255,107,107,0.12); border-color: var(--danger); color: var(--danger); }
+    button.active { background: rgba(88,214,141,0.14); border-color: var(--ok); color: var(--ok); }
+
+    .toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+    .toggle input { display: none; }
+    .sw { width: 34px; height: 18px; border-radius: 9px; background: var(--grid-strong); position: relative; transition: .15s; }
+    .sw::after { content: ""; position: absolute; left: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--text); transition: .15s; }
+    .toggle input:checked + .sw { background: rgba(95,168,211,0.35); }
+    .toggle input:checked + .sw::after { left: 18px; background: var(--accent); }
+
+    .h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 4px 0; }
+
+    .overlay-msg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(17,23,28,0.94);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s;
+      text-align: center;
+      max-width: 80%;
+    }
+    .overlay-msg.show { opacity: 1; }
+
+    @media (max-width: 820px) {
+      .wrap { flex-direction: column; }
+      .controls { flex: 0 0 auto; border-right: none; border-bottom: 1px solid var(--border); max-height: 46vh; }
+      .stage { min-height: 50vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">
+    <strong>Experimental toy.</strong> This simulator is untested, idealised, and <strong>not for real engineering decisions</strong>. Use verified CAD/CAE tools for actual design work.
+  </div>
+
+  <div class="wrap">
+    <div class="controls">
+      <div class="card">
+        <div class="h3">Mechanism</div>
+        <div class="tabs" id="tabs"></div>
+      </div>
+
+      <div class="card" id="params-card">
+        <div class="h3">Dimensions</div>
+        <div id="params"></div>
+      </div>
+
+      <div class="card">
+        <div class="h3">Animation</div>
+        <div class="ctrl-row">
+          <label>RPM</label>
+          <input id="rpm" type="range" min="-120" max="120" value="30" step="1" />
+          <span class="value" id="rpm-val">30</span>
+        </div>
+        <div class="btn-row">
+          <button id="play" class="primary">Pause</button>
+          <button id="clear">Clear trace</button>
+          <button id="reset">Reset view</button>
+        </div>
+        <div class="btn-row">
+          <label class="toggle"><input id="vectors" type="checkbox" checked /><span class="sw"></span>Velocity vectors</label>
+          <label class="toggle"><input id="trace" type="checkbox" checked /><span class="sw"></span>Coupler trace</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="h3">Real-world uses</div>
+        <p id="use-text"></p>
+        <ul id="use-list"></ul>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-header">
+        <div class="stage-title" id="stage-title">Mechanism Lab</div>
+        <div class="status" id="status"><span class="dot"></span><span id="status-text">Ready</span></div>
+      </div>
+      <div class="svg-wrap">
+        <svg id="stage" viewBox="-200 -160 400 320" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,3 L0,6 L2,3 z" fill="#ff9f43" />
+            </marker>
+          </defs>
+          <g id="grid"></g>
+          <g id="ground-layer"></g>
+          <g id="trace-layer"></g>
+          <g id="links-layer"></g>
+          <g id="joints-layer"></g>
+          <g id="vectors-layer"></g>
+        </svg>
+        <div class="overlay-msg" id="fail-msg">Assembly failed: linkage can't close with these dimensions.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const SVG_W = 400, SVG_H = 320;
+      const DEG = Math.PI / 180;
+      const TWO_PI = Math.PI * 2;
+
+      const mechanisms = [
+        {
+          key: 'slider-crank',
+          name: 'Slider-Crank',
+          params: [
+            { key: 'r', label: 'Crank length', min: 10, max: 90, value: 45 },
+            { key: 'l', label: 'Rod length', min: 60, max: 220, value: 150 },
+            { key: 'e', label: 'Slider offset', min: -80, max: 80, value: 0 }
+          ],
+          info: 'Converts continuous rotation into reciprocating linear motion, or vice versa.',
+          uses: ['Internal-combustion engines (pistons)', 'Reciprocating compressors', 'Steam locomotives', 'Foot-powered sewing machines']
+        },
+        {
+          key: 'four-bar',
+          name: 'Four-Bar Crank-Rocker',
+          params: [
+            { key: 'g', label: 'Ground length', min: 60, max: 220, value: 140 },
+            { key: 'a', label: 'Crank length', min: 20, max: 90, value: 50 },
+            { key: 'b', label: 'Coupler length', min: 60, max: 220, value: 160 },
+            { key: 'c', label: 'Rocker length', min: 60, max: 180, value: 120 }
+          ],
+          info: 'A crank rotates fully while the output rocker oscillates.',
+          uses: ['Windshield wipers', 'Bicycle suspensions', 'Door closer linkages', 'Packaging machinery']
+        },
+        {
+          key: 'double-rocker',
+          name: 'Double-Rocker',
+          params: [
+            { key: 'g', label: 'Ground length', min: 40, max: 180, value: 100 },
+            { key: 'a', label: 'Input rocker', min: 80, max: 200, value: 140 },
+            { key: 'b', label: 'Coupler length', min: 40, max: 180, value: 100 },
+            { key: 'c', label: 'Output rocker', min: 80, max: 200, value: 140 }
+          ],
+          info: 'Both side links rock back and forth; the coupler traces interesting curves.',
+          uses: ['Automotive hatch lifters', 'Dump-truck bed mechanisms', 'Robotic grippers', 'Walking-machine linkages']
+        },
+        {
+          key: 'scotch-yoke',
+          name: 'Scotch Yoke',
+          params: [
+            { key: 'r', label: 'Crank pin radius', min: 15, max: 80, value: 45 },
+            { key: 'w', label: 'Yoke width', min: 50, max: 120, value: 80 }
+          ],
+          info: 'A pin in a rotating disk slides inside a vertical yoke, producing pure sinusoidal translation.',
+          uses: ['Valve actuators', 'Old film projectors', 'Reciprocating pumps', 'Sine-wave test fixtures']
+        },
+        {
+          key: 'quick-return',
+          name: 'Quick-Return',
+          params: [
+            { key: 'r', label: 'Crank length', min: 20, max: 90, value: 50 },
+            { key: 's', label: 'Slotted link length', min: 120, max: 280, value: 200 },
+            { key: 'd', label: 'Crank pivot offset', min: -80, max: 80, value: 40 }
+          ],
+          info: 'The cutting stroke is slower than the return stroke, saving idle time.',
+          uses: ['Shaping machines', 'Planing machines', 'Power hacksaws', 'Slotting machines']
+        },
+        {
+          key: 'toggle-clamp',
+          name: 'Toggle Clamp',
+          params: [
+            { key: 'a', label: 'Handle link', min: 40, max: 120, value: 80 },
+            { key: 'b', label: 'Toggle link', min: 40, max: 120, value: 80 },
+            { key: 'c', label: 'Clamp lever', min: 60, max: 160, value: 110 },
+            { key: 'd', label: 'Ground spacing', min: 20, max: 100, value: 50 },
+            { key: 'phase', label: 'Drive phase', min: 0, max: 360, value: 20 }
+          ],
+          info: 'Near the straight-line toggle position, a small input motion locks the clamp with high mechanical advantage.',
+          uses: ['Welding fixtures', 'Work-holding clamps', 'Injection-mould tooling', 'Quick-release toggle presses']
+        }
+      ];
+
+      let mech = mechanisms[0];
+      let state = {};
+      let time = 0;
+      let running = true;
+      let rpm = 30;
+      let showVectors = true;
+      let showTrace = true;
+      let trace = [];
+      let lastPt = null;
+      let scale = 1;
+      let assemblyOk = true;
+
+      const svg = document.getElementById('stage');
+      const gridLayer = document.getElementById('grid');
+      const groundLayer = document.getElementById('ground-layer');
+      const traceLayer = document.getElementById('trace-layer');
+      const linksLayer = document.getElementById('links-layer');
+      const jointsLayer = document.getElementById('joints-layer');
+      const vectorsLayer = document.getElementById('vectors-layer');
+      const tabs = document.getElementById('tabs');
+      const paramsEl = document.getElementById('params');
+      const useText = document.getElementById('use-text');
+      const useList = document.getElementById('use-list');
+      const stageTitle = document.getElementById('stage-title');
+      const statusText = document.getElementById('status-text');
+      const statusEl = document.getElementById('status');
+      const failMsg = document.getElementById('fail-msg');
+      const rpmInput = document.getElementById('rpm');
+      const rpmVal = document.getElementById('rpm-val');
+      const playBtn = document.getElementById('play');
+      const clearBtn = document.getElementById('clear');
+      const resetBtn = document.getElementById('reset');
+      const vecToggle = document.getElementById('vectors');
+      const traceToggle = document.getElementById('trace');
+
+      function setAttr(el, attrs) {
+        for (const k in attrs) el.setAttribute(k, attrs[k]);
+      }
+
+      function ns(tag) { return document.createElementNS('http://www.w3.org/2000/svg', tag); }
+
+      function vec(x, y) { return { x, y }; }
+      function add(a, b) { return vec(a.x + b.x, a.y + b.y); }
+      function sub(a, b) { return vec(a.x - b.x, a.y - b.y); }
+      function mul(a, s) { return vec(a.x * s, a.y * s); }
+      function len(a) { return Math.hypot(a.x, a.y); }
+      function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+      function rot(a, ang) {
+        const c = Math.cos(ang), s = Math.sin(ang);
+        return vec(a.x * c - a.y * s, a.x * s + a.y * c);
+      }
+      function angle(a) { return Math.atan2(a.y, a.x); }
+      function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+      function normAng(a) {
+        a = a % TWO_PI;
+        if (a < 0) a += TWO_PI;
+        return a;
+      }
+
+      function circleIntersection(p1, r1, p2, r2, sign) {
+        const d = dist(p1, p2);
+        if (d < 1e-6 || d > r1 + r2 + 1e-6 || d < Math.abs(r1 - r2) - 1e-6) return null;
+        const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d);
+        const h2 = r1 * r1 - a * a;
+        if (h2 < -1e-6) return null;
+        const h = Math.sqrt(Math.max(0, h2));
+        const base = add(p1, mul(sub(p2, p1), a / d));
+        const perp = mul(vec(-(p2.y - p1.y), p2.x - p1.x), h / d);
+        return sign > 0 ? add(base, perp) : sub(base, perp);
+      }
+
+      function makeGrid() {
+        gridLayer.innerHTML = '';
+        const step = 40;
+        const major = ns('g');
+        for (let x = -200; x <= 200; x += step) {
+          const line = ns('line');
+          setAttr(line, { x1: x, y1: -160, x2: x, y2: 160, stroke: x === 0 ? '#3d5566' : '#1e2930', 'stroke-width': x === 0 ? 1.5 : 1 });
+          major.appendChild(line);
+        }
+        for (let y = -160; y <= 160; y += step) {
+          const line = ns('line');
+          setAttr(line, { x1: -200, y1: y, x2: 200, y2: y, stroke: y === 0 ? '#3d5566' : '#1e2930', 'stroke-width': y === 0 ? 1.5 : 1 });
+          major.appendChild(line);
+        }
+        gridLayer.appendChild(major);
+      }
+
+      function buildTabs() {
+        tabs.innerHTML = '';
+        mechanisms.forEach(m => {
+          const b = document.createElement('div');
+          b.className = 'tab' + (m.key === mech.key ? ' active' : '');
+          b.textContent = m.name;
+          b.addEventListener('click', () => selectMech(m));
+          tabs.appendChild(b);
+        });
+      }
+
+      function buildParams() {
+        paramsEl.innerHTML = '';
+        mech.params.forEach(p => {
+          const row = document.createElement('div');
+          row.className = 'ctrl-row';
+          const label = document.createElement('label');
+          label.textContent = p.label;
+          const input = document.createElement('input');
+          input.type = 'range';
+          input.min = p.min;
+          input.max = p.max;
+          input.value = state[p.key];
+          input.step = 1;
+          input.dataset.key = p.key;
+          const val = document.createElement('span');
+          val.className = 'value';
+          val.id = 'val-' + p.key;
+          val.textContent = state[p.key];
+          input.addEventListener('input', () => {
+            state[p.key] = +input.value;
+            val.textContent = state[p.key];
+            trace = [];
+            lastPt = null;
+            update();
+          });
+          row.appendChild(label);
+          row.appendChild(input);
+          row.appendChild(val);
+          paramsEl.appendChild(row);
+        });
+      }
+
+      function selectMech(m) {
+        mech = m;
+        state = {};
+        mech.params.forEach(p => state[p.key] = p.value);
+        time = 0;
+        trace = [];
+        lastPt = null;
+        buildTabs();
+        buildParams();
+        useText.textContent = mech.info;
+        useList.innerHTML = '';
+        mech.uses.forEach(u => { const li = document.createElement('li'); li.textContent = u; useList.appendChild(li); });
+        stageTitle.textContent = mech.name;
+        update();
+      }
+
+      function setStatus(ok, text) {
+        assemblyOk = ok;
+        statusText.textContent = text;
+        statusEl.className = 'status' + (ok ? ' ok' : ' bad');
+        failMsg.classList.toggle('show', !ok);
+      }
+
+      function resetView() {
+        svg.setAttribute('viewBox', '-200 -160 400 320');
+        scale = 1;
+      }
+
+      function drawLine(a, b, opt) {
+        opt = opt || {};
+        const el = ns('line');
+        setAttr(el, {
+          x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+          stroke: opt.stroke || '#5fa8d3',
+          'stroke-width': opt.width || 4,
+          'stroke-linecap': 'round'
+        });
+        if (opt.dash) setAttr(el, { 'stroke-dasharray': opt.dash });
+        return el;
+      }
+
+      function drawCircle(o, r, opt) {
+        opt = opt || {};
+        const el = ns('circle');
+        setAttr(el, { cx: o.x, cy: o.y, r: r, fill: opt.fill || 'none', stroke: opt.stroke || '#5fa8d3', 'stroke-width': opt.width || 2 });
+        if (opt.dash) setAttr(el, { 'stroke-dasharray': opt.dash });
+        return el;
+      }
+
+      function drawJoint(p, opt) {
+        opt = opt || {};
+        const g = ns('g');
+        const outer = ns('circle');
+        setAttr(outer, { cx: p.x, cy: p.y, r: opt.r || 5, fill: opt.fill || '#0c0f12', stroke: opt.stroke || '#5fa8d3', 'stroke-width': 2 });
+        g.appendChild(outer);
+        if (opt.fixed) {
+          const base = ns('rect');
+          setAttr(base, { x: p.x - 10, y: p.y + 4, width: 20, height: 7, fill: '#5fa8d3' });
+          g.appendChild(base);
+          const h = ns('path');
+          setAttr(h, { d: `M${p.x-12},${p.y+11} L${p.x+12},${p.y+11}`, stroke: '#5fa8d3', 'stroke-width': 2 });
+          g.appendChild(h);
+        }
+        return g;
+      }
+
+      function drawVector(origin, v, s, label) {
+        if (len(v) < 1e-3) return null;
+        const tip = add(origin, mul(v, s));
+        const g = ns('g');
+        const line = ns('line');
+        setAttr(line, { x1: origin.x, y1: origin.y, x2: tip.x, y2: tip.y, stroke: '#ff9f43', 'stroke-width': 2, 'marker-end': 'url(#arrow)' });
+        g.appendChild(line);
+        if (label) {
+          const t = ns('text');
+          setAttr(t, { x: tip.x + 4, y: tip.y - 4, fill: '#ff9f43', 'font-size': 10 });
+          t.textContent = label;
+          g.appendChild(t);
+        }
+        return g;
+      }
+
+      function sliderCrank(theta) {
+        const r = state.r, l = state.l, e = state.e;
+        const O = vec(-80, 0);
+        const A = add(O, vec(r * Math.cos(theta), r * Math.sin(theta)));
+        const dx = A.x - O.x;
+        const psi = Math.asin(clamp((e - dx) / l, -1, 1));
+        const sliderX = A.x + l * Math.cos(psi);
+        const sliderY = e;
+        const B = vec(sliderX, sliderY);
+
+        const pts = { O, A, B };
+        const omega = rpm * 2 * Math.PI / 60;
+        const vA = mul(vec(-Math.sin(theta), Math.cos(theta)), r * omega);
+        const cosB = Math.cos(psi);
+        const vB = vec(cosB !== 0 ? (vA.x + vA.y * Math.tan(psi)) : 0, 0);
+        const vArel = sub(vA, vB);
+
+        return {
+          pts,
+          coupler: A,
+          crankTip: A,
+          links: () => {
+            const g = ns('g');
+            g.appendChild(drawLine(O, A, { stroke: '#ff9f43', width: 5 }));
+            g.appendChild(drawLine(A, B, { width: 4 }));
+            const yoke = ns('rect');
+            setAttr(yoke, { x: B.x - 16, y: B.y - 10, width: 32, height: 20, rx: 4, fill: '#151d23', stroke: '#5fa8d3', 'stroke-width': 2 });
+            g.appendChild(yoke);
+            const guide = ns('line');
+            setAttr(guide, { x1: -180, y1: e, x2: 180, y2: e, stroke: '#3d5566', 'stroke-width': 1, 'stroke-dasharray': '4 4' });
+            g.appendChild(guide);
+            return g;
+          },
+          joints: () => {
+            const g = ns('g');
+            g.appendChild(drawJoint(O, { fixed: true }));
+            g.appendChild(drawJoint(A, { fill: '#ff9f43' }));
+            g.appendChild(drawJoint(B));
+            return g;
+          },
+          vectors: () => {
+            const g = ns('g');
+            g.appendChild(drawVector(A, vA, 0.12, 'vA'));
+            g.appendChild(drawVector(B, vB, 0.12, 'vB'));
+            return g;
+          }
+        };
+      }
+
+      function fourBar(theta) {
+        const gnd = state.g, a = state.a, b = state.b, c = state.c;
+        const O = vec(-gnd / 2, 0);
+        const D = vec(gnd / 2, 0);
+        const A = add(O, vec(a * Math.cos(theta), a * Math.sin(theta)));
+        const B = circleIntersection(A, b, D, c, 1);
+        if (!B) return null;
+        const omega = rpm * 2 * Math.PI / 60;
+        const vA = mul(vec(-Math.sin(theta), Math.cos(theta)), a * omega);
+        const rBA = sub(B, A), rBD = sub(B, D);
+        const w2 = (rBA.x * vA.y - rBA.y * vA.x) / (rBA.x * rBD.y - rBA.y * rBD.x);
+        const vB = mul(vec(-rBD.y, rBD.x), w2);
+
+        return {
+          pts: { O, A, B, D },
+          coupler: B,
+          crankTip: A,
+          links: () => {
+            const g = ns('g');
+            g.appendChild(drawLine(O, A, { stroke: '#ff9f43', width: 5 }));
+            g.appendChild(drawLine(A, B, { width: 4 }));
+            g.appendChild(drawLine(D, B, { width: 4 }));
+            return g;
+          },
+          joints: () => {
+            const g = ns('g');
+            g.appendChild(drawJoint(O, { fixed: true }));
+            g.appendChild(drawJoint(D, { fixed: true }));
+            g.appendChild(drawJoint(A, { fill: '#ff9f43' }));
+            g.appendChild(drawJoint(B));
+            return g;
+          },
+          vectors: () => {
+            const g = ns('g');
+            g.appendChild(drawVector(A, vA, 0.12, 'vA'));
+            g.appendChild(drawVector(B, vB, 0.12, 'vB'));
+            return g;
+          }
+        };
+      }
+
+      function doubleRocker(theta) {
+        const gnd = state.g, a = state.a, b = state.b, c = state.c;
+        const O = vec(-gnd / 2, 0);
+        const D = vec(gnd / 2, 0);
+        const inputAng = Math.sin(theta) * 0.65;
+        const A = add(O, vec(a * Math.cos(inputAng), a * Math.sin(inputAng)));
+        const B = circleIntersection(A, b, D, c, 1);
+        if (!B) return null;
+        const omegaIn = rpm * 2 * Math.PI / 60 * Math.cos(theta);
+        const vA = mul(vec(-Math.sin(inputAng), Math.cos(inputAng)), a * omegaIn);
+        const rBA = sub(B, A), rBD = sub(B, D);
+        const denom = rBA.x * rBD.y - rBA.y * rBD.x;
+        let vB = vec(0, 0);
+        if (Math.abs(denom) > 1e-6) {
+          const w2 = (rBA.x * vA.y - rBA.y * vA.x) / denom;
+          vB = mul(vec(-rBD.y, rBD.x), w2);
+        }
+        return {
+          pts: { O, A, B, D },
+          coupler: B,
+          crankTip: A,
+          links: () => {
+            const g = ns('g');
+            g.appendChild(drawLine(O, A, { stroke: '#ff9f43', width: 5 }));
+            g.appendChild(drawLine(A, B, { width: 4 }));
+            g.appendChild(drawLine(D, B, { width: 4 }));
+            return g;
+          },
+          joints: () => {
+            const g = ns('g');
+            g.appendChild(drawJoint(O, { fixed: true }));
+            g.appendChild(drawJoint(D, { fixed: true }));
+            g.appendChild(drawJoint(A, { fill: '#ff9f43' }));
+            g.appendChild(drawJoint(B));
+            return g;
+          },
+          vectors: () => {
+            const g = ns('g');
+            g.appendChild(drawVector(A, vA, 0.12, 'vA'));
+            g.appendChild(drawVector(B, vB, 0.12, 'vB'));
+            return g;
+          }
+        };
+      }
+
+      function scotchYoke(theta) {
+        const r = state.r, w = state.w;
+        const O = vec(-60, 0);
+        const A = add(O, vec(r * Math.cos(theta), r * Math.sin(theta)));
+        const sliderX = O.x;
+        const sliderY = A.y;
+        const B = vec(sliderX, sliderY);
+        const omega = rpm * 2 * Math.PI / 60;
+        const vA = mul(vec(-Math.sin(theta), Math.cos(theta)), r * omega);
+        const vB = vec(0, vA.y);
+
+        return {
+          pts: { O, A, B },
+          coupler: B,
+          crankTip: A,
+          links: () => {
+            const g = ns('g');
+            const disk = ns('circle');
+            setAttr(disk, { cx: O.x, cy: O.y, r: r, fill: 'none', stroke: '#5fa8d3', 'stroke-width': 3 });
+            g.appendChild(disk);
+            g.appendChild(drawLine(O, A, { stroke: '#ff9f43', width: 3 }));
+            const yoke = ns('g');
+            const yokeW = w, yokeH = 80;
+            const rect = ns('rect');
+            setAttr(rect, { x: B.x - yokeW / 2, y: B.y - yokeH / 2, width: yokeW, height: yokeH, rx: 6, fill: '#151d23', stroke: '#5fa8d3', 'stroke-width': 3 });
+            yoke.appendChild(rect);
+            const slot = ns('line');
+            setAttr(slot, { x1: B.x, y1: B.y - 40, x2: B.x, y2: B.y + 40, stroke: '#0c0f12', 'stroke-width': 10 });
+            yoke.appendChild(slot);
+            g.appendChild(yoke);
+            const guide = ns('line');
+            setAttr(guide, { x1: B.x - 80, y1: -110, x2: B.x + 80, y2: -110, stroke: '#3d5566', 'stroke-width': 2 });
+            g.appendChild(guide);
+            const guide2 = ns('line');
+            setAttr(guide2, { x1: B.x - 80, y1: 110, x2: B.x + 80, y2: 110, stroke: '#3d5566', 'stroke-width': 2 });
+            g.appendChild(guide2);
+            return g;
+          },
+          joints: () => {
+            const g = ns('g');
+            g.appendChild(drawJoint(O, { fixed: true }));
+            g.appendChild(drawJoint(A, { fill: '#ff9f43', r: 4 }));
+            return g;
+          },
+          vectors: () => {
+            const g = ns('g');
+            g.appendChild(drawVector(A, vA, 0.12, 'vA'));
+            g.appendChild(drawVector(B, vB, 0.12, 'vB'));
+            return g;
+          }
+        };
+      }
+
+      function quickReturn(theta) {
+        const r = state.r, s = state.s, d = state.d;
+        const O = vec(-100, -60);
+        const P = vec(-100, d);
+        const A = add(P, vec(r * Math.cos(theta), r * Math.sin(theta)));
+        const ap = sub(A, O);
+        const baseAng = angle(ap);
+        const perp = Math.sqrt(Math.max(0, s * s - len(ap) * len(ap)));
+        const B = add(A, mul(vec(-Math.sin(baseAng), Math.cos(baseAng)), perp));
+        const C = add(B, mul(vec(Math.cos(baseAng), Math.sin(baseAng)), 100));
+        const omega = rpm * 2 * Math.PI / 60;
+        const vA = mul(vec(-Math.sin(theta), Math.cos(theta)), r * omega);
+        const along = vec(Math.cos(baseAng), Math.sin(baseAng));
+        const vB = mul(along, dot(vA, along));
+
+        return {
+          pts: { O, P, A, B, C },
+          coupler: C,
+          crankTip: A,
+          links: () => {
+            const g = ns('g');
+            g.appendChild(drawLine(P, A, { stroke: '#ff9f43', width: 4 }));
+            g.appendChild(drawLine(O, B, { width: 5 }));
+            const slot = ns('line');
+            setAttr(slot, { x1: O.x, y1: O.y - s, x2: O.x + s + 60, y2: O.y - s, stroke: '#3d5566', 'stroke-width': 2, 'stroke-dasharray': '4 4' });
+            g.appendChild(slot);
+            g.appendChild(drawLine(B, C, { width: 4, stroke: '#5fa8d3' }));
+            const ram = ns('rect');
+            setAttr(ram, { x: C.x - 18, y: C.y - 12, width: 36, height: 24, rx: 4, fill: '#151d23', stroke: '#5fa8d3', 'stroke-width': 2 });
+            g.appendChild(ram);
+            return g;
+          },
+          joints: () => {
+            const g = ns('g');
+            g.appendChild(drawJoint(P, { fixed: true }));
+            g.appendChild(drawJoint(O, { fixed: true }));
+            g.appendChild(drawJoint(A, { fill: '#ff9f43' }));
+            g.appendChild(drawJoint(B));
+            return g;
+          },
+          vectors: () => {
+            const g = ns('g');
+            g.appendChild(drawVector(A, vA, 0.12, 'vA'));
+            g.appendChild(drawVector(C, vB, 0.12, 'vC'));
+            return g;
+          }
+        };
+      }
+
+      function dot(a, b) { return a.x * b.x + a.y * b.y; }
+
+      function toggleClamp(theta) {
+        const a = state.a, b = state.b, c = state.c, d = state.d;
+        const phase = state.phase * DEG;
+        const O = vec(-d / 2, 0);
+        const D = vec(d / 2, 0);
+        const t = theta + phase;
+        const A = add(O, vec(a * Math.cos(t), a * Math.sin(t)));
+        const B = circleIntersection(A, b, D, c, 1);
+        if (!B) return null;
+        const omega = rpm * 2 * Math.PI / 60;
+        const vA = mul(vec(-Math.sin(t), Math.cos(t)), a * omega);
+        const rBA = sub(B, A), rBD = sub(B, D);
+        const denom = rBA.x * rBD.y - rBA.y * rBD.x;
+        let vB = vec(0, 0);
+        if (Math.abs(denom) > 1e-6) {
+          const w2 = (rBA.x * vA.y - rBA.y * vA.x) / denom;
+          vB = mul(vec(-rBD.y, rBD.x), w2);
+        }
+
+        return {
+          pts: { O, A, B, D },
+          coupler: B,
+          crankTip: A,
+          links: () => {
+            const g = ns('g');
+            g.appendChild(drawLine(O, A, { stroke: '#ff9f43', width: 5 }));
+            g.appendChild(drawLine(A, B, { width: 4 }));
+            g.appendChild(drawLine(D, B, { width: 4 }));
+            const pad = ns('circle');
+            const clampTip = add(B, mul(sub(B, D), c / len(sub(B, D))));
+            setAttr(pad, { cx: clampTip.x, cy: clampTip.y, r: 10, fill: 'rgba(255,159,67,0.25)', stroke: '#ff9f43', 'stroke-width': 2 });
+            g.appendChild(pad);
+            return g;
+          },
+          joints: () => {
+            const g = ns('g');
+            g.appendChild(drawJoint(O, { fixed: true }));
+            g.appendChild(drawJoint(D, { fixed: true }));
+            g.appendChild(drawJoint(A, { fill: '#ff9f43' }));
+            g.appendChild(drawJoint(B));
+            return g;
+          },
+          vectors: () => {
+            const g = ns('g');
+            g.appendChild(drawVector(A, vA, 0.12, 'vA'));
+            g.appendChild(drawVector(B, vB, 0.12, 'vB'));
+            return g;
+          }
+        };
+      }
+
+      function compute(theta) {
+        if (mech.key === 'slider-crank') return sliderCrank(theta);
+        if (mech.key === 'four-bar') return fourBar(theta);
+        if (mech.key === 'double-rocker') return doubleRocker(theta);
+        if (mech.key === 'scotch-yoke') return scotchYoke(theta);
+        if (mech.key === 'quick-return') return quickReturn(theta);
+        if (mech.key === 'toggle-clamp') return toggleClamp(theta);
+        return null;
+      }
+
+      function updateTrace(pt) {
+        if (!pt) return;
+        if (!lastPt || dist(pt, lastPt) > 1.5) {
+          trace.push({ x: pt.x, y: pt.y, t: performance.now() });
+          lastPt = pt;
+        }
+        const now = performance.now();
+        trace = trace.filter(p => now - p.t < 5000);
+        if (trace.length > 400) trace.splice(0, trace.length - 400);
+      }
+
+      function renderTrace() {
+        traceLayer.innerHTML = '';
+        if (!showTrace || trace.length < 2) return;
+        const now = performance.now();
+        const path = ns('path');
+        let d = '';
+        for (let i = 0; i < trace.length; i++) {
+          const p = trace[i];
+          const cmd = i === 0 ? 'M' : 'L';
+          d += `${cmd}${p.x.toFixed(2)},${p.y.toFixed(2)} `;
+        }
+        setAttr(path, { d: d.trim(), fill: 'none', stroke: '#ff9f43', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0.7 });
+        traceLayer.appendChild(path);
+        for (let i = 0; i < trace.length; i += 6) {
+          const p = trace[i];
+          const age = (now - p.t) / 5000;
+          const c = ns('circle');
+          setAttr(c, { cx: p.x, cy: p.y, r: 1.5 * (1 - age), fill: '#ff9f43', opacity: 0.5 * (1 - age) });
+          traceLayer.appendChild(c);
+        }
+      }
+
+      function update() {
+        const theta = time;
+        const result = compute(theta);
+        groundLayer.innerHTML = '';
+        linksLayer.innerHTML = '';
+        jointsLayer.innerHTML = '';
+        vectorsLayer.innerHTML = '';
+
+        if (!result) {
+          setStatus(false, 'Assembly failed');
+          renderTrace();
+          return;
+        }
+        setStatus(true, 'Running');
+
+        linksLayer.appendChild(result.links());
+        jointsLayer.appendChild(result.joints());
+        if (showVectors) vectorsLayer.appendChild(result.vectors());
+
+        updateTrace(result.coupler);
+        renderTrace();
+      }
+
+      let last = performance.now();
+      function loop(now) {
+        const dt = Math.min((now - last) / 1000, 0.05);
+        last = now;
+        if (running) {
+          time += rpm * 2 * Math.PI / 60 * dt;
+        }
+        update();
+        requestAnimationFrame(loop);
+      }
+
+      function handleResize() {
+        const rect = svg.getBoundingClientRect();
+        const sx = rect.width / SVG_W;
+        const sy = rect.height / SVG_H;
+        scale = Math.min(sx, sy);
+      }
+
+      window.addEventListener('resize', handleResize);
+      rpmInput.addEventListener('input', () => { rpm = +rpmInput.value; rpmVal.textContent = rpm; });
+      playBtn.addEventListener('click', () => { running = !running; playBtn.textContent = running ? 'Pause' : 'Play'; });
+      clearBtn.addEventListener('click', () => { trace = []; lastPt = null; update(); });
+      resetBtn.addEventListener('click', resetView);
+      vecToggle.addEventListener('change', () => { showVectors = vecToggle.checked; update(); });
+      traceToggle.addEventListener('change', () => { showTrace = traceToggle.checked; update(); });
+
+      makeGrid();
+      selectMech(mechanisms[0]);
+      handleResize();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

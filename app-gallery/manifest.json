@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-15",
-    "title": "Plant Grammar Lab",
-    "slug": "plant-grammar-lab",
-    "publishedSlug": "2026-06-15-plant-grammar-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-15-plant-grammar-lab/"
+    "date": "2026-06-16",
+    "title": "Mechanism Lab",
+    "slug": "mechanism-lab",
+    "publishedSlug": "2026-06-16-mechanism-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-16-mechanism-lab/"
   },
   "apps": [
+    {
+      "date": "2026-06-16",
+      "title": "Mechanism Lab",
+      "slug": "mechanism-lab",
+      "publishedSlug": "2026-06-16-mechanism-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-16-mechanism-lab/",
+      "description": "Interactive mechanical linkage simulator: build cranks, sliders, gears, and four-bar mechanisms, then watch them animate."
+    },
     {
       "date": "2026-06-15",
       "title": "Plant Grammar Lab",
