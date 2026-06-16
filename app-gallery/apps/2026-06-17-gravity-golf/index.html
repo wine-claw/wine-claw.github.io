@@ -236,7 +236,7 @@
 
   const G = 1200; // gravitational constant scaled for gameplay
   const DT = 1/60;
-  const MAX_SPEED = 320;
+  const MAX_SPEED = 160;
   const OFF_BUFFER = 80;
 
   let width, height, dpr;
@@ -608,6 +608,33 @@
       ctx.font = '12px sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText(`${Math.round(power/160*100)}% power`, b.x + 12, b.y - 12);
+
+      // predicted trajectory
+      ctx.save();
+      ctx.strokeStyle = 'rgba(63,185,80,0.25)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath();
+      let px = ball.x, py = ball.y, pvx = Math.cos(angle)*launch, pvy = Math.sin(angle)*launch;
+      for (let i=0; i<90; i++) {
+        let fx=0, fy=0, hit=false;
+        for (const p of planets) {
+          const dx = p.x - px, dy = p.y - py, d2 = dx*dx+dy*dy, d = Math.sqrt(d2);
+          if (d < p.r + ball.r + 2) { hit = true; break; }
+          const f = G * p.mass / (d2 + 80);
+          fx += f * dx / d; fy += f * dy / d;
+        }
+        if (hit) break;
+        pvx += fx * DT; pvy += fy * DT;
+        const ps = Math.hypot(pvx, pvy);
+        if (ps > MAX_SPEED) { pvx = pvx/ps*MAX_SPEED; pvy = pvy/ps*MAX_SPEED; }
+        px += pvx * DT * 60; py += pvy * DT * 60;
+        const ppt = worldToScreen(px, py);
+        if (i===0) ctx.moveTo(ppt.x, ppt.y); else ctx.lineTo(ppt.x, ppt.y);
+        if (Math.hypot(px, py) > Math.max(width, height)) break;
+      }
+      ctx.stroke();
+      ctx.restore();
     }
 
     requestAnimationFrame(draw);
@@ -697,8 +724,8 @@
     }
 
     // camera follow ball smoothly
-    camera.x += (ball.x - camera.x) * 0.12;
-    camera.y += (ball.y - camera.y) * 0.12;
+    camera.x += (ball.x - camera.x) * 0.18;
+    camera.y += (ball.y - camera.y) * 0.18;
   }
 
   let toastTimer = null;
@@ -778,7 +805,7 @@
     const power = Math.min(raw, 160) / 160; // 0..1
     if (power < 0.05) { dragStart = null; dragCurrent = null; return; }
     const angle = Math.atan2(dy, dx);
-    const launch = 35 + power * 110; // velocity magnitude
+    const launch = 18 + power * 55; // velocity magnitude
     ball.vx = Math.cos(angle) * launch;
     ball.vy = Math.sin(angle) * launch;
     state = 'flying';
