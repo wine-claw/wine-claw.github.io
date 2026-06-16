@@ -373,8 +373,8 @@
     shots = 0;
     trail = [];
     state = 'aim';
-    ball = { x: hole.start.x, y: hole.start.y, vx: 0, vy: 0, r: 5 };
-    camera = { x: 0, y: 0 };
+    ball = { x: hole.start.x, y: hole.start.y, vx: 0, vy: 0, r: 7 };
+    camera = { x: ball.x, y: ball.y }; // start with ball in centre of view
     updateStats();
     draw();
   }
@@ -396,10 +396,11 @@
   function resetBall() {
     const seed = getCourseSeed();
     const hole = generateHole(seed, holeIndex);
-    ball = { x: hole.start.x, y: hole.start.y, vx: 0, vy: 0, r: 5 };
+    ball = { x: hole.start.x, y: hole.start.y, vx: 0, vy: 0, r: 7 };
     shots = 0;
     trail = [];
     state = 'aim';
+    camera = { x: ball.x, y: ball.y };
     updateStats();
     draw();
   }
@@ -495,8 +496,8 @@
     // trail
     if (trail.length > 1) {
       ctx.save();
-      ctx.strokeStyle = 'rgba(121,192,255,0.35)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(121,192,255,0.45)';
+      ctx.lineWidth = 3;
       ctx.beginPath();
       for (let i=0;i<trail.length;i++) {
         const pt = worldToScreen(trail[i].x, trail[i].y);
@@ -534,15 +535,46 @@
       ctx.fillText(p.isTarget ? 'Target' : p.name, pos.x, pos.y + p.r + 16);
     }
 
+    // off-screen indicator
+    if (ball) {
+      const b = worldToScreen(ball.x, ball.y);
+      const pad = 24;
+      if (b.x < -pad || b.x > width+pad || b.y < -pad || b.y > height+pad) {
+        const cx = Math.max(pad, Math.min(width-pad, b.x));
+        const cy = Math.max(pad, Math.min(height-pad, b.y));
+        const angle = Math.atan2(b.y - height/2, b.x - width/2);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle + Math.PI/2);
+        ctx.fillStyle = '#79c0ff';
+        ctx.shadowColor = '#79c0ff';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.moveTo(0, -10);
+        ctx.lineTo(7, 6);
+        ctx.lineTo(0, 3);
+        ctx.lineTo(-7, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
     // ball
     if (ball) {
       const b = worldToScreen(ball.x, ball.y);
       ctx.save();
       ctx.shadowColor = '#79c0ff';
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 16;
       ctx.fillStyle = '#e6edf3';
       ctx.beginPath();
       ctx.arc(b.x, b.y, ball.r, 0, Math.PI*2);
+      ctx.fill();
+      // inner bright core
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(b.x-1, b.y-1, ball.r*0.5, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     }
@@ -636,7 +668,7 @@
     ball.y += ball.vy * DT * 60;
 
     trail.push({ x: ball.x, y: ball.y });
-    if (trail.length > 280) trail.shift();
+    if (trail.length > 400) trail.shift();
 
     // target check
     const target = planets.find(p => p.isTarget);
@@ -665,8 +697,8 @@
     }
 
     // camera follow ball smoothly
-    camera.x += (ball.x - camera.x) * 0.05;
-    camera.y += (ball.y - camera.y) * 0.05;
+    camera.x += (ball.x - camera.x) * 0.12;
+    camera.y += (ball.y - camera.y) * 0.12;
   }
 
   let toastTimer = null;
