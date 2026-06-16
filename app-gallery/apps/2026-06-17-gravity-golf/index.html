@@ -355,7 +355,7 @@
     // Target planet (not the central star)
     const targetIndex = 1 + Math.floor(rnd()*(planets.length-1));
     planets[targetIndex].isTarget = true;
-    planets[targetIndex].targetR = planets[targetIndex].r + 30;
+    planets[targetIndex].targetR = planets[targetIndex].r + 40;
 
     // Start position opposite-ish from target, but not so far that first shot has to cross the star
     const t = planets[targetIndex];
@@ -711,7 +711,7 @@
     const target = planets.find(p => p.isTarget);
     if (target) {
       const dist = Math.hypot(ball.x - target.x, ball.y - target.y);
-      if (dist < target.targetR && speed < 60) {
+      if (dist < target.targetR && speed < 100) {
         state = 'landed';
         const par = [3,3,4,4,5,4,5,3,4][holeIndex] || 4;
         const score = Math.max(1, shots);
