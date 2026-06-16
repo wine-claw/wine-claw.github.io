@@ -334,9 +334,10 @@
     });
     // Add 2-4 planetary bodies
     const n = 2 + Math.floor(rnd()*3);
+    const minPlanetDist = 260; // keep planets away from the central star so shots can pass
     for (let i=0;i<n;i++) {
       const angle = rnd()*Math.PI*2;
-      const dist = 140 + i*90 + rnd()*80;
+      const dist = minPlanetDist + i*90 + rnd()*90;
       const r = 14 + rnd()*16;
       const palette = ['#58a6ff','#3fb950','#a371f7','#f85149','#d29922'];
       const color = palette[i % palette.length];
@@ -354,12 +355,12 @@
     // Target planet (not the central star)
     const targetIndex = 1 + Math.floor(rnd()*(planets.length-1));
     planets[targetIndex].isTarget = true;
-    planets[targetIndex].targetR = planets[targetIndex].r + 18;
+    planets[targetIndex].targetR = planets[targetIndex].r + 24;
 
-    // Start position opposite-ish from target
+    // Start position opposite-ish from target, but not so far that first shot has to cross the star
     const t = planets[targetIndex];
-    const startAngle = Math.atan2(t.y, t.x) + Math.PI + (rnd()-0.5)*1.2;
-    const startDist = 280 + rnd()*100;
+    const startAngle = Math.atan2(t.y, t.x) + Math.PI + (rnd()-0.5)*0.8;
+    const startDist = 380 + rnd()*120;
     const start = { x: Math.cos(startAngle)*startDist, y: Math.sin(startAngle)*startDist };
     const par = [3,3,4,4,5,4,5,3,4][index] || 4;
     return { planets, start, par };
@@ -669,7 +670,8 @@
       const dy = p.y - ball.y;
       const d2 = dx*dx + dy*dy;
       const d = Math.sqrt(d2);
-      if (d < p.r + ball.r) {
+      const hitR = p.type === 'star' ? Math.max(p.r * 0.65, ball.r + 4) : Math.max(p.r * 0.45, ball.r + 3);
+      if (d < hitR) {
         crashed = true;
         break;
       }
