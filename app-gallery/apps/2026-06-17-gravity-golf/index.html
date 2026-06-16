@@ -686,6 +686,11 @@
 
     ball.vx += fx * DT;
     ball.vy += fy * DT;
+
+    // gentle space drag so orbits decay and shots don't instantly escape
+    ball.vx *= 0.998;
+    ball.vy *= 0.998;
+
     const speed = Math.hypot(ball.vx, ball.vy);
     if (speed > MAX_SPEED) {
       ball.vx = ball.vx / speed * MAX_SPEED;
@@ -715,8 +720,8 @@
     }
 
     // out of bounds
-    const margin = Math.max(width, height) * 0.75;
-    if (Math.hypot(ball.x, ball.y) > margin + 300) {
+    const margin = Math.max(width, height) * 1.5 + 600;
+    if (Math.hypot(ball.x, ball.y) > margin) {
       state = 'lost';
       updateStats();
       showToast('Lost in deep space. Reset and try again.');
