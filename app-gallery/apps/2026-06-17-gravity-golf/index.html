@@ -234,9 +234,9 @@
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
 
-  const G = 1200; // gravitational constant scaled for gameplay
+  const G = 600; // gravitational constant scaled for gameplay
   const DT = 1/60;
-  const MAX_SPEED = 160;
+  const MAX_SPEED = 140;
   const OFF_BUFFER = 80;
 
   let width, height, dpr;
@@ -326,7 +326,7 @@
     planets.push({
       x: 0, y: 0,
       r: 28 + rnd()*10,
-      mass: 2200 + rnd()*1200,
+      mass: 1200 + rnd()*600,
       color: '#f7b731',
       glow: '#f7b731',
       type: 'star',
@@ -345,7 +345,7 @@
         x: Math.cos(angle)*dist,
         y: Math.sin(angle)*dist,
         r,
-        mass: 120 + rnd()*240,
+        mass: 80 + rnd()*120,
         color,
         glow: color,
         type: 'planet',
@@ -355,7 +355,7 @@
     // Target planet (not the central star)
     const targetIndex = 1 + Math.floor(rnd()*(planets.length-1));
     planets[targetIndex].isTarget = true;
-    planets[targetIndex].targetR = planets[targetIndex].r + 24;
+    planets[targetIndex].targetR = planets[targetIndex].r + 30;
 
     // Start position opposite-ish from target, but not so far that first shot has to cross the star
     const t = planets[targetIndex];
@@ -616,7 +616,7 @@
       ctx.lineWidth = 3;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
-      const simLaunch = 18 + (power / 160) * 55;
+      const simLaunch = 15 + (power / 160) * 45;
       let px = ball.x, py = ball.y, pvx = Math.cos(angle)*simLaunch, pvy = Math.sin(angle)*simLaunch;
       for (let i=0; i<120; i++) {
         let fx=0, fy=0, hit=false;
@@ -711,7 +711,7 @@
     const target = planets.find(p => p.isTarget);
     if (target) {
       const dist = Math.hypot(ball.x - target.x, ball.y - target.y);
-      if (dist < target.targetR && speed < 45) {
+      if (dist < target.targetR && speed < 60) {
         state = 'landed';
         const par = [3,3,4,4,5,4,5,3,4][holeIndex] || 4;
         const score = Math.max(1, shots);
@@ -815,7 +815,7 @@
     const power = Math.min(raw, 160) / 160; // 0..1
     if (power < 0.05) { dragStart = null; dragCurrent = null; return; }
     const angle = Math.atan2(dy, dx);
-    const launch = 18 + power * 55; // velocity magnitude
+    const launch = 15 + power * 45; // velocity magnitude
     ball.vx = Math.cos(angle) * launch;
     ball.vy = Math.sin(angle) * launch;
     state = 'flying';
