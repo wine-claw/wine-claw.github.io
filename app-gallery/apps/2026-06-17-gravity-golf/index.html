@@ -612,27 +612,30 @@
 
       // predicted trajectory
       ctx.save();
-      ctx.strokeStyle = 'rgba(63,185,80,0.25)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 6]);
+      ctx.strokeStyle = 'rgba(63,185,80,0.45)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([5, 5]);
       ctx.beginPath();
-      let px = ball.x, py = ball.y, pvx = Math.cos(angle)*launch, pvy = Math.sin(angle)*launch;
-      for (let i=0; i<90; i++) {
+      const simLaunch = 18 + (power / 160) * 55;
+      let px = ball.x, py = ball.y, pvx = Math.cos(angle)*simLaunch, pvy = Math.sin(angle)*simLaunch;
+      for (let i=0; i<120; i++) {
         let fx=0, fy=0, hit=false;
         for (const p of planets) {
           const dx = p.x - px, dy = p.y - py, d2 = dx*dx+dy*dy, d = Math.sqrt(d2);
-          if (d < p.r + ball.r + 2) { hit = true; break; }
+          const hitR = p.type === 'star' ? Math.max(p.r * 0.65, ball.r + 4) : Math.max(p.r * 0.45, ball.r + 3);
+          if (d < hitR + 2) { hit = true; break; }
           const f = G * p.mass / (d2 + 80);
           fx += f * dx / d; fy += f * dy / d;
         }
         if (hit) break;
         pvx += fx * DT; pvy += fy * DT;
+        pvx *= 0.998; pvy *= 0.998;
         const ps = Math.hypot(pvx, pvy);
         if (ps > MAX_SPEED) { pvx = pvx/ps*MAX_SPEED; pvy = pvy/ps*MAX_SPEED; }
         px += pvx * DT * 60; py += pvy * DT * 60;
         const ppt = worldToScreen(px, py);
         if (i===0) ctx.moveTo(ppt.x, ppt.y); else ctx.lineTo(ppt.x, ppt.y);
-        if (Math.hypot(px, py) > Math.max(width, height)) break;
+        if (Math.hypot(px, py) > Math.max(width, height) * 1.5) break;
       }
       ctx.stroke();
       ctx.restore();
