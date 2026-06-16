@@ -253,6 +253,7 @@
   let dragCurrent = null;
   let trail = [];
   let camera = { x:0, y:0 };
+  let scale = 1;
 
   const holeNumEl = document.getElementById('holeNum');
   const scoreBoardEl = document.getElementById('scoreBoard');
@@ -282,6 +283,7 @@
     canvas.style.height = height + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (!stars.length) initStars();
+    if (ball) fitView();
     draw();
   }
 
@@ -366,6 +368,22 @@
     return { planets, start, par };
   }
 
+  function fitView() {
+    const target = planets.find(p => p.isTarget);
+    if (!ball || !target) return;
+    const pad = 140;
+    const minX = Math.min(ball.x, target.x) - pad;
+    const maxX = Math.max(ball.x, target.x) + pad;
+    const minY = Math.min(ball.y, target.y) - pad;
+    const maxY = Math.max(ball.y, target.y) + pad;
+    const worldW = maxX - minX;
+    const worldH = maxY - minY;
+    let s = Math.min(width / worldW, height / worldH);
+    s = Math.max(0.22, Math.min(s, 1.15));
+    scale = s;
+    camera = { x: (minX + maxX)/2, y: (minY + maxY)/2 };
+  }
+
   function loadHole(idx) {
     holeIndex = idx;
     const seed = getCourseSeed();
@@ -375,22 +393,22 @@
     trail = [];
     state = 'aim';
     ball = { x: hole.start.x, y: hole.start.y, vx: 0, vy: 0, r: 7 };
-    camera = { x: ball.x, y: ball.y }; // start with ball in centre of view
+    fitView();
     updateStats();
     draw();
   }
 
   function worldToScreen(wx, wy) {
     return {
-      x: width/2 + (wx - camera.x),
-      y: height/2 + (wy - camera.y)
+      x: width/2 + (wx - camera.x) * scale,
+      y: height/2 + (wy - camera.y) * scale
     };
   }
 
   function screenToWorld(sx, sy) {
     return {
-      x: sx - width/2 + camera.x,
-      y: sy - height/2 + camera.y
+      x: (sx - width/2) / scale + camera.x,
+      y: (sy - height/2) / scale + camera.y
     };
   }
 
@@ -401,7 +419,7 @@
     shots = 0;
     trail = [];
     state = 'aim';
-    camera = { x: ball.x, y: ball.y };
+    fitView();
     updateStats();
     draw();
   }
@@ -460,7 +478,7 @@
       grad.addColorStop(1, 'transparent');
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r + g, 0, Math.PI*2);
+      ctx.arc(p.x, p.y, (p.r + g) * scale, 0, Math.PI*2);
       ctx.fill();
     }
     ctx.restore();
@@ -475,7 +493,7 @@
       ctx.setLineDash([6, 4]);
       ctx.globalAlpha = 0.7 + Math.sin(Date.now()/300)*0.15;
       ctx.beginPath();
-      ctx.arc(t.x, t.y, target.targetR, 0, Math.PI*2);
+      ctx.arc(t.x, t.y, target.targetR * scale, 0, Math.PI*2);
       ctx.stroke();
       ctx.restore();
 
@@ -515,25 +533,25 @@
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.4)';
       ctx.beginPath();
-      ctx.arc(pos.x+3, pos.y+3, p.r, 0, Math.PI*2);
+      ctx.arc(pos.x+3*scale, pos.y+3*scale, p.r*scale, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
 
       // planet body gradient
-      const grad = ctx.createRadialGradient(pos.x - p.r*0.35, pos.y - p.r*0.35, p.r*0.2, pos.x, pos.y, p.r);
+      const grad = ctx.createRadialGradient(pos.x - p.r*0.35*scale, pos.y - p.r*0.35*scale, p.r*0.2*scale, pos.x, pos.y, p.r*scale);
       grad.addColorStop(0, lighten(p.color, 35));
       grad.addColorStop(0.5, p.color);
       grad.addColorStop(1, darken(p.color, 35));
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, p.r, 0, Math.PI*2);
+      ctx.arc(pos.x, pos.y, p.r*scale, 0, Math.PI*2);
       ctx.fill();
 
       // label
       ctx.fillStyle = 'rgba(230,237,243,0.85)';
       ctx.font = '11px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(p.isTarget ? 'Target' : p.name, pos.x, pos.y + p.r + 16);
+      ctx.fillText(p.isTarget ? 'Target' : p.name, pos.x, pos.y + p.r*scale + 16);
     }
 
     // off-screen indicator
@@ -569,13 +587,13 @@
       ctx.shadowBlur = 16;
       ctx.fillStyle = '#e6edf3';
       ctx.beginPath();
-      ctx.arc(b.x, b.y, ball.r, 0, Math.PI*2);
+      ctx.arc(b.x, b.y, ball.r*scale, 0, Math.PI*2);
       ctx.fill();
       // inner bright core
       ctx.shadowBlur = 0;
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(b.x-1, b.y-1, ball.r*0.5, 0, Math.PI*2);
+      ctx.arc(b.x-1*scale, b.y-1*scale, ball.r*scale*0.5, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
     }

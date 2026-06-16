@@ -28,14 +28,13 @@
 - File size >5 KB: ✓ (~24.6 KB)
 - Disclaimer banner present: ✓
 - Robots meta present: ✓
-- Extracted JS passes `node --check`: planned
-- Local HTTP smoke test 200: planned
-- Visual/layout review via canvas snapshot: planned
+- Extracted JS passes `node --check`: ✓
+- Local HTTP smoke test 200 for index.html: ✓
+- Hosted gallery and latest redirect updated: ✓ (after fast-forwarding `gh-pages` to `main`)
+- Pipeline check `mini_app_pipeline_check.py`: ✓ passes
 
 ## Status
-- App built and verified locally.
-- Publishing via `publish_mini_app.py` planned.
-- Pipeline check planned.
+- App built, verified, published, and pipeline check passing.
 
 ## Recommended next steps / caveats
 - The scoring formula is intentionally simple and could be tuned.
