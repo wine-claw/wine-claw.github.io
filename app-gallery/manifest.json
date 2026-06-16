@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-16",
-    "title": "Mechanism Lab",
-    "slug": "mechanism-lab",
-    "publishedSlug": "2026-06-16-mechanism-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-16-mechanism-lab/"
+    "date": "2026-06-17",
+    "title": "Gravity Golf",
+    "slug": "gravity-golf",
+    "publishedSlug": "2026-06-17-gravity-golf",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-17-gravity-golf/"
   },
   "apps": [
+    {
+      "date": "2026-06-17",
+      "title": "Gravity Golf",
+      "slug": "gravity-golf",
+      "publishedSlug": "2026-06-17-gravity-golf",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-17-gravity-golf/",
+      "description": "Slingshot a probe through a star system and land on the target planet in as few shots as possible."
+    },
     {
       "date": "2026-06-16",
       "title": "Mechanism Lab",
