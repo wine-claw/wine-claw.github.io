@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-17",
-    "title": "Gravity Golf",
-    "slug": "gravity-golf",
-    "publishedSlug": "2026-06-17-gravity-golf",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-17-gravity-golf/"
+    "date": "2026-06-18",
+    "title": "Firefly Sync Lab",
+    "slug": "firefly-sync",
+    "publishedSlug": "2026-06-18-firefly-sync",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-18-firefly-sync/"
   },
   "apps": [
+    {
+      "date": "2026-06-18",
+      "title": "Firefly Sync Lab",
+      "slug": "firefly-sync",
+      "publishedSlug": "2026-06-18-firefly-sync",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-18-firefly-sync/",
+      "description": "Interactive pulse-coupled firefly synchronization sandbox — tweak coupling and watch emergent rhythm."
+    },
     {
       "date": "2026-06-17",
       "title": "Gravity Golf",

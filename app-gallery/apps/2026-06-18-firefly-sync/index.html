@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Firefly Sync Lab</title>
+<style>
+  :root {
+    --bg: #05070a;
+    --panel: #0f1419;
+    --panel2: #151c24;
+    --accent: #b4ff39;
+    --accent2: #39ffe2;
+    --text: #e6f4e9;
+    --muted: #8aa39b;
+    --danger: #ff5e5e;
+    --warn: #ffd166;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+  #warning-banner {
+    background: #2a1a10;
+    border-bottom: 1px solid #553319;
+    color: #eac086;
+    padding: 8px 14px;
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: center;
+  }
+  #app {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+  }
+  header {
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--panel);
+    border-bottom: 1px solid #1c252f;
+  }
+  h1 {
+    margin: 0; font-size: 16px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h1 .firefly-icon {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent2);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+  .stats {
+    font-size: 12px; color: var(--muted);
+    display: flex; gap: 12px; align-items: center;
+    flex-wrap: wrap;
+  }
+  .stat b { color: var(--text); font-weight: 600; }
+  #sync-bar {
+    width: 90px; height: 6px; background: #22303a; border-radius: 3px; overflow: hidden;
+  }
+  #sync-fill {
+    height: 100%; width: 0%; background: linear-gradient(90deg, var(--warn), var(--accent));
+    transition: width 0.05s linear;
+  }
+  main {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(53, 90, 68, 0.12), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(66, 94, 120, 0.10), transparent 35%),
+      var(--bg);
+  }
+  canvas {
+    display: block; width: 100%; height: 100%;
+    cursor: crosshair;
+  }
+  .hint {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; color: var(--muted); pointer-events: none;
+    background: rgba(5,7,10,0.6); padding: 4px 10px; border-radius: 12px;
+    white-space: nowrap;
+  }
+  #controls {
+    background: var(--panel);
+    border-top: 1px solid #1c252f;
+    padding: 12px 16px 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px 18px;
+    max-height: 38vh;
+    overflow-y: auto;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--muted); display: flex; justify-content: space-between;
+  }
+  .field label span { font-variant-numeric: tabular-nums; }
+  input[type=range] {
+    width: 100%; accent-color: var(--accent); cursor: pointer;
+    background: transparent; -webkit-appearance: none;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 5px; background: #22303a; border-radius: 3px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+    background: var(--accent); margin-top: -5px; box-shadow: 0 0 8px rgba(180,255,57,0.35);
+  }
+  input[type=range]::-moz-range-track { height: 5px; background: #22303a; border-radius: 3px; }
+  input[type=range]::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: var(--accent); border: none; }
+  .buttons {
+    grid-column: 1 / -1;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center;
+  }
+  button {
+    background: var(--panel2); color: var(--text); border: 1px solid #2a3844;
+    border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: background 0.12s, border-color 0.12s;
+  }
+  button:hover { background: #1e2933; border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #0a0f0a; border-color: var(--accent); }
+  button.primary:hover { filter: brightness(1.08); }
+  .mode-row {
+    grid-column: 1 / -1;
+    display: flex; gap: 6px; align-items: center; justify-content: center;
+    flex-wrap: wrap; font-size: 12px; color: var(--muted);
+  }
+  .pill {
+    background: var(--panel2); border: 1px solid #2a3844; border-radius: 14px;
+    padding: 4px 10px; cursor: pointer; font-size: 11px; transition: all .12s;
+  }
+  .pill.active { background: rgba(180,255,57,0.14); border-color: var(--accent); color: var(--accent); }
+  footer {
+    grid-column: 1 / -1; font-size: 11px; color: var(--muted); text-align: center; padding-top: 4px;
+  }
+  @media (max-width: 520px) {
+    h1 { font-size: 14px; }
+    .stats { font-size: 11px; gap: 8px; }
+    #controls { grid-template-columns: 1fr 1fr; gap: 10px 12px; padding: 10px 12px 12px; }
+  }
+</style>
+</head>
+<body>
+<div id="warning-banner">
+  ⚠️ Experimental OpenClaw AI mini-app — untested, not scientifically validated. For play only; do not rely on it for decisions.
+</div>
+<div id="app">
+  <header>
+    <h1><span class="firefly-icon"></span> Firefly Sync Lab</h1>
+    <div class="stats">
+      <div>Sync <b id="sync-text">0%</b><div id="sync-bar"><div id="sync-fill"></div></div></div>
+      <div>Flash rate <b id="rate-text">0.0</b>/s</div>
+      <div>Fireflies <b id="count-text">80</b></div>
+    </div>
+  </header>
+  <main id="scene">
+    <canvas id="fireflies"></canvas>
+    <div class="hint">Tap anywhere to add a firefly. Drag to push.</div>
+  </main>
+  <div id="controls">
+    <div class="field">
+      <label>Count <span id="count-val">80</span></label>
+      <input id="count" type="range" min="10" max="200" value="80">
+    </div>
+    <div class="field">
+      <label>Coupling <span id="coupling-val">0.20</span></label>
+      <input id="coupling" type="range" min="0" max="100" value="20">
+    </div>
+    <div class="field">
+      <label>Speed spread <span id="spread-val">0.40</span></label>
+      <input id="spread" type="range" min="0" max="100" value="40">
+    </div>
+    <div class="field">
+      <label>Flash range <span id="range-val">120</span>px</label>
+      <input id="range" type="range" min="20" max="250" value="120">
+    </div>
+    <div class="field">
+      <label>Sim speed <span id="speed-val">1.0×</span></label>
+      <input id="speed" type="range" min="0" max="300" value="100">
+    </div>
+    <div class="field">
+      <label>Base tempo <span id="tempo-val">1.0 Hz</span></label>
+      <input id="tempo" type="range" min="20" max="300" value="100">
+    </div>
+    <div class="mode-row">
+      View:
+      <span class="pill active" data-mode="field">Meadow</span>
+      <span class="pill" data-mode="phase">Phase ring</span>
+      <span class="pill" data-mode="kuramoto">Kuramoto plot</span>
+    </div>
+    <div class="buttons">
+      <button id="reset" class="primary">Reset meadow</button>
+      <button id="scramble">Scramble phases</button>
+      <button id="pulse">Send one flash</button>
+      <button id="toggle">Pause</button>
+    </div>
+    <footer>Click the scene to plant fireflies. Watch them pulse into rhythm.</footer>
+  </div>
+</div>
+<script>
+(() => {
+  const canvas = document.getElementById('fireflies');
+  const ctx = canvas.getContext('2d');
+  const scene = document.getElementById('scene');
+  let W, H, DPR;
+
+  const state = {
+    count: 80,
+    coupling: 0.20,
+    spread: 0.40,
+    range: 120,
+    speed: 1.0,
+    tempo: 1.0,
+    mode: 'field',
+    running: true,
+    t: 0,
+    fireflies: []
+  };
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = scene.clientWidth; H = scene.clientHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  class Firefly {
+    constructor(x, y, locked=false) {
+      this.x = x ?? Math.random() * W;
+      this.y = y ?? Math.random() * H;
+      this.locked = locked;
+      this.phase = Math.random();
+      this.freq = 1 + (Math.random() - 0.5) * state.spread;
+      this.vx = (Math.random() - 0.5) * 8;
+      this.vy = (Math.random() - 0.5) * 8;
+      this.flashDur = 0;
+      this.color = `hsl(${100 + Math.random()*50}, 95%, 65%)`;
+      this.radius = 2.2 + Math.random() * 1.6;
+    }
+  }
+
+  function resetMeadow() {
+    state.fireflies = [];
+    for (let i = 0; i < state.count; i++) state.fireflies.push(new Firefly());
+  }
+  resetMeadow();
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function step(dt) {
+    const dt2 = dt * state.speed;
+    const range2 = state.range * state.range;
+    const meanFreq = state.fireflies.reduce((s, f) => s + f.freq, 0) / state.fireflies.length || 1;
+
+    for (const f of state.fireflies) {
+      let syncPush = 0;
+      let neighbors = 0;
+      if (state.coupling > 0) {
+        for (const o of state.fireflies) {
+          if (o === f) continue;
+          const dx = o.x - f.x, dy = o.y - f.y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 < range2 && d2 > 0.5) {
+            const strength = 1 - d2 / range2;
+            syncPush += strength * Math.sin((o.phase - f.phase) * Math.PI * 2);
+            neighbors++;
+          }
+        }
+      }
+      if (neighbors > 0) syncPush /= neighbors;
+      const dPhase = (f.freq * state.tempo + state.coupling * 5 * syncPush) * dt2;
+      f.phase = (f.phase + dPhase) % 1;
+      if (f.phase < 0) f.phase += 1;
+
+      if (f.flashDur > 0) f.flashDur -= dt2;
+      if (f.phase < dPhase && f.flashDur <= 0) {
+        f.flashDur = 0.35;
+        if (state.mode === 'field') flashRipple(f.x, f.y, f.color);
+      }
+
+      if (!f.locked && state.mode === 'field') {
+        f.x += f.vx * dt2;
+        f.y += f.vy * dt2;
+        if (f.x < 0 || f.x > W) { f.vx *= -1; f.x = clamp(f.x, 0, W); }
+        if (f.y < 0 || f.y > H) { f.vy *= -1; f.y = clamp(f.y, 0, H); }
+        f.vx += (Math.random() - 0.5) * 2 * dt2;
+        f.vy += (Math.random() - 0.5) * 2 * dt2;
+        const spd = Math.hypot(f.vx, f.vy);
+        if (spd > 30) { f.vx *= 0.92; f.vy *= 0.92; }
+      }
+    }
+  }
+
+  const ripples = [];
+  function flashRipple(x, y, color) {
+    ripples.push({x, y, r: 2, alpha: 1, color});
+  }
+
+  function orderParameter() {
+    let sx = 0, sy = 0, n = state.fireflies.length;
+    for (const f of state.fireflies) {
+      const a = f.phase * Math.PI * 2;
+      sx += Math.cos(a); sy += Math.sin(a);
+    }
+    return Math.hypot(sx, sy) / n;
+  }
+
+  function flashRate() {
+    const now = state.t;
+    let count = 0;
+    for (const f of state.fireflies) {
+      const p = (f.phase - state.tempo * state.speed * 0.01) % 1;
+      if (p < 0) p += 1;
+      if (f.phase < p) count++;
+    }
+    return count; // per integration step proxy
+  }
+
+  function drawField() {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    for (let i = ripples.length - 1; i >= 0; i--) {
+      const r = ripples[i];
+      r.r += 1.8; r.alpha -= 0.025;
+      if (r.alpha <= 0) { ripples.splice(i, 1); continue; }
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+      ctx.strokeStyle = r.color.replace(')', `, ${r.alpha})`).replace('hsl', 'hsla');
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+    for (const f of state.fireflies) {
+      const flash = f.flashDur > 0;
+      const glow = 0.35 + 0.65 * Math.sin(f.phase * Math.PI * 2);
+      const alpha = flash ? 1 : 0.4 + 0.35 * glow;
+      const r = flash ? f.radius * 2.2 : f.radius;
+      const col = flash ? f.color : f.color.replace('65%', '55%');
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = col;
+      ctx.shadowColor = col;
+      ctx.shadowBlur = flash ? 22 : 8;
+      ctx.globalAlpha = alpha;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+      if (!f.locked) {
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, state.range, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(180,255,57,${0.02 * (0.5 + 0.5*Math.sin(state.t*2 + f.x))})`;
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawRing(cx, cy, R) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(180,255,57,0.12)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const order = orderParameter();
+    const meanPhase = Math.atan2(
+      state.fireflies.reduce((s, f) => s + Math.sin(f.phase * Math.PI * 2), 0),
+      state.fireflies.reduce((s, f) => s + Math.cos(f.phase * Math.PI * 2), 0)
+    );
+    const ax = cx + Math.cos(meanPhase) * R * order;
+    const ay = cy + Math.sin(meanPhase) * R * order;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ax, ay);
+    ctx.strokeStyle = 'rgba(255,209,102,0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(ax, ay, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'var(--warn)';
+    ctx.fill();
+
+    for (const f of state.fireflies) {
+      const a = f.phase * Math.PI * 2;
+      const x = cx + Math.cos(a) * R;
+      const y = cy + Math.sin(a) * R;
+      const flash = f.flashDur > 0;
+      ctx.beginPath();
+      ctx.arc(x, y, flash ? 5 : 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = f.color;
+      ctx.shadowColor = f.color;
+      ctx.shadowBlur = flash ? 18 : 6;
+      ctx.globalAlpha = flash ? 1 : 0.75;
+      ctx.fill();
+      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawKuramoto() {
+    const pad = 28, plotW = W - pad*2, plotH = H - pad*2 - 24;
+    const left = pad, top = pad + 24;
+    ctx.strokeStyle = 'rgba(180,255,57,0.15)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(left, top, plotW, plotH);
+    ctx.fillStyle = 'rgba(138,163,155,0.6)';
+    ctx.font = '11px system-ui';
+    ctx.fillText('Time →', left + plotW - 40, top + plotH + 14);
+    ctx.fillText('Phase', left - 22, top - 8);
+
+    const now = state.t;
+    const tWindow = 8; // seconds of history
+    for (let i = 0; i < state.fireflies.length; i += Math.max(1, Math.floor(state.fireflies.length / 40))) {
+      const f = state.fireflies[i];
+      ctx.beginPath();
+      ctx.strokeStyle = f.color.replace('65%', '55%');
+      ctx.lineWidth = 1;
+      for (let j = 0; j < 60; j++) {
+        const tBack = j / 60 * tWindow;
+        let phaseAt = (f.phase - state.tempo * state.speed * tBack) % 1;
+        if (phaseAt < 0) phaseAt += 1;
+        const x = left + plotW * (1 - tBack / tWindow);
+        const y = top + plotH * (1 - phaseAt);
+        if (j === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    if (state.mode === 'field') drawField();
+    else if (state.mode === 'phase') drawRing(W/2, H/2, Math.min(W, H) * 0.36);
+    else {
+      drawKuramoto();
+    }
+  }
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min((now - last) / 1000, 0.04);
+    last = now;
+    if (state.running) {
+      step(dt);
+      state.t += dt;
+    }
+    draw();
+
+    const order = orderParameter();
+    document.getElementById('sync-text').textContent = Math.round(order * 100) + '%';
+    document.getElementById('sync-fill').style.width = Math.round(order * 100) + '%';
+    document.getElementById('count-text').textContent = state.fireflies.length;
+    document.getElementById('rate-text').textContent = (state.tempo * state.speed).toFixed(1);
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function setCount(n) {
+    state.count = n;
+    const diff = n - state.fireflies.length;
+    if (diff > 0) for (let i = 0; i < diff; i++) state.fireflies.push(new Firefly());
+    else state.fireflies.splice(0, -diff);
+    document.getElementById('count-val').textContent = n;
+    document.getElementById('count-text').textContent = n;
+  }
+
+  function bind(id, key, fmt, scale=1, offset=0) {
+    const el = document.getElementById(id);
+    el.addEventListener('input', e => {
+      const v = Number(e.target.value) * scale + offset;
+      state[key] = v;
+      document.getElementById(id + '-val').textContent = fmt(v);
+    });
+  }
+  bind('count', 'countRaw', v => v, 1, 0);
+  document.getElementById('count').addEventListener('input', e => setCount(Number(e.target.value)));
+  bind('coupling', 'coupling', v => v.toFixed(2), 0.01, 0);
+  bind('spread', 'spread', v => v.toFixed(2), 0.01, 0);
+  bind('range', 'range', v => v.toFixed(0), 1, 0);
+  bind('speed', 'speed', v => v.toFixed(1) + '×', 0.01, 0);
+  bind('tempo', 'tempo', v => v.toFixed(1) + ' Hz', 0.01, 0);
+
+  document.querySelectorAll('.pill').forEach(p => p.addEventListener('click', () => {
+    document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    state.mode = p.dataset.mode;
+    ripples.length = 0;
+  }));
+
+  document.getElementById('reset').addEventListener('click', () => {
+    resetMeadow(); ripples.length = 0; state.t = 0;
+  });
+  document.getElementById('scramble').addEventListener('click', () => {
+    state.fireflies.forEach(f => f.phase = Math.random());
+  });
+  document.getElementById('pulse').addEventListener('click', () => {
+    state.fireflies.forEach(f => f.flashDur = 0.25);
+  });
+  const toggleBtn = document.getElementById('toggle');
+  toggleBtn.addEventListener('click', () => {
+    state.running = !state.running;
+    toggleBtn.textContent = state.running ? 'Pause' : 'Resume';
+  });
+
+  canvas.addEventListener('pointerdown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (state.fireflies.length < 250) {
+      const f = new Firefly(x, y, true);
+      f.locked = true;
+      state.fireflies.push(f);
+      setCount(state.fireflies.length);
+      document.getElementById('count').value = state.fireflies.length;
+    }
+  });
+
+  document.getElementById('range').addEventListener('input', e => {
+    state.range = Number(e.target.value);
+    document.getElementById('range-val').textContent = state.range;
+  });
+})();
+</script>
+</body>
+</html>
