@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-18",
-    "title": "Firefly Sync Lab",
-    "slug": "firefly-sync",
-    "publishedSlug": "2026-06-18-firefly-sync",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-18-firefly-sync/"
+    "date": "2026-06-19",
+    "title": "Reaction-Diffusion Lab",
+    "slug": "reaction-diffusion-lab",
+    "publishedSlug": "2026-06-19-reaction-diffusion-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-19-reaction-diffusion-lab/"
   },
   "apps": [
+    {
+      "date": "2026-06-19",
+      "title": "Reaction-Diffusion Lab",
+      "slug": "reaction-diffusion-lab",
+      "publishedSlug": "2026-06-19-reaction-diffusion-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-19-reaction-diffusion-lab/",
+      "description": "Interactive Gray-Scott pattern formation sandbox"
+    },
     {
       "date": "2026-06-18",
       "title": "Firefly Sync Lab",

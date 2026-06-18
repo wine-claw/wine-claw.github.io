@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex">
+<title>Reaction-Diffusion Lab</title>
+<style>
+  :root {
+    --bg: #081016;
+    --bg2: #101d28;
+    --panel: rgba(11, 18, 26, 0.82);
+    --panel-strong: rgba(8, 14, 20, 0.94);
+    --line: rgba(164, 220, 196, 0.18);
+    --text: #e7f5ec;
+    --muted: #9cb6aa;
+    --accent: #87ffbf;
+    --accent-2: #5cd4ff;
+    --warn: #f6bb72;
+    --shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background:
+      radial-gradient(circle at top left, rgba(92, 212, 255, 0.13), transparent 34%),
+      radial-gradient(circle at 85% 20%, rgba(135, 255, 191, 0.11), transparent 30%),
+      linear-gradient(180deg, #0c1620 0%, #071016 100%);
+    color: var(--text);
+    font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  body {
+    touch-action: none;
+  }
+
+  #app {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    min-height: 100vh;
+  }
+
+  .warning {
+    padding: 9px 14px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #ffd6a2;
+    background: linear-gradient(90deg, rgba(71, 38, 10, 0.95), rgba(54, 28, 11, 0.95));
+    border-bottom: 1px solid rgba(255, 179, 92, 0.28);
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px 12px;
+  }
+
+  .title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(1.35rem, 2vw, 1.8rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    max-width: 60ch;
+  }
+
+  .status-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .pill {
+    padding: 7px 10px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+  }
+
+  .pill b {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .preset-strip {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 0 18px 14px;
+    scrollbar-width: thin;
+  }
+
+  .preset-btn {
+    min-width: 108px;
+    padding: 10px 12px;
+    border: 1px solid rgba(130, 199, 170, 0.18);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(18, 31, 42, 0.95), rgba(10, 18, 25, 0.95));
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    box-shadow: var(--shadow);
+  }
+
+  .preset-btn strong {
+    display: block;
+    font-size: 0.92rem;
+  }
+
+  .preset-btn span {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.74rem;
+  }
+
+  .preset-btn.active {
+    border-color: rgba(135, 255, 191, 0.7);
+    box-shadow: 0 0 0 1px rgba(135, 255, 191, 0.25), var(--shadow);
+    background: linear-gradient(180deg, rgba(24, 48, 43, 0.98), rgba(11, 24, 19, 0.98));
+  }
+
+  main {
+    position: relative;
+    min-height: 0;
+    padding: 0 12px 12px;
+  }
+
+  .stage {
+    position: relative;
+    height: 100%;
+    min-height: 320px;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: var(--shadow);
+    background:
+      linear-gradient(180deg, rgba(10, 16, 22, 0.92), rgba(4, 8, 12, 0.98)),
+      linear-gradient(120deg, rgba(92, 212, 255, 0.08), transparent 45%);
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+  }
+
+  .stage-overlay {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    pointer-events: none;
+  }
+
+  .overlay-card {
+    pointer-events: auto;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: var(--panel);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(16px);
+    max-width: min(40ch, 72vw);
+  }
+
+  .overlay-card h2 {
+    margin: 0 0 3px;
+    font-size: 0.84rem;
+  }
+
+  .overlay-card p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 14px;
+    padding: 14px 12px 18px;
+  }
+
+  .panel {
+    background: var(--panel-strong);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .panel h3 {
+    margin: 0 0 12px;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .slider-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .field label {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .field output {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    appearance: none;
+    background: transparent;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(92, 212, 255, 0.55), rgba(135, 255, 191, 0.55));
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: -6px;
+    border-radius: 50%;
+    border: 0;
+    background: #f4fff8;
+    box-shadow: 0 0 0 3px rgba(135, 255, 191, 0.18);
+  }
+
+  input[type="range"]::-moz-range-track {
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(92, 212, 255, 0.55), rgba(135, 255, 191, 0.55));
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 0;
+    background: #f4fff8;
+    box-shadow: 0 0 0 3px rgba(135, 255, 191, 0.18);
+  }
+
+  .button-row,
+  .ramp-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(24, 39, 52, 0.98), rgba(12, 19, 27, 0.98));
+    color: var(--text);
+    padding: 10px 13px;
+    font: inherit;
+    font-size: 0.84rem;
+    cursor: pointer;
+  }
+
+  button:hover {
+    border-color: rgba(135, 255, 191, 0.38);
+  }
+
+  button.primary {
+    background: linear-gradient(180deg, rgba(127, 255, 190, 0.92), rgba(62, 210, 241, 0.95));
+    color: #041014;
+    border-color: rgba(135, 255, 191, 0.8);
+    font-weight: 700;
+  }
+
+  .ramp-btn.active {
+    border-color: rgba(135, 255, 191, 0.64);
+    box-shadow: 0 0 0 1px rgba(135, 255, 191, 0.26) inset;
+  }
+
+  .swatch {
+    display: inline-block;
+    width: 40px;
+    height: 10px;
+    border-radius: 999px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .legend {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  @media (max-width: 880px) {
+    .controls {
+      grid-template-columns: 1fr;
+    }
+
+    .slider-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    header {
+      flex-direction: column;
+    }
+
+    .status-pills {
+      justify-content: flex-start;
+    }
+
+    .slider-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .preset-strip {
+      padding-bottom: 10px;
+    }
+
+    .stage-overlay {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .overlay-card {
+      max-width: calc(100% - 8px);
+    }
+
+    .controls {
+      padding-top: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="warning">Experimental OpenClaw AI mini-app. Gray-Scott pattern toy only; unreviewed, unvalidated, and not suitable for scientific or operational decisions.</div>
+  <header>
+    <div class="title-group">
+      <h1>Reaction-Diffusion Lab</h1>
+      <p class="subtitle">Interactive Gray-Scott pattern formation sandbox. Paint reagent B into the dish, switch Pearson-style presets, and watch spots, stripes, worms, and coral emerge.</p>
+    </div>
+    <div class="status-pills">
+      <div class="pill">Preset <b id="presetName">Coral</b></div>
+      <div class="pill">State spread <b id="activityValue">0.000</b></div>
+      <div class="pill">Cells <b id="gridValue">0 x 0</b></div>
+      <div class="pill">Mode <b id="modeValue">Running</b></div>
+    </div>
+  </header>
+
+  <div class="preset-strip" id="presetStrip"></div>
+
+  <main>
+    <div class="stage" id="stage">
+      <canvas id="sim"></canvas>
+      <div class="stage-overlay">
+        <div class="overlay-card">
+          <h2>Paint interaction</h2>
+          <p>Tap or drag on the field to inject chemical B. Reset recenters the dish with the current preset's seed pattern.</p>
+        </div>
+        <div class="overlay-card">
+          <h2>Color ramps</h2>
+          <p>Thermal emphasizes fronts, Neon exaggerates activator spikes, and Biological keeps the dish closer to a wet-lab palette.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <section class="controls">
+    <div class="panel">
+      <h3>Parameters</h3>
+      <div class="slider-grid">
+        <div class="field">
+          <label for="feed">Feed F <output id="feedOut">0.0545</output></label>
+          <input id="feed" type="range" min="0.005" max="0.095" step="0.0001" value="0.0545">
+        </div>
+        <div class="field">
+          <label for="kill">Kill k <output id="killOut">0.0620</output></label>
+          <input id="kill" type="range" min="0.035" max="0.075" step="0.0001" value="0.0620">
+        </div>
+        <div class="field">
+          <label for="diffA">Diffusion A <output id="diffAOut">1.000</output></label>
+          <input id="diffA" type="range" min="0.4" max="1.6" step="0.001" value="1.000">
+        </div>
+        <div class="field">
+          <label for="diffB">Diffusion B <output id="diffBOut">0.500</output></label>
+          <input id="diffB" type="range" min="0.1" max="0.9" step="0.001" value="0.500">
+        </div>
+        <div class="field">
+          <label for="speed">Solver speed <output id="speedOut">1.00x</output></label>
+          <input id="speed" type="range" min="0.25" max="2.5" step="0.01" value="1.00">
+        </div>
+        <div class="field">
+          <label for="brush">Brush radius <output id="brushOut">18 px</output></label>
+          <input id="brush" type="range" min="6" max="42" step="1" value="18">
+        </div>
+      </div>
+      <p class="legend">Classic Gray-Scott controls: F adds reagent A, k removes B, and the diffusion rates determine how quickly each reagent spreads across the grid.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Controls</h3>
+      <div class="button-row">
+        <button class="primary" id="toggleBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="stepBtn">Step</button>
+        <button id="clearBtn">Clear</button>
+        <button id="reseedBtn">Reseed</button>
+      </div>
+      <h3 style="margin-top: 16px;">Palette</h3>
+      <div class="ramp-row" id="rampRow">
+        <button class="ramp-btn active" data-ramp="thermal"><span class="swatch" style="background:linear-gradient(90deg,#0a1320,#64206f,#f36f3c,#ffe6a6);"></span>Thermal</button>
+        <button class="ramp-btn" data-ramp="neon"><span class="swatch" style="background:linear-gradient(90deg,#04060a,#2e185c,#09d8ff,#b8ff59);"></span>Neon</button>
+        <button class="ramp-btn" data-ramp="biological"><span class="swatch" style="background:linear-gradient(90deg,#061115,#0d5a54,#7ac86f,#dcedb8);"></span>Biological</button>
+      </div>
+      <p class="legend">The solver runs immediately on load. If a preset settles into a frozen state, pause and paint a fresh disturbance, or hit Reseed to restart the dish.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const presets = {
+    Coral: { feed: 0.0545, kill: 0.0620, diffA: 1.0, diffB: 0.50, note: "Branching reef-like fronts" },
+    Spots: { feed: 0.0350, kill: 0.0625, diffA: 1.0, diffB: 0.50, note: "Separated leopard spots" },
+    Stripes: { feed: 0.0215, kill: 0.0510, diffA: 1.0, diffB: 0.50, note: "Labyrinth stripes" },
+    Mitosis: { feed: 0.0367, kill: 0.0649, diffA: 1.0, diffB: 0.50, note: "Splitting cell clusters" },
+    Worms: { feed: 0.0780, kill: 0.0610, diffA: 1.0, diffB: 0.48, note: "Moving worm trails" },
+    Chaos: { feed: 0.0260, kill: 0.0510, diffA: 1.0, diffB: 0.53, note: "Restless turbulent texture" }
+  };
+
+  const ramps = {
+    thermal(t) {
+      return multiStop(t, [
+        [0.00, [8, 13, 24]],
+        [0.28, [59, 23, 84]],
+        [0.56, [144, 43, 120]],
+        [0.78, [243, 108, 54]],
+        [1.00, [255, 233, 176]]
+      ]);
+    },
+    neon(t) {
+      return multiStop(t, [
+        [0.00, [3, 5, 8]],
+        [0.25, [36, 20, 89]],
+        [0.50, [8, 124, 220]],
+        [0.72, [14, 227, 255]],
+        [1.00, [184, 255, 89]]
+      ]);
+    },
+    biological(t) {
+      return multiStop(t, [
+        [0.00, [5, 18, 22]],
+        [0.22, [10, 67, 74]],
+        [0.50, [29, 123, 99]],
+        [0.78, [120, 196, 99]],
+        [1.00, [227, 237, 187]]
+      ]);
+    }
+  };
+
+  const canvas = document.getElementById("sim");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  const scratchCanvas = document.createElement("canvas");
+  const scratchCtx = scratchCanvas.getContext("2d", { alpha: false });
+
+  const presetStrip = document.getElementById("presetStrip");
+  const toggleBtn = document.getElementById("toggleBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const stepBtn = document.getElementById("stepBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const reseedBtn = document.getElementById("reseedBtn");
+
+  const feedInput = document.getElementById("feed");
+  const killInput = document.getElementById("kill");
+  const diffAInput = document.getElementById("diffA");
+  const diffBInput = document.getElementById("diffB");
+  const speedInput = document.getElementById("speed");
+  const brushInput = document.getElementById("brush");
+
+  const presetName = document.getElementById("presetName");
+  const activityValue = document.getElementById("activityValue");
+  const gridValue = document.getElementById("gridValue");
+  const modeValue = document.getElementById("modeValue");
+
+  const valueOutputs = {
+    feed: document.getElementById("feedOut"),
+    kill: document.getElementById("killOut"),
+    diffA: document.getElementById("diffAOut"),
+    diffB: document.getElementById("diffBOut"),
+    speed: document.getElementById("speedOut"),
+    brush: document.getElementById("brushOut")
+  };
+
+  let currentPreset = "Coral";
+  let activeRamp = "thermal";
+  let running = true;
+  let lastTime = 0;
+  let width = 0;
+  let height = 0;
+  let simW = 0;
+  let simH = 0;
+  let brushRadius = Number(brushInput.value);
+  let diffA = Number(diffAInput.value);
+  let diffB = Number(diffBInput.value);
+  let feed = Number(feedInput.value);
+  let kill = Number(killInput.value);
+  let speed = Number(speedInput.value);
+  let imageData;
+  let a;
+  let b;
+  let nextA;
+  let nextB;
+  let pointerDown = false;
+  let renderFrame = 0;
+  const maxCells = 105000;
+  const dt = 1;
+
+  function multiStop(t, stops) {
+    const clamped = clamp(t, 0, 1);
+    for (let i = 0; i < stops.length - 1; i += 1) {
+      const [s0, c0] = stops[i];
+      const [s1, c1] = stops[i + 1];
+      if (clamped >= s0 && clamped <= s1) {
+        const p = (clamped - s0) / (s1 - s0 || 1);
+        return [
+          Math.round(c0[0] + (c1[0] - c0[0]) * p),
+          Math.round(c0[1] + (c1[1] - c0[1]) * p),
+          Math.round(c0[2] + (c1[2] - c0[2]) * p)
+        ];
+      }
+    }
+    return stops[stops.length - 1][1];
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function formatValues() {
+    valueOutputs.feed.value = feed.toFixed(4);
+    valueOutputs.kill.value = kill.toFixed(4);
+    valueOutputs.diffA.value = diffA.toFixed(3);
+    valueOutputs.diffB.value = diffB.toFixed(3);
+    valueOutputs.speed.value = `${speed.toFixed(2)}x`;
+    valueOutputs.brush.value = `${brushRadius} px`;
+  }
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = Math.max(240, Math.round(rect.width));
+    height = Math.max(240, Math.round(rect.height));
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+
+    const targetArea = width * height;
+    const simScale = Math.min(0.5, Math.sqrt(maxCells / Math.max(1, targetArea)));
+    simW = Math.max(110, Math.round(width * simScale));
+    simH = Math.max(110, Math.round(height * simScale));
+    scratchCanvas.width = simW;
+    scratchCanvas.height = simH;
+    imageData = scratchCtx.createImageData(simW, simH);
+    allocateGrids();
+    seedCurrentPreset();
+    gridValue.textContent = `${simW} x ${simH}`;
+  }
+
+  function allocateGrids() {
+    const size = simW * simH;
+    a = new Float32Array(size);
+    b = new Float32Array(size);
+    nextA = new Float32Array(size);
+    nextB = new Float32Array(size);
+  }
+
+  function clearChemicals() {
+    a.fill(1);
+    b.fill(0);
+  }
+
+  function stamp(x, y, radius, amount = 1) {
+    const r = Math.max(1, Math.round(radius));
+    const rr = r * r;
+    for (let dy = -r; dy <= r; dy += 1) {
+      for (let dx = -r; dx <= r; dx += 1) {
+        if ((dx * dx) + (dy * dy) > rr) {
+          continue;
+        }
+        const px = clamp(x + dx, 0, simW - 1);
+        const py = clamp(y + dy, 0, simH - 1);
+        const idx = py * simW + px;
+        const falloff = 1 - Math.sqrt((dx * dx) + (dy * dy)) / r;
+        b[idx] = Math.max(b[idx], amount * falloff);
+        a[idx] = Math.min(a[idx], 1 - amount * 0.65 * falloff);
+      }
+    }
+  }
+
+  function sprinkle(count, radiusMin, radiusMax) {
+    for (let i = 0; i < count; i += 1) {
+      const x = Math.floor(Math.random() * simW);
+      const y = Math.floor(Math.random() * simH);
+      const radius = radiusMin + Math.random() * (radiusMax - radiusMin);
+      stamp(x, y, radius, 1);
+    }
+  }
+
+  function seedCurrentPreset() {
+    clearChemicals();
+    const cx = Math.floor(simW / 2);
+    const cy = Math.floor(simH / 2);
+    const size = Math.min(simW, simH);
+    switch (currentPreset) {
+      case "Coral":
+        sprinkle(16, size * 0.018, size * 0.042);
+        stamp(cx, cy, size * 0.085, 1);
+        break;
+      case "Spots":
+        sprinkle(9, size * 0.024, size * 0.038);
+        break;
+      case "Stripes":
+        for (let i = -2; i <= 2; i += 1) {
+          stamp(cx + i * size * 0.08, cy + i * size * 0.03, size * 0.045, 1);
+        }
+        break;
+      case "Mitosis":
+        stamp(cx - size * 0.06, cy, size * 0.07, 1);
+        stamp(cx + size * 0.06, cy, size * 0.07, 1);
+        sprinkle(5, size * 0.016, size * 0.026);
+        break;
+      case "Worms":
+        for (let i = 0; i < 7; i += 1) {
+          stamp(cx - size * 0.18 + i * size * 0.06, cy + ((i % 2) * 2 - 1) * size * 0.03, size * 0.028, 1);
+        }
+        break;
+      case "Chaos":
+        sprinkle(24, size * 0.012, size * 0.03);
+        break;
+      default:
+        stamp(cx, cy, size * 0.07, 1);
+        break;
+    }
+    for (let i = 0; i < b.length; i += 1) {
+      if (b[i] > 0) {
+        b[i] = clamp(b[i] + (Math.random() - 0.5) * 0.04, 0, 1);
+      }
+    }
+  }
+
+  function seedFromPointer(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * simW;
+    const y = ((clientY - rect.top) / rect.height) * simH;
+    const simRadius = Math.max(2, (brushRadius / rect.width) * simW);
+    stamp(Math.floor(x), Math.floor(y), simRadius, 1);
+  }
+
+  function lap(field, x, y, idx) {
+    const xm = x === 0 ? simW - 1 : x - 1;
+    const xp = x === simW - 1 ? 0 : x + 1;
+    const ym = y === 0 ? simH - 1 : y - 1;
+    const yp = y === simH - 1 ? 0 : y + 1;
+    return (
+      field[idx] * -1 +
+      field[y * simW + xm] * 0.2 +
+      field[y * simW + xp] * 0.2 +
+      field[ym * simW + x] * 0.2 +
+      field[yp * simW + x] * 0.2 +
+      field[ym * simW + xm] * 0.05 +
+      field[ym * simW + xp] * 0.05 +
+      field[yp * simW + xm] * 0.05 +
+      field[yp * simW + xp] * 0.05
+    );
+  }
+
+  function stepSolver(iterations) {
+    let activity = 0;
+    for (let step = 0; step < iterations; step += 1) {
+      activity = 0;
+      for (let y = 0; y < simH; y += 1) {
+        for (let x = 0; x < simW; x += 1) {
+          const idx = y * simW + x;
+          const av = a[idx];
+          const bv = b[idx];
+          const reaction = av * bv * bv;
+          const nextAv = av + (diffA * lap(a, x, y, idx) - reaction + feed * (1 - av)) * dt;
+          const nextBv = bv + (diffB * lap(b, x, y, idx) + reaction - (kill + feed) * bv) * dt;
+          const clampedA = clamp(nextAv, 0, 1);
+          const clampedB = clamp(nextBv, 0, 1);
+          nextA[idx] = clampedA;
+          nextB[idx] = clampedB;
+          activity += Math.abs(clampedB - bv);
+        }
+      }
+      [a, nextA] = [nextA, a];
+      [b, nextB] = [nextB, b];
+    }
+    activityValue.textContent = (activity / (simW * simH)).toFixed(3);
+  }
+
+  function render() {
+    const pixels = imageData.data;
+    const ramp = ramps[activeRamp];
+    for (let i = 0; i < b.length; i += 1) {
+      const intensity = clamp((b[i] * 1.55) - (a[i] * 0.18) + 0.08, 0, 1);
+      const [r, g, bl] = ramp(intensity);
+      const p = i * 4;
+      pixels[p] = r;
+      pixels[p + 1] = g;
+      pixels[p + 2] = bl;
+      pixels[p + 3] = 255;
+    }
+    scratchCtx.putImageData(imageData, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.drawImage(scratchCanvas, 0, 0, width, height);
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+    ctx.restore();
+  }
+
+  function updatePresetButtons() {
+    presetName.textContent = currentPreset;
+    [...presetStrip.querySelectorAll(".preset-btn")].forEach((button) => {
+      button.classList.toggle("active", button.dataset.preset === currentPreset);
+    });
+  }
+
+  function setPreset(name) {
+    const preset = presets[name];
+    if (!preset) {
+      return;
+    }
+    currentPreset = name;
+    feed = preset.feed;
+    kill = preset.kill;
+    diffA = preset.diffA;
+    diffB = preset.diffB;
+    feedInput.value = feed.toFixed(4);
+    killInput.value = kill.toFixed(4);
+    diffAInput.value = diffA.toFixed(3);
+    diffBInput.value = diffB.toFixed(3);
+    updatePresetButtons();
+    formatValues();
+    seedCurrentPreset();
+    render();
+  }
+
+  function markCustomIfNeeded() {
+    const preset = presets[currentPreset];
+    if (!preset) {
+      return;
+    }
+    const matchesPreset =
+      Math.abs(feed - preset.feed) < 0.00005 &&
+      Math.abs(kill - preset.kill) < 0.00005 &&
+      Math.abs(diffA - preset.diffA) < 0.0005 &&
+      Math.abs(diffB - preset.diffB) < 0.0005;
+    presetName.textContent = matchesPreset ? currentPreset : "Custom";
+    [...presetStrip.querySelectorAll(".preset-btn")].forEach((button) => {
+      button.classList.toggle("active", matchesPreset && button.dataset.preset === currentPreset);
+    });
+  }
+
+  function buildPresetButtons() {
+    Object.entries(presets).forEach(([name, preset]) => {
+      const button = document.createElement("button");
+      button.className = "preset-btn";
+      button.dataset.preset = name;
+      button.innerHTML = `<strong>${name}</strong><span>${preset.note}</span>`;
+      button.addEventListener("click", () => setPreset(name));
+      presetStrip.appendChild(button);
+    });
+    updatePresetButtons();
+  }
+
+  function setRunning(value) {
+    running = value;
+    toggleBtn.textContent = running ? "Pause" : "Play";
+    toggleBtn.classList.toggle("primary", running);
+    modeValue.textContent = running ? "Running" : "Paused";
+  }
+
+  function attachInputs() {
+    feedInput.addEventListener("input", () => {
+      feed = Number(feedInput.value);
+      formatValues();
+      markCustomIfNeeded();
+    });
+    killInput.addEventListener("input", () => {
+      kill = Number(killInput.value);
+      formatValues();
+      markCustomIfNeeded();
+    });
+    diffAInput.addEventListener("input", () => {
+      diffA = Number(diffAInput.value);
+      formatValues();
+      markCustomIfNeeded();
+    });
+    diffBInput.addEventListener("input", () => {
+      diffB = Number(diffBInput.value);
+      formatValues();
+      markCustomIfNeeded();
+    });
+    speedInput.addEventListener("input", () => {
+      speed = Number(speedInput.value);
+      formatValues();
+    });
+    brushInput.addEventListener("input", () => {
+      brushRadius = Number(brushInput.value);
+      formatValues();
+    });
+
+    toggleBtn.addEventListener("click", () => setRunning(!running));
+    resetBtn.addEventListener("click", () => {
+      seedCurrentPreset();
+      render();
+    });
+    stepBtn.addEventListener("click", () => {
+      setRunning(false);
+      stepSolver(10);
+      render();
+    });
+    clearBtn.addEventListener("click", () => {
+      clearChemicals();
+      render();
+    });
+    reseedBtn.addEventListener("click", () => {
+      seedCurrentPreset();
+      stepSolver(10);
+      render();
+    });
+
+    [...document.querySelectorAll(".ramp-btn")].forEach((button) => {
+      button.addEventListener("click", () => {
+        activeRamp = button.dataset.ramp;
+        document.querySelectorAll(".ramp-btn").forEach((candidate) => {
+          candidate.classList.toggle("active", candidate === button);
+        });
+        render();
+      });
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      pointerDown = true;
+      canvas.setPointerCapture(event.pointerId);
+      seedFromPointer(event.clientX, event.clientY);
+      render();
+    });
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointerDown) {
+        return;
+      }
+      seedFromPointer(event.clientX, event.clientY);
+      render();
+    });
+    canvas.addEventListener("pointerup", (event) => {
+      pointerDown = false;
+      canvas.releasePointerCapture(event.pointerId);
+    });
+    canvas.addEventListener("pointercancel", () => {
+      pointerDown = false;
+    });
+
+    window.addEventListener("resize", resize);
+  }
+
+  function animate(time) {
+    const delta = Math.min(32, time - lastTime || 16);
+    lastTime = time;
+    if (running) {
+      const iterations = clamp(Math.round((delta / 16) * speed * 9), 1, 28);
+      stepSolver(iterations);
+    }
+    renderFrame += 1;
+    if (running || renderFrame % 6 === 0) {
+      render();
+    }
+    requestAnimationFrame(animate);
+  }
+
+  buildPresetButtons();
+  attachInputs();
+  formatValues();
+  resize();
+  setPreset(currentPreset);
+  setRunning(true);
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
