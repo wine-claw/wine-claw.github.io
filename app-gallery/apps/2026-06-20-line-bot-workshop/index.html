@@ -137,7 +137,8 @@
   .canvas-wrap {
     position: relative;
     flex: 1;
-    min-height: 420px;
+    min-height: 280px;
+    max-height: 70vh;
     cursor: crosshair;
   }
   canvas {
@@ -147,8 +148,9 @@
   }
   .overlay-hint {
     position: absolute;
-    bottom: 12px;
-    left: 14px;
+    top: 12px;
+    right: 14px;
+    max-width: min(280px, calc(100% - 28px));
     font-size: 12px;
     color: var(--muted);
     background: rgba(15,17,21,0.75);
@@ -156,6 +158,16 @@
     border-radius: 8px;
     pointer-events: none;
     backdrop-filter: blur(4px);
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+  .overlay-hint.faded { opacity: 0; }
+  @media (max-width: 980px) {
+    .canvas-wrap { max-height: 55vh; min-height: 240px; }
+  }
+  @media (max-width: 480px) {
+    .canvas-wrap { max-height: 50vh; min-height: 200px; }
+    .overlay-hint { font-size: 11px; padding: 5px 8px; }
   }
   .sidebar {
     display: flex;
@@ -454,6 +466,12 @@
   let lastControlTime = 0;
   let lapStart = 0;
   let lapTime = 0;
+  let hintTimer = null;
+  function showHintOnce() {
+    ui.hint.classList.remove('faded');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => { ui.hint.classList.add('faded'); }, 6000);
+  }
 
   const bot = {
     x: 0, y: 0, theta: 0,
@@ -472,7 +490,10 @@
   function resize() {
     const rect = wrap.getBoundingClientRect();
     width = Math.floor(rect.width);
-    height = Math.max(420, Math.floor(window.innerHeight - rect.top - 40));
+    const computedStyle = window.getComputedStyle(wrap);
+    const maxH = parseFloat(computedStyle.maxHeight) || Infinity;
+    const vhPx = window.innerHeight * (maxH !== Infinity ? maxH / 100 : 0.7);
+    height = Math.max(200, Math.min(Math.floor(window.innerHeight - rect.top - 40), Math.floor(vhPx)));
     canvas.width = Math.floor(width * DPR);
     canvas.height = Math.floor(height * DPR);
     canvas.style.width = width + 'px';
@@ -889,11 +910,11 @@
   bindSlider(ui.kd, ui.valKd, 'kd');
   ui.updateRate.addEventListener('input', () => { bot.updateRate = parseInt(ui.updateRate.value); ui.valUpdateRate.textContent = ui.updateRate.value; });
 
-  ui.btnDraw.addEventListener('click', () => { tool = 'draw'; ui.btnDraw.classList.add('active'); ui.btnErase.classList.remove('active'); ui.hint.textContent = 'Drag to draw a line. Press Run to release the bot.'; });
-  ui.btnErase.addEventListener('click', () => { tool = 'erase'; ui.btnErase.classList.add('active'); ui.btnDraw.classList.remove('active'); ui.hint.textContent = 'Drag over the line to erase it.'; });
-  ui.btnRun.addEventListener('click', () => { running = true; if (lapStart === 0) lapStart = performance.now(); ui.hint.textContent = 'Bot is running. Tune sliders live.'; });
-  ui.btnPause.addEventListener('click', () => { running = false; ui.hint.textContent = 'Paused. Adjust geometry or PID, then Run.'; });
-  ui.btnReset.addEventListener('click', () => { running = false; resetBot(); ui.hint.textContent = 'Bot reset. Press Run to start again.'; });
+  ui.btnDraw.addEventListener('click', () => { tool = 'draw'; ui.btnDraw.classList.add('active'); ui.btnErase.classList.remove('active'); ui.hint.textContent = 'Drag to draw a line. Press Run to release the bot.'; showHintOnce(); });
+  ui.btnErase.addEventListener('click', () => { tool = 'erase'; ui.btnErase.classList.add('active'); ui.btnDraw.classList.remove('active'); ui.hint.textContent = 'Drag over the line to erase it.'; showHintOnce(); });
+  ui.btnRun.addEventListener('click', () => { running = true; if (lapStart === 0) lapStart = performance.now(); ui.hint.textContent = 'Bot is running. Tune sliders live.'; showHintOnce(); });
+  ui.btnPause.addEventListener('click', () => { running = false; ui.hint.textContent = 'Paused. Adjust geometry or PID, then Run.'; showHintOnce(); });
+  ui.btnReset.addEventListener('click', () => { running = false; resetBot(); ui.hint.textContent = 'Bot reset. Press Run to start again.'; showHintOnce(); });
   ui.btnTrails.addEventListener('click', () => { showTrails = !showTrails; ui.btnTrails.classList.toggle('active'); });
   ui.btnSensors.addEventListener('click', () => { showSensors = !showSensors; ui.btnSensors.classList.toggle('active'); });
   ui.trackSelect.addEventListener('change', () => { buildTrack(ui.trackSelect.value); });

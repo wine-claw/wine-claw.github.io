@@ -15,6 +15,14 @@
       "slug": "line-bot-workshop",
       "publishedSlug": "2026-06-20-line-bot-workshop",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-20-line-bot-workshop/",
+      "description": "Interactive line-following robot simulator with PID tuning"
+    },
+    {
+      "date": "2026-06-20",
+      "title": "Line Bot Workshop",
+      "slug": "line-bot-workshop",
+      "publishedSlug": "2026-06-20-line-bot-workshop",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-20-line-bot-workshop/",
       "description": "Interactive line-following robot simulator — draw tracks, tune PID, watch the bot chase the line."
     },
     {
