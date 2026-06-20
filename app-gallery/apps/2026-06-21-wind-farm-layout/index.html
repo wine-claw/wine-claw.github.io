@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Wind Farm Layout Toy — 2am Mini App</title>
+  <style>
+    :root {
+      --bg: #0b1420;
+      --panel: #111d2b;
+      --panel-2: #162536;
+      --text: #e6f1f8;
+      --muted: #8aa3b5;
+      --accent: #4fd1c5;
+      --accent-2: #38b2ac;
+      --highlight: #f6ad55;
+      --danger: #fc8181;
+      --ok: #68d391;
+      --grid: #1a2d3d;
+      --grid-strong: #243b4f;
+      --border: #1f3344;
+      --wake: rgba(79, 209, 197, 0.18);
+      --wake-strong: rgba(79, 209, 197, 0.34);
+      --shadow: rgba(0,0,0,0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.45;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .warning {
+      background: repeating-linear-gradient(45deg, rgba(246,173,85,0.12), rgba(246,173,85,0.12) 10px, rgba(246,173,85,0.05) 10px, rgba(246,173,85,0.05) 20px);
+      border-bottom: 1px solid rgba(246,173,85,0.35);
+      color: #fff4e6;
+      padding: 8px 14px;
+      font-size: 13px;
+      text-align: center;
+      flex: 0 0 auto;
+    }
+    .warning strong { color: var(--highlight); }
+    .header {
+      flex: 0 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: var(--accent);
+    }
+    .header .subtitle {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .main {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+    .stage {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg);
+      position: relative;
+    }
+    .canvas-wrap {
+      flex: 1 1 auto;
+      position: relative;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    canvas {
+      background: radial-gradient(circle at 30% 30%, #112433 0%, #0b1420 70%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 40px var(--shadow);
+      max-width: 100%;
+      max-height: 100%;
+      touch-action: none;
+    }
+    .controls {
+      flex: 0 0 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 14px;
+      overflow-y: auto;
+      border-left: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .card h3 {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 6px 0;
+      font-size: 14px;
+    }
+    .stat-row .value {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .big-stat {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 4px 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .stars {
+      color: var(--highlight);
+      font-size: 18px;
+      letter-spacing: 2px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    button {
+      background: var(--grid-strong);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+      flex: 1 1 auto;
+      min-width: 70px;
+    }
+    button:hover {
+      background: #2d4a61;
+      border-color: var(--accent-2);
+    }
+    button:active { transform: translateY(1px); }
+    button.primary {
+      background: var(--accent-2);
+      border-color: var(--accent-2);
+      color: #062823;
+      font-weight: 600;
+    }
+    button.primary:hover { background: var(--accent); }
+    button.danger { border-color: var(--danger); color: var(--danger); }
+    button.danger:hover { background: rgba(252,129,129,0.12); }
+    .wind-rose {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .wind-rose button {
+      padding: 10px 4px;
+      font-size: 12px;
+    }
+    .wind-rose button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #062823;
+      font-weight: 700;
+    }
+    .slider-group {
+      margin-top: 8px;
+    }
+    .slider-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .toast {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(17,29,43,0.95);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 10;
+    }
+    .toast.show { opacity: 1; }
+    @media (max-width: 760px) {
+      .main { flex-direction: column; }
+      .controls {
+        flex: 0 0 auto;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        max-height: 45vh;
+      }
+      .header h1 { font-size: 15px; }
+      .header .subtitle { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">
+    <strong>Experimental AI mini-app.</strong> Untested toy output — not professionally validated. Do not rely on it for real wind-farm decisions.
+  </div>
+  <div class="header">
+    <div>
+      <h1>Wind Farm Layout Toy</h1>
+      <p class="subtitle">Place turbines, watch wakes, chase maximum clean power.</p>
+    </div>
+  </div>
+  <div class="main">
+    <div class="stage">
+      <div class="canvas-wrap">
+        <canvas id="farm" width="700" height="520"></canvas>
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="card">
+        <h3>Wind</h3>
+        <p class="hint" style="margin-top:-6px;margin-bottom:8px">Wind <strong>comes from</strong> the direction you pick.</p>
+        <div class="wind-rose" id="rose"></div>
+        <div class="slider-group">
+          <label><span>Wind speed</span><span id="speedVal">10.0 m/s</span></label>
+          <input type="range" id="speed" min="4" max="20" step="0.5" value="10" />
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Score</h3>
+        <div class="big-stat" id="score">0 %</div>
+        <div class="stars" id="stars">—</div>
+        <div class="stat-row"><span>Total output</span><span class="value" id="totalPower">0 kW</span></div>
+        <div class="stat-row"><span>Wake losses</span><span class="value" id="wakeLoss">0 %</span></div>
+        <div class="stat-row"><span>Turbines</span><span class="value" id="turbCount">0</span></div>
+        <div class="stat-row"><span>Capacity factor</span><span class="value" id="capFactor">0 %</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Actions</h3>
+        <div class="btn-row">
+          <button class="primary" id="btnAdd">Add</button>
+          <button id="btnRemove" class="danger">Remove</button>
+        </div>
+        <div class="btn-row" style="margin-top:8px">
+          <button id="btnRandom">Random</button>
+          <button id="btnGrid">Grid</button>
+          <button id="btnOptimize">Improve</button>
+        </div>
+        <div class="btn-row" style="margin-top:8px">
+          <button id="btnReset">Reset</button>
+          <button id="btnWakes">Hide wakes</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>How to play</h3>
+        <p class="hint">
+          • <strong>Tap/click</strong> an empty spot to add a turbine.<br>
+          • <strong>Drag</strong> a turbine to move it.<br>
+          • <strong>Double-tap</strong> a turbine to remove it.<br>
+          • Turbines downwind of others catch slower air (wake losses). Spread them out to raise output.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="legend">
+          <span><i class="dot" style="background:#4fd1c5"></i> Turbine</span>
+          <span><i class="dot" style="background:var(--wake-strong)"></i> Wake</span>
+          <span><i class="dot" style="background:var(--danger)"></i> Too close</span>
+        </div>
+        <p class="hint" style="margin-top:10px;margin-bottom:0">Wake model: simplified Jensen wake (linear expansion, velocity deficit superposition). A toy, not an engineering study.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('farm');
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  // Layout constants
+  const MARGIN = 34;
+  const FARM_X = MARGIN;
+  const FARM_Y = MARGIN;
+  const FARM_W = canvas.width - MARGIN * 2;
+  const FARM_H = canvas.height - MARGIN * 2;
+  const M_PER_PX = 8; // 1 px = 8 m
+  const ROTOR_D_M = 80; // 80 m rotor diameter
+  const ROTOR_R_PX = (ROTOR_D_M / M_PER_PX) / 2;
+  const HUB_R_PX = 3;
+  const MIN_SPACING_M = 3 * ROTOR_D_M; // 3D spacing rule
+  const MIN_SPACING_PX = MIN_SPACING_M / M_PER_PX;
+  const CT = 0.80;
+  const WAKE_K = 0.075;
+  const RHO = 1.225;
+  const CP = 0.45;
+  const RATED_WIND = 12;
+  const CUT_IN = 3;
+  const CUT_OUT = 25;
+  const RATED_POWER_KW = 2000; // 2 MW turbine
+
+  const DIRS = [
+    { label: 'N', deg: 0 },
+    { label: 'NE', deg: 45 },
+    { label: 'E', deg: 90 },
+    { label: 'SE', deg: 135 },
+    { label: 'S', deg: 180 },
+    { label: 'SW', deg: 225 },
+    { label: 'W', deg: 270 },
+    { label: 'NW', deg: 315 }
+  ];
+
+  let windDir = 270; // west by default (blows toward east)
+  let windSpeed = 10;
+  let showWakes = true;
+  let turbines = [];
+  let dragT = null;
+  let hoverT = null;
+  let addMode = false;
+  let removeMode = false;
+  let toastTimer = null;
+
+  // Resize canvas for DPR
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    // Keep logical size fixed, but CSS scales
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+  }
+  resizeCanvas();
+
+  function toRad(deg) { return (deg * Math.PI) / 180; }
+  function wrapDeg(deg) { return ((deg % 360) + 360) % 360; }
+  function angDiff(a, b) { const d = wrapDeg(a - b); return d > 180 ? d - 360 : d; }
+
+  function windUnitVector() {
+    // windDir is where wind comes FROM. The wake flows TOWARD windDir + 180.
+    const theta = toRad(windDir + 180);
+    return { x: Math.cos(theta), y: Math.sin(theta) };
+  }
+
+  function dist(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function dot(a, b) { return a.x * b.x + a.y * b.y; }
+
+  function inFarm(x, y) {
+    return x > FARM_X + ROTOR_R_PX && x < FARM_X + FARM_W - ROTOR_R_PX &&
+           y > FARM_Y + ROTOR_R_PX && y < FARM_Y + FARM_H - ROTOR_R_PX;
+  }
+
+  function tooCloseToOthers(t, exclude) {
+    for (const other of turbines) {
+      if (other === exclude || other === t) continue;
+      if (dist(t, other) < MIN_SPACING_PX) return true;
+    }
+    return false;
+  }
+
+  function computeWakes() {
+    const w = windUnitVector();
+    const deficits = new Array(turbines.length).fill(0);
+    for (let j = 0; j < turbines.length; j++) {
+      const tj = turbines[j];
+      let sumSq = 0;
+      for (let i = 0; i < turbines.length; i++) {
+        if (i === j) continue;
+        const ti = turbines[i];
+        const dx = tj.x - ti.x;
+        const dy = tj.y - ti.y;
+        const downstream = dx * w.x + dy * w.y;
+        if (downstream <= 0.5) continue; // upstream only
+        const cross = Math.abs(-dx * w.y + dy * w.x); // perpendicular distance
+        const xM = downstream * M_PER_PX;
+        const rWakeM = WAKE_K * xM + ROTOR_D_M / 2;
+        const rWakePx = rWakeM / M_PER_PX;
+        if (cross > rWakePx + ROTOR_R_PX) continue;
+        const deficit = (1 - Math.sqrt(1 - CT)) * Math.pow(ROTOR_D_M / (ROTOR_D_M + 2 * WAKE_K * xM), 2);
+        sumSq += deficit * deficit;
+      }
+      deficits[j] = Math.min(Math.sqrt(sumSq), 0.7);
+    }
+    return deficits;
+  }
+
+  function turbinePower(effectiveWind) {
+    if (effectiveWind < CUT_IN || effectiveWind > CUT_OUT) return 0;
+    if (effectiveWind < RATED_WIND) {
+      const ratio = effectiveWind / RATED_WIND;
+      return RATED_POWER_KW * ratio * ratio * ratio;
+    }
+    return RATED_POWER_KW;
+  }
+
+  function scoreLayout() {
+    const deficits = computeWakes();
+    let total = 0;
+    let maxTotal = 0;
+    for (let i = 0; i < turbines.length; i++) {
+      const u = windSpeed * (1 - deficits[i]);
+      total += turbinePower(u);
+      maxTotal += turbinePower(windSpeed);
+    }
+    const capFactor = maxTotal ? (total / maxTotal) * 100 : 0;
+    const wakeLoss = maxTotal ? ((maxTotal - total) / maxTotal) * 100 : 0;
+    return { total, capFactor, wakeLoss, deficits };
+  }
+
+  function starsFromCap(cap) {
+    if (cap >= 90) return '★★★★★';
+    if (cap >= 75) return '★★★★☆';
+    if (cap >= 55) return '★★★☆☆';
+    if (cap >= 35) return '★★☆☆☆';
+    return '★☆☆☆☆';
+  }
+
+  function drawGrid() {
+    ctx.save();
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid').trim();
+    ctx.lineWidth = 1;
+    const step = 40;
+    ctx.beginPath();
+    for (let x = FARM_X; x <= FARM_X + FARM_W; x += step) { ctx.moveTo(x, FARM_Y); ctx.lineTo(x, FARM_Y + FARM_H); }
+    for (let y = FARM_Y; y <= FARM_Y + FARM_H; y += step) { ctx.moveTo(FARM_X, y); ctx.lineTo(FARM_X + FARM_W, y); }
+    ctx.stroke();
+
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-strong').trim();
+    ctx.lineWidth = 2;
+    ctx.strokeRect(FARM_X, FARM_Y, FARM_W, FARM_H);
+
+    // North indicator
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('N', FARM_X + 6, FARM_Y + 16);
+    ctx.beginPath();
+    ctx.moveTo(FARM_X + 18, FARM_Y + 8);
+    ctx.lineTo(FARM_X + 18, FARM_Y + 18);
+    ctx.lineTo(FARM_X + 24, FARM_Y + 18);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawWakes(deficits) {
+    if (!showWakes) return;
+    const w = windUnitVector();
+    ctx.save();
+    for (let i = 0; i < turbines.length; i++) {
+      const t = turbines[i];
+      const lenPx = Math.min(FARM_W, FARM_H) * 0.85;
+      const lenM = lenPx * M_PER_PX;
+      const rEndM = WAKE_K * lenM + ROTOR_D_M / 2;
+      const rEndPx = rEndM / M_PER_PX;
+      const perpX = -w.y;
+      const perpY = w.x;
+
+      const grad = ctx.createLinearGradient(t.x, t.y, t.x + w.x * lenPx, t.y + w.y * lenPx);
+      const baseAlpha = Math.min(0.28 + deficits[i] * 0.5, 0.55);
+      grad.addColorStop(0, `rgba(79,209,197,${baseAlpha})`);
+      grad.addColorStop(1, 'rgba(79,209,197,0.0)');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(t.x + perpX * ROTOR_R_PX, t.y + perpY * ROTOR_R_PX);
+      ctx.lineTo(t.x + w.x * lenPx + perpX * rEndPx, t.y + w.y * lenPx + perpY * rEndPx);
+      ctx.lineTo(t.x + w.x * lenPx - perpX * rEndPx, t.y + w.y * lenPx - perpY * rEndPx);
+      ctx.lineTo(t.x - perpX * ROTOR_R_PX, t.y - perpY * ROTOR_R_PX);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawTurbine(t, hover, deficit, invalid) {
+    ctx.save();
+    ctx.translate(t.x, t.y);
+
+    // Rotor swept area
+    ctx.fillStyle = invalid ? 'rgba(252,129,129,0.18)' : 'rgba(79,209,197,0.10)';
+    ctx.strokeStyle = invalid ? getComputedStyle(document.documentElement).getPropertyValue('--danger').trim() :
+                                getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, ROTOR_R_PX, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Hub
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(0, 0, HUB_R_PX, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Blades
+    const time = performance.now() / 1000;
+    const rpm = Math.max(0, windSpeed * (1 - deficit)) / RATED_WIND;
+    const angle = time * 5 * rpm;
+    ctx.strokeStyle = '#e6f1f8';
+    ctx.lineWidth = 2;
+    for (let k = 0; k < 3; k++) {
+      const a = angle + k * (Math.PI * 2 / 3);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a) * (ROTOR_R_PX - 2), Math.sin(a) * (ROTOR_R_PX - 2));
+      ctx.stroke();
+    }
+
+    // Hover ring
+    if (hover) {
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--highlight').trim();
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(0, 0, ROTOR_R_PX + 6, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    ctx.restore();
+  }
+
+  function drawWindArrow() {
+    const cx = FARM_X + FARM_W - 50;
+    const cy = FARM_Y + 28;
+    const rad = toRad(windDir);
+    const len = 22;
+    const ux = Math.cos(rad);
+    const uy = -Math.sin(rad);
+    ctx.save();
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx - ux * len, cy - uy * len);
+    ctx.lineTo(cx + ux * len, cy + uy * len);
+    ctx.stroke();
+    // arrowhead at origin of wind (where it comes from)
+    ctx.beginPath();
+    ctx.moveTo(cx - ux * len, cy - uy * len);
+    ctx.lineTo(cx - ux * len + (ux + uy) * 6, cy - uy * len + (uy - ux) * 6);
+    ctx.lineTo(cx - ux * len + (ux - uy) * 6, cy - uy * len + (uy + ux) * 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${windDir}° ${speedLabel()}`, cx, cy + 24);
+    ctx.restore();
+  }
+
+  function speedLabel() {
+    return `${windSpeed.toFixed(1)} m/s`;
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
+    const { deficits } = computeStatsCache;
+    drawWakes(deficits);
+    for (let i = 0; i < turbines.length; i++) {
+      const invalid = tooCloseToOthers(turbines[i], null);
+      drawTurbine(turbines[i], turbines[i] === hoverT, deficits[i], invalid);
+    }
+    drawWindArrow();
+  }
+
+  let computeStatsCache = { total: 0, capFactor: 0, wakeLoss: 0, deficits: [] };
+  function updateStats() {
+    computeStatsCache = scoreLayout();
+    const { total, capFactor, wakeLoss } = computeStatsCache;
+    document.getElementById('score').textContent = capFactor.toFixed(1) + ' %';
+    document.getElementById('stars').textContent = starsFromCap(capFactor);
+    document.getElementById('totalPower').textContent = Math.round(total) + ' kW';
+    document.getElementById('wakeLoss').textContent = wakeLoss.toFixed(1) + ' %';
+    document.getElementById('turbCount').textContent = turbines.length;
+    document.getElementById('capFactor').textContent = capFactor.toFixed(1) + ' %';
+  }
+
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  function getPointerPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = (clientX - rect.left) * (canvas.width / rect.width);
+    const y = (clientY - rect.top) * (canvas.height / rect.height);
+    return { x, y };
+  }
+
+  function hitTurbine(pos) {
+    for (let i = turbines.length - 1; i >= 0; i--) {
+      if (dist(pos, turbines[i]) <= ROTOR_R_PX + 8) return turbines[i];
+    }
+    return null;
+  }
+
+  let lastTap = 0;
+  function onDown(e) {
+    e.preventDefault();
+    const pos = getPointerPos(e);
+    const t = hitTurbine(pos);
+
+    if (removeMode && t) {
+      turbines = turbines.filter(x => x !== t);
+      removeMode = false;
+      document.getElementById('btnRemove').classList.remove('danger');
+      document.getElementById('btnRemove').style.background = '';
+      showToast('Turbine removed');
+      updateStats();
+      render();
+      return;
+    }
+
+    if (addMode) {
+      if (inFarm(pos.x, pos.y)) {
+        const newT = { x: pos.x, y: pos.y };
+        if (tooCloseToOthers(newT, null)) {
+          showToast('Too close to another turbine');
+        } else {
+          turbines.push(newT);
+          showToast('Turbine added');
+        }
+      }
+      addMode = false;
+      document.getElementById('btnAdd').classList.remove('primary');
+      updateStats();
+      render();
+      return;
+    }
+
+    if (t) {
+      const now = performance.now();
+      if (now - lastTap < 300) {
+        // double-tap remove
+        turbines = turbines.filter(x => x !== t);
+        dragT = null;
+        showToast('Turbine removed');
+        updateStats();
+        render();
+        lastTap = 0;
+        return;
+      }
+      lastTap = now;
+      dragT = t;
+    }
+  }
+
+  function onMove(e) {
+    e.preventDefault();
+    const pos = getPointerPos(e);
+    hoverT = hitTurbine(pos);
+    if (dragT) {
+      dragT.x = Math.max(FARM_X + ROTOR_R_PX, Math.min(FARM_X + FARM_W - ROTOR_R_PX, pos.x));
+      dragT.y = Math.max(FARM_Y + ROTOR_R_PX, Math.min(FARM_Y + FARM_H - ROTOR_R_PX, pos.y));
+    }
+    updateStats();
+    render();
+  }
+
+  function onUp(e) {
+    if (e.cancelable) e.preventDefault();
+    if (dragT) {
+      if (tooCloseToOthers(dragT, dragT)) {
+        showToast('Too close — move it farther apart');
+      }
+    }
+    dragT = null;
+    updateStats();
+    render();
+  }
+
+  canvas.addEventListener('mousedown', onDown);
+  canvas.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  canvas.addEventListener('touchstart', onDown, { passive: false });
+  canvas.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('touchend', onUp, { passive: false });
+
+  // Wind rose UI
+  const rose = document.getElementById('rose');
+  function renderRose() {
+    rose.innerHTML = '';
+    DIRS.forEach(d => {
+      const b = document.createElement('button');
+      b.textContent = d.label;
+      if (d.deg === windDir) b.classList.add('active');
+      b.addEventListener('click', () => {
+        windDir = d.deg;
+        renderRose();
+        updateStats();
+        render();
+      });
+      rose.appendChild(b);
+    });
+  }
+  renderRose();
+
+  // Speed slider
+  const speedInput = document.getElementById('speed');
+  const speedVal = document.getElementById('speedVal');
+  speedInput.addEventListener('input', () => {
+    windSpeed = parseFloat(speedInput.value);
+    speedVal.textContent = speedLabel();
+    updateStats();
+    render();
+  });
+
+  // Buttons
+  document.getElementById('btnAdd').addEventListener('click', () => {
+    addMode = !addMode;
+    removeMode = false;
+    const btn = document.getElementById('btnAdd');
+    btn.classList.toggle('primary', addMode);
+    document.getElementById('btnRemove').classList.remove('danger');
+    showToast(addMode ? 'Tap the farm to add a turbine' : 'Add mode off');
+  });
+  document.getElementById('btnRemove').addEventListener('click', () => {
+    removeMode = !removeMode;
+    addMode = false;
+    document.getElementById('btnAdd').classList.add('primary');
+    document.getElementById('btnRemove').classList.toggle('danger', removeMode);
+    showToast(removeMode ? 'Tap a turbine to remove it' : 'Remove mode off');
+  });
+  document.getElementById('btnReset').addEventListener('click', () => {
+    turbines = [];
+    updateStats();
+    render();
+    showToast('Farm cleared');
+  });
+  document.getElementById('btnRandom').addEventListener('click', () => {
+    turbines = [];
+    const count = 5 + Math.floor(Math.random() * 8);
+    let attempts = 0;
+    while (turbines.length < count && attempts < 2000) {
+      attempts++;
+      const x = FARM_X + ROTOR_R_PX + Math.random() * (FARM_W - ROTOR_R_PX * 2);
+      const y = FARM_Y + ROTOR_R_PX + Math.random() * (FARM_H - ROTOR_R_PX * 2);
+      const t = { x, y };
+      if (!tooCloseToOthers(t, null)) turbines.push(t);
+    }
+    updateStats();
+    render();
+    showToast(`Random layout: ${turbines.length} turbines`);
+  });
+  document.getElementById('btnGrid').addEventListener('click', () => {
+    turbines = [];
+    const cols = 5;
+    const rows = 4;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = FARM_X + (FARM_W * (c + 0.5)) / cols;
+        const y = FARM_Y + (FARM_H * (r + 0.5)) / rows;
+        turbines.push({ x, y });
+      }
+    }
+    updateStats();
+    render();
+    showToast('Grid layout');
+  });
+  document.getElementById('btnOptimize').addEventListener('click', () => {
+    if (turbines.length < 2) { showToast('Add at least 2 turbines first'); return; }
+    let best = scoreLayout().total;
+    const bestPos = turbines.map(t => ({ x: t.x, y: t.y }));
+    for (let iter = 0; iter < 600; iter++) {
+      const idx = Math.floor(Math.random() * turbines.length);
+      const orig = { x: turbines[idx].x, y: turbines[idx].y };
+      const angle = Math.random() * Math.PI * 2;
+      const step = 10 + Math.random() * 50;
+      turbines[idx].x = Math.max(FARM_X + ROTOR_R_PX, Math.min(FARM_X + FARM_W - ROTOR_R_PX, orig.x + Math.cos(angle) * step));
+      turbines[idx].y = Math.max(FARM_Y + ROTOR_R_PX, Math.min(FARM_Y + FARM_H - ROTOR_R_PX, orig.y + Math.sin(angle) * step));
+      if (tooCloseToOthers(turbines[idx], turbines[idx])) {
+        turbines[idx].x = orig.x; turbines[idx].y = orig.y;
+        continue;
+      }
+      const newScore = scoreLayout().total;
+      if (newScore > best) {
+        best = newScore;
+        bestPos.length = 0;
+        turbines.forEach(t => bestPos.push({ x: t.x, y: t.y }));
+      } else {
+        turbines[idx].x = orig.x; turbines[idx].y = orig.y;
+      }
+    }
+    for (let i = 0; i < turbines.length; i++) { turbines[i].x = bestPos[i].x; turbines[i].y = bestPos[i].y; }
+    updateStats();
+    render();
+    showToast('Layout improved');
+  });
+  const wakeBtn = document.getElementById('btnWakes');
+  wakeBtn.addEventListener('click', () => {
+    showWakes = !showWakes;
+    wakeBtn.textContent = showWakes ? 'Hide wakes' : 'Show wakes';
+    render();
+  });
+
+  // Initial layout: a simple line to make wakes obvious
+  function resetToDemo() {
+    turbines = [];
+    for (let i = 0; i < 5; i++) {
+      turbines.push({
+        x: FARM_X + 70 + i * (MIN_SPACING_PX * 0.55),
+        y: FARM_Y + FARM_H / 2 + (i % 2 === 0 ? 0 : 30)
+      });
+    }
+    windDir = 270; // wind from west
+    updateStats();
+    render();
+  }
+
+  resetToDemo();
+
+  // Animation loop for blade rotation
+  function loop() {
+    render();
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>
+</body>
+</html>

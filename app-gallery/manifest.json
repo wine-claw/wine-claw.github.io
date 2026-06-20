@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-20",
-    "title": "Line Bot Workshop",
-    "slug": "line-bot-workshop",
-    "publishedSlug": "2026-06-20-line-bot-workshop",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-20-line-bot-workshop/"
+    "date": "2026-06-21",
+    "title": "Wind Farm Layout Toy",
+    "slug": "wind-farm-layout",
+    "publishedSlug": "2026-06-21-wind-farm-layout",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/"
   },
   "apps": [
+    {
+      "date": "2026-06-21",
+      "title": "Wind Farm Layout Toy",
+      "slug": "wind-farm-layout",
+      "publishedSlug": "2026-06-21-wind-farm-layout",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/",
+      "description": "Interactive wind-farm placement sandbox — drag turbines, tune wind, see wakes and power output."
+    },
     {
       "date": "2026-06-20",
       "title": "Line Bot Workshop",
