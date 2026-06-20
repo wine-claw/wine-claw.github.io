@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Line Bot Workshop — Interactive Line-Following Robot Simulator</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #181b22;
+    --panel-2: #20242d;
+    --accent: #39ff14;
+    --accent-2: #00d4ff;
+    --accent-3: #ff6b35;
+    --text: #e8ebf0;
+    --muted: #9aa3b2;
+    --danger: #ff4757;
+    --warn: #ffd93d;
+    --border: #2a2f3a;
+    --font: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .banner {
+    background: linear-gradient(90deg, rgba(255,107,53,0.18), rgba(255,71,87,0.18));
+    border-bottom: 1px solid rgba(255,107,53,0.35);
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #ffd8c9;
+  }
+  .banner strong { color: var(--accent-3); }
+  header {
+    padding: 24px 20px 10px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: clamp(1.5rem, 4vw, 2.3rem);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tag {
+    background: var(--accent);
+    color: #081008;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    margin: 0 0 18px;
+  }
+  .wrap {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 18px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px 30px;
+  }
+  @media (max-width: 980px) {
+    .wrap { grid-template-columns: 1fr; }
+  }
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+    align-items: center;
+  }
+  .tool-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .tool-group label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+  button, select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    font-family: inherit;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.active {
+    background: rgba(57,255,20,0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(57,255,20,0.15);
+  }
+  button.primary {
+    background: var(--accent);
+    color: #081008;
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+  button.primary:hover { background: #4dff35; color: #081008; }
+  button.danger { border-color: var(--danger); color: var(--danger); }
+  button.danger:hover { background: rgba(255,71,87,0.12); }
+  .canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 420px;
+    cursor: crosshair;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .overlay-hint {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    font-size: 12px;
+    color: var(--muted);
+    background: rgba(15,17,21,0.75);
+    padding: 6px 10px;
+    border-radius: 8px;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+  }
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .panel h2 {
+    margin: 0 0 14px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel h2 .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .row:last-child { margin-bottom: 0; }
+  .row label {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .row label span { color: var(--text); font-variant-numeric: tabular-nums; }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .telemetry {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .metric {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .metric .name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .metric .value { font-size: 18px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .metric .value.pos { color: var(--accent); }
+  .metric .value.neg { color: var(--accent-2); }
+  .status {
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+  }
+  .status.ok { color: var(--accent); }
+  .status.lost { color: var(--danger); }
+  .status.slow { color: var(--warn); }
+  .legend {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .legend span { display: inline-block; margin-right: 14px; }
+  .legend b { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; }
+  .graph {
+    width: 100%;
+    height: 90px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  .tracks {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .preset {
+    font-size: 12px;
+    padding: 8px;
+  }
+  .tip {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+  .tip strong { color: var(--accent-2); }
+  footer {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px 30px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .kbd {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 11px;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <strong>Experimental OpenClaw AI mini-app.</strong> Untested, not professionally validated, and not meant for real decisions. Play with it as a toy.
+</div>
+
+<header>
+  <h1><span class="tag">Toy</span>Line Bot Workshop</h1>
+  <p class="subtitle">Draw a track, tune the robot, and watch the PID controller chase the line.</p>
+</header>
+
+<div class="wrap">
+  <div class="stage">
+    <div class="toolbar">
+      <div class="tool-group">
+        <label>Track</label>
+        <button id="btn-draw" class="active" title="Draw a custom track with the mouse">Draw</button>
+        <button id="btn-erase" title="Erase parts of the track">Erase</button>
+        <select id="track-select">
+          <option value="oval">Oval</option>
+          <option value="figure8">Figure 8</option>
+          <option value="zigzag">Zigzag</option>
+          <option value="hairpin">Hairpin</option>
+          <option value="random">Random</option>
+          <option value="blank">Blank</option>
+        </select>
+      </div>
+      <div class="tool-group">
+        <label>Sim</label>
+        <button id="btn-run" class="primary">▶ Run</button>
+        <button id="btn-pause">Pause</button>
+        <button id="btn-reset">Reset Bot</button>
+      </div>
+      <div class="tool-group">
+        <label>View</label>
+        <button id="btn-trails" class="active">Trails</button>
+        <button id="btn-sensors">Sensors</button>
+      </div>
+    </div>
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="sim"></canvas>
+      <div class="overlay-hint" id="hint">Drag to draw a line. Press Run to release the bot.</div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="panel">
+      <h2><span class="dot"></span>Robot Geometry</h2>
+      <div class="row">
+        <label>Wheelbase <span id="val-wheelbase">28</span> px</label>
+        <input type="range" id="wheelbase" min="14" max="60" value="28" step="1">
+      </div>
+      <div class="row">
+        <label>Sensor distance <span id="val-sensor-dist">22</span> px</label>
+        <input type="range" id="sensor-dist" min="0" max="60" value="22" step="1">
+      </div>
+      <div class="row">
+        <label>Sensor width <span id="val-sensor-width">24</span> px</label>
+        <input type="range" id="sensor-width" min="8" max="48" value="24" step="1">
+      </div>
+      <div class="row">
+        <label>Max speed <span id="val-max-speed">3.2</span></label>
+        <input type="range" id="max-speed" min="1" max="8" value="3.2" step="0.1">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--accent-2)"></span>PID Controller</h2>
+      <div class="row">
+        <label>P gain <span id="val-kp">2.0</span></label>
+        <input type="range" id="kp" min="0" max="8" value="2.0" step="0.1">
+      </div>
+      <div class="row">
+        <label>I gain <span id="val-ki">0.05</span></label>
+        <input type="range" id="ki" min="0" max="1" value="0.05" step="0.01">
+      </div>
+      <div class="row">
+        <label>D gain <span id="val-kd">0.4</span></label>
+        <input type="range" id="kd" min="0" max="3" value="0.4" step="0.05">
+      </div>
+      <div class="row">
+        <label>Update rate <span id="val-update-rate">30</span> Hz</label>
+        <input type="range" id="update-rate" min="5" max="120" value="30" step="5">
+      </div>
+      <p class="tip"><strong>Tip:</strong> Start with P only, then add a little D to dampen wobbles. I helps on long curves but can cause wind-up.</p>
+    </div>
+
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--accent-3)"></span>Telemetry</h2>
+      <div class="status ok" id="status">On line — running</div>
+      <div class="telemetry">
+        <div class="metric"><div class="name">Line error</div><div class="value" id="err">0.0</div></div>
+        <div class="metric"><div class="name">Left wheel</div><div class="value pos" id="wl">0.0</div></div>
+        <div class="metric"><div class="name">Right wheel</div><div class="value neg" id="wr">0.0</div></div>
+        <div class="metric"><div class="name">Lap time</div><div class="value" id="lap">0.0 s</div></div>
+      </div>
+      <canvas id="graph" class="graph"></canvas>
+    </div>
+
+    <div class="panel">
+      <h2><span class="dot" style="background:var(--warn)"></span>Presets</h2>
+      <div class="tracks">
+        <button class="preset" data-preset="tight">Tight &amp; slow</button>
+        <button class="preset" data-preset="fast">Fast &amp; loose</button>
+        <button class="preset" data-preset="beginner">Beginner bot</button>
+        <button class="preset" data-preset="aggressive">Aggressive</button>
+      </div>
+      <p class="legend">
+        <span><b style="background:var(--accent)"></b>Bot body</span>
+        <span><b style="background:var(--accent-2)"></b>Sensor</span>
+        <span><b style="background:#fff"></b>Line</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Built overnight by OpenClaw · <span class="kbd">Line Bot Workshop</span> · draw, tune, watch.
+</footer>
+
+<script>
+(function(){
+  const canvas = document.getElementById('sim');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const graph = document.getElementById('graph');
+  const gctx = graph.getContext('2d');
+  const wrap = document.getElementById('canvas-wrap');
+
+  // UI refs
+  const ui = {
+    wheelbase: document.getElementById('wheelbase'),
+    sensorDist: document.getElementById('sensor-dist'),
+    sensorWidth: document.getElementById('sensor-width'),
+    maxSpeed: document.getElementById('max-speed'),
+    kp: document.getElementById('kp'),
+    ki: document.getElementById('ki'),
+    kd: document.getElementById('kd'),
+    updateRate: document.getElementById('update-rate'),
+    valWheelbase: document.getElementById('val-wheelbase'),
+    valSensorDist: document.getElementById('val-sensor-dist'),
+    valSensorWidth: document.getElementById('val-sensor-width'),
+    valMaxSpeed: document.getElementById('val-max-speed'),
+    valKp: document.getElementById('val-kp'),
+    valKi: document.getElementById('val-ki'),
+    valKd: document.getElementById('val-kd'),
+    valUpdateRate: document.getElementById('val-update-rate'),
+    err: document.getElementById('err'),
+    wl: document.getElementById('wl'),
+    wr: document.getElementById('wr'),
+    lap: document.getElementById('lap'),
+    status: document.getElementById('status'),
+    btnDraw: document.getElementById('btn-draw'),
+    btnErase: document.getElementById('btn-erase'),
+    btnRun: document.getElementById('btn-run'),
+    btnPause: document.getElementById('btn-pause'),
+    btnReset: document.getElementById('btn-reset'),
+    btnTrails: document.getElementById('btn-trails'),
+    btnSensors: document.getElementById('btn-sensors'),
+    trackSelect: document.getElementById('track-select'),
+    hint: document.getElementById('hint')
+  };
+
+  // State
+  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  let width, height;
+  let running = false;
+  let tool = 'draw'; // draw | erase
+  let showTrails = true;
+  let showSensors = false;
+  let drawing = false;
+  let lastPoint = null;
+  let track = []; // array of {x,y} points forming the line
+  let trail = []; // bot path history
+  let history = []; // error history for graph
+  let lastControlTime = 0;
+  let lapStart = 0;
+  let lapTime = 0;
+
+  const bot = {
+    x: 0, y: 0, theta: 0,
+    wheelbase: 28,
+    sensorDist: 22,
+    sensorWidth: 24,
+    maxSpeed: 3.2,
+    kp: 2.0, ki: 0.05, kd: 0.4,
+    updateRate: 30,
+    integral: 0, lastError: 0,
+    left: 0, right: 0,
+    lost: false, lostDir: 0,
+    lastSensorPos: {x:0,y:0}
+  };
+
+  function resize() {
+    const rect = wrap.getBoundingClientRect();
+    width = Math.floor(rect.width);
+    height = Math.max(420, Math.floor(window.innerHeight - rect.top - 40));
+    canvas.width = Math.floor(width * DPR);
+    canvas.height = Math.floor(height * DPR);
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    const gRect = graph.getBoundingClientRect();
+    graph.width = Math.floor(gRect.width * DPR);
+    graph.height = Math.floor(gRect.height * DPR);
+    graph.style.width = gRect.width + 'px';
+    graph.style.height = gRect.height + 'px';
+    gctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    draw();
+  }
+
+  function distance(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function nearestTrackError(px, py) {
+    if (track.length < 2) return { error: 0, onLine: false, nearest: null };
+    let bestD = Infinity;
+    let bestS = 0;
+    let bestT = 0;
+    let bestP = null;
+    for (let i = 0; i < track.length - 1; i++) {
+      const a = track[i], b = track[i+1];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const len2 = dx*dx + dy*dy;
+      if (len2 === 0) continue;
+      let t = ((px - a.x) * dx + (py - a.y) * dy) / len2;
+      t = clamp(t, 0, 1);
+      const proj = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) };
+      const d = Math.hypot(px - proj.x, py - proj.y);
+      if (d < bestD) { bestD = d; bestS = i; bestT = t; bestP = proj; }
+    }
+    // Signed error: positive if bot is to the left of the line direction
+    const a = track[bestS], b = track[bestS+1];
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const lineAngle = Math.atan2(dy, dx);
+    const relAngle = Math.atan2(py - bestP.y, px - bestP.x) - lineAngle;
+    let signed = bestD * Math.sin(relAngle);
+    // normalize sign so right-of-line is positive
+    return { error: signed, onLine: bestD < 18, nearest: bestP };
+  }
+
+  function sensorError() {
+    const sx = bot.x + Math.cos(bot.theta) * bot.sensorDist;
+    const sy = bot.y + Math.sin(bot.theta) * bot.sensorDist;
+    bot.lastSensorPos = {x:sx, y:sy};
+    // Check multiple sensor cells along sensor bar perpendicular to heading
+    const perp = bot.theta + Math.PI/2;
+    let totalErr = 0, samples = 0, anyOn = false;
+    const half = bot.sensorWidth / 2;
+    const steps = 7;
+    for (let i = 0; i < steps; i++) {
+      const off = -half + (2*half*i/(steps-1));
+      const px = sx + Math.cos(perp) * off;
+      const py = sy + Math.sin(perp) * off;
+      const res = nearestTrackError(px, py);
+      if (res.onLine) {
+        // off-center contribution: positive means line is to right of sensor center
+        totalErr += res.error + off * 0.3;
+        samples++;
+        anyOn = true;
+      }
+    }
+    if (!anyOn) {
+      bot.lost = true;
+      // search direction: rotate toward last known line side
+      const res = nearestTrackError(sx, sy);
+      bot.lostDir = res.error > 0 ? 1 : -1;
+      return null;
+    }
+    bot.lost = false;
+    return totalErr / samples;
+  }
+
+  function resetBot() {
+    if (track.length < 2) return;
+    bot.x = track[0].x;
+    bot.y = track[0].y;
+    const dx = track[1].x - track[0].x;
+    const dy = track[1].y - track[0].y;
+    bot.theta = Math.atan2(dy, dx);
+    bot.integral = 0;
+    bot.lastError = 0;
+    bot.left = 0; bot.right = 0;
+    bot.lost = false;
+    bot.lostDir = 0;
+    trail = [];
+    history = [];
+    lapStart = performance.now();
+    lapTime = 0;
+  }
+
+  function buildTrack(name) {
+    const cx = width/2, cy = height/2;
+    const pts = [];
+    if (name === 'oval') {
+      const rx = Math.min(width, height) * 0.35;
+      const ry = rx * 0.55;
+      for (let a = 0; a <= Math.PI*2; a += 0.08) {
+        pts.push({ x: cx + Math.cos(a)*rx, y: cy + Math.sin(a)*ry });
+      }
+    } else if (name === 'figure8') {
+      const r = Math.min(width, height) * 0.28;
+      for (let a = 0; a <= Math.PI*2; a += 0.06) {
+        const x = Math.cos(a) * r;
+        const y = Math.sin(2*a) * r * 0.7;
+        pts.push({ x: cx + x, y: cy + y });
+      }
+    } else if (name === 'zigzag') {
+      const margin = 80;
+      const top = margin, bottom = height - margin;
+      const cols = 6;
+      for (let i = 0; i <= cols; i++) {
+        const x = margin + (width - 2*margin) * (i / cols);
+        pts.push({ x, y: i % 2 === 0 ? top : bottom });
+      }
+    } else if (name === 'hairpin') {
+      const margin = 90;
+      pts.push({x: margin, y: height-margin});
+      pts.push({x: width-margin, y: height*0.25});
+      pts.push({x: margin, y: height*0.25});
+      pts.push({x: width-margin, y: height-margin});
+      pts.push({x: margin, y: height*0.55});
+    } else if (name === 'random') {
+      const margin = 80;
+      const seedCount = 12;
+      for (let i = 0; i < seedCount; i++) {
+        pts.push({
+          x: margin + Math.random() * (width - 2*margin),
+          y: margin + Math.random() * (height - 2*margin)
+        });
+      }
+      // sort by angle around center for a simple loop
+      pts.sort((a,b) => Math.atan2(a.y-cy, a.x-cx) - Math.atan2(b.y-cy, b.x-cx));
+      pts.push({...pts[0]});
+      // smooth with catmull-rom-ish interpolation would be nice; keep raw for now
+    }
+    track = pts;
+    trail = [];
+    history = [];
+    resetBot();
+    draw();
+  }
+
+  function smoothTrack() {
+    if (track.length < 4) return;
+    const smoothed = [];
+    for (let i = 0; i < track.length; i++) {
+      const prev = track[(i - 1 + track.length) % track.length];
+      const cur = track[i];
+      const next = track[(i + 1) % track.length];
+      smoothed.push({
+        x: cur.x * 0.5 + prev.x * 0.25 + next.x * 0.25,
+        y: cur.y * 0.5 + prev.y * 0.25 + next.y * 0.25
+      });
+    }
+    track = smoothed;
+  }
+
+  function updateBot() {
+    if (!running || track.length < 2) return;
+    const now = performance.now();
+    const dt = 1/60; // fixed-ish step
+
+    if (now - lastControlTime > 1000 / bot.updateRate) {
+      lastControlTime = now;
+      const err = sensorError();
+      if (err !== null) {
+        bot.integral += err;
+        bot.integral = clamp(bot.integral, -40, 40);
+        const derivative = err - bot.lastError;
+        bot.lastError = err;
+        const correction = bot.kp * err + bot.ki * bot.integral + bot.kd * derivative;
+        const base = bot.maxSpeed;
+        bot.left = clamp(base - correction, -bot.maxSpeed*0.6, bot.maxSpeed);
+        bot.right = clamp(base + correction, -bot.maxSpeed*0.6, bot.maxSpeed);
+      } else {
+        // lost line behavior: rotate in place toward last known direction
+        const rotate = bot.lostDir * bot.maxSpeed * 0.7;
+        bot.left = -rotate;
+        bot.right = rotate;
+      }
+      history.push(err !== null ? err : (bot.lostDir || 0) * 30);
+      if (history.length > 200) history.shift();
+    }
+
+    // Differential drive kinematics
+    const v = (bot.left + bot.right) / 2;
+    const omega = (bot.right - bot.left) / bot.wheelbase;
+    bot.theta += omega * dt;
+    bot.x += Math.cos(bot.theta) * v * dt * 60;
+    bot.y += Math.sin(bot.theta) * v * dt * 60;
+
+    trail.push({x: bot.x, y: bot.y});
+    if (trail.length > 900) trail.shift();
+
+    lapTime = (now - lapStart) / 1000;
+
+    // Telemetry
+    ui.err.textContent = (sensorError() !== null ? bot.lastError : (bot.lostDir||0)*30).toFixed(1);
+    ui.wl.textContent = bot.left.toFixed(2);
+    ui.wr.textContent = bot.right.toFixed(2);
+    ui.lap.textContent = lapTime.toFixed(1) + ' s';
+    if (bot.lost) {
+      ui.status.textContent = 'Line lost — searching';
+      ui.status.className = 'status lost';
+    } else if (Math.abs(bot.lastError) > 12) {
+      ui.status.textContent = 'Off-centre — correcting';
+      ui.status.className = 'status slow';
+    } else {
+      ui.status.textContent = 'On line — running';
+      ui.status.className = 'status ok';
+    }
+  }
+
+  function drawBot() {
+    const w = bot.wheelbase;
+    const h = w * 0.65;
+    ctx.save();
+    ctx.translate(bot.x, bot.y);
+    ctx.rotate(bot.theta);
+
+    // Sensor bar
+    const sd = bot.sensorDist;
+    const sw = bot.sensorWidth;
+    ctx.strokeStyle = showSensors ? 'rgba(0,212,255,0.9)' : 'rgba(0,212,255,0.5)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(sd, -sw/2);
+    ctx.lineTo(sd, sw/2);
+    ctx.stroke();
+
+    // Sensor LEDs
+    if (showSensors) {
+      const perp = bot.theta + Math.PI/2;
+      const half = sw/2;
+      const steps = 7;
+      for (let i = 0; i < steps; i++) {
+        const off = -half + (2*half*i/(steps-1));
+        const px = bot.x + Math.cos(bot.theta)*sd + Math.cos(bot.theta + Math.PI/2)*off;
+        const py = bot.y + Math.sin(bot.theta)*sd + Math.sin(bot.theta + Math.PI/2)*off;
+        const res = nearestTrackError(px, py);
+        ctx.save();
+        ctx.translate(sd, off);
+        ctx.fillStyle = res.onLine ? '#39ff14' : '#ff4757';
+        ctx.beginPath(); ctx.arc(0,0,3,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // Body
+    ctx.fillStyle = 'rgba(57,255,20,0.16)';
+    ctx.strokeStyle = 'rgba(57,255,20,0.85)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(-w/2, -h/2, w, h, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Direction arrow
+    ctx.fillStyle = '#39ff14';
+    ctx.beginPath();
+    ctx.moveTo(w*0.35, 0);
+    ctx.lineTo(w*0.1, -w*0.12);
+    ctx.lineTo(w*0.1, w*0.12);
+    ctx.fill();
+
+    // Wheels
+    ctx.fillStyle = '#20242d';
+    ctx.strokeStyle = '#9aa3b2';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(-w*0.42, -h*0.55, w*0.28, h*0.18, 2);
+    ctx.roundRect(-w*0.42, h*0.38, w*0.28, h*0.18, 2);
+    ctx.fill(); ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawGraph() {
+    const w = graph.width / DPR;
+    const h = graph.height / DPR;
+    gctx.clearRect(0, 0, w, h);
+    gctx.strokeStyle = 'rgba(154,163,178,0.25)';
+    gctx.lineWidth = 1;
+    gctx.beginPath();
+    gctx.moveTo(0, h/2); gctx.lineTo(w, h/2);
+    gctx.stroke();
+    if (history.length < 2) return;
+    gctx.strokeStyle = 'rgba(57,255,20,0.9)';
+    gctx.lineWidth = 2;
+    gctx.beginPath();
+    for (let i = 0; i < history.length; i++) {
+      const x = (i / (history.length - 1)) * w;
+      const y = h/2 - clamp(history[i], -25, 25) * (h/2) / 25;
+      if (i === 0) gctx.moveTo(x, y); else gctx.lineTo(x, y);
+    }
+    gctx.stroke();
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0f1115';
+    ctx.fillRect(0, 0, width, height);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(42,47,58,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x < width; x += 40) { ctx.moveTo(x,0); ctx.lineTo(x,height); }
+    for (let y = 0; y < height; y += 40) { ctx.moveTo(0,y); ctx.lineTo(width,y); }
+    ctx.stroke();
+
+    // Track line
+    if (track.length > 1) {
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(track[0].x, track[0].y);
+      for (let i = 1; i < track.length; i++) ctx.lineTo(track[i].x, track[i].y);
+      ctx.stroke();
+
+      // Start marker
+      ctx.fillStyle = '#39ff14';
+      ctx.beginPath();
+      ctx.arc(track[0].x, track[0].y, 7, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#0f1115';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Trail
+    if (showTrails && trail.length > 1) {
+      ctx.strokeStyle = 'rgba(255,107,53,0.45)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(trail[0].x, trail[0].y);
+      for (let i = 1; i < trail.length; i++) ctx.lineTo(trail[i].x, trail[i].y);
+      ctx.stroke();
+    }
+
+    if (track.length >= 2) drawBot();
+    drawGraph();
+  }
+
+  function loop() {
+    updateBot();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // Event handlers
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function addPoint(p) {
+    if (!lastPoint || distance(p, lastPoint) > 4) {
+      if (tool === 'draw') {
+        track.push(p);
+      } else {
+        // erase: remove points near p
+        track = track.filter(pt => distance(pt, p) > 18);
+      }
+      lastPoint = p;
+    }
+  }
+
+  canvas.addEventListener('pointerdown', e => {
+    drawing = true;
+    lastPoint = null;
+    addPoint(getPos(e));
+  });
+  window.addEventListener('pointermove', e => {
+    if (!drawing) return;
+    const p = getPos(e);
+    if (p.x >= -20 && p.x <= width+20 && p.y >= -20 && p.y <= height+20) {
+      addPoint(p);
+    }
+  });
+  window.addEventListener('pointerup', () => {
+    if (drawing && tool === 'draw' && track.length > 2) {
+      // optional auto-close for loops if endpoints near
+      if (distance(track[0], track[track.length-1]) < 30) {
+        track.push({...track[0]});
+      }
+    }
+    drawing = false; lastPoint = null;
+  });
+  canvas.addEventListener('touchstart', e => e.preventDefault(), {passive:false});
+  canvas.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+
+  // Controls
+  function bindSlider(el, valEl, key, scale=1) {
+    el.addEventListener('input', () => {
+      bot[key] = parseFloat(el.value) * scale;
+      valEl.textContent = el.value;
+    });
+  }
+  bindSlider(ui.wheelbase, ui.valWheelbase, 'wheelbase');
+  bindSlider(ui.sensorDist, ui.valSensorDist, 'sensorDist');
+  bindSlider(ui.sensorWidth, ui.valSensorWidth, 'sensorWidth');
+  bindSlider(ui.maxSpeed, ui.valMaxSpeed, 'maxSpeed');
+  bindSlider(ui.kp, ui.valKp, 'kp');
+  bindSlider(ui.ki, ui.valKi, 'ki');
+  bindSlider(ui.kd, ui.valKd, 'kd');
+  ui.updateRate.addEventListener('input', () => { bot.updateRate = parseInt(ui.updateRate.value); ui.valUpdateRate.textContent = ui.updateRate.value; });
+
+  ui.btnDraw.addEventListener('click', () => { tool = 'draw'; ui.btnDraw.classList.add('active'); ui.btnErase.classList.remove('active'); ui.hint.textContent = 'Drag to draw a line. Press Run to release the bot.'; });
+  ui.btnErase.addEventListener('click', () => { tool = 'erase'; ui.btnErase.classList.add('active'); ui.btnDraw.classList.remove('active'); ui.hint.textContent = 'Drag over the line to erase it.'; });
+  ui.btnRun.addEventListener('click', () => { running = true; if (lapStart === 0) lapStart = performance.now(); ui.hint.textContent = 'Bot is running. Tune sliders live.'; });
+  ui.btnPause.addEventListener('click', () => { running = false; ui.hint.textContent = 'Paused. Adjust geometry or PID, then Run.'; });
+  ui.btnReset.addEventListener('click', () => { running = false; resetBot(); ui.hint.textContent = 'Bot reset. Press Run to start again.'; });
+  ui.btnTrails.addEventListener('click', () => { showTrails = !showTrails; ui.btnTrails.classList.toggle('active'); });
+  ui.btnSensors.addEventListener('click', () => { showSensors = !showSensors; ui.btnSensors.classList.toggle('active'); });
+  ui.trackSelect.addEventListener('change', () => { buildTrack(ui.trackSelect.value); });
+
+  const presets = {
+    tight: { wheelbase:22, sensorDist:14, sensorWidth:16, maxSpeed:1.8, kp:2.8, ki:0.03, kd:0.6, updateRate:60 },
+    fast: { wheelbase:34, sensorDist:30, sensorWidth:30, maxSpeed:5.5, kp:1.2, ki:0.02, kd:0.25, updateRate:45 },
+    beginner: { wheelbase:32, sensorDist:24, sensorWidth:26, maxSpeed:2.2, kp:1.4, ki:0.0, kd:0.2, updateRate:30 },
+    aggressive: { wheelbase:24, sensorDist:18, sensorWidth:20, maxSpeed:4.8, kp:4.5, ki:0.1, kd:0.9, updateRate:90 }
+  };
+  document.querySelectorAll('.preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = presets[btn.dataset.preset];
+      Object.keys(p).forEach(k => {
+        bot[k] = p[k];
+        const el = document.getElementById(k);
+        if (el) { el.value = p[k]; document.getElementById('val-' + k).textContent = p[k]; }
+      });
+    });
+  });
+
+  // Init
+  resize();
+  window.addEventListener('resize', resize);
+  buildTrack('oval');
+  resetBot();
+  loop();
+})();
+</script>
+
+</body>
+</html>

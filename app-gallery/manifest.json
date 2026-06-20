@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-19",
-    "title": "Reaction-Diffusion Lab",
-    "slug": "reaction-diffusion-lab",
-    "publishedSlug": "2026-06-19-reaction-diffusion-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-19-reaction-diffusion-lab/"
+    "date": "2026-06-20",
+    "title": "Line Bot Workshop",
+    "slug": "line-bot-workshop",
+    "publishedSlug": "2026-06-20-line-bot-workshop",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-20-line-bot-workshop/"
   },
   "apps": [
+    {
+      "date": "2026-06-20",
+      "title": "Line Bot Workshop",
+      "slug": "line-bot-workshop",
+      "publishedSlug": "2026-06-20-line-bot-workshop",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-20-line-bot-workshop/",
+      "description": "Interactive line-following robot simulator — draw tracks, tune PID, watch the bot chase the line."
+    },
     {
       "date": "2026-06-19",
       "title": "Reaction-Diffusion Lab",
