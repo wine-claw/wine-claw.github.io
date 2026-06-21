@@ -23,6 +23,14 @@
       "slug": "wind-farm-layout",
       "publishedSlug": "2026-06-21-wind-farm-layout",
       "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/",
+      "description": "Interactive wind-farm placement sandbox with live wake visualization and power scoring"
+    },
+    {
+      "date": "2026-06-21",
+      "title": "Wind Farm Layout Toy",
+      "slug": "wind-farm-layout",
+      "publishedSlug": "2026-06-21-wind-farm-layout",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/",
       "description": "Interactive wind-farm placement sandbox — drag turbines, tune wind, see wakes and power output."
     },
     {

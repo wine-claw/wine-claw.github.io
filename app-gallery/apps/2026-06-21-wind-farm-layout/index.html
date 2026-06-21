@@ -340,8 +340,8 @@
   const MARGIN = 34;
   const FARM_X = MARGIN;
   const FARM_Y = MARGIN;
-  const FARM_W = canvas.width - MARGIN * 2;
-  const FARM_H = canvas.height - MARGIN * 2;
+  let FARM_W = canvas.width - MARGIN * 2;
+  let FARM_H = canvas.height - MARGIN * 2;
   const M_PER_PX = 8; // 1 px = 8 m
   const ROTOR_D_M = 80; // 80 m rotor diameter
   const ROTOR_R_PX = (ROTOR_D_M / M_PER_PX) / 2;
@@ -378,23 +378,41 @@
   let removeMode = false;
   let toastTimer = null;
 
-  // Resize canvas for DPR
-  function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    // Keep logical size fixed, but CSS scales
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
+  // Responsive canvas: fill the available stage while keeping aspect ratio
+  function fitCanvas() {
+    const wrap = canvas.parentElement;
+    const availableW = wrap.clientWidth - 24; // account for padding
+    const availableH = wrap.clientHeight - 24;
+    const scale = Math.min(availableW / 700, availableH / 520, 1);
+    const logicalW = Math.max(320, Math.floor(700 * scale));
+    const logicalH = Math.floor(520 * scale);
+
+    canvas.width = Math.floor(logicalW * dpr);
+    canvas.height = Math.floor(logicalH * dpr);
+    canvas.style.width = logicalW + 'px';
+    canvas.style.height = logicalH + 'px';
+
+    FARM_W = logicalW - MARGIN * 2;
+    FARM_H = logicalH - MARGIN * 2;
+
+    // Keep existing turbines inside the new bounds
+    for (const t of turbines) {
+      t.x = Math.max(FARM_X + ROTOR_R_PX, Math.min(FARM_X + FARM_W - ROTOR_R_PX, t.x));
+      t.y = Math.max(FARM_Y + ROTOR_R_PX, Math.min(FARM_Y + FARM_H - ROTOR_R_PX, t.y));
+    }
   }
-  resizeCanvas();
+  fitCanvas();
 
   function toRad(deg) { return (deg * Math.PI) / 180; }
   function wrapDeg(deg) { return ((deg % 360) + 360) % 360; }
   function angDiff(a, b) { const d = wrapDeg(a - b); return d > 180 ? d - 360 : d; }
 
   function windUnitVector() {
-    // windDir is where wind comes FROM. The wake flows TOWARD windDir + 180.
-    const theta = toRad(windDir + 180);
+    // windDir is meteorological "from" direction (0=N, 90=E, 180=S, 270=W).
+    // Canvas angle convention: 0=right/E, 90=down/S, 180=left/W, 270=up/N.
+    // Convert meteorological "from" to canvas angle, then add 180 for flow direction.
+    const flowAngle = wrapDeg(windDir + 90);
+    const theta = toRad(flowAngle);
     return { x: Math.cos(theta), y: Math.sin(theta) };
   }
 
@@ -583,23 +601,22 @@
   function drawWindArrow() {
     const cx = FARM_X + FARM_W - 50;
     const cy = FARM_Y + 28;
-    const rad = toRad(windDir);
+    const w = windUnitVector();
     const len = 22;
-    const ux = Math.cos(rad);
-    const uy = -Math.sin(rad);
     ctx.save();
     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
     ctx.lineWidth = 3;
+    // Arrow points downwind
     ctx.beginPath();
-    ctx.moveTo(cx - ux * len, cy - uy * len);
-    ctx.lineTo(cx + ux * len, cy + uy * len);
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + w.x * len, cy + w.y * len);
     ctx.stroke();
-    // arrowhead at origin of wind (where it comes from)
+    // Arrowhead at tip
     ctx.beginPath();
-    ctx.moveTo(cx - ux * len, cy - uy * len);
-    ctx.lineTo(cx - ux * len + (ux + uy) * 6, cy - uy * len + (uy - ux) * 6);
-    ctx.lineTo(cx - ux * len + (ux - uy) * 6, cy - uy * len + (uy + ux) * 6);
+    ctx.moveTo(cx + w.x * len, cy + w.y * len);
+    ctx.lineTo(cx + w.x * len - (w.x + w.y) * 6, cy + w.y * len - (w.y - w.x) * 6);
+    ctx.lineTo(cx + w.x * len - (w.x - w.y) * 6, cy + w.y * len - (w.y + w.x) * 6);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
@@ -614,7 +631,8 @@
   }
 
   function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
     drawGrid();
     const { deficits } = computeStatsCache;
     drawWakes(deficits);
