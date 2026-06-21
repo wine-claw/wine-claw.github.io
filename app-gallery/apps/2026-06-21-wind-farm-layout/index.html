@@ -670,8 +670,7 @@
     if (removeMode && t) {
       turbines = turbines.filter(x => x !== t);
       removeMode = false;
-      document.getElementById('btnRemove').classList.remove('danger');
-      document.getElementById('btnRemove').style.background = '';
+      updateModeButtons();
       showToast('Turbine removed');
       updateStats();
       render();
@@ -743,6 +742,12 @@
   canvas.addEventListener('touchmove', onMove, { passive: false });
   window.addEventListener('touchend', onUp, { passive: false });
 
+  window.addEventListener('resize', () => {
+    fitCanvas();
+    updateStats();
+    render();
+  });
+
   // Wind rose UI
   const rose = document.getElementById('rose');
   function renderRose() {
@@ -772,20 +777,22 @@
     render();
   });
 
+  function updateModeButtons() {
+    document.getElementById('btnAdd').classList.toggle('primary', addMode);
+    document.getElementById('btnRemove').classList.toggle('danger', removeMode);
+  }
+
   // Buttons
   document.getElementById('btnAdd').addEventListener('click', () => {
     addMode = !addMode;
     removeMode = false;
-    const btn = document.getElementById('btnAdd');
-    btn.classList.toggle('primary', addMode);
-    document.getElementById('btnRemove').classList.remove('danger');
+    updateModeButtons();
     showToast(addMode ? 'Tap the farm to add a turbine' : 'Add mode off');
   });
   document.getElementById('btnRemove').addEventListener('click', () => {
     removeMode = !removeMode;
     addMode = false;
-    document.getElementById('btnAdd').classList.add('primary');
-    document.getElementById('btnRemove').classList.toggle('danger', removeMode);
+    updateModeButtons();
     showToast(removeMode ? 'Tap a turbine to remove it' : 'Remove mode off');
   });
   document.getElementById('btnReset').addEventListener('click', () => {
@@ -875,6 +882,7 @@
   }
 
   resetToDemo();
+  fitCanvas();
 
   // Animation loop for blade rotation
   function loop() {
