@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-21",
-    "title": "Wind Farm Layout Toy",
-    "slug": "wind-farm-layout",
-    "publishedSlug": "2026-06-21-wind-farm-layout",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/"
+    "date": "2026-06-24",
+    "title": "Sourdough Starter Pet",
+    "slug": "sourdough-starter-pet",
+    "publishedSlug": "2026-06-24-sourdough-starter-pet",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-24-sourdough-starter-pet/"
   },
   "apps": [
+    {
+      "date": "2026-06-24",
+      "title": "Sourdough Starter Pet",
+      "slug": "sourdough-starter-pet",
+      "publishedSlug": "2026-06-24-sourdough-starter-pet",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-24-sourdough-starter-pet/",
+      "description": "Interactive sourdough starter simulator — feed, stir, discard, and watch it rise."
+    },
     {
       "date": "2026-06-21",
       "title": "Wind Farm Layout Toy",

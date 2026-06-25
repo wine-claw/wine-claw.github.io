@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Sourdough Starter Pet</title>
+  <style>
+    :root {
+      --cream: #fff8ec;
+      --tan: #f5e6cc;
+      --warm-tan: #e8d4b0;
+      --golden: #d4a35b;
+      --brown: #8b5a2b;
+      --dark-brown: #5c3a1e;
+      --teal: #4a9b9b;
+      --soft-blue: #7ab8c4;
+      --hooch: #3d2b1f;
+      --danger: #c45b4a;
+      --text: #4a3b2a;
+      --shadow: rgba(92, 58, 30, 0.12);
+      --glass: rgba(255, 255, 255, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at 50% 0%, var(--cream) 0%, var(--tan) 60%, var(--warm-tan) 100%);
+      color: var(--text);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 16px 40px 16px;
+      min-width: 0;
+      overflow-x: hidden;
+    }
+
+    .warning-banner {
+      width: min(100%, 640px);
+      background: #fff3cd;
+      border: 1px solid #e0c36e;
+      color: #7a5c1e;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+      margin-bottom: 16px;
+      text-align: center;
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
+    }
+
+    .app {
+      width: min(100%, 640px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    header {
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      color: var(--dark-brown);
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      font-size: 14px;
+      color: var(--brown);
+    }
+
+    .name-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .pet-name {
+      font-weight: 700;
+      color: var(--teal);
+      font-size: 18px;
+    }
+
+    .mood-badge {
+      background: var(--golden);
+      color: white;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .jar-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 280px;
+      aspect-ratio: 3/4;
+      margin: 0 auto;
+    }
+
+    .jar {
+      position: absolute;
+      inset: 0;
+      border-radius: 40% 40% 46% 46% / 12% 12% 18% 18%;
+      background: linear-gradient(135deg, var(--glass) 0%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.05) 100%);
+      border: 3px solid rgba(255,255,255,0.6);
+      box-shadow:
+        inset 10px 0 20px rgba(255,255,255,0.45),
+        inset -14px 0 24px rgba(139,90,43,0.08),
+        0 12px 30px var(--shadow);
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    .jar-rim {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 52%;
+      height: 26px;
+      border-radius: 10px 10px 6px 6px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(212,163,91,0.25) 100%);
+      border: 2px solid rgba(255,255,255,0.55);
+      box-shadow: 0 2px 8px rgba(92,58,30,0.1);
+      z-index: 3;
+    }
+
+    .jar-neck {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50%;
+      height: 28px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.35) 100%);
+      z-index: 1;
+    }
+
+    .jar-shine {
+      position: absolute;
+      top: 8%;
+      left: 6%;
+      width: 14%;
+      height: 55%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.05) 100%);
+      filter: blur(2px);
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .jar-highlight {
+      position: absolute;
+      top: 5%;
+      right: 10%;
+      width: 8%;
+      height: 25%;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.25);
+      filter: blur(3px);
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .starter-mask {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      bottom: 5%;
+      top: 10%;
+      border-radius: 30% 30% 42% 42% / 10% 10% 14% 14%;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    .starter-body {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(180deg, #f0dca0 0%, #e6c67a 60%, #dcb05e 100%);
+      transition: height 0.4s ease-out;
+      border-radius: 50% 50% 0 0 / 6% 6% 0 0;
+    }
+
+    .starter-body::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, transparent 100%);
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    }
+
+    .hooch-layer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 0;
+      background: linear-gradient(180deg, var(--hooch) 0%, rgba(61,43,31,0.85) 70%, transparent 100%);
+      opacity: 0.9;
+      transition: height 0.6s ease-out;
+      border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+    }
+
+    .bubble-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .temp-badge {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      background: rgba(255,255,255,0.85);
+      color: var(--dark-brown);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px var(--shadow);
+      z-index: 5;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .stat {
+      flex: 1 1 calc(33% - 6px);
+      min-width: 78px;
+      background: white;
+      border-radius: 14px;
+      padding: 10px 6px;
+      text-align: center;
+      box-shadow: 0 3px 10px var(--shadow);
+      overflow-wrap: anywhere;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--brown);
+      margin-bottom: 3px;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--dark-brown);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .controls button {
+      flex: 1 1 calc(33% - 6px);
+      min-width: 78px;
+      padding: 10px 6px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 10px 10px 30px 10px; }
+      h1 { font-size: 22px; }
+      .subtitle { font-size: 13px; }
+      .warning-banner { font-size: 11px; padding: 8px 10px; }
+      .stat { flex: 1 1 calc(33% - 6px); padding: 8px 4px; }
+      .stat-value { font-size: 14px; }
+      .stat-label { font-size: 9px; letter-spacing: 0.2px; }
+      .controls button { flex: 1 1 calc(33% - 6px); min-width: 0; padding: 8px 4px; font-size: 12px; }
+      .jar-wrap { max-width: 240px; }
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: white;
+      color: var(--dark-brown);
+      box-shadow: 0 3px 10px var(--shadow);
+      transition: transform 0.08s, box-shadow 0.15s;
+    }
+
+    button:active { transform: scale(0.96); }
+
+    .btn-primary {
+      background: var(--golden);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--soft-blue);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-wide {
+      grid-column: span 3;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 3px 12px var(--shadow);
+    }
+
+    .panel-title {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--dark-brown);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .slider-row label {
+      min-width: 90px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brown);
+    }
+
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--teal);
+    }
+
+    .slider-value {
+      min-width: 52px;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark-brown);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 2px solid var(--warm-tan);
+      background: white;
+      color: var(--dark-brown);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip.active {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: white;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid var(--warm-tan);
+      background: white;
+      color: var(--dark-brown);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .log {
+      max-height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 4px;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 13px;
+      line-height: 1.35;
+      background: var(--cream);
+      border-radius: 10px;
+      padding: 8px 10px;
+      animation: popIn 0.25s ease-out;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .log-entry.new { border-left: 3px solid var(--golden); }
+    .log-time { color: var(--brown); font-weight: 600; white-space: nowrap; }
+    .log-text { color: var(--text); }
+
+    .flavor-note {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--brown);
+      font-style: italic;
+    }
+
+    @media (min-width: 640px) {
+      body { padding: 24px 24px 40px 24px; }
+      h1 { font-size: 32px; }
+      .jar-wrap { max-width: 360px; }
+      .stat { flex: 1 1 calc(16.6% - 7px); }
+      .controls button { flex: 1 1 calc(16.6% - 7px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="warning-banner">
+    <strong>Experimental AI toy:</strong> Not real baking advice — trust your experience.
+  </div>
+
+  <main class="app">
+    <header>
+      <h1>🍞 Sourdough Starter Pet</h1>
+      <p class="subtitle">Feed it, stir it, watch it rise.</p>
+      <div class="name-row">
+        <span class="pet-name" id="petName">Bubblino</span>
+        <span class="mood-badge" id="moodBadge">active</span>
+      </div>
+    </header>
+
+    <div class="jar-wrap">
+      <div class="jar-neck"></div>
+      <div class="jar-rim"></div>
+      <div class="jar">
+        <div class="starter-mask">
+          <div class="starter-body" id="starterBody">
+            <div class="hooch-layer" id="hoochLayer"></div>
+          </div>
+        </div>
+        <canvas class="bubble-canvas" id="bubbleCanvas"></canvas>
+        <div class="jar-shine"></div>
+        <div class="jar-highlight"></div>
+        <div class="temp-badge" id="tempBadge">25°C</div>
+      </div>
+    </div>
+
+    <section class="stats" id="statsRow">
+      <div class="stat">
+        <div class="stat-label">Rise</div>
+        <div class="stat-value" id="riseStat">0%</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">pH</div>
+        <div class="stat-value" id="phStat">5.8</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Hydration</div>
+        <div class="stat-value" id="hydrationStat">100%</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Temp</div>
+        <div class="stat-value" id="tempStat">25°C</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Age</div>
+        <div class="stat-value" id="ageStat">0d</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Feeds</div>
+        <div class="stat-value" id="feedStat">0</div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <button class="btn-primary" id="feedBtn">🥄 Feed</button>
+      <button class="btn-secondary" id="stirBtn">🌀 Stir</button>
+      <button class="btn-danger" id="discardBtn">🗑 Discard</button>
+      <button id="pauseBtn">⏸ Pause</button>
+      <button id="resetBtn">↺ Reset</button>
+      <button id="renameBtn">✏ Rename</button>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Environment</h2>
+      <div class="slider-row">
+        <label for="tempSlider">Temperature</label>
+        <input type="range" id="tempSlider" min="15" max="35" value="25" step="1">
+        <span class="slider-value" id="tempValue">25°C</span>
+      </div>
+      <div class="slider-row">
+        <label for="speedSlider">Time speed</label>
+        <input type="range" id="speedSlider" min="0" max="24" value="1" step="1">
+        <span class="slider-value" id="speedValue">1h/s</span>
+      </div>
+      <div class="slider-row">
+        <label>Ratio</label>
+        <div class="chips" id="ratioChips">
+          <button class="chip active" data-ratio="1:1:1">1:1:1</button>
+          <button class="chip" data-ratio="1:2:2">1:2:2</button>
+          <button class="chip" data-ratio="1:5:5">1:5:5</button>
+        </div>
+      </div>
+      <div class="slider-row" style="margin-bottom: 0;">
+        <label for="flourSelect">Flour</label>
+        <select id="flourSelect">
+          <option value="ap">All-purpose</option>
+          <option value="ww">Whole wheat</option>
+          <option value="rye">Rye</option>
+        </select>
+      </div>
+      <p class="flavor-note" id="flavorNote">Balanced growth and mild tang.</p>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Discovery Log</h2>
+      <div class="log" id="log"></div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const CONFIG = {
+        minTemp: 15,
+        maxTemp: 35,
+        baseHydration: 1.0,
+        maxRise: 2.0,
+        targetAcid: 1.0,
+        hoochFoodThreshold: 0.12,
+        hoochAcidThreshold: 0.55,
+        hoochTimeThreshold: 3,
+      };
+
+      const FLOURS = {
+        ap: { name: 'All-purpose', speed: 1.0, acidMod: 1.0, note: 'Balanced growth and mild tang.' },
+        ww: { name: 'Whole wheat', speed: 1.2, acidMod: 1.15, note: 'Faster rise and a nuttier, tangier profile.' },
+        rye: { name: 'Rye', speed: 1.35, acidMod: 1.25, note: 'Very active with fruity, complex sour notes.' },
+      };
+
+      const MOODS = {
+        happy: { label: 'happy', color: '#4a9b9b' },
+        active: { label: 'active', color: '#d4a35b' },
+        hungry: { label: 'hungry', color: '#c45b4a' },
+        sleepy: { label: 'sleepy', color: '#7ab8c4' },
+        sour: { label: 'sour', color: '#8b5a2b' },
+        boozy: { label: 'boozy', color: '#3d2b1f' },
+      };
+
+      const state = {
+        yeast: 0.18,
+        lab: 0.15,
+        food: 0.55,
+        acid: 0.18,
+        gas: 0.45,
+        hydration: 1.0,
+        temp: 25,
+        ageDays: 0,
+        feedCount: 0,
+        hooch: 0,
+        hoochTimer: 0,
+        flour: 'ap',
+        ratio: '1:1:1',
+        speed: 1,
+        paused: false,
+        simHours: 0,
+        name: 'Bubblino',
+      };
+
+      const milestones = new Set();
+      const logEl = document.getElementById('log');
+      const starterBody = document.getElementById('starterBody');
+      const hoochLayer = document.getElementById('hoochLayer');
+      const canvas = document.getElementById('bubbleCanvas');
+      const ctx = canvas.getContext('2d');
+      const bubbles = [];
+
+      function formatTime() {
+        const total = Math.floor(state.simHours);
+        const d = Math.floor(total / 24);
+        const h = total % 24;
+        if (d > 0) return `${d}d ${h}h`;
+        return `${h}h`;
+      }
+
+      function addLog(text, isNew = true) {
+        const entry = document.createElement('div');
+        entry.className = 'log-entry' + (isNew ? ' new' : '');
+        entry.innerHTML = `<span class="log-time">${formatTime()}</span><span class="log-text">${text}</span>`;
+        logEl.prepend(entry);
+        if (logEl.children.length > 40) logEl.lastElementChild.remove();
+      }
+
+      function checkMilestone(key, condition, text) {
+        if (condition && !milestones.has(key)) {
+          milestones.add(key);
+          addLog(text);
+        }
+      }
+
+      function tempFactor(temp, optimum, spread, stressAbove) {
+        const diff = Math.abs(temp - optimum);
+        let factor = Math.max(0, 1 - Math.pow(diff / spread, 2));
+        if (stressAbove && temp > stressAbove) {
+          factor *= Math.max(0.35, 1 - (temp - stressAbove) * 0.08);
+        }
+        return factor;
+      }
+
+      function pHFromAcid() {
+        return 6.0 - state.acid * (6.0 - 3.8);
+      }
+
+      function risePercent() {
+        return Math.round(state.gas * 100);
+      }
+
+      function updateMood() {
+        const badge = document.getElementById('moodBadge');
+        let mood = MOODS.active;
+        if (state.hooch > 0.15) mood = MOODS.boozy;
+        else if (state.food < 0.12 && state.acid > 0.5) mood = MOODS.hungry;
+        else if (state.temp < 18) mood = MOODS.sleepy;
+        else if (state.acid > 0.65) mood = MOODS.sour;
+        else if (state.gas > 0.7 && state.food > 0.2) mood = MOODS.happy;
+        badge.textContent = mood.label;
+        badge.style.background = mood.color;
+      }
+
+      function updateStats() {
+        document.getElementById('riseStat').textContent = risePercent() + '%';
+        document.getElementById('phStat').textContent = pHFromAcid().toFixed(2);
+        document.getElementById('hydrationStat').textContent = Math.round(state.hydration * 100) + '%';
+        document.getElementById('tempStat').textContent = state.temp + '°C';
+        document.getElementById('ageStat').textContent = state.ageDays.toFixed(1) + 'd';
+        document.getElementById('feedStat').textContent = state.feedCount;
+        document.getElementById('tempBadge').textContent = state.temp + '°C';
+        updateMood();
+      }
+
+      function updateJar() {
+        const baseLevel = 0.25 + state.hydration * 0.12;
+        const riseVisual = Math.min(0.7, state.gas * 0.45);
+        const hoochVisual = state.hooch * 0.18;
+        const totalHeight = Math.min(0.92, baseLevel + riseVisual + hoochVisual);
+        starterBody.style.height = (totalHeight * 100) + '%';
+        hoochLayer.style.height = (state.hooch * 100) + '%';
+      }
+
+      function flourSpeed() { return FLOURS[state.flour].speed; }
+      function flourAcidMod() { return FLOURS[state.flour].acidMod; }
+
+      function simulate(dtHours) {
+        if (state.paused || state.speed <= 0) return;
+        const speed = flourSpeed();
+        const acidMod = flourAcidMod();
+
+        const yeastFactor = tempFactor(state.temp, 26, 14, 32) * (1 - state.acid * 0.55);
+        const labFactor = tempFactor(state.temp, 30, 15, 36) * (1 - state.acid * 0.25);
+
+        const foodAvailable = Math.max(0, state.food);
+        const yeastGrowth = state.yeast * yeastFactor * foodAvailable * 0.18 * dtHours * speed;
+        const labGrowth = state.lab * labFactor * foodAvailable * 0.22 * dtHours * speed;
+
+        const yeastDeath = state.yeast * 0.015 * dtHours * (1 + state.acid * 0.6);
+        const labDeath = state.lab * 0.012 * dtHours * (1 + state.acid * 0.3);
+
+        state.yeast = Math.max(0.001, Math.min(1, state.yeast + yeastGrowth - yeastDeath));
+        state.lab = Math.max(0.001, Math.min(1, state.lab + labGrowth - labDeath));
+
+        const yeastFoodUse = state.yeast * 0.055 * dtHours * speed;
+        const labFoodUse = state.lab * 0.035 * dtHours * speed;
+        state.food = Math.max(0, state.food - yeastFoodUse - labFoodUse);
+
+        const acidProduction = state.lab * labFactor * 0.028 * dtHours * acidMod;
+        const acidBuffering = 0.004 * dtHours;
+        state.acid = Math.max(0, Math.min(1, state.acid + acidProduction - acidBuffering));
+
+        const co2Rate = state.yeast * yeastFactor * foodAvailable * 0.35 * dtHours * speed;
+        const leakage = state.gas * 0.025 * dtHours;
+        state.gas = Math.max(0, Math.min(CONFIG.maxRise, state.gas + co2Rate - leakage));
+
+        if (state.food < CONFIG.hoochFoodThreshold && state.acid > CONFIG.hoochAcidThreshold) {
+          state.hoochTimer += dtHours;
+        } else {
+          state.hoochTimer = Math.max(0, state.hoochTimer - dtHours * 0.5);
+        }
+        const targetHooch = state.hoochTimer > CONFIG.hoochTimeThreshold
+          ? Math.min(0.35, (state.hoochTimer - CONFIG.hoochTimeThreshold) * 0.04)
+          : 0;
+        state.hooch += (targetHooch - state.hooch) * 0.08 * dtHours;
+
+        state.simHours += dtHours;
+        state.ageDays = state.simHours / 24;
+
+        checkMilestone('first_bubbles', state.gas > 0.25, 'First bubbles! CO2 is forming.');
+        checkMilestone('rise_peak', state.gas > 0.9, 'Big rise — the starter is pushing the lid off.');
+        checkMilestone('ph_drop', state.acid > 0.45, 'pH dropped below 4.5 — LAB are active.');
+        checkMilestone('hooch', state.hooch > 0.05, 'Hooch appeared on top — time to feed or stir.');
+        checkMilestone('hungry', state.food < 0.08 && state.gas < 0.2, 'Starter is hungry and collapsed.');
+        checkMilestone('day1', state.ageDays >= 1, 'Your starter is a day old. Good job keeping it alive.');
+        checkMilestone('first_feed', state.feedCount >= 1, 'First feeding complete.');
+        checkMilestone('first_stir', false, '');
+        checkMilestone('first_discard', false, '');
+      }
+
+      function feed() {
+        const ratio = state.ratio;
+        let flourPart = 1, waterPart = 1;
+        if (ratio === '1:2:2') { flourPart = 2; waterPart = 2; }
+        else if (ratio === '1:5:5') { flourPart = 5; waterPart = 5; }
+
+        const totalNewMass = flourPart + waterPart + 1;
+        const dilution = 1 / totalNewMass;
+        state.yeast *= dilution;
+        state.lab *= dilution;
+        state.acid *= dilution;
+        state.gas *= dilution;
+        state.hooch = Math.max(0, state.hooch * dilution - 0.05);
+        state.hoochTimer = 0;
+
+        const addedFood = (flourPart / totalNewMass) * 0.9;
+        state.food = Math.min(1, state.food * dilution + addedFood);
+        state.hydration = waterPart / flourPart;
+        state.feedCount += 1;
+
+        spawnBubbles(20, true);
+        updateJar();
+        updateStats();
+        addLog(`Fed with ${ratio} ${FLOURS[state.flour].name.toLowerCase()} flour.`);
+        if (!milestones.has('first_feed')) {
+          milestones.add('first_feed');
+          addLog('First feeding complete.');
+        }
+      }
+
+      function stir() {
+        state.gas *= 0.55;
+        state.food = Math.min(1, state.food + 0.04);
+        state.hooch = Math.max(0, state.hooch - 0.15);
+        state.hoochTimer = Math.max(0, state.hoochTimer - 6);
+        state.yeast = Math.min(1, state.yeast * 1.02);
+        state.lab = Math.min(1, state.lab * 1.02);
+        spawnBubbles(12, false);
+        updateJar();
+        updateStats();
+        addLog('Stirred — redistributed microbes and knocked out some gas.');
+        if (!milestones.has('first_stir')) {
+          milestones.add('first_stir');
+          addLog('First stir. Air helps a little.');
+        }
+      }
+
+      function discard() {
+        state.yeast *= 0.6;
+        state.lab *= 0.6;
+        state.food *= 0.6;
+        state.acid *= 0.6;
+        state.gas *= 0.7;
+        state.hooch *= 0.7;
+        addLog('Discarded half to keep the jar manageable.');
+        if (!milestones.has('first_discard')) {
+          milestones.add('first_discard');
+          addLog('First discard. Less bulk, same culture.');
+        }
+        updateJar();
+        updateStats();
+      }
+
+      function reset() {
+        state.yeast = 0.18;
+        state.lab = 0.15;
+        state.food = 0.55;
+        state.acid = 0.18;
+        state.gas = 0.45;
+        state.hydration = 1.0;
+        state.temp = 25;
+        state.ageDays = 0;
+        state.feedCount = 0;
+        state.hooch = 0;
+        state.hoochTimer = 0;
+        state.simHours = 0;
+        state.speed = 1;
+        state.flour = 'ap';
+        state.ratio = '1:1:1';
+        state.name = 'Bubblino';
+        state.paused = false;
+        milestones.clear();
+        logEl.innerHTML = '';
+        document.getElementById('tempSlider').value = 25;
+        document.getElementById('speedSlider').value = 1;
+        document.getElementById('flourSelect').value = 'ap';
+        document.getElementById('petName').textContent = state.name;
+        updateChips();
+        addLog('New starter born.');
+        updateFlavorNote();
+        updateSliders();
+        updateJar();
+        updateStats();
+      }
+
+      function updateChips() {
+        document.querySelectorAll('#ratioChips .chip').forEach((chip) => {
+          chip.classList.toggle('active', chip.dataset.ratio === state.ratio);
+        });
+      }
+
+      function updateSliders() {
+        document.getElementById('tempValue').textContent = state.temp + '°C';
+        document.getElementById('speedValue').textContent = state.speed + 'h/s';
+      }
+
+      function updateFlavorNote() {
+        document.getElementById('flavorNote').textContent = FLOURS[state.flour].note;
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = Math.floor(rect.width);
+        canvas.height = Math.floor(rect.height);
+      }
+
+      function spawnBubbles(count, big) {
+        const w = canvas.width;
+        const h = canvas.height;
+        for (let i = 0; i < count; i++) {
+          bubbles.push({
+            x: (w * 0.12) + Math.random() * (w * 0.76),
+            y: h - (h * 0.12) - Math.random() * (h * 0.55),
+            r: (big ? 2.5 : 1) + Math.random() * (big ? 4 : 2.5),
+            vy: 0.3 + Math.random() * 0.8,
+            life: 1,
+            decay: 0.005 + Math.random() * 0.015,
+          });
+        }
+      }
+
+      function drawBubbles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const activity = (state.yeast + state.lab) * 0.5;
+        if (Math.random() < 0.05 + activity * 0.25) {
+          spawnBubbles(1 + Math.floor(activity * 3), false);
+        }
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+          const b = bubbles[i];
+          b.y -= b.vy;
+          b.life -= b.decay;
+          if (b.life <= 0 || b.y < canvas.height * 0.12) {
+            bubbles.splice(i, 1);
+            continue;
+          }
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 253, 245, ' + (0.25 * b.life) + ')';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255, 255, 255, ' + (0.4 * b.life) + ')';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        requestAnimationFrame(drawBubbles);
+      }
+
+      function gameLoop() {
+        simulate(1);
+        updateJar();
+        updateStats();
+      }
+
+      function bindControls() {
+        document.getElementById('feedBtn').addEventListener('click', feed);
+        document.getElementById('stirBtn').addEventListener('click', stir);
+        document.getElementById('discardBtn').addEventListener('click', discard);
+
+        const pauseBtn = document.getElementById('pauseBtn');
+        pauseBtn.addEventListener('click', () => {
+          state.paused = !state.paused;
+          pauseBtn.textContent = state.paused ? '▶ Resume' : '⏸ Pause';
+          addLog(state.paused ? 'Simulation paused.' : 'Simulation resumed.');
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', reset);
+        document.getElementById('renameBtn').addEventListener('click', () => {
+          const name = prompt('Name your starter:', state.name);
+          if (name && name.trim()) {
+            state.name = name.trim().slice(0, 20);
+            document.getElementById('petName').textContent = state.name;
+            addLog(`Renamed to ${state.name}.`);
+          }
+        });
+
+        const tempSlider = document.getElementById('tempSlider');
+        tempSlider.addEventListener('input', () => {
+          state.temp = parseInt(tempSlider.value, 10);
+          updateSliders();
+          updateStats();
+        });
+
+        const speedSlider = document.getElementById('speedSlider');
+        speedSlider.addEventListener('input', () => {
+          state.speed = parseInt(speedSlider.value, 10);
+          updateSliders();
+        });
+
+        document.querySelectorAll('#ratioChips .chip').forEach((chip) => {
+          chip.addEventListener('click', () => {
+            state.ratio = chip.dataset.ratio;
+            updateChips();
+          });
+        });
+
+        const flourSelect = document.getElementById('flourSelect');
+        flourSelect.addEventListener('change', () => {
+          state.flour = flourSelect.value;
+          updateFlavorNote();
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+      }
+
+      function init() {
+        resizeCanvas();
+        bindControls();
+        updateChips();
+        updateSliders();
+        updateFlavorNote();
+        spawnBubbles(18, true);
+        addLog('Starter is awake and bubbling. Try feeding or stirring.');
+        updateJar();
+        updateStats();
+        drawBubbles();
+        setInterval(gameLoop, 1000);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
