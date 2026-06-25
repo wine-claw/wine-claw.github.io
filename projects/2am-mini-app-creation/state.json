@@ -1,137 +1,150 @@
 {
-    "name": "2am Mini-App Creation",
-    "slug": "2am-mini-app-creation",
-    "status": "active",
-    "summary": "2026-06-13: Patent Guesser \u2014 Guess the invention from its patent drawing and clues",
-    "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/README.md",
-    "specPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/SPEC.md",
-    "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/latest-summary.md",
-    "updatedAt": "2026-06-12T16:37:06.268132+00:00",
-    "nextStep": "Next overnight run at 2:00 AM",
-    "primaryLink": {
-        "label": "Patent Guesser",
-        "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-13-patent-guesser/"
+  "name": "2am Mini-App Creation",
+  "slug": "2am-mini-app-creation",
+  "status": "active",
+  "summary": "2026-06-24: Sourdough Starter Pet — Interactive sourdough starter simulator — feed, stir, discard, and watch it rise.",
+  "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/README.md",
+  "specPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/SPEC.md",
+  "latestSummaryPath": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/latest-summary.md",
+  "updatedAt": "2026-06-25T00:05:47.243361+00:00",
+  "nextStep": "Next overnight run at 2:00 AM",
+  "primaryLink": {
+    "label": "Sourdough Starter Pet",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-24-sourdough-starter-pet/"
+  },
+  "secondaryClosedLinks": [
+    {
+      "label": "Gallery",
+      "url": "https://wine-claw.github.io/app-gallery/"
+    }
+  ],
+  "links": [],
+  "latestRun": {
+    "date": "2026-06-24",
+    "title": "Sourdough Starter Pet",
+    "kind": "overnight",
+    "notes": "Interactive sourdough starter simulator — feed, stir, discard, and watch it rise.",
+    "path": "projects/2am-mini-app-creation/runs/2026-06-24/sourdough-starter-pet",
+    "entryFile": "projects/2am-mini-app-creation/runs/2026-06-24/sourdough-starter-pet/index.html",
+    "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-06-24-sourdough-starter-pet/",
+    "delegation": {
+      "used": true,
+      "worker": "subagent",
+      "workerHandled": "Core implementation: concept, HTML/CSS/JS build, simulation model, UI controls, discovery log, warning banner, robots meta, initial responsive layout, JS syntax check.",
+      "mainHandled": "Review, mobile-layout fixes (flex wrapping, font/button sizing, warning text shortening), verification screenshots via Playwright mobile viewport, gallery packaging, state update, and script path bug fix.",
+      "estimatedSplit": {
+        "workerPercent": 80,
+        "mainPercent": 20,
+        "worker2Percent": 0
+      }
     },
-    "secondaryClosedLinks": [
-        {
-            "label": "Gallery",
-            "url": "https://wine-claw.github.io/app-gallery/"
+    "buildSpecFile": "projects/2am-mini-app-creation/runs/2026-06-24/sourdough-starter-pet/BUILD-SPEC.md"
+  },
+  "extraRuns": [
+    {
+      "date": "2026-06-21",
+      "title": "Wind Farm Layout Toy",
+      "kind": "overnight",
+      "notes": "Interactive wind-farm placement sandbox with live wake visualization and power scoring",
+      "path": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout",
+      "entryFile": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/index.html",
+      "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/",
+      "delegation": {
+        "used": false,
+        "worker": "none",
+        "workerHandled": "No worker agents available or used.",
+        "mainHandled": "100% — concept, design, implementation, verification syntax check, gallery publish, state update.",
+        "estimatedSplit": {
+          "workerPercent": 0,
+          "mainPercent": 100,
+          "worker2Percent": 0
         }
-    ],
-    "links": [],
-    "latestRun": {
-        "date": "2026-06-13",
-        "title": "Patent Guesser",
-        "kind": "overnight",
-        "notes": "Guess the invention from its patent drawing and clues",
-        "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-06-13/patent-guesser",
-        "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-06-13/patent-guesser/index.html",
-        "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-06-13-patent-guesser/",
-        "delegation": {
-            "used": false,
-            "worker": "worker1 (Kimi K2.6)",
-            "workerHandled": "Not attempted \u2014 worker1 has timed out without producing code on 6+ consecutive overnight cron runs. Main agent built directly per current SPEC.",
-            "mainHandled": "100% \u2014 concept selection (patent-drawing guessing game \u2014 deliberately chosen for domain variety after a streak of ancient water lifts, permaculture, and reaction-diffusion; archetype: guess/challenge game with visual discovery, distinct from animated explainers and sandboxes; domain: history of technology / engineering, not wine), design (cream paper background with blueprint grid, navy ink palette, Courier New patent-figure labels, inline SVG technical drawings for 20 inventions in patent-diagram style: zipper teeth with slider, ballpoint pen cross-section with ball-and-ink, safety razor guard plate, Velcro hook/loop fastener, refrigerator coil schematic, phonograph turntable with tone arm, incandescent lamp with filament and base, sewing machine needle-and-bobbin lockstitch, bicycle diamond frame, barbed wire with twisted strands and barbs, windshield wiper arm and linkage, escalator steps on inclined track, paperclip on paper, vacuum cleaner canister with hose, thermos double-wall with vacuum arrows, dishwasher spray arm and racks, microwave oven with magnetron wave, turbojet engine with compressor and exhaust, cotton gin saw cylinder with brush), full HTML/CSS/JS implementation (~48 KB single-file app with 20 invention cards, category filter buttons, daily challenge seeded randomizer, progressive hint reveal, scoring with streak bonus, flip-card reveal with engineering explanation, session history log), verification (file size >5KB, disclaimer present, robots meta present, HTML syntax valid, web_fetch confirmed hosted gallery loads and latest redirect works), publish script execution, pipeline check (initially false-positive due to outdated expected_public_slug logic in check script \u2014 fixed script bug and re-ran to confirm pass), state and latest-summary update.",
-            "estimatedSplit": {
-                "workerPercent": 0,
-                "mainPercent": 100,
-                "worker2Percent": 0
-            }
-        }
+      },
+      "buildSpecFile": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/BUILD-SPEC.md"
     },
-    "extraRuns": [
-        {
-            "date": "2026-06-12",
-            "title": "Ancient Water Lifts Explorer",
-            "kind": "overnight",
-            "notes": "Interactive animated engineering history \u2014 5 ancient water-lifting machines with live parameter sandbox, flowing water particles, and side-by-side comparison",
-            "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-06-12/ancient-water-lifts",
-            "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-06-12/ancient-water-lifts/index.html",
-            "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-06-12-ancient-water-lifts/",
-            "delegation": {
-                "used": false,
-                "worker": "worker1 (Kimi K2.6)",
-                "workerHandled": "Not attempted \u2014 worker1 has timed out without producing code on 6+ consecutive overnight cron runs. Main agent built directly per current SPEC.",
-                "mainHandled": "100% \u2014 concept selection (history of engineering/ancient technology \u2014 deliberately chosen to fill a completely new domain gap), domain research (shadoof/Archimedes screw/qanat/noria/saqiya specifications from UNESCO, Scientific American, Water History, MDPI, Nature, Akvopedia), design (dark warm earth-tone palette with SVG cross-section animations, real-time water particle flow, interactive parameter sliders with live metric updates, era badges, comparison throughput bar), full HTML/CSS/JS implementation (~52 KB single-file app with 5 machine tabs, 4 parameter sliders per machine, animated SVG scenes for each machine: oscillating shadoof with counterweight physics, rotating Archimedes screw with helical water trapping, underground qanat cross-section with flowing water particles and shaft labels, spinning noria with bucket pour animation, animal-driven saqiya with ox walking in a circle, gear meshing animation, yoke connection), verification, publish script execution, state and latest-summary manual repair.",
-                "estimatedSplit": {
-                    "workerPercent": 0,
-                    "mainPercent": 100,
-                    "worker2Percent": 0
-                }
-            }
-        },
-        {
-            "date": "2026-05-02",
-            "title": "Linkage Lab",
-            "kind": "overnight",
-            "notes": "Interactive kinematic linkage sandbox. Drag joints to reshape planar linkages (crank-rocker, double-crank, Chebyshev lambda, Peaucellier straight-line, crank-slider) and watch coupler curves trace in real time. 5 presets, adjustable speed, trace toggle, velocity vectors, Grashof classification. Dark engineering theme.",
-            "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-05-02/linkage-lab",
-            "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-05-02/linkage-lab/index.html",
-            "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-05-02/linkage-lab/BUILD-SPEC.md",
-            "verification": "HTML parse OK, JS syntax OK. Gallery publishing deferred to daytime \u2014 published 2026-05-02 09:51 ACST after Simon noticed missing app. Build itself completed at 02:09 but packaging step (gallery copy, index.html update, git push, state.json update) was skipped.",
-            "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-05-02-linkage-lab/",
-            "delegation": {
-                "used": true,
-                "worker": "worker1 (Kimi K2.6)",
-                "workerHandled": "Concept selection, BUILD-SPEC.md, full HTML/CSS/JS implementation (~90% of code).",
-                "mainHandled": "Reviewed BUILD-SPEC.md, verified HTML/JS syntax, but packaging step (gallery copy, git push, state update) was missed until Simon flagged it.",
-                "estimatedSplit": {
-                    "workerPercent": 90,
-                    "mainPercent": 10,
-                    "worker2Percent": 0
-                }
-            }
-        },
-        {
-            "date": "2026-04-29",
-            "title": "Ripple Lab",
-            "kind": "overnight",
-            "notes": "Interactive wave interference sandbox \u2014 tap to drop pebbles, drag to stir, place persistent wave sources, draw reflective walls, and watch interference patterns form in real time. 5 interaction modes, 3 presets (freeform, double slit, circular pool), adjustable speed/frequency/damping, water/sound color modes. Dark scientific responsive UI.",
-            "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab",
-            "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/index.html",
-            "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-29/ripple-lab/summary.md",
-            "verification": "Playwright CLI screenshots captured (mobile 390x844, desktop 1280x800). Pixel sanity check passed: non-blank dark UI (~96-98% dark pixels) with visible wave crests. Static checks passed. Full interactive verification deferred to daytime (overnight policy).",
-            "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-04-29-ripple-lab/",
-            "delegation": {
-                "used": true,
-                "worker": "worker1 (Kimi K2.6 / glm-5.1)",
-                "workerHandled": "Full HTML/CSS/JS implementation, wave physics simulation, canvas rendering, responsive layout, mobile touch handling, presets, UI controls (~75%)",
-                "mainHandled": "Concept selection, domain research, requirements framing, code review, verification (screenshots), packaging, gallery publishing, state updates (~25%)",
-                "estimatedSplit": {
-                    "workerPercent": 75,
-                    "mainPercent": 25,
-                    "worker2Percent": 0
-                }
-            }
-        },
-        {
-            "date": "2026-04-28",
-            "title": "Globe Projector",
-            "notes": "Interactive cartography sandbox / projection guessing game. Draggable source globe, 9 projection lenses, simplified continent outlines, graticule, Tissot-style distortion circles, live thumbnails, side-by-side compare mode, and guess-the-projection streak game. Dark scientific responsive UI.",
-            "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-28/globe-projector",
-            "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-28/globe-projector/index.html",
-            "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-28/globe-projector/summary.md",
-            "verification": "Static checks passed; local HTTP smoke test passed; Playwright CLI screenshot captured; screenshot pixel sanity check confirmed non-blank dark UI; mini_app_pipeline_check.py passed after GitHub Pages refreshed. Full recorded-video loop not completed because only CLI screenshot verification was available in this unattended run.",
-            "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-04-28-globe-projector/",
-            "delegation": {
-                "used": true,
-                "worker": "worker1 (K2.6)",
-                "workerHandled": "Attempted \u2014 worker1 timed out before producing files.",
-                "mainHandled": "Concept selection, research synthesis, complete HTML/CSS/JS implementation, verification, packaging, state updates, and gallery publishing.",
-                "estimatedSplit": {
-                    "workerPercent": 0,
-                    "mainPercent": 100,
-                    "worker2Percent": 0
-                }
-            }
-        },
-        {
-            "date": "2026-04-27",
-            "title": "Fermentation Comparison Atlas",
-            "notes": "Interactive side-by-side comparison explorer of 7 fermentation types with animated timelines, temperature gauges, pH arcs, microbe illustrations, byproduct visualisations, and expandable educational cards. Warm cream theme. Single-file HTML/CSS/JS. Responsive.",
-            "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas",
-            "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas/index.html",
-            "summaryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-04-27/fermentation-comparison-atlas/summary.md"
+    {
+      "date": "2026-06-21",
+      "title": "Wind Farm Layout Toy",
+      "kind": "overnight",
+      "notes": "Interactive wind-farm placement sandbox with live wake visualization and power scoring",
+      "path": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout",
+      "entryFile": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/index.html",
+      "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/",
+      "delegation": {
+        "used": false,
+        "worker": "none",
+        "workerHandled": "No worker agents available or used.",
+        "mainHandled": "100% — concept, design, implementation, verification syntax check, gallery publish, state update.",
+        "estimatedSplit": {
+          "workerPercent": 0,
+          "mainPercent": 100,
+          "worker2Percent": 0
         }
-    ]
+      },
+      "buildSpecFile": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/BUILD-SPEC.md"
+    },
+    {
+      "date": "2026-06-21",
+      "title": "Wind Farm Layout Toy",
+      "kind": "overnight",
+      "notes": "Interactive wind-farm placement sandbox with live wake visualization and power scoring",
+      "path": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout",
+      "entryFile": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/index.html",
+      "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/",
+      "delegation": {
+        "used": false,
+        "worker": "none",
+        "workerHandled": "No worker agents available or used.",
+        "mainHandled": "100% — concept, design, implementation, verification syntax check, gallery publish, state update.",
+        "estimatedSplit": {
+          "workerPercent": 0,
+          "mainPercent": 100,
+          "worker2Percent": 0
+        }
+      },
+      "buildSpecFile": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/BUILD-SPEC.md"
+    },
+    {
+      "date": "2026-06-21",
+      "title": "Wind Farm Layout Toy",
+      "kind": "overnight",
+      "notes": "Interactive wind-farm placement sandbox with live wake visualization and power scoring",
+      "path": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout",
+      "entryFile": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/index.html",
+      "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/",
+      "delegation": {
+        "used": false,
+        "worker": "none",
+        "workerHandled": "No worker agents available or used.",
+        "mainHandled": "100% — concept, design, implementation, verification syntax check, gallery publish, state update.",
+        "estimatedSplit": {
+          "workerPercent": 0,
+          "mainPercent": 100,
+          "worker2Percent": 0
+        }
+      },
+      "buildSpecFile": "projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/BUILD-SPEC.md"
+    },
+    {
+      "date": "2026-06-21",
+      "title": "Wind Farm Layout Toy",
+      "kind": "overnight",
+      "notes": "Interactive wind-farm placement sandbox — drag turbines, tune wind, see wakes and power output.",
+      "path": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout",
+      "entryFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/index.html",
+      "galleryUrl": "https://wine-claw.github.io/app-gallery/apps/2026-06-21-wind-farm-layout/",
+      "delegation": {
+        "used": false,
+        "worker": "none",
+        "workerHandled": "No worker agents available or used.",
+        "mainHandled": "100% — concept, design, implementation, verification syntax check, gallery publish, state update.",
+        "estimatedSplit": {
+          "workerPercent": 0,
+          "mainPercent": 100,
+          "worker2Percent": 0
+        }
+      },
+      "buildSpecFile": "/Users/wineclaw/.openclaw/workspace/projects/2am-mini-app-creation/runs/2026-06-21/wind-farm-layout/BUILD-SPEC.md"
+    }
+  ]
 }
