@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Vineyard Row Gap Estimator</title>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --panel: #ffffff;
+      --ink: #2c241b;
+      --muted: #6b5f55;
+      --accent: #6b8e23;
+      --accent-2: #8b5a2b;
+      --warn: #fff3cd;
+      --warn-border: #e0b16c;
+      --line: #dcd6cc;
+      --dot: #4a6f16;
+      --row: #a89f91;
+      --shadow: 0 2px 8px rgba(44,36,27,0.08);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .warning {
+      background: var(--warn);
+      border-bottom: 1px solid var(--warn-border);
+      padding: 12px 16px;
+      font-size: 0.92rem;
+      color: #5c4515;
+    }
+    .warning strong { color: #3f2e0a; }
+    header {
+      padding: 18px 16px 6px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .subtitle {
+      margin: 4px 0 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(300px, 420px) 1fr;
+      gap: 16px;
+      padding: 16px;
+    }
+    @media (max-width: 880px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--panel);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+      color: var(--accent-2);
+    }
+    .field {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--ink);
+      background: #fff;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(107,142,35,0.15);
+    }
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .preset {
+      padding: 6px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--ink);
+    }
+    .preset.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .outputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 420px) {
+      .outputs { grid-template-columns: 1fr; }
+    }
+    .metric {
+      background: #faf9f6;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .metric-name {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .metric-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .metric-unit {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-left: 2px;
+    }
+    .canvas-wrap {
+      position: relative;
+      background: #f0ece4;
+      border-radius: 14px;
+      overflow: hidden;
+      min-height: 360px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      cursor: grab;
+      touch-action: none;
+    }
+    canvas:active { cursor: grabbing; }
+    .canvas-hint {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: rgba(255,255,255,0.85);
+      padding: 5px 9px;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+    .note {
+      margin-top: 12px;
+      font-size: 0.86rem;
+      color: var(--muted);
+      background: #faf9f6;
+      border-left: 3px solid var(--accent);
+      padding: 10px 12px;
+      border-radius: 0 10px 10px 0;
+    }
+    .footer {
+      padding: 0 16px 24px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">
+    <strong>Experimental OpenClaw AI mini-app.</strong> Untested, not professionally validated, and not for real vineyard decisions. Use only as a rough illustration.
+  </div>
+
+  <header>
+    <h1>Vineyard Row Gap Estimator</h1>
+    <p class="subtitle">Replanting calculator and top-down block layout preview</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Presets</h2>
+      <div class="presets" id="presets">
+        <button class="preset" data-row="3.6" data-vine="2.0">Wide 3.6 × 2.0 m</button>
+        <button class="preset" data-row="2.5" data-vine="1.2">Narrow 2.5 × 1.2 m</button>
+        <button class="preset" data-row="2.2" data-vine="1.0">High density 2.2 × 1.0 m</button>
+        <button class="preset active" data-row="" data-vine="">Custom</button>
+      </div>
+
+      <h2>Spacing</h2>
+      <div class="field">
+        <label for="rowLength">Row length (m)</label>
+        <input type="number" id="rowLength" value="100" min="1" step="1">
+      </div>
+      <div class="field">
+        <label for="blockWidth">Block width / between-row spacing (m)</label>
+        <input type="number" id="blockWidth" value="120" min="1" step="1">
+      </div>
+      <div class="field">
+        <label for="rowSpacing">Row spacing within block (m)</label>
+        <input type="number" id="rowSpacing" value="3.6" min="0.5" step="0.1">
+      </div>
+      <div class="field">
+        <label for="vineSpacing">Vine spacing within row (m)</label>
+        <input type="number" id="vineSpacing" value="2.0" min="0.3" step="0.1">
+      </div>
+
+      <h2 style="margin-top:18px">Targets</h2>
+      <div class="field">
+        <label for="vinesPerHaInput">Desired vines / hectare (optional)</label>
+        <input type="number" id="vinesPerHaInput" placeholder="leave blank to auto-calculate" min="0" step="1">
+      </div>
+
+      <h2 style="margin-top:18px">Economics</h2>
+      <div class="field">
+        <label for="estCost">Establishment cost per vine ($)</label>
+        <input type="number" id="estCost" value="12" min="0" step="0.5">
+      </div>
+      <div class="field">
+        <label for="runCost">Annual running cost per vine ($)</label>
+        <input type="number" id="runCost" value="8" min="0" step="0.5">
+      </div>
+      <div class="field">
+        <label for="yieldPerVine">Expected yield per vine (kg)</label>
+        <input type="number" id="yieldPerVine" value="2.0" min="0" step="0.1">
+      </div>
+      <div class="field">
+        <label for="grapePrice">Expected grape price ($ / tonne)</label>
+        <input type="number" id="grapePrice" value="2500" min="0" step="50">
+      </div>
+    </section>
+
+    <section class="panel" style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <h2>Layout preview</h2>
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="blockCanvas"></canvas>
+          <div class="canvas-hint">Drag to pan · scroll/pinch to zoom</div>
+        </div>
+      </div>
+
+      <div>
+        <h2>Results</h2>
+        <div class="outputs" id="outputs">
+          <div class="metric"><div class="metric-name">Rows per block</div><div class="metric-value" id="rowsOut">—</div></div>
+          <div class="metric"><div class="metric-name">Vines per row</div><div class="metric-value" id="vinesRowOut">—</div></div>
+          <div class="metric"><div class="metric-name">Total vines</div><div class="metric-value" id="totalVinesOut">—</div></div>
+          <div class="metric"><div class="metric-name">Vines / hectare</div><div class="metric-value" id="vinesHaOut">—</div></div>
+          <div class="metric"><div class="metric-name">Planting density</div><div class="metric-value" id="densityOut">—<span class="metric-unit">vines/ha</span></div></div>
+          <div class="metric"><div class="metric-name">Block area</div><div class="metric-value" id="areaOut">—<span class="metric-unit">ha</span></div></div>
+          <div class="metric"><div class="metric-name">Total establishment cost</div><div class="metric-value" id="estCostOut">—</div></div>
+          <div class="metric"><div class="metric-name">Annual gross revenue</div><div class="metric-value" id="revenueOut">—</div></div>
+          <div class="metric"><div class="metric-name">Gross margin / vine</div><div class="metric-value" id="marginVineOut">—</div></div>
+          <div class="metric"><div class="metric-name">Gross margin / hectare</div><div class="metric-value" id="marginHaOut">—</div></div>
+          <div class="metric"><div class="metric-name">Simple gross margin / block</div><div class="metric-value" id="marginBlockOut">—</div></div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Why row spacing and vine spacing interact.</strong>
+        Vine density depends on the <em>area</em> each vine occupies: row spacing × vine spacing. Bringing rows closer together increases density unless you also widen vine spacing. Tighter spacing can improve yield per hectare but increases competition for water, light, and nutrients, and raises establishment and running costs.
+      </div>
+    </section>
+  </main>
+
+  <div class="footer">
+    Built as an overnight OpenClaw mini-app prototype. Numbers are illustrative; always validate planting plans with local advice and measured field data.
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const inputs = {
+        rowLength: document.getElementById('rowLength'),
+        blockWidth: document.getElementById('blockWidth'),
+        rowSpacing: document.getElementById('rowSpacing'),
+        vineSpacing: document.getElementById('vineSpacing'),
+        vinesPerHaInput: document.getElementById('vinesPerHaInput'),
+        estCost: document.getElementById('estCost'),
+        runCost: document.getElementById('runCost'),
+        yieldPerVine: document.getElementById('yieldPerVine'),
+        grapePrice: document.getElementById('grapePrice'),
+      };
+
+      const outputs = {
+        rows: document.getElementById('rowsOut'),
+        vinesRow: document.getElementById('vinesRowOut'),
+        totalVines: document.getElementById('totalVinesOut'),
+        vinesHa: document.getElementById('vinesHaOut'),
+        density: document.getElementById('densityOut'),
+        area: document.getElementById('areaOut'),
+        estCost: document.getElementById('estCostOut'),
+        revenue: document.getElementById('revenueOut'),
+        marginVine: document.getElementById('marginVineOut'),
+        marginHa: document.getElementById('marginHaOut'),
+        marginBlock: document.getElementById('marginBlockOut'),
+      };
+
+      const canvas = document.getElementById('blockCanvas');
+      const ctx = canvas.getContext('2d');
+      const wrap = document.getElementById('canvasWrap');
+      const presetButtons = document.querySelectorAll('.preset');
+
+      let state = {
+        panX: 0,
+        panY: 0,
+        scale: 1,
+        dragging: false,
+        lastX: 0,
+        lastY: 0,
+      };
+
+      function formatNumber(n, decimals) {
+        if (!isFinite(n)) return '—';
+        return n.toLocaleString(undefined, { maximumFractionDigits: decimals, minimumFractionDigits: 0 });
+      }
+
+      function formatCurrency(n) {
+        if (!isFinite(n)) return '—';
+        return '$' + formatNumber(Math.round(n), 0);
+      }
+
+      function parseVal(el) {
+        const v = parseFloat(el.value);
+        return isNaN(v) ? 0 : v;
+      }
+
+      function compute() {
+        const rowLength = parseVal(inputs.rowLength);
+        const blockWidth = parseVal(inputs.blockWidth);
+        const rowSpacing = parseVal(inputs.rowSpacing);
+        const vineSpacing = parseVal(inputs.vineSpacing);
+        const estCostPerVine = parseVal(inputs.estCost);
+        const runCostPerVine = parseVal(inputs.runCost);
+        const yieldPerVine = parseVal(inputs.yieldPerVine);
+        const grapePrice = parseVal(inputs.grapePrice);
+        const desiredVinesHa = parseVal(inputs.vinesPerHaInput);
+
+        const areaM2 = rowLength * blockWidth;
+        const areaHa = areaM2 / 10000;
+
+        let rowsPerBlock = 0, vinesPerRow = 0, totalVines = 0, vinesHa = 0;
+
+        if (rowSpacing > 0) {
+          rowsPerBlock = Math.max(1, Math.floor(blockWidth / rowSpacing));
+        }
+        if (vineSpacing > 0) {
+          vinesPerRow = Math.max(1, Math.floor(rowLength / vineSpacing));
+        }
+        totalVines = rowsPerBlock * vinesPerRow;
+        vinesHa = areaHa > 0 ? totalVines / areaHa : 0;
+
+        if (desiredVinesHa > 0 && areaHa > 0) {
+          const desiredTotal = Math.round(desiredVinesHa * areaHa);
+          outputs.vinesHa.textContent = formatNumber(desiredVinesHa, 0);
+          outputs.totalVines.textContent = formatNumber(desiredTotal, 0);
+        } else {
+          outputs.vinesHa.textContent = formatNumber(vinesHa, 0);
+          outputs.totalVines.textContent = formatNumber(totalVines, 0);
+        }
+
+        outputs.rows.textContent = formatNumber(rowsPerBlock, 0);
+        outputs.vinesRow.textContent = formatNumber(vinesPerRow, 0);
+        outputs.density.innerHTML = formatNumber(vinesHa, 0) + '<span class="metric-unit">vines/ha</span>';
+        outputs.area.innerHTML = formatNumber(areaHa, 3) + '<span class="metric-unit">ha</span>';
+
+        const effectiveTotal = desiredVinesHa > 0 && areaHa > 0 ? Math.round(desiredVinesHa * areaHa) : totalVines;
+        const establishmentTotal = effectiveTotal * estCostPerVine;
+        const revenueTotal = effectiveTotal * yieldPerVine * (grapePrice / 1000);
+        const runningTotal = effectiveTotal * runCostPerVine;
+        const grossMarginBlock = revenueTotal - runningTotal;
+        const grossMarginVine = effectiveTotal > 0 ? grossMarginBlock / effectiveTotal : 0;
+        const grossMarginHa = areaHa > 0 ? grossMarginBlock / areaHa : 0;
+
+        outputs.estCost.textContent = formatCurrency(establishmentTotal);
+        outputs.revenue.textContent = formatCurrency(revenueTotal);
+        outputs.marginVine.textContent = formatCurrency(grossMarginVine);
+        outputs.marginHa.textContent = formatCurrency(grossMarginHa);
+        outputs.marginBlock.textContent = formatCurrency(grossMarginBlock);
+
+        draw(rowsPerBlock, vinesPerRow, rowLength, blockWidth, rowSpacing, vineSpacing);
+      }
+
+      function resizeCanvas() {
+        const rect = wrap.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(320, Math.floor(rect.height * dpr));
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+        compute();
+      }
+
+      function draw(rows, vinesPerRow, rowLength, blockWidth, rowSpacing, vineSpacing) {
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        ctx.clearRect(0, 0, w, h);
+
+        const pad = 28;
+        const availW = Math.max(1, w - pad * 2);
+        const availH = Math.max(1, h - pad * 2);
+
+        const scaleX = availW / Math.max(1, rowLength);
+        const scaleY = availH / Math.max(1, blockWidth);
+        const baseScale = Math.min(scaleX, scaleY);
+
+        ctx.save();
+        ctx.translate(w / 2 + state.panX, h / 2 + state.panY);
+        ctx.scale(state.scale * baseScale, state.scale * baseScale);
+        ctx.translate(-rowLength / 2, -blockWidth / 2);
+
+        // Block outline
+        ctx.strokeStyle = '#bdae9e';
+        ctx.lineWidth = 2 / (state.scale * baseScale);
+        ctx.strokeRect(0, 0, rowLength, blockWidth);
+
+        // Rows
+        ctx.strokeStyle = 'var(--row)';
+        ctx.lineWidth = 1.5 / (state.scale * baseScale);
+        for (let r = 0; r < rows; r++) {
+          const y = r * rowSpacing + rowSpacing / 2;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(rowLength, y);
+          ctx.stroke();
+        }
+
+        // Vines
+        ctx.fillStyle = 'var(--dot)';
+        const dotRadius = Math.max(1.5, Math.min(rowSpacing, vineSpacing) * 0.08);
+        for (let r = 0; r < rows; r++) {
+          const y = r * rowSpacing + rowSpacing / 2;
+          for (let v = 0; v < vinesPerRow; v++) {
+            const x = v * vineSpacing + vineSpacing / 2;
+            ctx.beginPath();
+            ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Direction / scale bar
+        const barLenM = Math.max(5, Math.round(rowLength / 5));
+        const barY = blockWidth + 10 / (state.scale * baseScale);
+        ctx.strokeStyle = 'var(--ink)';
+        ctx.lineWidth = 1.2 / (state.scale * baseScale);
+        ctx.beginPath();
+        ctx.moveTo(0, barY);
+        ctx.lineTo(barLenM, barY);
+        ctx.stroke();
+        ctx.fillStyle = 'var(--ink)';
+        ctx.font = `${12 / (state.scale * baseScale)}px sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.fillText(barLenM + ' m', 0, barY + 16 / (state.scale * baseScale));
+
+        ctx.restore();
+      }
+
+      // Presets
+      presetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          presetButtons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const rs = parseFloat(btn.dataset.row);
+          const vs = parseFloat(btn.dataset.vine);
+          if (!isNaN(rs)) inputs.rowSpacing.value = rs;
+          if (!isNaN(vs)) inputs.vineSpacing.value = vs;
+          compute();
+        });
+      });
+
+      // Pan / zoom
+      canvas.addEventListener('pointerdown', e => {
+        state.dragging = true;
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+        canvas.setPointerCapture(e.pointerId);
+      });
+      canvas.addEventListener('pointermove', e => {
+        if (!state.dragging) return;
+        const dx = e.clientX - state.lastX;
+        const dy = e.clientY - state.lastY;
+        state.panX += dx;
+        state.panY += dy;
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+        compute();
+      });
+      canvas.addEventListener('pointerup', () => { state.dragging = false; });
+      canvas.addEventListener('pointercancel', () => { state.dragging = false; });
+      canvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.12 : 0.88;
+        state.scale = Math.max(0.25, Math.min(8, state.scale * factor));
+        compute();
+      }, { passive: false });
+
+      Object.values(inputs).forEach(el => {
+        el.addEventListener('input', compute);
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+    })();
+  </script>
+</body>
+</html>

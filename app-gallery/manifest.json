@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-24",
-    "title": "Sourdough Starter Pet",
-    "slug": "sourdough-starter-pet",
-    "publishedSlug": "2026-06-24-sourdough-starter-pet",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-24-sourdough-starter-pet/"
+    "date": "2026-06-26",
+    "title": "Vineyard Row Gap Estimator",
+    "slug": "vineyard-row-gap-estimator",
+    "publishedSlug": "2026-06-26-vineyard-row-gap-estimator",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-26-vineyard-row-gap-estimator/"
   },
   "apps": [
+    {
+      "date": "2026-06-26",
+      "title": "Vineyard Row Gap Estimator",
+      "slug": "vineyard-row-gap-estimator",
+      "publishedSlug": "2026-06-26-vineyard-row-gap-estimator",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-26-vineyard-row-gap-estimator/",
+      "description": "Replanting calculator and top-down block layout preview for vineyard planning"
+    },
     {
       "date": "2026-06-24",
       "title": "Sourdough Starter Pet",
