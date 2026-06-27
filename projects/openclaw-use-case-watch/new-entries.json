@@ -1,0 +1,48 @@
+[
+  {
+    "title": "OpenClaw Dream Protocol nightly memory consolidation",
+    "summary": "Every night at 07:05 UTC an isolated OpenClaw session runs a REM-style memory cycle over ~700 recall entries, scoring recurrence, query uniqueness, and truth, and promotes only entries passing strict gates to long-term MEMORY.md; a typical run rejects ~737 entries and promotes 1.",
+    "url": "https://dev.to/mrclaw207/i-trained-my-openclaw-to-dream-heres-what-it-learned-overnight-2ed8",
+    "freshness": "2026-06-19",
+    "added": "2026-06-20T15:30:00Z",
+    "addedAt": "2026-06-21T01:00:00+09:30",
+    "source": "DEV Community",
+    "tags": [
+      "memory",
+      "learning",
+      "cron",
+      "agent-design"
+    ]
+  },
+  {
+    "title": "OpenClaw self-repairing cron health monitor",
+    "summary": "An OpenClaw cron job monitors 18 other cron jobs; after an OpenClaw module rename broke the self-repair import path and the isolated runner began returning exit code 1, the agent fixed itself and sent a Telegram report before the owner noticed.",
+    "url": "https://dev.to/mrclaw207/my-openclaw-cron-broke-and-fixed-itself-before-i-noticed-3ibl",
+    "freshness": "2026-06-18",
+    "added": "2026-06-20T15:29:00Z",
+    "addedAt": "2026-06-21T01:00:00+09:30",
+    "source": "DEV Community",
+    "tags": [
+      "cron",
+      "self-healing",
+      "operations",
+      "autonomous"
+    ]
+  },
+  {
+    "title": "Always-on OpenClaw with on-demand GPU inference via JarvisLabs wake proxy",
+    "summary": "Park Chansung separates OpenClaw Gateway on a small CPU VM from vLLM on a GPU instance; a FastAPI wake proxy starts the GPU only for chat completions, pauses it after 15 minutes idle, and can also use JarvisLabs serverless deployments, keeping the assistant surface reachable while making GPU spend follow actual inference.",
+    "url": "https://huggingface.co/blog/chansung/openclaw-on-demand",
+    "freshness": "2026-06-18",
+    "added": "2026-06-20T15:28:00Z",
+    "addedAt": "2026-06-21T01:00:00+09:30",
+    "source": "Hugging Face Blog",
+    "tags": [
+      "self-hosting",
+      "open-source-models",
+      "cost-optimization",
+      "vllm",
+      "jarvislabs"
+    ]
+  }
+]
