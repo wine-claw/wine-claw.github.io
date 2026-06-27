@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Cymatic Sand Sandbox</title>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --panel: #161b22;
+      --text: #e3e6eb;
+      --muted: #9aa3b2;
+      --accent: #5fd3c5;
+      --accent2: #f2a65a;
+      --danger: #f25c5c;
+      --btn: #232936;
+      --btn-hover: #2e384a;
+      --ring: rgba(95, 211, 197, 0.35);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); }
+    body { display: flex; flex-direction: column; }
+
+    .banner {
+      background: #2a1d15;
+      color: #f5c591;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.85rem;
+      text-align: center;
+      border-bottom: 1px solid #3e2c20;
+      line-height: 1.35;
+    }
+
+    header {
+      padding: 0.85rem 1rem 0.25rem;
+      display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; justify-content: center;
+    }
+    h1 { margin: 0; font-size: clamp(1.15rem, 4vw, 1.55rem); font-weight: 700; letter-spacing: -0.01em; }
+    .tagline { color: var(--muted); font-size: 0.9rem; }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 0.9rem;
+      padding: 0.75rem 1rem 1rem;
+      min-height: 0;
+    }
+
+    .stage {
+      position: relative;
+      background: var(--panel);
+      border-radius: 12px;
+      border: 1px solid #222836;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      min-height: 0;
+    }
+    canvas { display: block; touch-action: none; max-width: 100%; max-height: 100%; }
+
+    .controls {
+      background: var(--panel);
+      border-radius: 12px;
+      border: 1px solid #222836;
+      padding: 0.95rem;
+      display: flex; flex-direction: column; gap: 0.9rem;
+      overflow-y: auto;
+    }
+
+    .group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .group label { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+    .group .value { color: var(--accent); font-weight: 700; }
+    .row { display: flex; align-items: center; gap: 0.6rem; }
+    .row input[type=range] { flex: 1; }
+    .row span { min-width: 2.5rem; text-align: right; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+
+    .btn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+    button {
+      background: var(--btn); color: var(--text); border: 1px solid #2e384a;
+      border-radius: 8px; padding: 0.55rem 0.6rem; font-size: 0.9rem; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+    }
+    button:hover { background: var(--btn-hover); border-color: var(--accent); }
+    button:active { transform: translateY(1px); }
+    button.primary { background: #234a44; border-color: var(--accent); color: #eafffb; }
+    button.primary:hover { background: #2b5e55; }
+    button.warn { background: #4a2828; border-color: var(--danger); color: #ffe8e8; }
+    button.warn:hover { background: #5e3232; }
+
+    .readout {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+      font-size: 0.82rem; color: var(--muted);
+    }
+    .readout div { background: #10141c; padding: 0.45rem 0.55rem; border-radius: 6px; }
+    .readout strong { color: var(--text); font-weight: 700; }
+
+    .hint { font-size: 0.78rem; color: var(--muted); line-height: 1.35; margin-top: 0.2rem; }
+    .hint kbd { background: #10141c; padding: 0.08rem 0.35rem; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--accent2); }
+
+    .presets { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .preset { font-size: 0.78rem; padding: 0.35rem 0.55rem; }
+
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; grid-template-rows: 55vh auto; }
+      .controls { max-height: unset; }
+      header { padding-top: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for decisions.
+  </div>
+
+  <header>
+    <h1>Cymatic Sand Sandbox</h1>
+    <span class="tagline">Interactive Chladni plate particle toy</span>
+  </header>
+
+  <main>
+    <div class="stage" id="stage">
+      <canvas id="plate" aria-label="Chladni plate simulation"></canvas>
+    </div>
+
+    <div class="controls">
+      <div class="group">
+        <label>Mode presets</label>
+        <div class="presets" id="presets"></div>
+      </div>
+
+      <div class="group">
+        <label>Plate shape</label>
+        <div class="btn-grid">
+          <button class="primary" id="shape-square">Square</button>
+          <button id="shape-circle">Circle</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <label>Vibration mode <span id="modeLabel" class="value">(3, 5)</span></label>
+        <div class="row"><label style="min-width:1.4rem">M</label><input id="m" type="range" min="1" max="12" value="3" step="1"><span id="mVal">3</span></div>
+        <div class="row"><label style="min-width:1.4rem">N</label><input id="n" type="range" min="1" max="12" value="5" step="1"><span id="nVal">5</span></div>
+      </div>
+
+      <div class="group">
+        <label>Particles <span id="partsLabel" class="value">12,000</span></label>
+        <input id="particles" type="range" min="2000" max="32000" value="12000" step="1000">
+      </div>
+
+      <div class="group">
+        <label>Node tightness</label>
+        <input id="threshold" type="range" min="0.02" max="0.45" value="0.18" step="0.01">
+      </div>
+
+      <div class="group">
+        <label>Agitation</label>
+        <input id="jitter" type="range" min="0" max="3" value="1.2" step="0.1">
+      </div>
+
+      <div class="btn-grid">
+        <button id="sprinkle">Sprinkle sand</button>
+        <button id="clear" class="warn">Clear plate</button>
+      </div>
+
+      <div class="btn-grid">
+        <button id="autoCycle">Auto-cycle: ON</button>
+        <button id="pause">Pause</button>
+      </div>
+
+      <div class="readout">
+        <div>FPS: <strong id="fps">0</strong></div>
+        <div>Active: <strong id="activeCount">0</strong></div>
+      </div>
+
+      <p class="hint">
+        Tap or drag on the plate to add sand. The plate vibrates at a resonant mode; grains slide toward the stationary nodal lines, revealing <strong>Chladni figures</strong>. Try <kbd>m</kbd> and <kbd>n</kbd> where <kbd>m ≠ n</kbd>.
+      </p>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('plate');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const stage = document.getElementById('stage');
+
+      const ui = {
+        m: document.getElementById('m'),
+        n: document.getElementById('n'),
+        mVal: document.getElementById('mVal'),
+        nVal: document.getElementById('nVal'),
+        modeLabel: document.getElementById('modeLabel'),
+        particles: document.getElementById('particles'),
+        partsLabel: document.getElementById('partsLabel'),
+        threshold: document.getElementById('threshold'),
+        jitter: document.getElementById('jitter'),
+        sprinkle: document.getElementById('sprinkle'),
+        clear: document.getElementById('clear'),
+        autoCycle: document.getElementById('autoCycle'),
+        pause: document.getElementById('pause'),
+        fps: document.getElementById('fps'),
+        activeCount: document.getElementById('activeCount'),
+        presets: document.getElementById('presets'),
+        shapeSquare: document.getElementById('shape-square'),
+        shapeCircle: document.getElementById('shape-circle'),
+      };
+
+      const PRESETS = [
+        [3, 5], [2, 7], [4, 9], [1, 6], [5, 8], [2, 3], [6, 11], [4, 7]
+      ];
+
+      let DPR = Math.min(window.devicePixelRatio || 1, 2);
+      let width = 0, height = 0, radius = 0;
+      let shape = 'square';
+      let particles = [];
+      let field = null; // Float32Array of displacement magnitude
+      let gridW = 0, gridH = 0;
+      let m = 3, n = 5;
+      let threshold = 0.18;
+      let jitter = 1.2;
+      let paused = false;
+      let autoCycling = true;
+      let autoTimer = 0;
+      let lastTime = performance.now();
+      let frameCount = 0;
+      let fps = 0;
+      let fpsTimer = 0;
+      let targetCount = 12000;
+
+      function resize() {
+        const rect = stage.getBoundingClientRect();
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        width = Math.max(1, Math.floor(rect.width * DPR));
+        height = Math.max(1, Math.floor(rect.height * DPR));
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        radius = Math.min(width, height) * 0.44;
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        buildField();
+        clampParticlesToPlate();
+      }
+
+      function isInside(x, y) {
+        if (shape === 'circle') {
+          const cx = width / 2, cy = height / 2;
+          return (x - cx) ** 2 + (y - cy) ** 2 <= radius ** 2;
+        }
+        const pad = (Math.min(width, height) - 2 * radius) / 2;
+        const left = (width - 2 * radius) / 2;
+        const top = (height - 2 * radius) / 2;
+        return x >= left && x <= left + 2 * radius && y >= top && y <= top + 2 * radius;
+      }
+
+      function fieldAtPixel(x, y) {
+        if (!field) return 1;
+        const gx = Math.max(0, Math.min(gridW - 1, Math.floor((x / width) * gridW)));
+        const gy = Math.max(0, Math.min(gridH - 1, Math.floor((y / height) * gridH)));
+        return field[gy * gridW + gx];
+      }
+
+      function buildField() {
+        gridW = Math.max(32, Math.floor(width / 4));
+        gridH = Math.max(32, Math.floor(height / 4));
+        field = new Float32Array(gridW * gridH);
+        const cx = width / 2;
+        const cy = height / 2;
+        const L = 2 * radius;
+        const left = (width - L) / 2;
+        const top = (height - L) / 2;
+
+        let minV = Infinity, maxV = -Infinity;
+        for (let gy = 0; gy < gridH; gy++) {
+          for (let gx = 0; gx < gridW; gx++) {
+            const x = (gx / (gridW - 1)) * width;
+            const y = (gy / (gridH - 1)) * height;
+            let v = 0;
+            if (shape === 'square' && isInside(x, y)) {
+              const sx = (x - left) / L;
+              const sy = (y - top) / L;
+              const a = Math.cos(m * Math.PI * sx) * Math.cos(n * Math.PI * sy);
+              const b = Math.cos(n * Math.PI * sx) * Math.cos(m * Math.PI * sy);
+              v = Math.abs(a - b);
+            } else if (shape === 'circle' && isInside(x, y)) {
+              const dx = (x - cx) / radius;
+              const dy = (y - cy) / radius;
+              const r = Math.sqrt(dx * dx + dy * dy);
+              const theta = Math.atan2(dy, dx);
+              // Approximate circular membrane nodal pattern via Bessel zeros is complex.
+              // Use a visually plausible radial-angular combination that creates Chladni-like rings.
+              const radial = Math.sin(n * Math.PI * r) / (r + 0.001);
+              const angular = Math.cos(m * theta);
+              v = Math.abs(radial * angular);
+            }
+            const idx = gy * gridW + gx;
+            field[idx] = v;
+            if (v < minV) minV = v;
+            if (v > maxV) maxV = v;
+          }
+        }
+        // Normalize
+        if (maxV > minV) {
+          const scale = 1 / (maxV - minV);
+          for (let i = 0; i < field.length; i++) {
+            field[i] = Math.max(0, Math.min(1, (field[i] - minV) * scale));
+          }
+        }
+      }
+
+      function randomPointOnPlate() {
+        if (shape === 'circle') {
+          const a = Math.random() * Math.PI * 2;
+          const r = Math.sqrt(Math.random()) * radius;
+          return { x: width / 2 + r * Math.cos(a), y: height / 2 + r * Math.sin(a) };
+        }
+        const L = 2 * radius;
+        const left = (width - L) / 2;
+        const top = (height - L) / 2;
+        return { x: left + Math.random() * L, y: top + Math.random() * L };
+      }
+
+      function createParticles(count) {
+        for (let i = 0; i < count; i++) {
+          const p = randomPointOnPlate();
+          particles.push({
+            x: p.x,
+            y: p.y,
+            vx: 0,
+            vy: 0,
+            active: true,
+          });
+        }
+      }
+
+      function clampParticlesToPlate() {
+        for (const p of particles) {
+          if (!isInside(p.x, p.y)) {
+            const np = randomPointOnPlate();
+            p.x = np.x; p.y = np.y;
+            p.vx = 0; p.vy = 0;
+          }
+        }
+      }
+
+      function setTargetCount(c) {
+        targetCount = c;
+        if (particles.length < targetCount) {
+          createParticles(targetCount - particles.length);
+        } else if (particles.length > targetCount) {
+          particles.splice(0, particles.length - targetCount);
+        }
+        ui.partsLabel.textContent = c.toLocaleString();
+      }
+
+      function updateMode(newM, newN) {
+        m = newM;
+        n = newN;
+        ui.m.value = m;
+        ui.n.value = n;
+        ui.mVal.textContent = m;
+        ui.nVal.textContent = n;
+        ui.modeLabel.textContent = `(${m}, ${n})`;
+        buildField();
+      }
+
+      function setShape(newShape) {
+        shape = newShape;
+        ui.shapeSquare.classList.toggle('primary', shape === 'square');
+        ui.shapeCircle.classList.toggle('primary', shape === 'circle');
+        buildField();
+        // Reseed if plate area changes significantly
+        if (particles.length === 0) createParticles(targetCount);
+        else clampParticlesToPlate();
+      }
+
+      function addSandAt(px, py, amount = 300) {
+        for (let i = 0; i < amount; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const dist = Math.random() * radius * 0.12;
+          const x = px + Math.cos(ang) * dist;
+          const y = py + Math.sin(ang) * dist;
+          if (isInside(x, y)) {
+            particles.push({ x, y, vx: 0, vy: 0, active: true });
+          }
+        }
+        if (particles.length > targetCount * 1.4) {
+          particles.splice(0, particles.length - Math.floor(targetCount * 1.2));
+        }
+      }
+
+      function step(dt) {
+        if (paused) return;
+        const dtClamped = Math.min(dt, 0.05);
+        const moveSpeed = 180 * dtClamped;
+        const friction = Math.pow(0.92, dtClamped * 60);
+        const noise = jitter * 12 * dtClamped;
+        const nodeWidth = threshold * 0.35;
+
+        let active = 0;
+        for (const p of particles) {
+          if (!isInside(p.x, p.y)) {
+            const np = randomPointOnPlate();
+            p.x = np.x; p.y = np.y; p.vx = 0; p.vy = 0;
+          }
+          const v = fieldAtPixel(p.x, p.y);
+          // Particles want to be where displacement is low (nodes). Push away from high displacement.
+          // Use gradient approximated by probing neighbors.
+          const eps = Math.max(2, radius * 0.01);
+          const vR = fieldAtPixel(p.x + eps, p.y);
+          const vL = fieldAtPixel(p.x - eps, p.y);
+          const vD = fieldAtPixel(p.x, p.y + eps);
+          const vU = fieldAtPixel(p.x, p.y - eps);
+          const gx = (vR - vL) / (2 * eps);
+          const gy = (vD - vU) / (2 * eps);
+
+          // Strong repulsion from high vibration; settle in low-vibration nodes.
+          const push = (v - threshold) * 8;
+          p.vx += -gx * moveSpeed * Math.max(0.2, push);
+          p.vy += -gy * moveSpeed * Math.max(0.2, push);
+
+          // Random agitation to stop perfect sticking and allow exploration.
+          p.vx += (Math.random() - 0.5) * noise;
+          p.vy += (Math.random() - 0.5) * noise;
+
+          p.vx *= friction;
+          p.vy *= friction;
+
+          p.x += p.vx * dtClamped;
+          p.y += p.vy * dtClamped;
+
+          if (Math.abs(p.vx) + Math.abs(p.vy) > 0.1) active++;
+        }
+
+        if (autoCycling) {
+          autoTimer += dtClamped;
+          if (autoTimer > 6) {
+            autoTimer = 0;
+            const preset = PRESETS[Math.floor(Math.random() * PRESETS.length)];
+            updateMode(preset[0], preset[1]);
+          }
+        }
+        ui.activeCount.textContent = active.toLocaleString();
+      }
+
+      function draw() {
+        const cssW = width / DPR;
+        const cssH = height / DPR;
+        ctx.fillStyle = '#0d0f14';
+        ctx.fillRect(0, 0, cssW, cssH);
+
+        const cx = cssW / 2;
+        const cy = cssH / 2;
+        const r = radius / DPR;
+
+        // Plate rim
+        ctx.beginPath();
+        if (shape === 'circle') {
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        } else {
+          const L = 2 * r;
+          ctx.rect(cx - r, cy - r, L, L);
+        }
+        ctx.fillStyle = '#13171f';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#2b3548';
+        ctx.stroke();
+
+        // Draw particles with a warm sand palette
+        const img = ctx.getImageData(0, 0, width, height);
+        const data = img.data;
+        const sandColors = [
+          [240, 220, 170], [232, 205, 148], [220, 190, 120], [250, 235, 190]
+        ];
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          const px = Math.floor(p.x / DPR);
+          const py = Math.floor(p.y / DPR);
+          if (px < 0 || px >= cssW || py < 0 || py >= cssH) continue;
+          const c = sandColors[i % sandColors.length];
+          const idx = (py * cssW + px) * 4;
+          data[idx] = c[0];
+          data[idx + 1] = c[1];
+          data[idx + 2] = c[2];
+          data[idx + 3] = 255;
+        }
+        ctx.putImageData(img, 0, 0);
+      }
+
+      function loop(now) {
+        const dt = (now - lastTime) / 1000;
+        lastTime = now;
+        step(dt);
+        draw();
+        frameCount++;
+        fpsTimer += dt;
+        if (fpsTimer >= 0.5) {
+          fps = Math.round(frameCount / fpsTimer);
+          frameCount = 0;
+          fpsTimer = 0;
+          ui.fps.textContent = fps;
+        }
+        requestAnimationFrame(loop);
+      }
+
+      function bind() {
+        ui.m.addEventListener('input', () => updateMode(parseInt(ui.m.value, 10), n));
+        ui.n.addEventListener('input', () => updateMode(m, parseInt(ui.n.value, 10)));
+        ui.particles.addEventListener('input', () => setTargetCount(parseInt(ui.particles.value, 10)));
+        ui.threshold.addEventListener('input', () => { threshold = parseFloat(ui.threshold.value); });
+        ui.jitter.addEventListener('input', () => { jitter = parseFloat(ui.jitter.value); });
+        ui.sprinkle.addEventListener('click', () => createParticles(1500));
+        ui.clear.addEventListener('click', () => { particles = []; setTargetCount(targetCount); });
+        ui.autoCycle.addEventListener('click', () => {
+          autoCycling = !autoCycling;
+          ui.autoCycle.textContent = autoCycling ? 'Auto-cycle: ON' : 'Auto-cycle: OFF';
+        });
+        ui.pause.addEventListener('click', () => {
+          paused = !paused;
+          ui.pause.textContent = paused ? 'Resume' : 'Pause';
+        });
+        ui.shapeSquare.addEventListener('click', () => setShape('square'));
+        ui.shapeCircle.addEventListener('click', () => setShape('circle'));
+
+        PRESETS.forEach(([pm, pn]) => {
+          const b = document.createElement('button');
+          b.className = 'preset';
+          b.textContent = `(${pm}, ${pn})`;
+          b.addEventListener('click', () => { autoCycling = false; ui.autoCycle.textContent = 'Auto-cycle: OFF'; updateMode(pm, pn); });
+          ui.presets.appendChild(b);
+        });
+
+        function pointerToCanvas(ex, ey) {
+          const rect = canvas.getBoundingClientRect();
+          return { x: (ex - rect.left) * DPR, y: (ey - rect.top) * DPR };
+        }
+
+        let dragging = false;
+        canvas.addEventListener('pointerdown', e => {
+          dragging = true;
+          const { x, y } = pointerToCanvas(e.clientX, e.clientY);
+          addSandAt(x, y, 400);
+        });
+        canvas.addEventListener('pointermove', e => {
+          if (!dragging) return;
+          const { x, y } = pointerToCanvas(e.clientX, e.clientY);
+          addSandAt(x, y, 80);
+        });
+        window.addEventListener('pointerup', () => dragging = false);
+        canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+      }
+
+      window.addEventListener('resize', resize);
+      bind();
+      resize();
+      setTargetCount(targetCount);
+      updateMode(m, n);
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

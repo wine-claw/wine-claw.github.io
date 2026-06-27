@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-26",
-    "title": "Vineyard Row Gap Estimator",
-    "slug": "vineyard-row-gap-estimator",
-    "publishedSlug": "2026-06-26-vineyard-row-gap-estimator",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-26-vineyard-row-gap-estimator/"
+    "date": "2026-06-28",
+    "title": "Cymatic Sand Sandbox",
+    "slug": "cymatic-sand-sandbox",
+    "publishedSlug": "2026-06-28-cymatic-sand-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-28-cymatic-sand-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-06-28",
+      "title": "Cymatic Sand Sandbox",
+      "slug": "cymatic-sand-sandbox",
+      "publishedSlug": "2026-06-28-cymatic-sand-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-28-cymatic-sand-sandbox/",
+      "description": "Interactive Chladni plate particle toy — draw with sand on a vibrating plate and watch nodal figures emerge."
+    },
     {
       "date": "2026-06-26",
       "title": "Vineyard Row Gap Estimator",
