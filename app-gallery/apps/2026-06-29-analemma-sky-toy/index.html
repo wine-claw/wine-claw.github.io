@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Analemma Sky Toy</title>
+  <style>
+    :root {
+      --bg: #070b14;
+      --panel: #121a2a;
+      --sky-top: #0a1628;
+      --sky-horizon: #1a3a5c;
+      --text: #e8edf5;
+      --muted: #8b9bb8;
+      --sun: #ffd54a;
+      --sun-glow: rgba(255, 213, 74, 0.45);
+      --trail: rgba(255, 213, 74, 0.35);
+      --accent: #6eb5ff;
+      --ring: rgba(110, 181, 255, 0.35);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+    body { display: flex; flex-direction: column; }
+
+    .banner {
+      background: linear-gradient(90deg, #2a1f12, #3d2a18);
+      color: #f0c896;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.78rem;
+      line-height: 1.4;
+      text-align: center;
+      border-bottom: 1px solid #4a3520;
+    }
+
+    header {
+      padding: 0.75rem 1rem 0.25rem;
+      text-align: center;
+    }
+    h1 { margin: 0; font-size: clamp(1.2rem, 4vw, 1.65rem); font-weight: 700; letter-spacing: -0.02em; }
+    .sub { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.88rem; max-width: 36rem; margin-inline: auto; }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+      gap: 0.85rem;
+      padding: 0.65rem 1rem 1rem;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    .viz-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-height: 0;
+    }
+
+    .sky-stage {
+      position: relative;
+      flex: 1;
+      min-height: 280px;
+      border-radius: 14px;
+      border: 1px solid #243048;
+      overflow: hidden;
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-horizon) 72%, #2d4a3a 100%);
+    }
+
+    canvas#sky { display: block; width: 100%; height: 100%; touch-action: none; }
+
+    .mini-map {
+      height: 140px;
+      border-radius: 12px;
+      border: 1px solid #243048;
+      background: var(--panel);
+      position: relative;
+      overflow: hidden;
+    }
+    canvas#analemma { display: block; width: 100%; height: 100%; }
+
+    .controls {
+      background: var(--panel);
+      border: 1px solid #243048;
+      border-radius: 14px;
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      overflow-y: auto;
+    }
+
+    .group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .group label span.val { color: var(--accent); font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    select {
+      width: 100%;
+      padding: 0.45rem 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #2e3d56;
+      background: #0d1420;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    button {
+      flex: 1;
+      min-width: 7rem;
+      padding: 0.5rem 0.65rem;
+      border-radius: 9px;
+      border: 1px solid #2e3d56;
+      background: #1a2438;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #243352; border-color: var(--ring); }
+    button.primary { background: #1e3a5f; border-color: var(--accent); color: #d6ebff; }
+    button.primary:hover { background: #264d7a; }
+
+    .readout {
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: var(--muted);
+      padding: 0.55rem 0.6rem;
+      background: #0d1420;
+      border-radius: 8px;
+      border: 1px solid #1e2a3d;
+    }
+    .readout strong { color: var(--text); }
+
+    .legend {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.25rem; vertical-align: middle; }
+
+    @media (max-width: 820px) {
+      main { grid-template-columns: 1fr; }
+      .sky-stage { min-height: 52vw; max-height: 420px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner" role="note">
+    Experimental OpenClaw AI mini-app — untested toy model, not for navigation, astronomy, or any real-world decisions.
+  </div>
+  <header>
+    <h1>Analemma Sky Toy</h1>
+    <p class="sub">Fixed clock time each day: watch the Sun’s height and east–west offset trace a figure‑8 over the year.</p>
+  </header>
+  <main>
+    <div class="viz-wrap">
+      <div class="sky-stage" id="stage">
+        <canvas id="sky" aria-label="Sky dome view"></canvas>
+      </div>
+      <div class="mini-map" title="Year trace at fixed time">
+        <canvas id="analemma" aria-label="Analemma plot"></canvas>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--sun)"></i>Today’s Sun</span>
+        <span><i style="background:var(--trail)"></i>Full-year trace</span>
+        <span><i style="background:#4a6fa5"></i>Horizon</span>
+      </div>
+    </div>
+    <aside class="controls">
+      <div class="group">
+        <label>Day of year <span class="val" id="dayVal">172</span></label>
+        <input type="range" id="day" min="1" max="365" value="172">
+      </div>
+      <div class="group">
+        <label>Observer latitude <span class="val" id="latVal">45°</span></label>
+        <input type="range" id="lat" min="-60" max="70" value="45">
+      </div>
+      <div class="group">
+        <label>Fixed local time (hours)</label>
+        <select id="hour">
+          <option value="7">07:00 — morning</option>
+          <option value="9">09:00</option>
+          <option value="12" selected>12:00 — noon-ish</option>
+          <option value="15">15:00</option>
+          <option value="17">17:00 — afternoon</option>
+        </select>
+      </div>
+      <div class="group">
+        <label><input type="checkbox" id="animate" checked> Animate through the year</label>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="primary" id="playBtn">Pause</button>
+        <button type="button" id="todayBtn">Jump to solstice demo</button>
+      </div>
+      <p class="readout" id="readout"></p>
+    </aside>
+  </main>
+  <script>
+(function () {
+  'use strict';
+
+  const DEG = Math.PI / 180;
+  const RAD = 180 / Math.PI;
+  const OBLIQUITY = 23.44 * DEG;
+
+  function dayOfYearToN(d) {
+    return d - 1;
+  }
+
+  /** Solar declination (simplified day-angle model). */
+  function declinationRad(n) {
+    return -OBLIQUITY * Math.cos(2 * Math.PI * (n + 10) / 365.25);
+  }
+
+  /** Equation of time in minutes (approximate Fourier form). */
+  function equationOfTimeMinutes(n) {
+    const B = 2 * Math.PI * (n - 81) / 365.25;
+    return 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+  }
+
+  /** Hour angle (degrees) for fixed clock time, solar noon ≈ 12 + EoT/60. */
+  function hourAngleDeg(clockHour, n) {
+    const eotH = equationOfTimeMinutes(n) / 60;
+    const solarTime = clockHour - eotH;
+    return 15 * (solarTime - 12);
+  }
+
+  function sunAltAz(latDeg, n, clockHour) {
+    const lat = latDeg * DEG;
+    const dec = declinationRad(n);
+    const H = hourAngleDeg(clockHour, n) * DEG;
+    const sinAlt = Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H);
+    const alt = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
+    const cosAz = (Math.sin(dec) - Math.sin(alt) * Math.sin(lat)) / (Math.cos(alt) * Math.cos(lat) + 1e-12);
+    let az = Math.acos(Math.max(-1, Math.min(1, cosAz)));
+    if (Math.sin(H) > 0) az = 2 * Math.PI - az;
+    return { altRad: alt, azRad: az, decRad: dec, eot: equationOfTimeMinutes(n) };
+  }
+
+  const sky = document.getElementById('sky');
+  const ana = document.getElementById('analemma');
+  const stage = document.getElementById('stage');
+  const dayEl = document.getElementById('day');
+  const latEl = document.getElementById('lat');
+  const hourEl = document.getElementById('hour');
+  const dayVal = document.getElementById('dayVal');
+  const latVal = document.getElementById('latVal');
+  const readout = document.getElementById('readout');
+  const animateEl = document.getElementById('animate');
+  const playBtn = document.getElementById('playBtn');
+  const todayBtn = document.getElementById('todayBtn');
+
+  let playing = true;
+  let animId = 0;
+  let yearPoints = [];
+
+  function fitCanvas(canvas, parent) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = parent.clientWidth;
+    const h = parent.clientHeight;
+    canvas.width = Math.max(1, Math.floor(w * dpr));
+    canvas.height = Math.max(1, Math.floor(h * dpr));
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w, h };
+  }
+
+  function rebuildYearTrace() {
+    const lat = +latEl.value;
+    const hour = +hourEl.value;
+    yearPoints = [];
+    for (let d = 1; d <= 365; d++) {
+      const n = dayOfYearToN(d);
+      const s = sunAltAz(lat, n, hour);
+      yearPoints.push({
+        d,
+        alt: s.altRad * RAD,
+        az: s.azRad * RAD,
+        eot: s.eot
+      });
+    }
+  }
+
+  function azToX(azDeg, w, margin) {
+    const t = (azDeg + 180) / 360;
+    return margin + t * (w - 2 * margin);
+  }
+
+  function altToY(altDeg, h, margin) {
+    const clamped = Math.max(-5, Math.min(90, altDeg));
+    const t = 1 - (clamped + 5) / 95;
+    return margin + t * (h - 2 * margin);
+  }
+
+  function drawSky() {
+    const { ctx, w, h } = fitCanvas(sky, stage);
+    const lat = +latEl.value;
+    const day = +dayEl.value;
+    const hour = +hourEl.value;
+    const n = dayOfYearToN(day);
+    const sun = sunAltAz(lat, n, hour);
+
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, '#0a1628');
+    grad.addColorStop(0.65, '#1a4a6e');
+    grad.addColorStop(1, '#3d5c48');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    const margin = 28;
+    const horizonY = altToY(0, h, margin);
+    ctx.strokeStyle = 'rgba(200,220,240,0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY);
+    ctx.lineTo(w, horizonY);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(180,200,220,0.5)';
+    ctx.font = '11px system-ui,sans-serif';
+    ctx.fillText('E', margin - 4, horizonY + 14);
+    ctx.fillText('W', w - margin - 10, horizonY + 14);
+    ctx.fillText('S', w / 2 - 4, horizonY + 14);
+
+    if (yearPoints.length === 0) rebuildYearTrace();
+
+    ctx.beginPath();
+    let started = false;
+    for (const p of yearPoints) {
+      if (p.alt < -2) { started = false; continue; }
+      const x = azToX(p.az, w, margin);
+      const y = altToY(p.alt, h, margin);
+      if (!started) { ctx.moveTo(x, y); started = true; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = 'rgba(255, 213, 74, 0.28)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const altDeg = sun.altRad * RAD;
+    const azDeg = sun.azRad * RAD;
+    if (altDeg > -4) {
+      const sx = azToX(azDeg, w, margin);
+      const sy = altToY(altDeg, h, margin);
+      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 36);
+      g.addColorStop(0, 'rgba(255,240,180,0.95)');
+      g.addColorStop(0.35, 'rgba(255,213,74,0.5)');
+      g.addColorStop(1, 'rgba(255,213,74,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 36, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffd54a';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const approxMonth = monthNames[Math.min(11, Math.floor((day - 1) / 30.5))];
+    readout.innerHTML =
+      '<strong>Day ' + day + '</strong> (~' + approxMonth + '). ' +
+      'Sun altitude <strong>' + altDeg.toFixed(1) + '°</strong>, azimuth <strong>' + azDeg.toFixed(0) + '°</strong>. ' +
+      'Equation of time <strong>' + (sun.eot >= 0 ? '+' : '') + sun.eot.toFixed(1) + ' min</strong> shifts the east–west leg of the analemma.';
+  }
+
+  function drawAnalemma() {
+    const parent = ana.parentElement;
+    const { ctx, w, h } = fitCanvas(ana, parent);
+    ctx.fillStyle = '#0d1420';
+    ctx.fillRect(0, 0, w, h);
+
+    if (yearPoints.length === 0) rebuildYearTrace();
+
+    const alts = yearPoints.map(p => p.alt);
+    const minA = Math.min(...alts);
+    const maxA = Math.max(...alts);
+    const eots = yearPoints.map(p => p.eot);
+    const minE = Math.min(...eots);
+    const maxE = Math.max(...eots);
+    const pad = 16;
+
+    function mapX(eot) {
+      const t = (eot - minE) / (maxE - minE + 1e-6);
+      return pad + t * (w - 2 * pad);
+    }
+    function mapY(alt) {
+      const t = (alt - minA) / (maxA - minA + 1e-6);
+      return h - pad - t * (h - 2 * pad);
+    }
+
+    ctx.strokeStyle = 'rgba(255,213,74,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    yearPoints.forEach((p, i) => {
+      const x = mapX(p.eot);
+      const y = mapY(p.alt);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.stroke();
+
+    const day = +dayEl.value;
+    const cur = yearPoints[day - 1];
+    if (cur) {
+      ctx.fillStyle = '#ffd54a';
+      ctx.beginPath();
+      ctx.arc(mapX(cur.eot), mapY(cur.alt), 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = '#8b9bb8';
+    ctx.font = '10px system-ui,sans-serif';
+    ctx.fillText('EoT (min) →', pad, h - 4);
+    ctx.save();
+    ctx.translate(10, h / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Altitude →', 0, 0);
+    ctx.restore();
+  }
+
+  function render() {
+    drawSky();
+    drawAnalemma();
+  }
+
+  function tick() {
+    if (playing && animateEl.checked) {
+      let d = +dayEl.value + 1;
+      if (d > 365) d = 1;
+      dayEl.value = d;
+      dayVal.textContent = d;
+    }
+    render();
+    animId = requestAnimationFrame(tick);
+  }
+
+  function syncLabels() {
+    dayVal.textContent = dayEl.value;
+    latVal.textContent = latEl.value + '°';
+    rebuildYearTrace();
+    render();
+  }
+
+  dayEl.addEventListener('input', syncLabels);
+  latEl.addEventListener('input', syncLabels);
+  hourEl.addEventListener('change', syncLabels);
+  animateEl.addEventListener('change', () => {
+    if (!animateEl.checked) playing = false;
+  });
+
+  playBtn.addEventListener('click', () => {
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    playBtn.classList.toggle('primary', playing);
+  });
+
+  todayBtn.addEventListener('click', () => {
+    dayEl.value = 172;
+    syncLabels();
+  });
+
+  window.addEventListener('resize', () => {
+    rebuildYearTrace();
+    render();
+  });
+
+  syncLabels();
+  cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(tick);
+})();
+  </script>
+</body>
+</html>

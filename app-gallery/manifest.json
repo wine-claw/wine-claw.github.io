@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-28",
-    "title": "Cymatic Sand Sandbox",
-    "slug": "cymatic-sand-sandbox",
-    "publishedSlug": "2026-06-28-cymatic-sand-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-28-cymatic-sand-sandbox/"
+    "date": "2026-06-29",
+    "title": "Analemma Sky Toy",
+    "slug": "analemma-sky-toy",
+    "publishedSlug": "2026-06-29-analemma-sky-toy",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-29-analemma-sky-toy/"
   },
   "apps": [
+    {
+      "date": "2026-06-29",
+      "title": "Analemma Sky Toy",
+      "slug": "analemma-sky-toy",
+      "publishedSlug": "2026-06-29-analemma-sky-toy",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-29-analemma-sky-toy/",
+      "description": "Fixed clock time each day: watch the Sun trace a figure-8 over the year on a sky dome."
+    },
     {
       "date": "2026-06-28",
       "title": "Cymatic Sand Sandbox",
