@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Chappe Telegraph Simulator</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #182029;
+      --panel-2: #1e2a36;
+      --text: #e8eef4;
+      --muted: #8fa3b8;
+      --accent: #f2c94c;
+      --accent-2: #6fcf97;
+      --danger: #eb5757;
+      --border: #2a3a4d;
+      --shadow: 0 12px 30px rgba(0,0,0,0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .warning {
+      background: #2a1f10;
+      color: #f2c94c;
+      border-bottom: 1px solid #463412;
+      padding: 10px 16px;
+      font-size: 13px;
+      text-align: center;
+    }
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      gap: 18px;
+    }
+    header { text-align: center; }
+    h1 { margin: 0 0 6px; font-size: clamp(26px, 5vw, 38px); letter-spacing: -0.02em; }
+    .subtitle { color: var(--muted); margin: 0; font-size: 15px; }
+    .stage {
+      background: linear-gradient(180deg, #111820 0%, #0d1218 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      min-height: 260px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .sky { position: absolute; inset: 0; pointer-events: none; }
+    .stars { fill: #ffffff; opacity: 0.16; }
+    .horizon {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 18%;
+      background: linear-gradient(180deg, rgba(20,50,30,0) 0%, rgba(26,40,28,0.9) 100%);
+      pointer-events: none;
+    }
+    svg#scene {
+      width: 100%;
+      height: auto;
+      max-height: 52vh;
+      min-height: 220px;
+      display: block;
+      z-index: 1;
+    }
+    .controls {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 820px) {
+      .controls { grid-template-columns: 1.1fr 0.9fr; }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .card h2 { margin: 0 0 12px; font-size: 16px; color: var(--accent); }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    textarea, input[type="text"], input[type="range"] {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      font: inherit;
+      padding: 10px 12px;
+    }
+    textarea { resize: vertical; min-height: 72px; }
+    input[type="range"] { padding: 0; height: 6px; cursor: pointer; }
+    .range-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+    .range-row span { min-width: 46px; font-size: 13px; color: var(--muted); text-align: right; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform .05s ease, opacity .2s ease;
+      color: #0f1419;
+      background: var(--accent);
+    }
+    button:active { transform: translateY(1px); }
+    button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      min-height: 24px;
+      margin-top: 10px;
+      color: var(--muted);
+    }
+    .status .dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--muted); flex: 0 0 auto;
+    }
+    .status.sending .dot { background: var(--accent); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+    .code-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+      gap: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .code-grid button {
+      padding: 7px 0;
+      font-size: 13px;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .code-grid button.active {
+      background: var(--accent);
+      color: #0f1419;
+      border-color: var(--accent);
+    }
+    .mini-tower {
+      width: 28px; height: 28px; display: inline-block; vertical-align: middle; margin-right: 6px;
+    }
+    .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); }
+    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 12px; }
+  </style>
+</head>
+<body>
+  <div class="warning">⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for decisions.</div>
+  <div class="app">
+    <header>
+      <h1>Chappe Telegraph Simulator</h1>
+      <p class="subtitle">Type a message, then watch the 1794 French optical telegraph semaphore it across the line of towers.</p>
+    </header>
+
+    <section class="stage" aria-label="Simulation stage">
+      <svg class="sky" viewBox="0 0 1000 300" preserveAspectRatio="xMidYMid slice">
+        <circle class="stars" cx="120" cy="40" r="1.2" />
+        <circle class="stars" cx="260" cy="80" r="1" />
+        <circle class="stars" cx="460" cy="30" r="1.3" />
+        <circle class="stars" cx="620" cy="70" r="1" />
+        <circle class="stars" cx="800" cy="50" r="1.2" />
+        <circle class="stars" cx="920" cy="110" r="1" />
+        <circle class="stars" cx="150" cy="150" r=".8" />
+        <circle class="stars" cx="350" cy="120" r="1" />
+        <circle class="stars" cx="720" cy="140" r=".9" />
+      </svg>
+      <div class="horizon"></div>
+      <svg id="scene" viewBox="0 0 1000 360" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="towerGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#2d3d50"/>
+            <stop offset="50%" stop-color="#4b617a"/>
+            <stop offset="100%" stop-color="#2d3d50"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="1.6" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g id="towers"></g>
+        <g id="beam" opacity="0"></g>
+      </svg>
+    </section>
+
+    <section class="controls">
+      <div class="card">
+        <h2>Message & Controls</h2>
+        <label for="msg">Message to semaphore</label>
+        <textarea id="msg" maxlength="80" placeholder="Type letters A-Z and numbers 0-9...">CHAPPE</textarea>
+        <div class="range-row">
+          <label for="speed">Speed</label>
+          <input id="speed" type="range" min="300" max="2200" step="100" value="1000" />
+          <span id="speedVal">1000ms</span>
+        </div>
+        <div class="btn-row">
+          <button id="sendBtn">▶ Send message</button>
+          <button id="stopBtn" class="secondary" disabled>■ Stop</button>
+          <button id="clearBtn" class="secondary">Clear</button>
+        </div>
+        <div class="status" id="status"><span class="dot"></span><span id="statusText">Ready. Type a message and press Send.</span></div>
+        <div class="legend">
+          <span><span class="swatch" style="background:#f2c94c"></span>Current symbol</span>
+          <span><span class="swatch" style="background:#2d3d50;border-color:#6fcf97"></span>Relayed</span>
+          <span><span class="swatch" style="background:#111820"></span>Idle</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Codebook</h2>
+        <div class="code-grid" id="codebook"></div>
+        <p class="note">Click any symbol to preview it on the nearest tower.</p>
+      </div>
+    </section>
+  </div>
+  <footer>Built as an OpenClaw 2am mini-app · History + engineering toy</footer>
+
+  <script>
+    // Chappe-ish simplified alphabet: regulator 4 positions, indicator arms 7 positions each.
+    // We encode 36 chars (A-Z, 0-9) plus a few control marks.
+    const REG_POS = [0, 45, 90, 135]; // degrees from horizontal, both sides symmetric if mirrored
+    const IND_POS = [0, 30, 60, 90, 120, 150, 180]; // degrees from horizontal outward
+    // Synthesized mapping: each char -> [regulatorAngle, leftIndicatorAngle, rightIndicatorAngle]
+    // We deterministically generate from code index so the table is stable and discoverable.
+    const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-";
+    const CODEBOOK = {};
+    function hashAngles(idx) {
+      const reg = REG_POS[idx % REG_POS.length];
+      const left = IND_POS[(idx * 3) % IND_POS.length];
+      const right = IND_POS[(idx * 5 + 2) % IND_POS.length];
+      return [reg, left, right];
+    }
+    for (let i = 0; i < CHARS.length; i++) {
+      CODEBOOK[CHARS[i]] = hashAngles(i);
+    }
+    CODEBOOK["\u00a0"] = [0, 0, 0]; // space as neutral rest for unknowns
+
+    const scene = document.getElementById("scene");
+    const towerGroup = document.getElementById("towers");
+    const beamGroup = document.getElementById("beam");
+    const codebookEl = document.getElementById("codebook");
+    const msgEl = document.getElementById("msg");
+    const sendBtn = document.getElementById("sendBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const speedEl = document.getElementById("speed");
+    const speedVal = document.getElementById("speedVal");
+    const statusEl = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+
+    const TOWER_COUNT = 5;
+    const VIEW_W = 1000;
+    const BASE_Y = 320;
+    const TOWER_W = 54;
+    const TOWER_H = 270;
+    const SPACING = (VIEW_W - TOWER_W) / (TOWER_COUNT - 1);
+    const towers = [];
+
+    function createSVGElement(tag, attrs) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+      return el;
+    }
+
+    function makeTower(x, idx) {
+      const g = createSVGElement("g", { transform: `translate(${x}, ${BASE_Y})` });
+
+      // Body
+      const body = createSVGElement("rect", {
+        x: -TOWER_W/2, y: -TOWER_H, width: TOWER_W, height: TOWER_H,
+        fill: "url(#towerGrad)", stroke: "#1c2832", "stroke-width": 2, rx: 4
+      });
+      g.appendChild(body);
+
+      // Cab / lantern room
+      const cab = createSVGElement("rect", {
+        x: -TOWER_W/2 - 4, y: -TOWER_H - 26, width: TOWER_W + 8, height: 26,
+        fill: "#233040", stroke: "#3a4f66", "stroke-width": 2, rx: 3
+      });
+      g.appendChild(cab);
+
+      // Roof
+      const roof = createSVGElement("path", {
+        d: `M ${-TOWER_W/2 - 10} ${-TOWER_H - 26} L 0 ${-TOWER_H - 42} L ${TOWER_W/2 + 10} ${-TOWER_H - 26} Z`,
+        fill: "#1b2735", stroke: "#3a4f66", "stroke-width": 2
+      });
+      g.appendChild(roof);
+
+      // Mast pivot at top center of cab
+      const pivotY = -TOWER_H - 8;
+
+      // Regulator (main cross beam)
+      const regLen = 86;
+      const reg = createSVGElement("line", {
+        x1: -regLen/2, y1: pivotY, x2: regLen/2, y2: pivotY,
+        stroke: "#10151c", "stroke-width": 9, "stroke-linecap": "round"
+      });
+      const regHighlight = createSVGElement("line", {
+        x1: -regLen/2, y1: pivotY, x2: regLen/2, y2: pivotY,
+        stroke: "#f2c94c", "stroke-width": 3, "stroke-linecap": "round", opacity: 0.85
+      });
+
+      // Indicators (small arms on each end of regulator)
+      const indLen = 42;
+      const leftInd = createSVGElement("line", {
+        x1: -regLen/2, y1: pivotY, x2: -regLen/2 - indLen, y2: pivotY,
+        stroke: "#10151c", "stroke-width": 7, "stroke-linecap": "round"
+      });
+      const leftIndHL = createSVGElement("line", {
+        x1: -regLen/2, y1: pivotY, x2: -regLen/2 - indLen, y2: pivotY,
+        stroke: "#f2c94c", "stroke-width": 2.5, "stroke-linecap": "round", opacity: 0.9
+      });
+      const rightInd = createSVGElement("line", {
+        x1: regLen/2, y1: pivotY, x2: regLen/2 + indLen, y2: pivotY,
+        stroke: "#10151c", "stroke-width": 7, "stroke-linecap": "round"
+      });
+      const rightIndHL = createSVGElement("line", {
+        x1: regLen/2, y1: pivotY, x2: regLen/2 + indLen, y2: pivotY,
+        stroke: "#f2c94c", "stroke-width": 2.5, "stroke-linecap": "round", opacity: 0.9
+      });
+
+      // Counterweight shadows
+      const cwL = createSVGElement("circle", { cx: -regLen/2, cy: pivotY + 16, r: 5, fill: "#141c24" });
+      const cwR = createSVGElement("circle", { cx: regLen/2, cy: pivotY + 16, r: 5, fill: "#141c24" });
+
+      g.appendChild(reg);
+      g.appendChild(leftInd);
+      g.appendChild(rightInd);
+      g.appendChild(cwL);
+      g.appendChild(cwR);
+      g.appendChild(regHighlight);
+      g.appendChild(leftIndHL);
+      g.appendChild(rightIndHL);
+
+      // Label
+      const label = createSVGElement("text", {
+        x: 0, y: 22, fill: "#8fa3b8", "font-size": 12, "text-anchor": "middle"
+      });
+      label.textContent = `Tower ${idx + 1}`;
+      g.appendChild(label);
+
+      // State badge
+      const badge = createSVGElement("circle", { cx: 0, cy: -TOWER_H - 56, r: 5, fill: "#5a6d80" });
+      g.appendChild(badge);
+
+      towerGroup.appendChild(g);
+      return { g, reg, leftInd, rightInd, regHighlight, leftIndHL, rightIndHL, badge, current: "\u00a0" };
+    }
+
+    for (let i = 0; i < TOWER_COUNT; i++) {
+      const x = TOWER_W/2 + i * SPACING;
+      towers.push(makeTower(x, i));
+    }
+
+    function setAngles(tower, angles) {
+      const [regDeg, leftDeg, rightDeg] = angles;
+      // SVG rotates clockwise from x-axis. Positive angle = downward from horizontal.
+      tower.reg.setAttribute("transform", `rotate(${regDeg}, 0, ${-TOWER_H - 8})`);
+      tower.regHighlight.setAttribute("transform", `rotate(${regDeg}, 0, ${-TOWER_H - 8})`);
+      tower.leftInd.setAttribute("transform", `rotate(${leftDeg}, ${-43}, ${-TOWER_H - 8})`);
+      tower.leftIndHL.setAttribute("transform", `rotate(${leftDeg}, ${-43}, ${-TOWER_H - 8})`);
+      tower.rightInd.setAttribute("transform", `rotate(${-rightDeg}, ${43}, ${-TOWER_H - 8})`);
+      tower.rightIndHL.setAttribute("transform", `rotate(${-rightDeg}, ${43}, ${-TOWER_H - 8})`);
+    }
+
+    function setTowerState(tower, char) {
+      const key = CODEBOOK[char] ? char : "\u00a0";
+      setAngles(tower, CODEBOOK[key]);
+      tower.current = key;
+    }
+
+    function drawBeam(fromIdx, toIdx) {
+      beamGroup.innerHTML = "";
+      if (fromIdx == null || toIdx == null) { beamGroup.setAttribute("opacity", "0"); return; }
+      const fromX = TOWER_W/2 + fromIdx * SPACING;
+      const toX = TOWER_W/2 + toIdx * SPACING;
+      const y = BASE_Y - TOWER_H - 24;
+      const line = createSVGElement("line", {
+        x1: fromX, y1: y, x2: toX, y2: y,
+        stroke: "#f2c94c", "stroke-width": 2, "stroke-dasharray": "8 6",
+        opacity: 0.55
+      });
+      beamGroup.appendChild(line);
+      beamGroup.setAttribute("opacity", "1");
+    }
+
+    function renderCodebook() {
+      codebookEl.innerHTML = "";
+      for (const ch of CHARS) {
+        const btn = document.createElement("button");
+        btn.textContent = ch === " " ? "␣" : ch;
+        btn.title = ch === " " ? "Space" : ch;
+        btn.dataset.char = ch;
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("#codebook button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          setTowerState(towers[0], ch);
+          statusText.textContent = `Preview: ${ch === " " ? "space" : ch}`;
+          drawBeam(null, null);
+        });
+        codebookEl.appendChild(btn);
+      }
+    }
+
+    function normalizeMessage(text) {
+      return text.toUpperCase().split("").filter(c => CODEBOOK[c] != null);
+    }
+
+    let abortController = null;
+    let running = false;
+
+    async function sleep(ms, signal) {
+      return new Promise((resolve, reject) => {
+        const t = setTimeout(resolve, ms);
+        if (signal) {
+          signal.addEventListener("abort", () => { clearTimeout(t); reject(new Error("aborted")); }, { once: true });
+        }
+      });
+    }
+
+    sendBtn.addEventListener("click", async () => {
+      if (running) return;
+      const raw = msgEl.value;
+      const message = normalizeMessage(raw);
+      if (message.length === 0) {
+        statusText.textContent = "Message is empty or contains no encodable characters.";
+        return;
+      }
+      running = true;
+      sendBtn.disabled = true;
+      stopBtn.disabled = false;
+      statusEl.classList.add("sending");
+      abortController = new AbortController();
+      const signal = abortController.signal;
+
+      // Reset towers to idle
+      towers.forEach(t => { setTowerState(t, "\u00a0"); t.badge.setAttribute("fill", "#5a6d80"); });
+
+      try {
+        for (let i = 0; i < message.length; i++) {
+          if (signal.aborted) break;
+          const ch = message[i];
+          const label = ch === " " ? "space" : ch;
+          statusText.textContent = `Sending ${i + 1}/${message.length}: “${label}”`;
+
+          // Animate propagation along towers
+          const delay = parseInt(speedEl.value, 10);
+          for (let t = 0; t < TOWER_COUNT; t++) {
+            if (signal.aborted) break;
+            setTowerState(towers[t], ch);
+            towers[t].badge.setAttribute("fill", "#f2c94c");
+            if (t > 0) drawBeam(t - 1, t);
+            await sleep(Math.max(120, delay / (TOWER_COUNT + 1)), signal);
+          }
+
+          // Hold so human eye can read the symbol
+          await sleep(Math.max(180, delay / 2), signal);
+
+          // Reset badges to relayed green except current still lit briefly
+          towers.forEach(t => t.badge.setAttribute("fill", "#6fcf97"));
+          await sleep(80, signal);
+
+          // Clear positions back to rest before next letter (a real operator would hold)
+          towers.forEach(t => { setTowerState(t, "\u00a0"); t.badge.setAttribute("fill", "#5a6d80"); });
+          drawBeam(null, null);
+          await sleep(120, signal);
+        }
+        statusText.textContent = `Done. Sent ${message.length} symbol${message.length === 1 ? "" : "s"}.`;
+      } catch (e) {
+        if (e.message === "aborted") {
+          statusText.textContent = "Stopped.";
+        } else {
+          statusText.textContent = "Error: " + e.message;
+        }
+      } finally {
+        running = false;
+        sendBtn.disabled = false;
+        stopBtn.disabled = true;
+        statusEl.classList.remove("sending");
+        abortController = null;
+        towers.forEach(t => t.badge.setAttribute("fill", "#5a6d80"));
+        drawBeam(null, null);
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      if (abortController) abortController.abort();
+    });
+
+    clearBtn.addEventListener("click", () => {
+      if (abortController) abortController.abort();
+      msgEl.value = "";
+      towers.forEach(t => { setTowerState(t, "\u00a0"); t.badge.setAttribute("fill", "#5a6d80"); });
+      statusText.textContent = "Ready.";
+      drawBeam(null, null);
+    });
+
+    speedEl.addEventListener("input", () => { speedVal.textContent = `${speedEl.value}ms`; });
+
+    // Initial state
+    renderCodebook();
+    towers.forEach(t => setTowerState(t, "\u00a0"));
+    // Show a preview of the first letter if there is one
+    const preview = normalizeMessage(msgEl.value)[0];
+    if (preview) setTowerState(towers[0], preview);
+  </script>
+</body>
+</html>

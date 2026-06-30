@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-06-30",
-    "title": "River Meander Sandbox",
-    "slug": "river-meander-sandbox",
-    "publishedSlug": "2026-06-30-river-meander-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-06-30-river-meander-sandbox/"
+    "date": "2026-07-01",
+    "title": "Chappe Telegraph Simulator",
+    "slug": "chappe-telegraph-simulator",
+    "publishedSlug": "2026-07-01-chappe-telegraph-simulator",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-01-chappe-telegraph-simulator/"
   },
   "apps": [
+    {
+      "date": "2026-07-01",
+      "title": "Chappe Telegraph Simulator",
+      "slug": "chappe-telegraph-simulator",
+      "publishedSlug": "2026-07-01-chappe-telegraph-simulator",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-01-chappe-telegraph-simulator/",
+      "description": "Interactive 1794 French optical telegraph toy: type a message and watch semaphore towers encode and relay it."
+    },
     {
       "date": "2026-06-30",
       "title": "River Meander Sandbox",
