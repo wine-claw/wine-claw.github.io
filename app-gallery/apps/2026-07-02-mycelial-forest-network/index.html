@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Mycelial Forest Network</title>
+  <style>
+    :root{
+      --bg:#0f1113;
+      --panel:#15191d;
+      --ink:#e8e6e1;
+      --muted:#9d9891;
+      --accent:#84d68a;
+      --accent2:#d2b48c;
+      --danger:#e07a5f;
+      --link:#7fcdbb;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .banner{
+      background:#2a2118;
+      color:#f3e5c9;
+      padding:.55rem .9rem;
+      font-size:.78rem;
+      line-height:1.35;
+      border-bottom:1px solid #3e3224;
+    }
+    .banner strong{color:#fff}
+    header{
+      padding:.75rem .9rem .55rem;
+      border-bottom:1px solid #23272b;
+      display:flex;align-items:center;gap:.7rem;justify-content:space-between;
+      background:var(--panel);
+    }
+    h1{font-size:1.05rem;margin:0;font-weight:600;letter-spacing:.01em}
+    .subtitle{font-size:.75rem;color:var(--muted);margin-top:.12rem}
+    .controls{
+      display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;
+    }
+    button,select,input[type="range"]{cursor:pointer}
+    button{
+      border:1px solid #2f353a;
+      background:#1d2328;
+      color:var(--ink);
+      border-radius:.45rem;
+      padding:.42rem .62rem;
+      font-size:.78rem;
+      transition:background .15s,border-color .15s,transform .08s;
+    }
+    button:hover{background:#242b31;border-color:#3a4248}
+    button:active{transform:translateY(1px)}
+    button.primary{background:var(--accent);color:#0f1113;border-color:var(--accent);font-weight:600}
+    button.primary:hover{background:#9ee0a3}
+    .tool-group{display:flex;gap:.3rem;align-items:center;flex-wrap:wrap}
+    .tool-btn.active{background:#2a3a2d;border-color:var(--accent);color:var(--accent)}
+    label{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:.35rem}
+    input[type="range"]{width:88px}
+    main{flex:1;position:relative;overflow:hidden;touch-action:none}
+    canvas{display:block;width:100%;height:100%;touch-action:none}
+    .overlay{
+      position:absolute;inset:auto auto .85rem .85rem;
+      background:rgba(15,17,19,.82);
+      border:1px solid #2b3136;
+      border-radius:.55rem;
+      padding:.65rem .8rem;
+      font-size:.72rem;
+      color:var(--muted);
+      pointer-events:none;
+      max-width:min(320px,72vw);
+      line-height:1.45;
+      backdrop-filter: blur(2px);
+    }
+    .overlay strong{color:var(--ink)}
+    .stats{
+      position:absolute;inset:auto .85rem .85rem auto;
+      background:rgba(15,17,19,.82);
+      border:1px solid #2b3136;
+      border-radius:.55rem;
+      padding:.5rem .75rem;
+      font-size:.72rem;
+      color:var(--muted);
+      display:flex;gap:.9rem;
+      backdrop-filter: blur(2px);
+    }
+    .drawer{
+      position:absolute;right:.85rem;top:.85rem;
+      background:rgba(21,25,29,.94);
+      border:1px solid #2b3136;
+      border-radius:.55rem;
+      padding:.7rem .85rem;
+      width:min(280px,70vw);
+      font-size:.74rem;
+      color:var(--muted);
+      max-height:calc(100% - 1.7rem);
+      overflow:auto;
+    }
+    .drawer h2{font-size:.82rem;margin:0 0 .55rem;color:var(--ink);font-weight:600}
+    .drawer p{margin:.35rem 0;line-height:1.45}
+    .legend-row{display:flex;align-items:center;gap:.4rem;margin:.28rem 0}
+    .dot{width:.55rem;height:.55rem;border-radius:50%;display:inline-block}
+    .hidden{display:none}
+    @media (max-width:640px){
+      header{flex-direction:column;align-items:flex-start;gap:.5rem}
+      .controls{width:100%}
+      .drawer{position:static;width:100%;border-radius:0;border-left:0;border-right:0;max-height:none;order:3}
+      main{order:2}
+      .overlay{bottom:.65rem;left:.65rem;right:.65rem;max-width:none}
+      .stats{display:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>Experimental AI mini-app.</strong> This is an untested toy simulation, not an ecological model. Don't use it for real decisions.
+  </div>
+  <header>
+    <div>
+      <h1>Mycelial Forest Network</h1>
+      <div class="subtitle">Tap soil to plant trees. Watch fungal threads connect them underground.</div>
+    </div>
+    <div class="controls">
+      <div class="tool-group">
+        <button id="btn-tree" class="tool-btn active" title="Plant a tree">🌲 Tree</button>
+        <button id="btn-food" class="tool-btn" title="Drop organic matter">🍂 Food</button>
+        <button id="btn-pest" class="tool-btn" title="Add a disturbance">🐛 Pest</button>
+      </div>
+      <button id="btn-pause">Pause</button>
+      <button id="btn-reset">Reset</button>
+      <button id="btn-demo" class="primary">Demo forest</button>
+    </div>
+  </header>
+  <main id="stage">
+    <canvas id="c"></canvas>
+    <div class="overlay" id="tip">
+      <strong id="tip-title">Welcome</strong><br>
+      <span id="tip-body">Plant 2+ trees. Mycelium will grow between them, trading nutrients. Add food to feed the network, or a pest to test resilience.</span>
+    </div>
+    <div class="stats" id="stats">
+      <span>Trees: <b id="s-trees">0</b></span>
+      <span>Hyphae: <b id="s-hyphae">0</b></span>
+      <span>Flow: <b id="s-flow">0</b></span>
+    </div>
+    <div class="drawer">
+      <h2>How it works</h2>
+      <p>Trees are nodes. Fungal <em>hyphae</em> explore the soil and fuse into a living network.</p>
+      <p>Carbon (sugars) flows from sunlit trees to shaded or young trees. Phosphorus/nitrogen flows the other way. The pulses show net trade direction.</p>
+      <div class="legend-row"><span class="dot" style="background:#84d68a"></span> Mycelium link</div>
+      <div class="legend-row"><span class="dot" style="background:#ffd166"></span> Carbon pulse</div>
+      <div class="legend-row"><span class="dot" style="background:#9b5de5"></span> Nutrient pulse</div>
+      <div class="legend-row"><span class="dot" style="background:#e07a5f"></span> Pest damage</div>
+    </div>
+  </main>
+  <script>
+    const canvas=document.getElementById('c');
+    const ctx=canvas.getContext('2d');
+    const stage=document.getElementById('stage');
+    const tipTitle=document.getElementById('tip-title');
+    const tipBody=document.getElementById('tip-body');
+
+    function resize(){
+      const rect=stage.getBoundingClientRect();
+      const dpr=Math.min(window.devicePixelRatio||1,2);
+      canvas.width=Math.floor(rect.width*dpr);
+      canvas.height=Math.floor(rect.height*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    window.addEventListener('resize',resize);
+    resize();
+
+    const rand=(a=1,b=0)=>Math.random()*(a-b)+b;
+    const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+    const state={
+      trees:[],
+      hyphae:[],
+      pulses:[],
+      foods:[],
+      pests:[],
+      particles:[],
+      links:[],
+      paused:false,
+      tool:'tree',
+      lastTime:performance.now(),
+      frame:0
+    };
+
+    function makeTree(x,y,age=1){
+      return {
+        x,y,
+        id:Math.random().toString(36).slice(2,8),
+        age,
+        canopy:20+age*18,
+        roots:[],
+        carbon:50+age*50,
+        demand:10+age*10,
+        health:1,
+        pulseTimer:rand(20),
+        color:'#84d68a'
+      };
+    }
+
+    function addTree(x,y){
+      const t=makeTree(x,y,0.6+rand(0.7));
+      state.trees.push(t);
+      // emit roots
+      for(let i=0;i<5;i++){
+        state.hyphae.push({
+          x:x+rand(18,-18),y:y+rand(18,-18),
+          vx:rand(1.2,-1.2),vy:rand(1.2,-1.2),
+          parent:t,age:0,dead:false,
+          energy:20+rand(30)
+        });
+      }
+      tip('Tree planted','A new node joins the network. Watch roots and hyphae explore.');
+    }
+
+    function addFood(x,y){
+      state.foods.push({x,y,radius:16,energy:120,life:600});
+      tip('Organic matter','Fungi will mine this patch and share the nutrients.');
+    }
+
+    function addPest(x,y){
+      state.pests.push({x,y,radius:24,life:900});
+      tip('Pest zone','This disturbance interrupts nearby mycelial links.');
+    }
+
+    function tip(title,body){
+      tipTitle.textContent=title;
+      tipBody.textContent=body;
+    }
+
+    function step(dt){
+      if(state.paused)return;
+      state.frame++;
+
+      // grow trees
+      state.trees.forEach(t=>{
+        t.age+=dt*0.008;
+        t.canopy=Math.min(20+t.age*18,60);
+        t.carbon+=dt*0.05*t.canopy;
+        if(t.carbon>200)t.carbon=200;
+      });
+
+      // food decays
+      state.foods=state.foods.filter(f=>{
+        f.life-=dt;
+        return f.life>0;
+      });
+
+      // pests
+      state.pests=state.pests.filter(p=>{
+        p.life-=dt;
+        return p.life>0;
+      });
+
+      // hyphae growth / explore
+      const maxH=1200;
+      state.hyphae.forEach(h=>{
+        if(h.dead)return;
+        h.age+=dt;
+        // wander
+        h.vx+=rand(0.4,-0.4);
+        h.vy+=rand(0.4,-0.4);
+        // food attraction
+        let fx=0,fy=0;
+        state.foods.forEach(fd=>{
+          const d=dist(h,fd);
+          if(d<120&&d>fd.radius){
+            const a=Math.atan2(fd.y-h.y,fd.x-h.x);
+            fx+=Math.cos(a)*0.6;fy+=Math.sin(a)*0.6;
+          }
+        });
+        // slight tree attraction to connect
+        let nearest=null,nd=Infinity;
+        state.trees.forEach(t=>{
+          if(t===h.parent)return;
+          const d=dist(h,t);
+          if(d<nd){nd=d;nearest=t;}
+        });
+        if(nearest&&nd>nearest.canopy*0.8&&nd<220){
+          const a=Math.atan2(nearest.y-h.y,nearest.x-h.x);
+          fx+=Math.cos(a)*0.25;fy+=Math.sin(a)*0.25;
+        }
+        h.vx+=fx;h.vy+=fy;
+        const spd=Math.hypot(h.vx,h.vy);
+        if(spd>1.8){h.vx=(h.vx/spd)*1.8;h.vy=(h.vy/spd)*1.8;}
+        h.x+=h.vx*dt*0.15;
+        h.y+=h.vy*dt*0.15;
+        h.energy-=dt*0.12;
+        if(h.energy<=0)h.dead=true;
+        if(h.x<0||h.x>canvas.width/dpr()||h.y<0||h.y>canvas.height/dpr())h.dead=true;
+
+        // branch
+        if(h.age>25&&h.age<160&&Math.random()<0.015&&state.hyphae.length<maxH){
+          const a=rand(Math.PI*2);
+          state.hyphae.push({
+            x:h.x,y:h.y,
+            vx:Math.cos(a),vy:Math.sin(a),
+            parent:h.parent,age:0,dead:false,energy:Math.min(h.energy,30)
+          });
+        }
+        // anastomosis / connect to another tree's hyphae or roots
+        if(nearest&&nd<nearest.canopy*0.7){
+          // link
+          const exists=state.links.some(l=>(l.a===h.parent&&l.b===nearest)||(l.a===nearest&&l.b===h.parent));
+          if(!exists){
+            state.links.push({a:h.parent,b:nearest,flow:0,capacity:3+rand(2)});
+          }
+          h.dead=true;
+        }
+      });
+
+      // clean dead hyphae
+      state.hyphae=state.hyphae.filter(h=>!h.dead);
+      if(state.hyphae.length>maxH) state.hyphae.splice(0,state.hyphae.length-maxH);
+
+      // flow on links
+      state.links.forEach(l=>{
+        const da=l.a.carbon+l.a.demand*0.5;
+        const db=l.b.carbon+l.b.demand*0.5;
+        l.flow+=(db-da)*dt*0.001;
+        l.flow*=0.92;
+        const transfer=l.flow*dt*0.05;
+        l.a.carbon-=transfer;l.b.carbon+=transfer;
+        // clamp
+        l.a.carbon=Math.max(0,Math.min(200,l.a.carbon));
+        l.b.carbon=Math.max(0,Math.min(200,l.b.carbon));
+        // emit pulse
+        if(Math.random()<0.003*Math.abs(l.flow)){
+          state.pulses.push({
+            a:l.a,b:l.b,t:0,kind:l.flow>0?'carbon':'nutrient',speed:0.8+rand(0.6)
+          });
+        }
+      });
+
+      // pulses
+      state.pulses=state.pulses.filter(p=>{
+        p.t+=dt*p.speed*0.015;
+        return p.t<=1;
+      });
+
+      // particles from food
+      state.foods.forEach(f=>{
+        if(Math.random()<0.08){
+          const a=rand(Math.PI*2);
+          state.particles.push({
+            x:f.x+Math.cos(a)*rand(f.radius),y:f.y+Math.sin(a)*rand(f.radius),
+            vx:Math.cos(a)*rand(0.8),vy:Math.sin(a)*rand(0.8),
+            life:40+rand(30),color:'#d2b48c'
+          });
+        }
+      });
+      state.particles=state.particles.filter(p=>{
+        p.x+=p.vx*dt*0.1;p.y+=p.vy*dt*0.1;
+        p.life-=dt;
+        return p.life>0;
+      });
+
+      // pest damage
+      state.pests.forEach(p=>{
+        state.links.forEach((l,i)=>{
+          const mx=(l.a.x+l.b.x)/2,my=(l.a.y+l.b.y)/2;
+          if(dist({x:mx,y:my},p)<p.radius){
+            if(Math.random()<0.03){
+              state.links.splice(i,1);
+              // feedback burst
+              for(let k=0;k<6;k++){
+                const a=rand(Math.PI*2);
+                state.particles.push({
+                  x:mx,y:my,vx:Math.cos(a)*rand(1.5),vy:Math.sin(a)*rand(1.5),
+                  life:30+rand(20),color:'#e07a5f'
+                });
+              }
+            }
+          }
+        });
+      });
+
+      // stats
+      document.getElementById('s-trees').textContent=state.trees.length;
+      document.getElementById('s-hyphae').textContent=state.hyphae.length;
+      document.getElementById('s-flow').textContent=Math.round(state.links.reduce((s,l)=>s+Math.abs(l.flow),0));
+    }
+
+    function dpr(){return Math.min(window.devicePixelRatio||1,2);}
+
+    function draw(){
+      const w=canvas.width/dpr(),h=canvas.height/dpr();
+      ctx.clearRect(0,0,w,h);
+
+      // soil gradient
+      const grad=ctx.createRadialGradient(w*0.5,h*0.3,0,w*0.5,h*0.5,Math.max(w,h)*0.8);
+      grad.addColorStop(0,'#1a1d20');
+      grad.addColorStop(1,'#0f1113');
+      ctx.fillStyle=grad;
+      ctx.fillRect(0,0,w,h);
+
+      // subtle grid
+      ctx.strokeStyle='rgba(255,255,255,0.03)';
+      ctx.lineWidth=1;
+      for(let x=0;x<w;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+      for(let y=0;y<h;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+
+      // food patches
+      state.foods.forEach(f=>{
+        ctx.beginPath();
+        ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);
+        ctx.fillStyle='rgba(210,180,140,0.18)';
+        ctx.fill();
+        ctx.strokeStyle='rgba(210,180,140,0.45)';
+        ctx.lineWidth=1.5;
+        ctx.stroke();
+      });
+
+      // pest zones
+      state.pests.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
+        ctx.fillStyle='rgba(224,122,95,0.12)';
+        ctx.fill();
+        ctx.strokeStyle='rgba(224,122,95,0.5)';
+        ctx.setLineDash([4,4]);
+        ctx.lineWidth=1.5;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+
+      // hyphae
+      ctx.strokeStyle='rgba(132,214,138,0.35)';
+      ctx.lineWidth=1;
+      ctx.beginPath();
+      state.hyphae.forEach(h=>{
+        ctx.moveTo(h.x,h.y);
+        ctx.lineTo(h.x-h.vx*6,h.y-h.vy*6);
+      });
+      ctx.stroke();
+
+      // links
+      state.links.forEach(l=>{
+        const alpha=0.25+0.35*Math.min(1,Math.abs(l.flow)/8);
+        ctx.strokeStyle=`rgba(132,214,138,${alpha})`;
+        ctx.lineWidth=1+Math.min(3,Math.abs(l.flow)/3);
+        ctx.beginPath();
+        ctx.moveTo(l.a.x,l.a.y);
+        ctx.lineTo(l.b.x,l.b.y);
+        ctx.stroke();
+      });
+
+      // pulses
+      state.pulses.forEach(p=>{
+        const x=p.a.x+(p.b.x-p.a.x)*p.t;
+        const y=p.a.y+(p.b.y-p.a.y)*p.t;
+        ctx.beginPath();
+        ctx.arc(x,y,3.2,0,Math.PI*2);
+        ctx.fillStyle=p.kind==='carbon'?'#ffd166':'#9b5de5';
+        ctx.fill();
+      });
+
+      // particles
+      state.particles.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,1.8,0,Math.PI*2);
+        ctx.fillStyle=p.color;
+        ctx.globalAlpha=Math.min(1,p.life/20);
+        ctx.fill();
+        ctx.globalAlpha=1;
+      });
+
+      // trees
+      state.trees.forEach(t=>{
+        // canopy shadow
+        ctx.beginPath();
+        ctx.arc(t.x,t.y,t.canopy,0,Math.PI*2);
+        ctx.fillStyle='rgba(0,0,0,0.25)';
+        ctx.fill();
+        // canopy
+        ctx.beginPath();
+        ctx.arc(t.x,t.y,t.canopy*0.92,0,Math.PI*2);
+        const cg=ctx.createRadialGradient(t.x-t.canopy*0.2,t.y-t.canopy*0.3,2,t.x,t.y,t.canopy);
+        cg.addColorStop(0,'#a3e6a9');
+        cg.addColorStop(1,'#4d8f54');
+        ctx.fillStyle=cg;
+        ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,0.08)';
+        ctx.lineWidth=1;
+        ctx.stroke();
+        // trunk
+        ctx.fillStyle='#5c4033';
+        ctx.fillRect(t.x-2.5,t.y,5,t.canopy*0.55);
+        // health halo
+        if(t.carbon>120){
+          ctx.beginPath();
+          ctx.arc(t.x,t.y,t.canopy+5,0,Math.PI*2);
+          ctx.strokeStyle='rgba(255,255,255,0.06)';
+          ctx.lineWidth=2;
+          ctx.stroke();
+        }
+      });
+    }
+
+    function loop(){
+      const now=performance.now();
+      const dt=Math.min(40,now-state.lastTime);
+      state.lastTime=now;
+      step(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    // input
+    function point(e){
+      const rect=canvas.getBoundingClientRect();
+      const cx=e.clientX||e.touches?.[0]?.clientX||0;
+      const cy=e.clientY||e.touches?.[0]?.clientY||0;
+      return {x:cx-rect.left,y:cy-rect.top};
+    }
+    function place(e){
+      const p=point(e);
+      if(state.tool==='tree')addTree(p.x,p.y);
+      else if(state.tool==='food')addFood(p.x,p.y);
+      else if(state.tool==='pest')addPest(p.x,p.y);
+    }
+    canvas.addEventListener('pointerdown',place);
+    canvas.addEventListener('touchstart',e=>{e.preventDefault();place(e);},{passive:false});
+
+    document.getElementById('btn-tree').addEventListener('click',()=>setTool('tree'));
+    document.getElementById('btn-food').addEventListener('click',()=>setTool('food'));
+    document.getElementById('btn-pest').addEventListener('click',()=>setTool('pest'));
+    document.getElementById('btn-pause').addEventListener('click',()=>{
+      state.paused=!state.paused;
+      document.getElementById('btn-pause').textContent=state.paused?'Resume':'Pause';
+    });
+    document.getElementById('btn-reset').addEventListener('click',()=>{
+      state.trees=[];state.hyphae=[];state.pulses=[];state.foods=[];state.pests=[];state.particles=[];state.links=[];
+      tip('Reset','Canvas cleared. Plant a new forest.');
+    });
+    document.getElementById('btn-demo').addEventListener('click',()=>{
+      state.trees=[];state.hyphae=[];state.pulses=[];state.foods=[];state.pests=[];state.particles=[];state.links=[];
+      const w=canvas.width/dpr(),h=canvas.height/dpr();
+      const positions=[
+        [w*0.2,h*0.25],[w*0.5,h*0.18],[w*0.78,h*0.28],
+        [w*0.3,h*0.58],[w*0.65,h*0.62],[w*0.48,h*0.82]
+      ];
+      positions.forEach(([x,y])=>addTree(x,y,0.7+rand(0.5)));
+      addFood(w*0.45,h*0.45);
+      tip('Demo forest','A small woodland connected by mycelium. Watch the pulses trade carbon and nutrients.');
+    });
+
+    function setTool(t){
+      state.tool=t;
+      ['tree','food','pest'].forEach(id=>{
+        document.getElementById('btn-'+id).classList.toggle('active',id===t);
+      });
+    }
+
+    // start
+    loop();
+    document.getElementById('btn-demo').click();
+  </script>
+</body>
+</html>

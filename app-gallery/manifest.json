@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-01",
-    "title": "Chappe Telegraph Simulator",
-    "slug": "chappe-telegraph-simulator",
-    "publishedSlug": "2026-07-01-chappe-telegraph-simulator",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-01-chappe-telegraph-simulator/"
+    "date": "2026-07-02",
+    "title": "Mycelial Forest Network",
+    "slug": "mycelial-forest-network",
+    "publishedSlug": "2026-07-02-mycelial-forest-network",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-02-mycelial-forest-network/"
   },
   "apps": [
+    {
+      "date": "2026-07-02",
+      "title": "Mycelial Forest Network",
+      "slug": "mycelial-forest-network",
+      "publishedSlug": "2026-07-02-mycelial-forest-network",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-02-mycelial-forest-network/",
+      "description": "Interactive toy of fungal hyphae connecting trees underground, with carbon and nutrient pulses, food patches, and pest disturbances."
+    },
     {
       "date": "2026-07-01",
       "title": "Chappe Telegraph Simulator",
