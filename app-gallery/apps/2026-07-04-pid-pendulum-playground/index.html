@@ -409,16 +409,22 @@
     }
 
     function updateGraphs() {
-      const normAngle = history.angle.map(d => ((d + 540) % 360) - 180);
+      const normAngle = history.angle.map(d => wrap180(d));
       const aMin = -25, aMax = 25;
       drawGraph(angleG, agCtx, normAngle, '#58a6ff', 0, aMin, aMax);
       const pMin = -3.2, pMax = 3.2;
       drawGraph(posG, pgCtx, history.position, '#f0883e', 0, pMin, pMax);
     }
 
+    function wrap180(deg) {
+      deg = deg % 360;
+      if (deg > 180) deg -= 360;
+      if (deg <= -180) deg += 360;
+      return deg;
+    }
+
     function updateReadouts() {
-      let deg = state.th * 180 / Math.PI;
-      deg = ((deg + 540) % 360) - 180; // normalise to [-180, 180]
+      const deg = wrap180(state.th * 180 / Math.PI);
       document.getElementById('angVal').textContent = deg.toFixed(1) + '°';
       document.getElementById('posVal').textContent = state.x.toFixed(2) + ' m';
       document.getElementById('forceVal').textContent = state.appliedForce.toFixed(1) + ' N';
