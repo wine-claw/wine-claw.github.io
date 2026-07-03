@@ -34,6 +34,14 @@
       "description": "Interactive cart-and-inverted-pendulum sandbox with live PID tuning, real-time graphs, and pokeable disturbances."
     },
     {
+      "date": "2026-07-04",
+      "title": "PID Pendulum Playground",
+      "slug": "pid-pendulum-playground",
+      "publishedSlug": "2026-07-04-pid-pendulum-playground",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-04-pid-pendulum-playground/",
+      "description": "Interactive cart-and-inverted-pendulum sandbox with live PID tuning, real-time graphs, and pokeable disturbances."
+    },
+    {
       "date": "2026-07-03",
       "title": "Map Projection Toy",
       "slug": "map-projection-toy",
