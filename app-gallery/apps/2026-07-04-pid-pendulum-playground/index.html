@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>PID Pendulum Playground</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel2: #1c2128;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent2: #f0883e;
+      --good: #3fb950;
+      --bad: #f85149;
+      --line: #30363d;
+      --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font); }
+    body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+    .wrap { width: 100%; max-width: 980px; padding: 18px; }
+    h1 { font-size: clamp(1.4rem, 4vw, 1.9rem); margin: 0 0 6px; letter-spacing: -0.02em; }
+    .subtitle { color: var(--muted); margin-bottom: 14px; font-size: 0.95rem; }
+    .banner { background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.35); border-radius: 10px; padding: 12px 14px; color: #ffdcd7; font-size: 0.9rem; margin-bottom: 14px; }
+    .banner strong { color: var(--bad); }
+    .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 14px; }
+    canvas { width: 100%; height: auto; display: block; border-radius: 10px; background: radial-gradient(circle at 50% 0%, #1f242c 0%, #0d1117 70%); touch-action: none; }
+    .readouts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; }
+    .readout { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; text-align: center; }
+    .readout .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .readout .value { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 4px; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 700px) { .controls { grid-template-columns: 1fr; } .readouts { grid-template-columns: repeat(2, 1fr); } }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+    .card h2 { margin: 0 0 12px; font-size: 1rem; color: var(--accent); }
+    .slider { margin-bottom: 12px; }
+    .slider label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; color: var(--muted); }
+    .slider label span { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+    input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    button { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font: inherit; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+    button:hover { background: #252b33; border-color: var(--accent); }
+    button.primary { background: var(--accent); color: #050a14; border-color: var(--accent); font-weight: 700; }
+    button.primary:hover { filter: brightness(1.08); }
+    button.push { background: rgba(240,136,62,0.15); border-color: rgba(240,136,62,0.45); color: #ffd8b4; }
+    .hint { font-size: 0.82rem; color: var(--muted); margin-top: 10px; line-height: 1.45; }
+    .graphs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    @media (max-width: 700px) { .graphs { grid-template-columns: 1fr; } }
+    .graph { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+    .graph h3 { margin: 0 0 6px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .graph canvas { background: #0d1117; }
+    footer { color: var(--muted); font-size: 0.8rem; margin: 18px 0 24px; text-align: center; }
+    .status.running { color: var(--good); }
+    .status.paused { color: var(--accent2); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>PID Pendulum Playground</h1>
+    <p class="subtitle">Tune a PID controller to balance an inverted pendulum on a moving cart. Poke it. Watch it recover.</p>
+    <div class="banner"><strong>Experimental AI mini-app:</strong> built overnight by OpenClaw. Not validated for engineering decisions. For play and learning only.</div>
+
+    <section class="stage">
+      <canvas id="sim" width="900" height="420"></canvas>
+      <div class="readouts">
+        <div class="readout"><div class="label">Angle</div><div class="value" id="angVal">0°</div></div>
+        <div class="readout"><div class="label">Cart Position</div><div class="value" id="posVal">0.0 m</div></div>
+        <div class="readout"><div class="label">Control Force</div><div class="value" id="forceVal">0 N</div></div>
+        <div class="readout"><div class="label">Status</div><div class="value status running" id="statusVal">Running</div></div>
+      </div>
+      <div class="actions">
+        <button id="resetBtn">Reset System</button>
+        <button class="push" id="nudgeLeftBtn">← Nudge Left</button>
+        <button class="push" id="nudgeRightBtn">Nudge Right →</button>
+        <button id="pauseBtn">Pause / Resume</button>
+      </div>
+    </section>
+
+    <section class="graphs">
+      <div class="graph"><h3>Pole Angle (deg)</h3><canvas id="angleGraph" width="420" height="160"></canvas></div>
+      <div class="graph"><h3>Cart Position (m)</h3><canvas id="posGraph" width="420" height="160"></canvas></div>
+    </section>
+
+    <section class="controls">
+      <div class="card">
+        <h2>PID Gains</h2>
+        <div class="slider">
+          <label>Proportional Kp <span id="kpVal">60</span></label>
+          <input type="range" id="kp" min="0" max="300" step="1" value="60" />
+        </div>
+        <div class="slider">
+          <label>Integral Ki <span id="kiVal">0.0</span></label>
+          <input type="range" id="ki" min="0" max="50" step="0.5" value="0" />
+        </div>
+        <div class="slider">
+          <label>Derivative Kd <span id="kdVal">20</span></label>
+          <input type="range" id="kd" min="0" max="100" step="1" value="20" />
+        </div>
+        <p class="hint">Start with Kp alone: the cart pushes under the falling pole. Add Kd to damp oscillation. Add Ki only if the pole drifts from upright over time.</p>
+      </div>
+
+      <div class="card">
+        <h2>Physics</h2>
+        <div class="slider">
+          <label>Cart mass <span id="mcVal">1.0 kg</span></label>
+          <input type="range" id="mc" min="0.2" max="5" step="0.1" value="1" />
+        </div>
+        <div class="slider">
+          <label>Pendulum mass <span id="mpVal">0.3 kg</span></label>
+          <input type="range" id="mp" min="0.05" max="2" step="0.05" value="0.3" />
+        </div>
+        <div class="slider">
+          <label>Pole length <span id="lVal">1.0 m</span></label>
+          <input type="range" id="l" min="0.3" max="2" step="0.05" value="1" />
+        </div>
+        <div class="slider">
+          <label>Simulation speed <span id="speedVal">1.0×</span></label>
+          <input type="range" id="speed" min="0.1" max="2" step="0.1" value="1" />
+        </div>
+      </div>
+    </section>
+
+    <footer>Built overnight by OpenClaw · control-theory sandbox · no external assets</footer>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('sim');
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const angleG = document.getElementById('angleGraph');
+    const posG = document.getElementById('posGraph');
+    const agCtx = angleG.getContext('2d');
+    const pgCtx = posG.getContext('2d');
+
+    function fitCanvas(c, cssW, cssH) {
+      c.style.width = cssW + 'px';
+      c.style.height = cssH + 'px';
+      c.width = Math.floor(cssW * dpr);
+      c.height = Math.floor(cssH * dpr);
+      const cx = c.getContext('2d');
+      cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    fitCanvas(canvas, 900, 420);
+    fitCanvas(angleG, 420, 160);
+    fitCanvas(posG, 420, 160);
+
+    const state = {
+      running: true,
+      t: 0,
+      dt: 1 / 60,
+      speed: 1,
+      // physics state
+      x: 0,    // cart position (m)
+      dx: 0,   // cart velocity
+      th: 0.08, // pendulum angle from upright (rad), small initial lean
+      dth: 0,  // pendulum angular velocity
+      // parameters
+      mc: 1.0,
+      mp: 0.3,
+      l: 1.0,
+      g: 9.81,
+      // PID
+      kp: 60,
+      ki: 0,
+      kd: 20,
+      setpoint: 0, // desired angle = upright = 0
+      integral: 0,
+      lastErr: 0,
+      maxForce: 80,
+      trackWidth: 6, // metres visible
+      appliedForce: 0
+    };
+
+    const history = {
+      angle: new Array(200).fill(0),
+      position: new Array(200).fill(0)
+    };
+
+    function pidControl(err) {
+      state.integral += err * state.dt;
+      // anti-windup clamp
+      state.integral = Math.max(-2, Math.min(2, state.integral));
+      const deriv = (err - state.lastErr) / state.dt;
+      state.lastErr = err;
+      let f = state.kp * err + state.ki * state.integral + state.kd * deriv;
+      // clamp force
+      return Math.max(-state.maxForce, Math.min(state.maxForce, f));
+    }
+
+    function stepPhysics(dt) {
+      const s = state;
+      // Inverted pendulum on a cart equations (small-ish angle, semi-implicit Euler)
+      // theta = 0 is upright. Positive theta => pole leans right.
+      // Standard derivation gives:
+      // cos = c, sin = sn
+      const c = Math.cos(s.th);
+      const sn = Math.sin(s.th);
+      const total = s.mc + s.mp;
+      const denom = total * s.l - s.mp * s.l * c * c;
+
+      // Desired cart acceleration from PID on angle
+      const err = s.setpoint - s.th;
+      const F = pidControl(err);
+      s.appliedForce = F;
+
+      // Angular acceleration
+      const alpha = (s.g * sn - c * (F / total + s.mp * s.l * s.dth * s.dth * sn / total)) / (s.l * (1 - s.mp * c * c / total));
+      // Cart acceleration
+      const ax = (F + s.mp * s.l * (s.dth * s.dth * sn - alpha * c)) / total;
+
+      s.dth += alpha * dt;
+      s.th += s.dth * dt;
+      s.dx += ax * dt;
+      s.x += s.dx * dt;
+
+      // tiny cart friction so it doesn't drift forever
+      s.dx *= 0.999;
+      // pendulum damping
+      s.dth *= 0.9998;
+
+      // Keep cart near origin with soft rails (invisible boundary)
+      if (s.x > 2.8) {
+        s.x = 2.8;
+        if (s.dx > 0) s.dx *= -0.3;
+      }
+      if (s.x < -2.8) {
+        s.x = -2.8;
+        if (s.dx < 0) s.dx *= -0.3;
+      }
+    }
+
+    function worldToScreen(wx, wy) {
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+      const sx = w / 2 + (wx / (state.trackWidth / 2)) * (w / 2 - 40);
+      const sy = h - 70 - wy * 80; // 80 px per metre vertical
+      return { x: sx, y: sy };
+    }
+
+    function drawSim() {
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+      ctx.clearRect(0, 0, w, h);
+
+      // Track
+      ctx.strokeStyle = '#30363d';
+      ctx.lineWidth = 4;
+      const left = worldToScreen(-state.trackWidth / 2, 0);
+      const right = worldToScreen(state.trackWidth / 2, 0);
+      ctx.beginPath();
+      ctx.moveTo(left.x, left.y);
+      ctx.lineTo(right.x, right.y);
+      ctx.stroke();
+
+      // Ticks every metre
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      for (let m = -3; m <= 3; m++) {
+        const p = worldToScreen(m, 0);
+        ctx.fillRect(p.x - 1, p.y - 4, 2, 8);
+        ctx.fillText(m + ' m', p.x, p.y + 18);
+      }
+
+      const cartPos = worldToScreen(state.x, 0);
+      const cartW = 72;
+      const cartH = 32;
+
+      // Wheels
+      ctx.fillStyle = '#6e7681';
+      ctx.beginPath();
+      ctx.arc(cartPos.x - 22, cartPos.y + 10, 9, 0, Math.PI * 2);
+      ctx.arc(cartPos.x + 22, cartPos.y + 10, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cart body
+      const grad = ctx.createLinearGradient(cartPos.x, cartPos.y - cartH / 2, cartPos.x, cartPos.y + cartH / 2);
+      grad.addColorStop(0, '#30363d');
+      grad.addColorStop(1, '#161b22');
+      ctx.fillStyle = grad;
+      ctx.strokeStyle = '#8b949e';
+      ctx.lineWidth = 2;
+      roundRect(ctx, cartPos.x - cartW / 2, cartPos.y - cartH / 2, cartW, cartH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Pivot
+      ctx.fillStyle = '#e6edf3';
+      ctx.beginPath();
+      ctx.arc(cartPos.x, cartPos.y - cartH / 2, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pendulum
+      const bobX = cartPos.x + Math.sin(state.th) * state.l * 160;
+      const bobY = cartPos.y - cartH / 2 - Math.cos(state.th) * state.l * 160;
+
+      ctx.strokeStyle = '#f0883e';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cartPos.x, cartPos.y - cartH / 2);
+      ctx.lineTo(bobX, bobY);
+      ctx.stroke();
+
+      // Bob
+      ctx.fillStyle = '#58a6ff';
+      ctx.beginPath();
+      ctx.arc(bobX, bobY, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#e6edf3';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Force arrow
+      if (Math.abs(state.appliedForce) > 0.5) {
+        drawArrow(ctx, cartPos.x, cartPos.y - cartH / 2 - 26, state.appliedForce / state.maxForce * 80, state.appliedForce > 0 ? '#3fb950' : '#f85149');
+      }
+
+      // Upright target ghost line
+      ctx.strokeStyle = 'rgba(88,166,255,0.18)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(cartPos.x, cartPos.y - cartH / 2);
+      ctx.lineTo(cartPos.x, cartPos.y - cartH / 2 - state.l * 160);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Help text
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('PID target: keep pole upright (θ = 0°)', 18, 26);
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
+    }
+
+    function drawArrow(ctx, x, y, len, color) {
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + len, y);
+      ctx.stroke();
+      const head = len > 0 ? 8 : -8;
+      ctx.beginPath();
+      ctx.moveTo(x + len, y);
+      ctx.lineTo(x + len - head, y - 5);
+      ctx.lineTo(x + len - head, y + 5);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function pushHistory() {
+      history.angle.push(state.th * 180 / Math.PI);
+      history.angle.shift();
+      history.position.push(state.x);
+      history.position.shift();
+    }
+
+    function drawGraph(c, ctx2, data, color, zeroLine, min, max) {
+      const w = c.width / dpr;
+      const h = c.height / dpr;
+      ctx2.clearRect(0, 0, w, h);
+      // Grid
+      ctx2.strokeStyle = '#21262d';
+      ctx2.lineWidth = 1;
+      ctx2.beginPath();
+      ctx2.moveTo(0, h / 2);
+      ctx2.lineTo(w, h / 2);
+      ctx2.stroke();
+      // Plot
+      ctx2.strokeStyle = color;
+      ctx2.lineWidth = 2;
+      ctx2.beginPath();
+      const range = Math.max(0.001, max - min);
+      for (let i = 0; i < data.length; i++) {
+        const y = h - 8 - ((data[i] - min) / range) * (h - 16);
+        const x = (i / (data.length - 1)) * w;
+        if (i === 0) ctx2.moveTo(x, y);
+        else ctx2.lineTo(x, y);
+      }
+      ctx2.stroke();
+      // zero line if visible
+      if (zeroLine >= min && zeroLine <= max) {
+        const zy = h - 8 - ((zeroLine - min) / range) * (h - 16);
+        ctx2.strokeStyle = 'rgba(139,148,158,0.5)';
+        ctx2.setLineDash([3, 3]);
+        ctx2.beginPath();
+        ctx2.moveTo(0, zy);
+        ctx2.lineTo(w, zy);
+        ctx2.stroke();
+        ctx2.setLineDash([]);
+      }
+    }
+
+    function updateGraphs() {
+      const aMin = -25, aMax = 25;
+      drawGraph(angleG, agCtx, history.angle, '#58a6ff', 0, aMin, aMax);
+      const pMin = -3.2, pMax = 3.2;
+      drawGraph(posG, pgCtx, history.position, '#f0883e', 0, pMin, pMax);
+    }
+
+    function updateReadouts() {
+      document.getElementById('angVal').textContent = (state.th * 180 / Math.PI).toFixed(1) + '°';
+      document.getElementById('posVal').textContent = state.x.toFixed(2) + ' m';
+      document.getElementById('forceVal').textContent = state.appliedForce.toFixed(1) + ' N';
+      const st = document.getElementById('statusVal');
+      st.textContent = state.running ? 'Running' : 'Paused';
+      st.className = 'value status ' + (state.running ? 'running' : 'paused');
+    }
+
+    function reset() {
+      state.x = 0;
+      state.dx = 0;
+      state.th = 0.08;
+      state.dth = 0;
+      state.integral = 0;
+      state.lastErr = 0;
+      state.appliedForce = 0;
+      history.angle.fill(0);
+      history.position.fill(0);
+    }
+
+    let lastFrame = performance.now();
+    function loop(now) {
+      const rawDt = Math.min((now - lastFrame) / 1000, 0.05);
+      lastFrame = now;
+      if (state.running) {
+        const steps = 4;
+        const sub = rawDt / steps * state.speed;
+        for (let i = 0; i < steps; i++) stepPhysics(sub);
+        pushHistory();
+      }
+      drawSim();
+      updateGraphs();
+      updateReadouts();
+      requestAnimationFrame(loop);
+    }
+
+    // Controls
+    function bindSlider(id, key, fmt) {
+      const el = document.getElementById(id);
+      const val = document.getElementById(id + 'Val');
+      el.addEventListener('input', () => {
+        const v = parseFloat(el.value);
+        state[key] = v;
+        val.textContent = fmt(v);
+      });
+    }
+    bindSlider('kp', 'kp', v => v);
+    bindSlider('ki', 'ki', v => v.toFixed(1));
+    bindSlider('kd', 'kd', v => v);
+    bindSlider('mc', 'mc', v => v.toFixed(1) + ' kg');
+    bindSlider('mp', 'mp', v => v.toFixed(2) + ' kg');
+    bindSlider('l', 'l', v => v.toFixed(2) + ' m');
+    bindSlider('speed', 'speed', v => v.toFixed(1) + '×');
+
+    document.getElementById('resetBtn').addEventListener('click', reset);
+    document.getElementById('nudgeLeftBtn').addEventListener('click', () => { state.dth -= 0.55; });
+    document.getElementById('nudgeRightBtn').addEventListener('click', () => { state.dth += 0.55; });
+    document.getElementById('pauseBtn').addEventListener('click', () => { state.running = !state.running; });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') { state.running = !state.running; e.preventDefault(); }
+      if (e.key === 'r' || e.key === 'R') reset();
+      if (e.key === 'ArrowLeft') state.dth -= 0.4;
+      if (e.key === 'ArrowRight') state.dth += 0.4;
+    });
+
+    // Touch nudge on canvas
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const cx = rect.width / 2;
+      state.dth += (x - cx) / rect.width * 1.2;
+    });
+
+    window.addEventListener('resize', () => {
+      fitCanvas(canvas, 900, 420);
+      fitCanvas(angleG, 420, 160);
+      fitCanvas(posG, 420, 160);
+    });
+
+    reset();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
