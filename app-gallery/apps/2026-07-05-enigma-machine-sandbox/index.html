@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Enigma Machine Sandbox</title>
+  <style>
+    :root {
+      --bg: #151515;
+      --panel: #202020;
+      --panel-2: #2b2b2b;
+      --ink: #e6e1d7;
+      --muted: #a7a198;
+      --accent: #d4b06a;
+      --accent-dim: #a38348;
+      --danger: #c45a4b;
+      --success: #7fb069;
+      --key: #2a2622;
+      --key-lit: #f3d681;
+      --shadow: rgba(0,0,0,.45);
+      --ring: rgba(212,176,106,.18);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 18px 14px 28px; }
+    .wrap { width: 100%; max-width: 840px; display: flex; flex-direction: column; gap: 18px; }
+    header { text-align: center; }
+    h1 { margin: 0 0 6px; font-size: 1.55rem; letter-spacing: .04em; color: var(--accent); }
+    .subtitle { margin: 0; color: var(--muted); font-size: .92rem; }
+    .banner { background: #2b2018; border: 1px solid #4a372a; color: #e9c9a8; padding: 10px 14px; border-radius: 8px; font-size: .85rem; line-height: 1.45; }
+    .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .panel { background: var(--panel); border-radius: 12px; padding: 14px 16px; border: 1px solid #2f2f2f; box-shadow: 0 8px 24px var(--shadow); }
+    .panel h2 { margin: 0 0 12px; font-size: .82rem; text-transform: uppercase; letter-spacing: .12em; color: var(--accent-dim); }
+    .setting-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .setting-row label { min-width: 110px; color: var(--muted); font-size: .86rem; }
+    .setting-row select, .setting-row input { background: var(--panel-2); color: var(--ink); border: 1px solid #3c3c3c; border-radius: 6px; padding: 6px 8px; font-size: .92rem; }
+    .setting-row select { min-width: 64px; }
+    .setting-row input { min-width: 64px; text-transform: uppercase; font-family: monospace; letter-spacing: .08em; }
+    .setting-row input.plug { min-width: 120px; }
+    .small { color: var(--muted); font-size: .78rem; }
+    .lampboard { display: grid; grid-template-columns: repeat(13, 1fr); gap: 7px; margin: 10px 0 14px; }
+    .lamp { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #3a3530, #1f1c19); border: 1px solid #3d3832; font-size: clamp(.7rem, 2.2vw, .95rem); font-weight: 700; color: #5f584e; transition: color .08s, box-shadow .08s; }
+    .lamp.lit { color: #2b2212; background: radial-gradient(circle at 35% 30%, #fff5c2, var(--key-lit)); box-shadow: 0 0 18px rgba(243,214,129,.55), inset 0 0 8px rgba(255,255,255,.45); }
+    .keyboard { display: grid; grid-template-columns: repeat(13, 1fr); gap: 7px; }
+    .key { appearance: none; border: 0; border-radius: 7px; background: linear-gradient(180deg, #3e3933, #26231f); color: var(--ink); padding: 9px 0; font-size: clamp(.72rem, 2.2vw, .95rem); font-weight: 700; cursor: pointer; box-shadow: 0 4px 0 #12110f, 0 6px 10px rgba(0,0,0,.35); transition: transform .04s, box-shadow .04s; }
+    .key:active, .key.pressed { transform: translateY(3px); box-shadow: 0 1px 0 #12110f, 0 2px 4px rgba(0,0,0,.35); }
+    .key:disabled { opacity: .45; cursor: not-allowed; }
+    .io { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    textarea { width: 100%; min-height: 120px; background: var(--panel-2); color: var(--ink); border: 1px solid #3c3c3c; border-radius: 8px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .9rem; resize: vertical; }
+    .io-label { display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .08em; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    button.action { background: var(--panel-2); color: var(--ink); border: 1px solid #444; border-radius: 7px; padding: 8px 14px; cursor: pointer; font-size: .85rem; }
+    button.action:hover { border-color: var(--accent-dim); }
+    button.primary { background: var(--accent); color: #1f1a12; border-color: var(--accent); font-weight: 700; }
+    button.primary:hover { background: #e0be75; }
+    .status { font-size: .8rem; color: var(--muted); margin-top: 8px; }
+    .status b { color: var(--accent); }
+    .rotor-visual { display: flex; justify-content: center; gap: 10px; margin: 12px 0 6px; }
+    .rotor { width: 52px; height: 52px; border-radius: 50%; background: conic-gradient(from 0deg, #2a2622 0deg, #3d3832 90deg, #2a2622 180deg, #3d3832 270deg, #2a2622 360deg); border: 2px solid var(--accent-dim); display: flex; align-items: center; justify-content: center; font-family: monospace; font-weight: 700; font-size: 1.15rem; position: relative; }
+    .rotor::after { content: attr(data-notch); position: absolute; top: -8px; right: -8px; background: var(--danger); color: #fff; font-size: .62rem; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .rotor-label { text-align: center; font-size: .7rem; color: var(--muted); margin-top: 6px; }
+    .hint { margin-top: 10px; padding: 10px; background: #1e241e; border: 1px solid #3b4d3b; border-radius: 7px; color: #b6d2b0; font-size: .82rem; }
+    .hint kbd { background: #2f2f2f; padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+    @media (max-width: 520px) {
+      .lampboard, .keyboard { grid-template-columns: repeat(13, 1fr); gap: 4px; }
+      .lamp, .key { font-size: .68rem; }
+      .io { grid-template-columns: 1fr; }
+      .rotor { width: 44px; height: 44px; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Enigma Machine Sandbox</h1>
+      <p class="subtitle">A playable M3 cipher toy. Type on the keyboard to encrypt; set the same key and run ciphertext back through to decrypt.</p>
+    </header>
+
+    <div class="banner">
+      <strong>Experimental AI mini-app.</strong> This simulator is for curiosity and education only. It is not professionally validated, and the cipher is trivially weak by modern standards. Do not use it for real security.
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <h2>Machine Settings</h2>
+        <div class="setting-row">
+          <label>Rotor order</label>
+          <select id="rotor-left"><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option></select>
+          <select id="rotor-mid"><option>I</option><option selected>II</option><option>III</option><option>IV</option><option>V</option></select>
+          <select id="rotor-right"><option>I</option><option>II</option><option selected>III</option><option>IV</option><option>V</option></select>
+        </div>
+        <div class="setting-row">
+          <label>Ring setting</label>
+          <input id="ring-left" maxlength="1" value="A" />
+          <input id="ring-mid" maxlength="1" value="A" />
+          <input id="ring-right" maxlength="1" value="A" />
+          <span class="small">A‑Z each</span>
+        </div>
+        <div class="setting-row">
+          <label>Indicator</label>
+          <input id="ind-left" maxlength="1" value="A" />
+          <input id="ind-mid" maxlength="1" value="A" />
+          <input id="ind-right" maxlength="1" value="A" />
+          <span class="small">Start position</span>
+        </div>
+        <div class="setting-row">
+          <label>Reflector</label>
+          <select id="reflector"><option selected>B</option><option>C</option></select>
+        </div>
+        <div class="setting-row">
+          <label>Plugboard</label>
+          <input id="plugboard" class="plug" placeholder="AB CD EF (up to 10 pairs)" />
+        </div>
+        <div class="actions">
+          <button class="action primary" id="btn-reset">Reset machine</button>
+          <button class="action" id="btn-random">Random key</button>
+          <button class="action" id="btn-clear-io">Clear I/O</button>
+        </div>
+        <p class="status">Current indicator: <b id="ind-display">AAA</b> · Encrypted letters: <b id="count">0</b></p>
+      </div>
+
+      <div class="panel">
+        <h2>Rotor Windows</h2>
+        <div class="rotor-visual">
+          <div><div class="rotor" id="win-left" data-notch="Q">A</div><div class="rotor-label">Left</div></div>
+          <div><div class="rotor" id="win-mid" data-notch="E">A</div><div class="rotor-label">Middle</div></div>
+          <div><div class="rotor" id="win-right" data-notch="V">A</div><div class="rotor-label">Right</div></div>
+        </div>
+        <p class="small" style="text-align:center; margin-top:8px;">Notch letters shown in red. Watch the double-step when the middle rotor is on its notch.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Lampboard</h2>
+      <div class="lampboard" id="lampboard"></div>
+      <h2 style="margin-top:6px;">Keyboard</h2>
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Message I/O</h2>
+      <div class="io">
+        <div>
+          <div class="io-label"><span>Input (plain or cipher)</span><span id="in-count">0 chars</span></div>
+          <textarea id="input-text" placeholder="Type or paste text here, then press keys above…"></textarea>
+        </div>
+        <div>
+          <div class="io-label"><span>Output</span><span id="out-count">0 chars</span></div>
+          <textarea id="output-text" readonly></textarea>
+        </div>
+      </div>
+      <div class="hint">
+        Tip: Enigma is symmetric. To decode, reset the machine to the same key and type the ciphertext. Try the classic test vector: rotors <b>I‑II‑III</b>, rings <b>AAA</b>, indicator <b>AAA</b>, no plugboard, reflector <b>B</b> — typing <b>AAAAA</b> gives <b>BDZGO</b>.
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const ROTORS = {
+    I:   { wiring: 'EKMFLGDQVZNTOWYHXUSPAIBRCJ', notch: 'Q' },
+    II:  { wiring: 'AJDKSIRUXBLHWTMCQGZNPYFVOE', notch: 'E' },
+    III: { wiring: 'BDFHJLCPRTXVZNYEIWGAKMUSQO', notch: 'V' },
+    IV:  { wiring: 'ESOVPZJAYQUIRHXLNFTGKDCMWB', notch: 'J' },
+    V:   { wiring: 'VZBRGITYUPSDNHLXAWMJQOFECK', notch: 'Z' }
+  };
+  const REFLECTORS = {
+    B: 'YRUHQSLDPXNGOKMIEBFZCWVJAT',
+    C: 'FVPJIAOYEDRZXWGCTKUQSBNMHL'
+  };
+
+  function mod(n, m) { return ((n % m) + m) % m; }
+
+  function parsePlugboard(str) {
+    const map = {};
+    for (const c of ALPHABET) map[c] = c;
+    const pairs = (str || '').toUpperCase().replace(/[^A-Z]/g, '').match(/.{1,2}/g) || [];
+    const used = new Set();
+    for (const pair of pairs) {
+      if (pair.length !== 2 || pair[0] === pair[1]) continue;
+      if (used.has(pair[0]) || used.has(pair[1])) continue;
+      map[pair[0]] = pair[1];
+      map[pair[1]] = pair[0];
+      used.add(pair[0]);
+      used.add(pair[1]);
+    }
+    return map;
+  }
+
+  function createEnigma() {
+    const left  = document.getElementById('rotor-left').value;
+    const mid   = document.getElementById('rotor-mid').value;
+    const right = document.getElementById('rotor-right').value;
+    const order = [left, mid, right];
+    const rings = [
+      document.getElementById('ring-left').value.toUpperCase().charCodeAt(0) - 65 || 0,
+      document.getElementById('ring-mid').value.toUpperCase().charCodeAt(0) - 65 || 0,
+      document.getElementById('ring-right').value.toUpperCase().charCodeAt(0) - 65 || 0
+    ];
+    const positions = [
+      document.getElementById('ind-left').value.toUpperCase().charCodeAt(0) - 65 || 0,
+      document.getElementById('ind-mid').value.toUpperCase().charCodeAt(0) - 65 || 0,
+      document.getElementById('ind-right').value.toUpperCase().charCodeAt(0) - 65 || 0
+    ];
+    const reflector = document.getElementById('reflector').value;
+    const plugboard = parsePlugboard(document.getElementById('plugboard').value);
+    return { order, rings, positions, reflector, plugboard };
+  }
+
+  function stepMachine(state) {
+    const [L, M, R] = state.order.map(n => ROTORS[n].notch.charCodeAt(0) - 65);
+    const pos = state.positions;
+    // Standard double-stepping: middle steps whenever it is on its notch (pre-step),
+    // right steps on every keypress, and left steps when middle is on notch.
+    const midOnNotch = pos[1] === M;
+    const rightOnNotch = pos[2] === R;
+    if (midOnNotch) {
+      pos[0] = mod(pos[0] + 1, 26);
+      pos[1] = mod(pos[1] + 1, 26);
+    }
+    if (rightOnNotch) {
+      pos[1] = mod(pos[1] + 1, 26);
+    }
+    pos[2] = mod(pos[2] + 1, 26);
+  }
+
+  function rotorMap(letter, wiring, position, ring, inverse) {
+    const offset = mod(position - ring, 26);
+    let idx = mod((letter.charCodeAt(0) - 65) + offset, 26);
+    let mapped;
+    if (!inverse) {
+      mapped = wiring.charCodeAt(idx) - 65;
+    } else {
+      mapped = wiring.indexOf(String.fromCharCode(idx + 65));
+    }
+    return String.fromCharCode(mod(mapped - offset, 26) + 65);
+  }
+
+  function encryptLetter(state, letter) {
+    if (!/[A-Z]/.test(letter)) return letter;
+    stepMachine(state);
+    let c = state.plugboard[letter] || letter;
+    for (let i = 2; i >= 0; i--) {
+      c = rotorMap(c, ROTORS[state.order[i]].wiring, state.positions[i], state.rings[i], false);
+    }
+    c = REFLECTORS[state.reflector][c.charCodeAt(0) - 65];
+    for (let i = 0; i < 3; i++) {
+      c = rotorMap(c, ROTORS[state.order[i]].wiring, state.positions[i], state.rings[i], true);
+    }
+    c = state.plugboard[c] || c;
+    return c;
+  }
+
+  // Test hook: encrypt a message string using current UI settings (used for verification only).
+  window.testEncryptMessage = function(msg) {
+    const s = createEnigma();
+    return msg.toUpperCase().split('').map(ch => /[A-Z]/.test(ch) ? encryptLetter(s, ch) : ch).join('');
+  };
+
+  // UI: build lampboard and keyboard
+  const lampboard = document.getElementById('lampboard');
+  const keyboard = document.getElementById('keyboard');
+  const keyMap = {};
+  const lampMap = {};
+  for (const ch of ALPHABET) {
+    const lamp = document.createElement('div');
+    lamp.className = 'lamp';
+    lamp.textContent = ch;
+    lamp.dataset.letter = ch;
+    lampboard.appendChild(lamp);
+    lampMap[ch] = lamp;
+    const key = document.createElement('button');
+    key.className = 'key';
+    key.textContent = ch;
+    key.dataset.letter = ch;
+    keyboard.appendChild(key);
+    keyMap[ch] = key;
+    key.addEventListener('pointerdown', () => pressKey(ch));
+    key.addEventListener('pointerup', () => releaseKey(ch));
+    key.addEventListener('pointerleave', () => releaseKey(ch));
+  }
+
+  let currentState = createEnigma();
+  let encryptedCount = 0;
+  const inputArea = document.getElementById('input-text');
+  const outputArea = document.getElementById('output-text');
+  const indDisplay = document.getElementById('ind-display');
+  const countDisplay = document.getElementById('count');
+  const inCount = document.getElementById('in-count');
+  const outCount = document.getElementById('out-count');
+
+  function updateWindows() {
+    const wL = document.getElementById('win-left');
+    const wM = document.getElementById('win-mid');
+    const wR = document.getElementById('win-right');
+    wL.textContent = String.fromCharCode(currentState.positions[0] + 65);
+    wM.textContent = String.fromCharCode(currentState.positions[1] + 65);
+    wR.textContent = String.fromCharCode(currentState.positions[2] + 65);
+    wL.dataset.notch = ROTORS[currentState.order[0]].notch;
+    wM.dataset.notch = ROTORS[currentState.order[1]].notch;
+    wR.dataset.notch = ROTORS[currentState.order[2]].notch;
+    indDisplay.textContent = wL.textContent + wM.textContent + wR.textContent;
+  }
+
+  function pressKey(ch) {
+    const key = keyMap[ch];
+    if (!key || key.disabled) return;
+    key.classList.add('pressed');
+    const out = encryptLetter(currentState, ch);
+    const lamp = lampMap[out];
+    if (lamp) lamp.classList.add('lit');
+    inputArea.value += ch;
+    outputArea.value += out;
+    encryptedCount++;
+    countDisplay.textContent = encryptedCount;
+    inCount.textContent = inputArea.value.length + ' chars';
+    outCount.textContent = outputArea.value.length + ' chars';
+    updateWindows();
+    setTimeout(() => { key.classList.remove('pressed'); if (lamp) lamp.classList.remove('lit'); }, 220);
+  }
+
+  function releaseKey(ch) {
+    const key = keyMap[ch];
+    if (key) key.classList.remove('pressed');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    const ch = e.key.toUpperCase();
+    if (ALPHABET.includes(ch) && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      pressKey(ch);
+    }
+  });
+  document.addEventListener('keyup', (e) => {
+    const ch = e.key.toUpperCase();
+    if (ALPHABET.includes(ch)) releaseKey(ch);
+  });
+
+  function resetMachine() {
+    currentState = createEnigma();
+    encryptedCount = 0;
+    countDisplay.textContent = '0';
+    updateWindows();
+  }
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    resetMachine();
+    inputArea.value = '';
+    outputArea.value = '';
+    inCount.textContent = '0 chars';
+    outCount.textContent = '0 chars';
+  });
+
+  document.getElementById('btn-random').addEventListener('click', () => {
+    const names = Object.keys(ROTORS);
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    const order = [];
+    while (order.length < 3) { const n = pick(names); if (!order.includes(n)) order.push(n); }
+    document.getElementById('rotor-left').value = order[0];
+    document.getElementById('rotor-mid').value = order[1];
+    document.getElementById('rotor-right').value = order[2];
+    document.getElementById('ring-left').value = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    document.getElementById('ring-mid').value = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    document.getElementById('ring-right').value = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    document.getElementById('ind-left').value = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    document.getElementById('ind-mid').value = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    document.getElementById('ind-right').value = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    document.getElementById('reflector').value = Math.random() < .5 ? 'B' : 'C';
+    resetMachine();
+  });
+
+  document.getElementById('btn-clear-io').addEventListener('click', () => {
+    inputArea.value = '';
+    outputArea.value = '';
+    inCount.textContent = '0 chars';
+    outCount.textContent = '0 chars';
+  });
+
+  // Rebuild state when settings inputs change but preserve indicator positions unless user changed them.
+  ['rotor-left','rotor-mid','rotor-right','ring-left','ring-mid','ring-right','reflector','plugboard'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      currentState = createEnigma();
+      updateWindows();
+    });
+  });
+  ['ind-left','ind-mid','ind-right'].forEach((id, i) => {
+    document.getElementById(id).addEventListener('change', () => {
+      const v = document.getElementById(id).value.toUpperCase();
+      document.getElementById(id).value = v.slice(0, 1) || 'A';
+      currentState.positions[i] = document.getElementById(id).value.charCodeAt(0) - 65;
+      updateWindows();
+    });
+  });
+
+  updateWindows();
+})();
+</script>
+</body>
+</html>
