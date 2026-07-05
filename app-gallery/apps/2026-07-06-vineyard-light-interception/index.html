@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+  <title>Vineyard Row Light Interception Simulator</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-2: #1c2129;
+      --text: #f0f3f6;
+      --muted: #9ca3af;
+      --accent: #f59e0b;
+      --accent-2: #10b981;
+      --sun: #fbbf24;
+      --sky-top: #0f172a;
+      --sky-bottom: #334155;
+      --shaded: #1e293b;
+      --lit: #f59e0b;
+      --soil: #3f2e22;
+      --leaf: #22c55e;
+      --line: #30363d;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .warning {
+      padding: 12px 16px;
+      background: #3a2319;
+      border: 1px solid #8b4d33;
+      color: #ffd9c8;
+      font-weight: 600;
+      line-height: 1.4;
+      font-size: 0.9rem;
+    }
+    .wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 16px;
+      width: 100%;
+      flex: 1;
+    }
+    h1 {
+      font-size: 1.35rem;
+      margin: 0 0 6px;
+      letter-spacing: -0.01em;
+    }
+    .subtitle { color: var(--muted); font-size: 0.92rem; margin-bottom: 14px; }
+    .stage {
+      position: relative;
+      width: 100%;
+      background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      touch-action: none;
+      aspect-ratio: 4 / 3;
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+    .hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: rgba(13, 17, 23, 0.82);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      backdrop-filter: blur(3px);
+    }
+    .chip span { color: var(--muted); font-weight: 500; }
+    .controls {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .card h2 {
+      font-size: 0.95rem;
+      margin: 0 0 10px;
+      color: var(--accent);
+    }
+    label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 6px; }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      margin-bottom: 2px;
+    }
+    .val { font-size: 0.75rem; color: var(--text); float: right; }
+    .row { margin-bottom: 10px; }
+    .row:last-child { margin-bottom: 0; }
+    .action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.active { background: var(--accent); color: #1a1200; border-color: var(--accent); }
+    .chart-wrap {
+      margin-top: 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .chart-wrap h2 {
+      font-size: 0.95rem;
+      margin: 0 0 8px;
+      color: var(--accent-2);
+    }
+    #dayChart { width: 100%; height: 160px; display: block; }
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.75rem;
+      padding: 16px;
+    }
+    @media (max-width: 520px) {
+      h1 { font-size: 1.15rem; }
+      .stage { aspect-ratio: 3 / 4; }
+      .chip { font-size: 0.7rem; padding: 4px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">Unlisted OpenClaw AI mini-app. Experimental and not professionally validated. Do not rely on it for decisions.</div>
+  <div class="wrap">
+    <h1>Vineyard Row Light Interception</h1>
+    <p class="subtitle">Drag the sun across the sky to see how row spacing, canopy width, height, and latitude change direct light interception and ground sun flecks.</p>
+
+    <div class="stage" id="stage">
+      <canvas id="mainCanvas"></canvas>
+      <div class="hud">
+        <div class="chip">Interception <span id="hudIntercept">0%</span></div>
+        <div class="chip">Sun flecks <span id="hudFlecks">0%</span></div>
+        <div class="chip">Elevation <span id="hudElev">0°</span></div>
+        <div class="chip">Azimuth <span id="hudAz">0°</span></div>
+        <div class="chip">Time <span id="hudTime">12:00</span></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="card">
+        <h2>Sun &amp; time</h2>
+        <div class="row">
+          <label>Latitude <span class="val" id="latVal">38°</span></label>
+          <input id="lat" type="range" min="-60" max="60" value="38" step="1">
+        </div>
+        <div class="row">
+          <label>Day of year <span class="val" id="doyVal">200</span></label>
+          <input id="doy" type="range" min="1" max="365" value="200" step="1">
+        </div>
+        <div class="row">
+          <label>Hour <span class="val" id="hourVal">12.0</span></label>
+          <input id="hour" type="range" min="5" max="20" value="12" step="0.05">
+        </div>
+        <div class="action-row">
+          <button id="btnPlay">▶ Play day</button>
+          <button id="btnReset">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Vineyard geometry</h2>
+        <div class="row">
+          <label>Row spacing <span class="val" id="rowSpacingVal">2.8 m</span></label>
+          <input id="rowSpacing" type="range" min="1.5" max="5" value="2.8" step="0.05">
+        </div>
+        <div class="row">
+          <label>Canopy width <span class="val" id="canopyWidthVal">0.7 m</span></label>
+          <input id="canopyWidth" type="range" min="0.2" max="2" value="0.7" step="0.05">
+        </div>
+        <div class="row">
+          <label>Canopy height <span class="val" id="canopyHeightVal">1.2 m</span></label>
+          <input id="canopyHeight" type="range" min="0.3" max="2.5" value="1.2" step="0.05">
+        </div>
+        <div class="row">
+          <label>Trunk height <span class="val" id="trunkHeightVal">0.6 m</span></label>
+          <input id="trunkHeight" type="range" min="0.1" max="1.2" value="0.6" step="0.05">
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <h2>Daily interception curve</h2>
+      <canvas id="dayChart"></canvas>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--accent)"></span> Interception %</span>
+        <span><span class="dot" style="background:var(--sun)"></span> Ground sun flecks %</span>
+      </div>
+    </div>
+  </div>
+  <footer>OpenClaw overnight mini-app · 2026-07-06</footer>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const canvas = document.getElementById('mainCanvas');
+      const ctx = canvas.getContext('2d');
+      const dayCanvas = document.getElementById('dayChart');
+      const dayCtx = dayCanvas.getContext('2d');
+      const stage = document.getElementById('stage');
+
+      const state = {
+        lat: 38,
+        doy: 200,
+        hour: 12,
+        rowSpacing: 2.8,
+        canopyWidth: 0.7,
+        canopyHeight: 1.2,
+        trunkHeight: 0.6,
+        playing: false,
+        draggingSun: false,
+      };
+
+      const inputs = {
+        lat: document.getElementById('lat'),
+        doy: document.getElementById('doy'),
+        hour: document.getElementById('hour'),
+        rowSpacing: document.getElementById('rowSpacing'),
+        canopyWidth: document.getElementById('canopyWidth'),
+        canopyHeight: document.getElementById('canopyHeight'),
+        trunkHeight: document.getElementById('trunkHeight'),
+      };
+      const displays = {
+        lat: document.getElementById('latVal'),
+        doy: document.getElementById('doyVal'),
+        hour: document.getElementById('hourVal'),
+        rowSpacing: document.getElementById('rowSpacingVal'),
+        canopyWidth: document.getElementById('canopyWidthVal'),
+        canopyHeight: document.getElementById('canopyHeightVal'),
+        trunkHeight: document.getElementById('trunkHeightVal'),
+      };
+      const hud = {
+        intercept: document.getElementById('hudIntercept'),
+        flecks: document.getElementById('hudFlecks'),
+        elev: document.getElementById('hudElev'),
+        az: document.getElementById('hudAz'),
+        time: document.getElementById('hudTime'),
+      };
+
+      function formatTime(decimalHour) {
+        const h = Math.floor(decimalHour);
+        const m = Math.floor((decimalHour - h) * 60);
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+      }
+
+      function deg2rad(d) { return d * Math.PI / 180; }
+      function rad2deg(r) { return r * 180 / Math.PI; }
+
+      // Solar declination and hour angle -> elevation and azimuth (south=0)
+      function solarPosition(lat, doy, hour) {
+        const decl = 23.45 * Math.sin(deg2rad((360 / 365) * (doy - 81))) * Math.PI / 180;
+        const latR = deg2rad(lat);
+        const hourAngle = deg2rad((hour - 12) * 15);
+        const sinElev = Math.sin(latR) * Math.sin(decl) + Math.cos(latR) * Math.cos(decl) * Math.cos(hourAngle);
+        const elev = Math.asin(Math.max(-1, Math.min(1, sinElev)));
+        const cosAz = (Math.sin(decl) - Math.sin(latR) * Math.sin(elev)) / (Math.cos(latR) * Math.cos(elev));
+        let az = Math.acos(Math.max(-1, Math.min(1, cosAz)));
+        if (hour < 12) az = 2 * Math.PI - az; // morning = east
+        return { elev, az, decl };
+      }
+
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const rect = stage.getBoundingClientRect();
+        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const drect = dayCanvas.getBoundingClientRect();
+        dayCanvas.width = Math.max(1, Math.floor(drect.width * dpr));
+        dayCanvas.height = Math.max(1, Math.floor(drect.height * dpr));
+        dayCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function worldToScreen(w, h, scale, cx, cy) {
+        return { x: cx + w * scale, y: cy - h * scale };
+      }
+
+      // Geometry drawing + interception estimate
+      function drawScene() {
+        const rect = stage.getBoundingClientRect();
+        const W = rect.width;
+        const H = rect.height;
+        ctx.clearRect(0, 0, W, H);
+
+        const sun = solarPosition(state.lat, state.doy, state.hour);
+        const elevDeg = Math.max(0, rad2deg(sun.elev));
+
+        // Ground plane and sky gradient already in CSS; draw soil horizon band
+        const horizonY = H * 0.78;
+        const skyH = horizonY;
+
+        // Sun disc position on screen arc
+        const sunRadius = Math.min(W, H) * 0.42;
+        const sunCx = W / 2;
+        const sunCy = horizonY;
+        const sunX = sunCx + sunRadius * Math.sin(sun.az);
+        const sunY = sunCy - sunRadius * Math.sin(sun.elev);
+
+        // Draw sun rays faintly
+        ctx.save();
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.10)';
+        ctx.lineWidth = 1;
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 16) {
+          ctx.beginPath();
+          ctx.moveTo(sunX, sunY);
+          ctx.lineTo(sunX + Math.cos(a) * W, sunY + Math.sin(a) * H);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Draw sun
+        const sunDiscR = Math.max(12, Math.min(22, W / 35));
+        const grad = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, sunDiscR * 3);
+        grad.addColorStop(0, 'rgba(251, 191, 36, 0.9)');
+        grad.addColorStop(0.5, 'rgba(251, 191, 36, 0.25)');
+        grad.addColorStop(1, 'rgba(251, 191, 36, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, sunDiscR * 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, sunDiscR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // World params
+        const sceneWm = state.rowSpacing * 5; // show 5 row periods
+        const scale = Math.min(W / sceneWm, (H - skyH - 20) / Math.max(state.canopyHeight + state.trunkHeight, 0.5));
+        const cx = W / 2;
+        const groundY = horizonY;
+
+        const rows = [];
+        const centreOffset = -(2 * state.rowSpacing); // centre middle-ish
+        for (let i = -2; i <= 2; i++) {
+          rows.push(centreOffset + i * state.rowSpacing);
+        }
+
+        // Geometric model: rows run north-south. Sun azimuth is relative to row axis (south=0).
+        // Perpendicular shadow component uses |cos(sun.az)|.
+        const cosAz = Math.abs(Math.cos(sun.az));
+        const tanElev = Math.tan(Math.max(deg2rad(3), sun.elev));
+        const sideShadow = elevDeg > 3 ? (state.canopyHeight / tanElev * cosAz) : 0;
+        const shadowFootprint = state.canopyWidth + sideShadow;
+        const rawIntercept = elevDeg > 3 ? Math.min(1, shadowFootprint / state.rowSpacing) : 0;
+        const selfShade = 0.08 * Math.exp(-elevDeg / 35);
+        const interceptFrac = Math.max(0, Math.min(1, rawIntercept * (1 - selfShade)));
+        const fleckFrac = Math.max(0, 1 - rawIntercept);
+
+        // Draw ground: shaded band around each row (canopy width + side shadow), rest is sun flecks.
+        const samples = 400;
+        const halfBand = shadowFootprint / 2;
+        for (let i = 0; i < samples; i++) {
+          const gxWorld = centreOffset + (i / samples) * sceneWm;
+          const sx = worldToScreen(gxWorld - centreOffset, 0, scale, cx, groundY).x;
+          const sw = (sceneWm / samples) * scale + 1;
+          let inShade = false;
+          if (elevDeg > 3) {
+            for (const rc of rows) {
+              if (Math.abs(gxWorld - rc) <= halfBand) { inShade = true; break; }
+            }
+          }
+          const col = inShade ? 'rgba(30, 41, 59, 0.88)' : 'rgba(245, 158, 11, 0.20)';
+          ctx.fillStyle = col;
+          ctx.fillRect(sx, groundY, sw, H - groundY);
+        }
+
+        // Draw row profiles (trunks + canopy)
+        for (const rc of rows) {
+          const x = worldToScreen(rc - centreOffset, 0, scale, cx, groundY).x;
+          const canopyBaseY = worldToScreen(rc - centreOffset, state.trunkHeight, scale, cx, groundY).y;
+          const canopyTopY = worldToScreen(rc - centreOffset, state.trunkHeight + state.canopyHeight, scale, cx, groundY).y;
+          const cwPx = state.canopyWidth * scale;
+
+          // Trunk / cordon
+          ctx.fillStyle = '#5c4033';
+          ctx.fillRect(x - 2, canopyBaseY, 4, groundY - canopyBaseY);
+
+          // Canopy rect
+          const gradLeaf = ctx.createLinearGradient(0, canopyTopY, 0, canopyBaseY);
+          gradLeaf.addColorStop(0, '#3b9c52');
+          gradLeaf.addColorStop(1, '#14522d');
+          ctx.fillStyle = gradLeaf;
+          ctx.fillRect(x - cwPx / 2, canopyTopY, cwPx, canopyBaseY - canopyTopY);
+          ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x - cwPx / 2, canopyTopY, cwPx, canopyBaseY - canopyTopY);
+
+          // Sun-facing edge highlight
+          ctx.fillStyle = 'rgba(255,255,255,0.15)';
+          ctx.fillRect(x - cwPx / 2, canopyTopY, 2, canopyBaseY - canopyTopY);
+
+          // Cast shadow wedge on ground
+          if (elevDeg > 3) {
+            const shadowDX = sideShadow * scale * Math.sign(Math.cos(sun.az));
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.beginPath();
+            ctx.moveTo(x - cwPx / 2, canopyTopY);
+            ctx.lineTo(x - cwPx / 2 + shadowDX, groundY);
+            ctx.lineTo(x + cwPx / 2 + shadowDX, groundY);
+            ctx.lineTo(x + cwPx / 2, canopyTopY);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+
+        // Ground line
+        ctx.strokeStyle = '#6b4c35';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, groundY);
+        ctx.lineTo(W, groundY);
+        ctx.stroke();
+
+        // Drag hint
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.font = '600 11px ui-sans-serif, sans-serif';
+        ctx.fillText('Drag the sun to change time', 12, H - 12);
+
+        const interceptPct = interceptFrac * 100;
+        const fleckPct = fleckFrac * 100;
+
+        hud.intercept.textContent = interceptPct.toFixed(1) + '%';
+        hud.flecks.textContent = fleckPct.toFixed(1) + '%';
+        hud.elev.textContent = elevDeg.toFixed(1) + '°';
+        hud.az.textContent = rad2deg(sun.az).toFixed(0) + '°';
+        hud.time.textContent = formatTime(state.hour);
+
+        return { interceptPct, fleckPct };
+      }
+
+      function drawDayChart() {
+        const rect = dayCanvas.getBoundingClientRect();
+        const W = rect.width;
+        const H = rect.height;
+        dayCtx.clearRect(0, 0, W, H);
+
+        const hours = [];
+        for (let h = 5; h <= 20; h += 0.25) hours.push(h);
+        const data = hours.map(h => {
+          const s = solarPosition(state.lat, state.doy, h);
+          const elevDeg = Math.max(0, rad2deg(s.elev));
+          if (elevDeg <= 3) return { h, intercept: 0, fleck: 1 };
+          const cosAz = Math.abs(Math.cos(s.az));
+          const tanElev = Math.tan(deg2rad(elevDeg));
+          const sideShadow = state.canopyHeight / tanElev * cosAz;
+          const footprint = state.canopyWidth + sideShadow;
+          const rawIntercept = Math.min(1, footprint / state.rowSpacing);
+          const selfShade = 0.08 * Math.exp(-elevDeg / 35);
+          const intercept = Math.max(0, Math.min(1, rawIntercept * (1 - selfShade)));
+          const fleck = Math.max(0, 1 - rawIntercept);
+          return { h, intercept, fleck };
+        });
+
+        const pad = { l: 34, r: 12, t: 14, b: 24 };
+        const x = i => pad.l + (i / (data.length - 1)) * (W - pad.l - pad.r);
+        const y = v => pad.t + (1 - v) * (H - pad.t - pad.b);
+
+        // Grid
+        dayCtx.strokeStyle = 'rgba(255,255,255,0.08)';
+        dayCtx.lineWidth = 1;
+        for (let p = 0; p <= 1; p += 0.25) {
+          dayCtx.beginPath();
+          dayCtx.moveTo(pad.l, y(p));
+          dayCtx.lineTo(W - pad.r, y(p));
+          dayCtx.stroke();
+        }
+        // Axes
+        dayCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+        dayCtx.beginPath();
+        dayCtx.moveTo(pad.l, pad.t);
+        dayCtx.lineTo(pad.l, H - pad.b);
+        dayCtx.lineTo(W - pad.r, H - pad.b);
+        dayCtx.stroke();
+
+        function line(values, color, fill) {
+          dayCtx.strokeStyle = color;
+          dayCtx.lineWidth = 2;
+          dayCtx.beginPath();
+          values.forEach((v, i) => {
+            const px = x(i), py = y(v);
+            if (i === 0) dayCtx.moveTo(px, py); else dayCtx.lineTo(px, py);
+          });
+          dayCtx.stroke();
+          if (fill) {
+            dayCtx.fillStyle = fill;
+            dayCtx.beginPath();
+            dayCtx.moveTo(x(0), H - pad.b);
+            values.forEach((v, i) => dayCtx.lineTo(x(i), y(v)));
+            dayCtx.lineTo(x(values.length - 1), H - pad.b);
+            dayCtx.closePath();
+            dayCtx.fill();
+          }
+        }
+
+        line(data.map(d => d.intercept), '#f59e0b', 'rgba(245, 158, 11, 0.18)');
+        line(data.map(d => d.fleck), '#fbbf24', null);
+
+        // Labels
+        dayCtx.fillStyle = 'rgba(255,255,255,0.55)';
+        dayCtx.font = '10px ui-sans-serif, sans-serif';
+        dayCtx.textAlign = 'right';
+        for (let p = 0; p <= 1; p += 0.25) {
+          dayCtx.fillText((p * 100).toFixed(0) + '%', pad.l - 6, y(p) + 3);
+        }
+        dayCtx.textAlign = 'center';
+        for (let h = 6; h <= 20; h += 2) {
+          const i = (h - 5) / 0.25;
+          dayCtx.fillText(h + ':00', x(i), H - 8);
+        }
+
+        // Current time marker
+        const curIdx = Math.max(0, Math.min(data.length - 1, Math.round((state.hour - 5) / 0.25)));
+        const cx = x(curIdx);
+        const cy = y(data[curIdx].intercept);
+        dayCtx.strokeStyle = '#fff';
+        dayCtx.setLineDash([3, 3]);
+        dayCtx.beginPath();
+        dayCtx.moveTo(cx, pad.t);
+        dayCtx.lineTo(cx, H - pad.b);
+        dayCtx.stroke();
+        dayCtx.setLineDash([]);
+        dayCtx.fillStyle = '#fff';
+        dayCtx.beginPath();
+        dayCtx.arc(cx, cy, 4, 0, Math.PI * 2);
+        dayCtx.fill();
+      }
+
+      function updateUI() {
+        Object.keys(inputs).forEach(k => {
+          inputs[k].value = state[k];
+          displays[k].textContent = formatDisplay(k, state[k]);
+        });
+        drawScene();
+        drawDayChart();
+      }
+
+      function formatDisplay(k, v) {
+        if (k === 'lat') return v + '°';
+        if (k === 'doy') return v;
+        if (k === 'hour') return v.toFixed(2);
+        if (['rowSpacing', 'canopyWidth', 'canopyHeight', 'trunkHeight'].includes(k)) return v.toFixed(2) + ' m';
+        return v;
+      }
+
+      Object.keys(inputs).forEach(k => {
+        inputs[k].addEventListener('input', e => {
+          state[k] = parseFloat(e.target.value);
+          displays[k].textContent = formatDisplay(k, state[k]);
+          if (k === 'hour') state.playing = false;
+          updateUI();
+        });
+      });
+
+      function sunFromPointer(clientX, clientY) {
+        const rect = stage.getBoundingClientRect();
+        const W = rect.width;
+        const H = rect.height;
+        const horizonY = H * 0.78;
+        const sunCx = W / 2;
+        const sunCy = horizonY;
+        const dx = clientX - rect.left - sunCx;
+        const dy = sunCy - (clientY - rect.top);
+        const sunRadius = Math.min(W, H) * 0.42;
+        let az = Math.atan2(dx, dy);
+        if (az < 0) az += Math.PI * 2;
+        const frac = (Math.PI - az) / Math.PI; // 0 = sunrise, 1 = sunset
+        const sunHour = 5 + frac * 15; // map to 5..20
+        return Math.max(5, Math.min(20, sunHour));
+      }
+
+      stage.addEventListener('pointerdown', e => {
+        const rect = stage.getBoundingClientRect();
+        const W = rect.width;
+        const H = rect.height;
+        const horizonY = H * 0.78;
+        const sunRadius = Math.min(W, H) * 0.42;
+        const sun = solarPosition(state.lat, state.doy, state.hour);
+        const sunCx = W / 2;
+        const sunCy = horizonY;
+        const sunX = sunCx + sunRadius * Math.sin(sun.az);
+        const sunY = sunCy - sunRadius * Math.sin(sun.elev);
+        const dx = e.clientX - rect.left - sunX;
+        const dy = e.clientY - rect.top - sunY;
+        if (dx * dx + dy * dy < (sunDiscR * 5) ** 2) {
+          state.draggingSun = true;
+          state.playing = false;
+          stage.setPointerCapture(e.pointerId);
+        }
+      });
+      stage.addEventListener('pointermove', e => {
+        if (!state.draggingSun) return;
+        state.hour = sunFromPointer(e.clientX, e.clientY);
+        inputs.hour.value = state.hour;
+        displays.hour.textContent = state.hour.toFixed(2);
+        updateUI();
+      });
+      stage.addEventListener('pointerup', e => {
+        state.draggingSun = false;
+      });
+      stage.addEventListener('pointercancel', () => state.draggingSun = false);
+
+      let sunDiscR = 16; // placeholder; recomputed in draw
+
+      document.getElementById('btnPlay').addEventListener('click', () => {
+        state.playing = !state.playing;
+        document.getElementById('btnPlay').textContent = state.playing ? '❚❚ Pause' : '▶ Play day';
+      });
+      document.getElementById('btnReset').addEventListener('click', () => {
+        state.lat = 38; state.doy = 200; state.hour = 12;
+        state.rowSpacing = 2.8; state.canopyWidth = 0.7; state.canopyHeight = 1.2; state.trunkHeight = 0.6;
+        state.playing = false;
+        document.getElementById('btnPlay').textContent = '▶ Play day';
+        updateUI();
+      });
+
+      let last = performance.now();
+      function loop(now) {
+        if (state.playing) {
+          const dt = (now - last) / 1000;
+          state.hour += dt * 0.8; // ~10 sec for full day
+          if (state.hour >= 20) state.hour = 5;
+          inputs.hour.value = state.hour;
+          displays.hour.textContent = state.hour.toFixed(2);
+          drawScene();
+          drawDayChart();
+        }
+        last = now;
+        requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', () => { resize(); updateUI(); });
+      resize();
+      updateUI();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

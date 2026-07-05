@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-05",
-    "title": "Enigma Machine Sandbox",
-    "slug": "enigma-machine-sandbox",
-    "publishedSlug": "2026-07-05-enigma-machine-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-05-enigma-machine-sandbox/"
+    "date": "2026-07-06",
+    "title": "Vineyard Row Light Interception Simulator",
+    "slug": "vineyard-light-interception",
+    "publishedSlug": "2026-07-06-vineyard-light-interception",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-06-vineyard-light-interception/"
   },
   "apps": [
+    {
+      "date": "2026-07-06",
+      "title": "Vineyard Row Light Interception Simulator",
+      "slug": "vineyard-light-interception",
+      "publishedSlug": "2026-07-06-vineyard-light-interception",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-06-vineyard-light-interception/",
+      "description": "Drag the sun through the sky to see how row spacing, canopy width, height, and latitude change direct light interception and ground sun flecks."
+    },
     {
       "date": "2026-07-05",
       "title": "Enigma Machine Sandbox",
