@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate">
+  <title>Four-Bar Linkage Sandbox</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --panel: #151920;
+      --panel-2: #1d232b;
+      --text: #e8eef4;
+      --muted: #9aa6b2;
+      --accent: #3b82f6;
+      --accent-2: #10b981;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --pin: #f59e0b;
+      --link: #94a3b8;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.45;
+    }
+    .banner {
+      padding: 10px 14px;
+      background: #2a1b12;
+      border-bottom: 1px solid #5c3a28;
+      color: #ffd9c8;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+    .wrap {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px 14px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    header { text-align: center; }
+    h1 { margin: 0 0 6px; font-size: 1.35rem; letter-spacing: -0.01em; }
+    .subtitle { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .stage-wrap {
+      background: var(--panel);
+      border: 1px solid #27303a;
+      border-radius: 12px;
+      padding: 12px;
+      position: relative;
+    }
+    #stage {
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: #0d1117;
+      border-radius: 8px;
+      display: block;
+      touch-action: none;
+    }
+    .readout {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      background: rgba(11, 13, 16, 0.82);
+      border: 1px solid #27303a;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.74rem;
+      color: var(--muted);
+      line-height: 1.5;
+      pointer-events: none;
+      max-width: 56%;
+    }
+    .readout strong { color: var(--text); }
+    .badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-left: 4px;
+    }
+    .badge.ok { background: rgba(16,185,129,0.18); color: #34d399; }
+    .badge.bad { background: rgba(239,68,68,0.18); color: #f87171; }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 720px) {
+      .controls { grid-template-columns: 1.25fr 0.75fr; }
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid #27303a;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .row label { min-width: 92px; color: var(--muted); font-size: 0.85rem; }
+    .row input[type="range"] { flex: 1; min-width: 140px; }
+    .row .val {
+      min-width: 44px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    button {
+      appearance: none;
+      border: 1px solid #334155;
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover { background: #252d37; border-color: #475569; }
+    button:active { transform: translateY(1px); }
+    button.primary { border-color: var(--accent); background: rgba(59,130,246,0.14); }
+    button.playing { border-color: var(--accent-2); background: rgba(16,185,129,0.14); }
+    .playback { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      font-size: 0.8rem;
+    }
+    .stat { background: var(--panel-2); padding: 8px 10px; border-radius: 8px; }
+    .stat .label { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat .num { font-variant-numeric: tabular-nums; font-size: 0.95rem; color: var(--text); }
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.45;
+    }
+    .disclaimer {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 12px 0 0;
+    }
+    .ai-note {
+      padding: 10px 14px;
+      background: #1a1f27;
+      border: 1px solid #2f3a47;
+      border-radius: 8px;
+      color: #b0c4d4;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">⚠️ Experimental OpenClaw AI mini-app — not professionally validated. For curiosity only; do not rely on it for design decisions.</div>
+  <main class="wrap">
+    <header>
+      <h1>Four-Bar Linkage Sandbox</h1>
+      <p class="subtitle">Tweak link lengths, watch the coupler curve emerge, and see Grashof classification change in real time.</p>
+    </header>
+    <div class="stage-wrap">
+      <canvas id="stage"></canvas>
+      <div class="readout" id="readout">
+        Type: <strong id="typeOut">—</strong><span id="grashofBadge" class="badge ok">Grashof</span><br>
+        Crank: <strong id="crankState">—</strong> · Follower: <strong id="rockerState">—</strong><br>
+        μ (transmission): <strong id="transOut">—</strong> · min μ: <strong id="minTransOut">—</strong><br>
+        ω follower / crank: <strong id="ratioOut">—</strong>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="panel">
+        <h2>Link lengths</h2>
+        <div class="row"><label>Ground <span style="color:#f59e0b">●</span></label><input id="gSlider" type="range" min="40" max="200" value="120"><span class="val" id="gVal">120</span></div>
+        <div class="row"><label>Crank <span style="color:#3b82f6">●</span></label><input id="aSlider" type="range" min="20" max="160" value="50"><span class="val" id="aVal">50</span></div>
+        <div class="row"><label>Coupler <span style="color:#10b981">●</span></label><input id="bSlider" type="range" min="40" max="220" value="140"><span class="val" id="bVal">140</span></div>
+        <div class="row"><label>Follower <span style="color:#ef4444">●</span></label><input id="cSlider" type="range" min="40" max="200" value="110"><span class="val" id="cVal">110</span></div>
+        <div class="row"><label>Coupler point</label><input id="pSlider" type="range" min="0" max="100" value="55"><span class="val" id="pVal">55%</span></div>
+        <div class="row"><label>Speed</label><input id="speedSlider" type="range" min="0" max="200" value="60"><span class="val" id="speedVal">60%</span></div>
+        <div class="hint">Drag sliders to reshape the mechanism. The crank is the shortest link in the default crank-rocker preset. If the linkage cannot assemble, the animation pauses.</div>
+      </div>
+      <div class="panel">
+        <h2>Presets & playback</h2>
+        <div class="preset-grid">
+          <button data-preset="crankRocker">Crank-Rocker</button>
+          <button data-preset="doubleCrank">Double-Crank</button>
+          <button data-preset="doubleRocker">Double-Rocker</button>
+          <button data-preset="parallelogram">Parallelogram</button>
+          <button data-preset="wiper">Wiper-ish</button>
+          <button data-preset="kite">Kite Toggle</button>
+        </div>
+        <div class="playback">
+          <button id="playBtn" class="primary">Pause</button>
+          <button id="resetBtn">Reset trace</button>
+          <button id="clearBtn">Clear curve</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="label">Link sum</div><div class="num" id="sumOut">—</div></div>
+          <div class="stat"><div class="label">Mechanism</div><div class="num" id="mechOut">—</div></div>
+          <div class="stat"><div class="label">Revolutions</div><div class="num" id="revOut">0</div></div>
+          <div class="stat"><div class="label">Trace points</div><div class="num" id="traceOut">0</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-note">
+      <strong>About this mini-app:</strong> Built autonomously by OpenClaw as an overnight mechanical-kinematics toy. The simulation uses idealised planar four-bar vector-loop equations and does not account for inertia, clearances, friction, or real-world manufacturing tolerances. Use it for intuition, not engineering sign-off.
+    </div>
+    <p class="disclaimer">Generated by OpenClaw · Not validated · Not for commercial or safety-critical use</p>
+  </main>
+  <script>
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+    const $ = id => document.getElementById(id);
+
+    const sliders = {
+      g: $('gSlider'), a: $('aSlider'), b: $('bSlider'), c: $('cSlider'),
+      p: $('pSlider'), speed: $('speedSlider')
+    };
+    const labels = {
+      g: $('gVal'), a: $('aVal'), b: $('bVal'), c: $('cVal'),
+      p: $('pVal'), speed: $('speedVal')
+    };
+
+    const state = {
+      g: 120, a: 50, b: 140, c: 110, p: 0.55, speed: 0.6,
+      theta: 0, playing: true,
+      trace: [], minMu: Infinity, maxMu: -Infinity,
+      revs: 0, lastTheta: 0,
+      assemblyError: false
+    };
+
+    const presets = {
+      crankRocker: { g:120, a:50, b:140, c:110, p:0.55 },
+      doubleCrank: { g:80, a:90, b:120, c:100, p:0.45 },
+      doubleRocker:{ g:120, a:90, b:60, c:90, p:0.6 },
+      parallelogram:{ g:100, a:70, b:100, c:70, p:0.5 },
+      wiper:       { g:100, a:35, b:130, c:90, p:0.35 },
+      kite:        { g:80, a:70, b:70, c:120, p:0.65 }
+    };
+
+    function setPreset(name) {
+      const p = presets[name];
+      if (!p) return;
+      sliders.g.value = p.g; sliders.a.value = p.a; sliders.b.value = p.b;
+      sliders.c.value = p.c; sliders.p.value = Math.round(p.p * 100);
+      updateFromSliders();
+      clearTrace();
+    }
+
+    function readSliders() {
+      state.g = +sliders.g.value;
+      state.a = +sliders.a.value;
+      state.b = +sliders.b.value;
+      state.c = +sliders.c.value;
+      state.p = +sliders.p.value / 100;
+      state.speed = +sliders.speed.value / 100;
+      labels.g.textContent = state.g;
+      labels.a.textContent = state.a;
+      labels.b.textContent = state.b;
+      labels.c.textContent = state.c;
+      labels.p.textContent = sliders.p.value + '%';
+      labels.speed.textContent = sliders.speed.value + '%';
+    }
+
+    function classify(g, a, b, c) {
+      const lengths = [
+        { name: 'ground', val: g, key: 'g' },
+        { name: 'crank', val: a, key: 'a' },
+      ];
+      // sort links by value
+      const sorted = [
+        { name: 'ground', val: g },
+        { name: 'crank', val: a },
+        { name: 'coupler', val: b },
+        { name: 'follower', val: c }
+      ].sort((x, y) => x.val - y.val);
+      const s = sorted[0].val, l = sorted[3].val;
+      const p2 = sorted[1].val, q = sorted[2].val;
+      const grashof = (s + l) <= (p2 + q) + 1e-6;
+      const shortest = sorted[0].name;
+
+      let type = 'Non-Grashof';
+      let crankFull = false, followerFull = false;
+      if (grashof) {
+        if (shortest === 'crank') { type = 'Crank-Rocker'; crankFull = true; }
+        else if (shortest === 'ground') { type = 'Double-Crank (drag link)'; crankFull = true; followerFull = true; }
+        else if (shortest === 'follower') { type = 'Rocker-Crank'; followerFull = true; }
+        else { type = 'Double-Rocker'; }
+        // special-case parallelogram / kite-ish
+        if (Math.abs(a - c) < 1e-6 && Math.abs(b - g) < 1e-6 && a !== b) {
+          type = 'Parallelogram';
+          crankFull = true; followerFull = true;
+        }
+        if (Math.abs(a - b) < 1e-6 && Math.abs(g - c) < 1e-6 && a !== g) {
+          type = 'Kite / Deltoid';
+        }
+      } else {
+        type = 'Double-Rocker (non-Grashof)';
+      }
+      return { grashof, type, shortest, crankFull, followerFull, s, l };
+    }
+
+    function solveFourBar(g, a, b, c, theta) {
+      // ground from (0,0) to (g,0). crank pivots at (0,0).
+      const Ax = a * Math.cos(theta);
+      const Ay = a * Math.sin(theta);
+      // distance from crank tip to follower pivot D = (g,0)
+      const dx = g - Ax;
+      const dy = -Ay;
+      const e2 = dx * dx + dy * dy;
+      const e = Math.sqrt(e2);
+      if (e > b + c || e < Math.abs(b - c)) return null;
+
+      const alpha = Math.atan2(dy, dx);
+      // law of cosines for the two triangles
+      const beta = Math.acos((e2 + c * c - b * b) / (2 * e * c));
+      const delta = Math.acos((e2 + b * b - c * c) / (2 * e * b));
+
+      // choose the "open" configuration branch (elbow down / assembly mode consistent)
+      const theta4 = alpha + beta;
+      const theta3 = Math.atan2(Ay + c * Math.sin(theta4), Ax + c * Math.cos(theta4) - g);
+
+      const Bx = g + c * Math.cos(theta4);
+      const By = c * Math.sin(theta4);
+      return { Ax, Ay, Bx, By, theta3, theta4 };
+    }
+
+    function clearTrace() {
+      state.trace = [];
+      state.minMu = Infinity; state.maxMu = -Infinity;
+      state.revs = 0; state.lastTheta = state.theta;
+      $('revOut').textContent = '0';
+      $('traceOut').textContent = '0';
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const cssW = rect.width - 24;
+      const cssH = Math.round(cssW * 10 / 16);
+      canvas.style.width = cssW + 'px';
+      canvas.style.height = cssH + 'px';
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { cssW, cssH };
+    }
+
+    function worldToCanvas(points, cx, cy, scale) {
+      return points.map(p => ({ x: cx + p.x * scale, y: cy - p.y * scale }));
+    }
+
+    function drawLink(from, to, color, width = 10) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+    }
+
+    function drawPin(p, r = 5, color = '#fff') {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#0b0d10';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function drawGround() {
+      ctx.fillStyle = '#27303a';
+      ctx.fillRect(0, 0, ctx.canvas.width / (window.devicePixelRatio || 1), ctx.canvas.height / (window.devicePixelRatio || 1));
+    }
+
+    function updateFromSliders() {
+      readSliders();
+      clearTrace();
+    }
+
+    function step(dt) {
+      if (state.playing && !state.assemblyError) {
+        const delta = (dt / 1000) * (0.5 + 2.5 * state.speed);
+        state.theta += delta;
+        if (state.theta >= Math.PI * 2) state.theta -= Math.PI * 2;
+        const revDelta = state.theta - state.lastTheta;
+        if (revDelta < -Math.PI) state.revs += 1;
+        state.lastTheta = state.theta;
+        $('revOut').textContent = state.revs;
+      }
+
+      const sol = solveFourBar(state.g, state.a, state.b, state.c, state.theta);
+      if (!sol) {
+        state.assemblyError = true;
+        render(null);
+        return;
+      }
+      state.assemblyError = false;
+
+      // coupler point P on coupler line from A to B, fraction p from A toward B
+      const Px = sol.Ax + state.p * (sol.Bx - sol.Ax);
+      const Py = sol.Ay + state.p * (sol.By - sol.Ay);
+
+      // transmission angle: acute angle between coupler (B-A) and follower (B-D)
+      const vBA = { x: sol.Bx - sol.Ax, y: sol.By - sol.Ay };
+      const vBD = { x: state.g - sol.Bx, y: -sol.By };
+      let mu = Math.acos((vBA.x * vBD.x + vBA.y * vBD.y) / (Math.hypot(vBA.x, vBA.y) * Math.hypot(vBD.x, vBD.y) + 1e-9));
+      mu = Math.min(mu, Math.PI - mu);
+      const muDeg = mu * 180 / Math.PI;
+      if (muDeg < state.minMu) state.minMu = muDeg;
+      if (muDeg > state.maxMu) state.maxMu = muDeg;
+
+      // angular velocity ratio via loop-closure derivative
+      // omega3 = -omega2 * a * sin(theta4 - theta2) / (b * sin(theta4 - theta3))
+      const omega2 = 1; // normalised
+      const omega3 = -omega2 * state.a * Math.sin(sol.theta4 - state.theta) / (state.b * Math.sin(sol.theta4 - sol.theta3) + 1e-9);
+      const omega4 = omega2 * state.a * Math.sin(sol.theta3 - state.theta) / (state.c * Math.sin(sol.theta3 - sol.theta4) + 1e-9);
+
+      // add to trace only when we have moved a little
+      if (state.trace.length === 0 || Math.hypot(state.trace[state.trace.length - 1].x - Px, state.trace[state.trace.length - 1].y - Py) > 0.5) {
+        state.trace.push({ x: Px, y: Py });
+        if (state.trace.length > 3000) state.trace.shift();
+        $('traceOut').textContent = state.trace.length;
+      }
+
+      render(sol, Px, Py, muDeg, omega4);
+    }
+
+    function render(sol, Px, Py, muDeg, omega4) {
+      const { cssW, cssH } = resizeCanvas();
+      ctx.clearRect(0, 0, cssW, cssH);
+      drawGround();
+
+      const cls = classify(state.g, state.a, state.b, state.c);
+      $('typeOut').textContent = cls.type;
+      const badge = $('grashofBadge');
+      badge.textContent = cls.grashof ? 'Grashof' : 'Non-Grashof';
+      badge.className = 'badge ' + (cls.grashof ? 'ok' : 'bad');
+      $('crankState').textContent = cls.crankFull ? '360°' : 'oscillates';
+      $('rockerState').textContent = cls.followerFull ? '360°' : 'oscillates';
+      $('transOut').textContent = sol ? muDeg.toFixed(1) + '°' : '—';
+      $('minTransOut').textContent = state.minMu === Infinity ? '—' : state.minMu.toFixed(1) + '°';
+      $('ratioOut').textContent = sol ? omega4.toFixed(2) + '×' : '—';
+      $('sumOut').textContent = (state.g + state.a + state.b + state.c).toFixed(0);
+      $('mechOut').textContent = cls.type.split(' ')[0];
+
+      if (!sol) {
+        ctx.fillStyle = '#f87171';
+        ctx.font = '16px ui-sans-serif, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Cannot assemble with these link lengths.', cssW / 2, cssH / 2);
+        ctx.textAlign = 'left';
+        return;
+      }
+
+      // compute scale to fit mechanism into stage
+      const maxDim = Math.max(state.g, state.a + state.b, state.c + state.b) * 1.25 + 30;
+      const scale = Math.min(cssW, cssH) / maxDim;
+      const cx = cssW / 2 - (state.g / 2) * scale;
+      const cy = cssH / 2 + (Math.max(state.a, state.c) * 0.1) * scale;
+
+      const O2 = { x: 0, y: 0 };
+      const O4 = { x: state.g, y: 0 };
+      const A = { x: sol.Ax, y: sol.Ay };
+      const B = { x: sol.Bx, y: sol.By };
+      const P = { x: Px, y: Py };
+
+      const pts = worldToCanvas([O2, O4, A, B, P], cx, cy, scale);
+      const [cO2, cO4, cA, cB, cP] = pts;
+
+      // draw trace
+      if (state.trace.length > 1) {
+        ctx.strokeStyle = 'rgba(244, 114, 182, 0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const first = worldToCanvas([state.trace[0]], cx, cy, scale)[0];
+        ctx.moveTo(first.x, first.y);
+        for (let i = 1; i < state.trace.length; i++) {
+          const tp = worldToCanvas([state.trace[i]], cx, cy, scale)[0];
+          ctx.lineTo(tp.x, tp.y);
+        }
+        ctx.stroke();
+      }
+
+      // ground pivots
+      drawPin(cO2, 7, '#f59e0b');
+      drawPin(cO4, 7, '#f59e0b');
+      // crank
+      drawLink(cO2, cA, '#3b82f6', 8);
+      drawPin(cA, 5, '#93c5fd');
+      // coupler
+      drawLink(cA, cB, '#10b981', 8);
+      drawPin(cB, 5, '#6ee7b7');
+      // follower
+      drawLink(cO4, cB, '#ef4444', 8);
+      // coupler point
+      drawPin(cP, 5, '#f472b6');
+      ctx.strokeStyle = '#f472b6';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cA.x, cA.y);
+      ctx.lineTo(cP.x, cP.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // labels
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
+      ctx.font = '11px ui-sans-serif, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('O₂', cO2.x, cO2.y + 22);
+      ctx.fillText('O₄', cO4.x, cO4.y + 22);
+      ctx.fillText('P', cP.x + 12, cP.y + 4);
+      ctx.textAlign = 'left';
+    }
+
+    Object.values(sliders).forEach(s => s.addEventListener('input', updateFromSliders));
+
+    document.querySelectorAll('button[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => setPreset(btn.dataset.preset));
+    });
+
+    const playBtn = $('playBtn');
+    playBtn.addEventListener('click', () => {
+      state.playing = !state.playing;
+      playBtn.textContent = state.playing ? 'Pause' : 'Play';
+      playBtn.classList.toggle('playing', !state.playing);
+    });
+    $('resetBtn').addEventListener('click', () => {
+      state.theta = 0;
+      clearTrace();
+    });
+    $('clearBtn').addEventListener('click', clearTrace);
+
+    window.addEventListener('resize', () => render(solveFourBar(state.g, state.a, state.b, state.c, state.theta)));
+
+    let last = performance.now();
+    function loop(now) {
+      const dt = Math.min(now - last, 50);
+      last = now;
+      step(dt);
+      requestAnimationFrame(loop);
+    }
+    readSliders();
+    setPreset('crankRocker');
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

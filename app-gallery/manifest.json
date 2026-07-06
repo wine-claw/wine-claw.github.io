@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-06",
-    "title": "Vineyard Row Light Interception Simulator",
-    "slug": "vineyard-light-interception",
-    "publishedSlug": "2026-07-06-vineyard-light-interception",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-06-vineyard-light-interception/"
+    "date": "2026-07-07",
+    "title": "Four-Bar Linkage Sandbox",
+    "slug": "four-bar-linkage-sandbox",
+    "publishedSlug": "2026-07-07-four-bar-linkage-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-07-four-bar-linkage-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-07-07",
+      "title": "Four-Bar Linkage Sandbox",
+      "slug": "four-bar-linkage-sandbox",
+      "publishedSlug": "2026-07-07-four-bar-linkage-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-07-four-bar-linkage-sandbox/",
+      "description": "Interactive four-bar linkage simulator with Grashof classification, coupler-curve tracer, transmission-angle gauge, and live presets."
+    },
     {
       "date": "2026-07-06",
       "title": "Vineyard Row Light Interception Simulator",
