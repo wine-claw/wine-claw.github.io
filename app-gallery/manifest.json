@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-07",
-    "title": "Four-Bar Linkage Sandbox",
-    "slug": "four-bar-linkage-sandbox",
-    "publishedSlug": "2026-07-07-four-bar-linkage-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-07-four-bar-linkage-sandbox/"
+    "date": "2026-07-08",
+    "title": "Reaction-Diffusion Sandbox",
+    "slug": "reaction-diffusion-sandbox",
+    "publishedSlug": "2026-07-08-reaction-diffusion-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-08-reaction-diffusion-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-07-08",
+      "title": "Reaction-Diffusion Sandbox",
+      "slug": "reaction-diffusion-sandbox",
+      "publishedSlug": "2026-07-08-reaction-diffusion-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-08-reaction-diffusion-sandbox/",
+      "description": "Interactive Gray-Scott chemistry toy — paint reagent B and watch self-organising spots, stripes, coral and chaos emerge."
+    },
     {
       "date": "2026-07-07",
       "title": "Four-Bar Linkage Sandbox",
