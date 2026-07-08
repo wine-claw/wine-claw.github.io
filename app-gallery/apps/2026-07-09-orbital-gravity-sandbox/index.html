@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="description" content="Interactive n-body gravity sandbox: fling bodies into orbit, watch collisions, slingshots, and chaotic three-body dances." />
+  <title>Orbital Gravity Sandbox</title>
+  <style>
+    :root {
+      --bg: #08090e;
+      --panel: #11131e;
+      --panel-2: #181c2b;
+      --text: #e1e5f2;
+      --muted: #8a94ad;
+      --accent: #7aa2ff;
+      --accent-2: #f7b731;
+      --danger: #ff6b6b;
+      --warning: #ff9f43;
+      --border: #23283a;
+      --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.45;
+      overflow: hidden;
+    }
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: linear-gradient(180deg, var(--panel) 0%, rgba(17,19,30,0.92) 100%);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      z-index: 10;
+    }
+    .brand { font-weight: 700; letter-spacing: 0.2px; font-size: 16px; }
+    .brand span { color: var(--accent); }
+    select, button, input[type="range"] { font: inherit; }
+    select {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 10px;
+      outline: none;
+    }
+    button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: transform .05s ease, background .15s ease;
+      white-space: nowrap;
+    }
+    button:active { transform: translateY(1px); }
+    button.primary { background: var(--accent); color: #0a0e1a; border-color: transparent; font-weight: 700; }
+    button.warn { color: var(--danger); border-color: rgba(255,107,107,.35); }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .spacer { flex: 1; }
+    main { flex: 1; position: relative; overflow: hidden; }
+    canvas { display: block; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+    aside {
+      position: absolute;
+      top: 12px; right: 12px;
+      width: min(280px, calc(100% - 24px));
+      background: rgba(17,19,30,.92);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      backdrop-filter: blur(8px);
+      z-index: 5;
+      max-height: calc(100% - 24px);
+      overflow-y: auto;
+    }
+    aside h3 { margin: 0 0 10px; font-size: 14px; color: var(--accent); }
+    .field { margin: 10px 0; }
+    .field label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .field output { color: var(--text); font-variant-numeric: tabular-nums; }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .hint kbd {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: 11px;
+    }
+    .stats {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--muted);
+    }
+    .stats span { color: var(--text); }
+    .banner {
+      padding: 10px 14px;
+      background: rgba(255,159,67,.12);
+      color: var(--warning);
+      font-size: 12px;
+      border-top: 1px solid rgba(255,159,67,.25);
+      z-index: 10;
+    }
+    .banner strong { color: var(--warning); }
+    .drag-hint {
+      position: absolute;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      background: rgba(17,19,30,.88);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      white-space: nowrap;
+      display: none;
+      z-index: 8;
+    }
+    @media (max-width: 640px) {
+      header { padding: 8px 10px; gap: 8px; }
+      .brand { font-size: 14px; }
+      aside { top: auto; bottom: 12px; right: 12px; left: 12px; width: auto; max-height: 38vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><span>Orbital</span> Gravity Sandbox</div>
+      <div class="controls">
+        <select id="preset" aria-label="Preset">
+          <option value="figure8">Figure-8 Three Body</option>
+          <option value="solar">Inner Solar System</option>
+          <option value="binary">Binary Star + Planet</option>
+          <option value="cluster">Random Cluster</option>
+          <option value="rogue">Rogue Planet Slingshot</option>
+          <option value="empty">Empty Sandbox</option>
+        </select>
+        <button id="btnLoad" class="primary">Load</button>
+        <button id="btnPause">Pause</button>
+        <button id="btnStep">Step</button>
+        <button id="btnReset" class="warn">Reset</button>
+      </div>
+      <div class="spacer"></div>
+    </header>
+    <main>
+      <canvas id="sim"></canvas>
+      <div class="drag-hint" id="dragHint">release to launch</div>
+      <aside>
+        <h3>Controls</h3>
+        <div class="field">
+          <label>Gravitational constant G <output id="gOut">1.0</output></label>
+          <input id="g" type="range" min="0.1" max="3" step="0.1" value="1" />
+        </div>
+        <div class="field">
+          <label>Time scale <output id="speedOut">1.0</output></label>
+          <input id="speed" type="range" min="0.1" max="5" step="0.1" value="1" />
+        </div>
+        <div class="field">
+          <label>Trail length <output id="trailOut">120</output></label>
+          <input id="trail" type="range" min="0" max="600" step="10" value="120" />
+        </div>
+        <div class="field">
+          <label>Merge threshold <output id="mergeOut">1.4</output></label>
+          <input id="merge" type="range" min="0.5" max="3" step="0.1" value="1.4" />
+        </div>
+        <div class="field">
+          <label>New body mass <output id="massOut">2.0</output></label>
+          <input id="mass" type="range" min="0.5" max="8" step="0.5" value="2" />
+        </div>
+        <div class="stats">
+          <div>Bodies: <span id="bodiesCount">0</span></div>
+          <div>FPS: <span id="fps">0</span></div>
+        </div>
+        <div class="hint">
+          Drag empty space to pan. Wheel/pinch to zoom. Click+drag on canvas to spawn and fling a new body. <kbd>space</kbd> toggles pause.
+        </div>
+      </aside>
+    </main>
+    <div class="banner">
+      <strong>Experimental OpenClaw AI mini-app.</strong> Untested, not professionally validated, and not suitable for real decisions. Built for play and exploration.
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+      const canvas = document.getElementById('sim');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const dragHint = document.getElementById('dragHint');
+
+      let width = 0, height = 0, dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      let bodies = [];
+      let stars = [];
+      let running = true;
+      let lastTime = performance.now();
+      let frameCount = 0;
+      let fpsTime = 0;
+      let fpsDisplay = 0;
+
+      let view = { x: 0, y: 0, zoom: 1, targetZoom: 1 };
+      let draggingView = false;
+      let dragStart = null;
+      let dragStartView = { x: 0, y: 0 };
+      let spawnDrag = null;
+      let pointers = new Map();
+      let lastPinchDist = 0;
+
+      const gInput = document.getElementById('g');
+      const speedInput = document.getElementById('speed');
+      const trailInput = document.getElementById('trail');
+      const mergeInput = document.getElementById('merge');
+      const massInput = document.getElementById('mass');
+      const presetSelect = document.getElementById('preset');
+      const btnPause = document.getElementById('btnPause');
+      const btnStep = document.getElementById('btnStep');
+      const btnReset = document.getElementById('btnReset');
+      const btnLoad = document.getElementById('btnLoad');
+      const gOut = document.getElementById('gOut');
+      const speedOut = document.getElementById('speedOut');
+      const trailOut = document.getElementById('trailOut');
+      const mergeOut = document.getElementById('mergeOut');
+      const massOut = document.getElementById('massOut');
+      const bodiesCount = document.getElementById('bodiesCount');
+      const fpsEl = document.getElementById('fps');
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        width = Math.max(320, Math.floor(rect.width));
+        height = Math.max(320, Math.floor(rect.height));
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      function makeStars() {
+        stars = [];
+        const count = 160;
+        for (let i = 0; i < count; i++) {
+          stars.push({
+            x: Math.random() * 2000 - 1000,
+            y: Math.random() * 2000 - 1000,
+            z: Math.random() * 1.5 + 0.3,
+            alpha: Math.random() * 0.6 + 0.2,
+            twinkle: Math.random() * Math.PI * 2,
+          });
+        }
+      }
+      function worldToScreen(x, y) {
+        return {
+          x: (x - view.x) * view.zoom + width / 2,
+          y: (y - view.y) * view.zoom + height / 2,
+        };
+      }
+      function screenToWorld(x, y) {
+        return {
+          x: (x - width / 2) / view.zoom + view.x,
+          y: (y - height / 2) / view.zoom + view.y,
+        };
+      }
+      function bodyRadius(m) {
+        return 4 + Math.pow(m, 1 / 2.4) * 6;
+      }
+      function palette(i) {
+        const colors = ['#7aa2ff', '#f7b731', '#ff6b6b', '#4cd97b', '#a29bfe', '#ff9f43', '#45aaf2', '#fd79a8', '#00d2d3'];
+        return colors[i % colors.length];
+      }
+      function resetView() {
+        view.x = 0; view.y = 0; view.zoom = 1; view.targetZoom = 1;
+      }
+
+      function makeBody(x, y, vx, vy, mass, name, color) {
+        return {
+          x, y, vx, vy, mass,
+          ax: 0, ay: 0,
+          prevAx: 0, prevAy: 0,
+          trail: [],
+          id: Math.random().toString(36).slice(2),
+          name: name || '',
+          color: color || palette(bodies.length),
+        };
+      }
+
+      function loadPreset(name) {
+        bodies = [];
+        running = true;
+        updatePauseButton();
+        const G = parseFloat(gInput.value);
+
+        if (name === 'figure8') {
+          resetView();
+          bodies.push(makeBody(0.97000436, -0.24308753, 0.4662036850 * 0.55, 0.4323657300 * 0.55, 1, 'A', '#7aa2ff'));
+          bodies.push(makeBody(-0.97000436, 0.24308753, 0.4662036850 * 0.55, 0.4323657300 * 0.55, 1, 'B', '#f7b731'));
+          bodies.push(makeBody(0, 0, -0.93240737 * 0.55, -0.86473146 * 0.55, 1, 'C', '#ff6b6b'));
+          gInput.value = 1; speedInput.value = 0.5; trailInput.value = 180;
+        } else if (name === 'solar') {
+          resetView();
+          bodies.push(makeBody(0, 0, 0, 0, 30, 'Sun', '#f7b731'));
+          bodies.push(makeBody(38, 0, 0, 0.88, 0.04, 'Mercury', '#b2bec3'));
+          bodies.push(makeBody(72, 0, 0, 0.64, 0.10, 'Venus', '#fab1a0'));
+          bodies.push(makeBody(100, 0, 0, 0.55, 0.12, 'Earth', '#74b9ff'));
+          bodies.push(makeBody(152, 0, 0, 0.44, 0.04, 'Mars', '#ff7675'));
+          view.zoom = 0.7; view.targetZoom = 0.7;
+          gInput.value = 1; speedInput.value = 1; trailInput.value = 120;
+        } else if (name === 'binary') {
+          resetView();
+          bodies.push(makeBody(-35, 0, 0, 0.55, 18, 'Star A', '#ffeaa7'));
+          bodies.push(makeBody(35, 0, 0, -0.55, 18, 'Star B', '#74b9ff'));
+          bodies.push(makeBody(0, 130, 0.68, 0, 1.2, 'Planet', '#00b894'));
+          gInput.value = 1; speedInput.value = 1; trailInput.value = 180;
+        } else if (name === 'cluster') {
+          resetView();
+          const n = 12;
+          for (let i = 0; i < n; i++) {
+            const a = (i / n) * Math.PI * 2;
+            const r = 40 + Math.random() * 50;
+            const m = 0.8 + Math.random() * 2.2;
+            const v = Math.sqrt(0.8 / r) * (0.85 + Math.random() * 0.3);
+            bodies.push(makeBody(
+              Math.cos(a) * r, Math.sin(a) * r,
+              -Math.sin(a) * v, Math.cos(a) * v,
+              m, '', palette(i)
+            ));
+          }
+          bodies.push(makeBody(0, 0, 0, 0, 8, 'Anchor', '#f7b731'));
+          gInput.value = 1.2; speedInput.value = 1; trailInput.value = 140;
+        } else if (name === 'rogue') {
+          resetView();
+          bodies.push(makeBody(0, 0, 0, 0, 22, 'Star', '#f7b731'));
+          bodies.push(makeBody(0, 95, 0.50, 0, 1.2, 'Planet', '#74b9ff'));
+          bodies.push(makeBody(-220, 90, 0.48, 0.22, 0.9, 'Rogue', '#ff6b6b'));
+          view.x = -40; view.zoom = 0.55; view.targetZoom = 0.55;
+          gInput.value = 1; speedInput.value = 1; trailInput.value = 220;
+        } else {
+          resetView();
+          bodies.push(makeBody(0, 0, 0, 0, 15, 'Star', '#f7b731'));
+        }
+        updateOutputs();
+      }
+
+      function computeAccelerations(b) {
+        const G = parseFloat(gInput.value);
+        const soft = 4;
+        for (const p of b) { p.ax = 0; p.ay = 0; }
+        for (let i = 0; i < b.length; i++) {
+          for (let j = i + 1; j < b.length; j++) {
+            const a = b[i], c = b[j];
+            const dx = c.x - a.x;
+            const dy = c.y - a.y;
+            const distSq = dx * dx + dy * dy + soft;
+            const invDist = 1 / Math.sqrt(distSq);
+            const f = G * c.mass * invDist / distSq;
+            const g = G * a.mass * invDist / distSq;
+            a.ax += dx * f; a.ay += dy * f;
+            c.ax -= dx * g; c.ay -= dy * g;
+          }
+        }
+      }
+
+      function mergeBodies(a, c) {
+        const totalM = a.mass + c.mass;
+        a.vx = (a.vx * a.mass + c.vx * c.mass) / totalM;
+        a.vy = (a.vy * a.mass + c.vy * c.mass) / totalM;
+        a.x = (a.x * a.mass + c.x * c.mass) / totalM;
+        a.y = (a.y * a.mass + c.y * c.mass) / totalM;
+        a.mass = totalM;
+        a.trail = [];
+      }
+
+      function handleCollisions(b) {
+        const threshold = parseFloat(mergeInput.value);
+        for (let i = 0; i < b.length; i++) {
+          for (let j = i + 1; j < b.length; j++) {
+            const a = b[i], c = b[j];
+            const dx = c.x - a.x, dy = c.y - a.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const sumR = (bodyRadius(a.mass) + bodyRadius(c.mass)) / view.zoom * threshold;
+            if (dist < sumR) {
+              if (a.mass >= c.mass) { mergeBodies(a, c); b.splice(j, 1); j--; }
+              else { mergeBodies(c, a); b.splice(i, 1); i--; break; }
+            }
+          }
+        }
+      }
+
+      function step(dt) {
+        const speed = parseFloat(speedInput.value);
+        const stepsPerFrame = 4;
+        const subDt = (dt * speed) / stepsPerFrame;
+        const maxTrail = parseInt(trailInput.value, 10);
+
+        for (let s = 0; s < stepsPerFrame; s++) {
+          computeAccelerations(bodies);
+          for (const p of bodies) {
+            p.vx += p.ax * subDt * 0.5;
+            p.vy += p.ay * subDt * 0.5;
+            p.x += p.vx * subDt;
+            p.y += p.vy * subDt;
+          }
+          computeAccelerations(bodies);
+          for (const p of bodies) {
+            p.vx += p.ax * subDt * 0.5;
+            p.vy += p.ay * subDt * 0.5;
+          }
+          handleCollisions(bodies);
+        }
+        for (const p of bodies) {
+          p.trail.push({ x: p.x, y: p.y });
+          if (p.trail.length > maxTrail) p.trail.shift();
+        }
+      }
+
+      function draw() {
+        ctx.fillStyle = '#08090e';
+        ctx.fillRect(0, 0, width, height);
+
+        const cx = width / 2, cy = height / 2;
+        const t = performance.now() / 1000;
+
+        for (const s of stars) {
+          const sx = (s.x - view.x * s.z * 0.1) * view.zoom * s.z + cx;
+          const sy = (s.y - view.y * s.z * 0.1) * view.zoom * s.z + cy;
+          const alpha = s.alpha * (0.75 + 0.25 * Math.sin(t * 2 + s.twinkle));
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = '#c7d2ff';
+          ctx.beginPath();
+          ctx.arc(sx, sy, s.z * 0.7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(view.zoom, view.zoom);
+        ctx.translate(-view.x, -view.y);
+
+        for (const p of bodies) {
+          ctx.beginPath();
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = 1.5 / view.zoom;
+          for (let i = 0; i < p.trail.length; i++) {
+            const pt = p.trail[i];
+            if (i === 0) ctx.moveTo(pt.x, pt.y);
+            else ctx.lineTo(pt.x, pt.y);
+          }
+          ctx.globalAlpha = 0.55;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+
+        for (const p of bodies) {
+          const r = bodyRadius(p.mass);
+          const grad = ctx.createRadialGradient(p.x - r * 0.25, p.y - r * 0.25, r * 0.2, p.x, p.y, r);
+          grad.addColorStop(0, '#fff');
+          grad.addColorStop(0.25, p.color);
+          grad.addColorStop(1, 'rgba(0,0,0,0.6)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+          ctx.lineWidth = 1 / view.zoom;
+          ctx.stroke();
+
+          if (p.name) {
+            ctx.fillStyle = 'rgba(255,255,255,0.75)';
+            ctx.font = `${10 / view.zoom}px ui-sans-serif, system-ui, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText(p.name, p.x, p.y + r + (12 / view.zoom));
+          }
+        }
+
+        if (spawnDrag) {
+          const sx = spawnDrag.sx, sy = spawnDrag.sy;
+          const wx = spawnDrag.wx, wy = spawnDrag.wy;
+          ctx.strokeStyle = '#fff';
+          ctx.setLineDash([4 / view.zoom, 4 / view.zoom]);
+          ctx.lineWidth = 1.5 / view.zoom;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(wx, wy);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          const r = bodyRadius(parseFloat(massInput.value));
+          ctx.strokeStyle = '#7aa2ff';
+          ctx.beginPath();
+          ctx.arc(sx, sy, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      function loop(now) {
+        frameCount++;
+        if (now - fpsTime >= 1000) {
+          fpsDisplay = frameCount;
+          frameCount = 0;
+          fpsTime = now;
+          fpsEl.textContent = fpsDisplay;
+        }
+        const dt = Math.min(0.05, (now - lastTime) / 1000);
+        lastTime = now;
+
+        if (running) step(dt);
+        view.zoom += (view.targetZoom - view.zoom) * 0.15;
+        draw();
+        bodiesCount.textContent = bodies.length;
+        requestAnimationFrame(loop);
+      }
+
+      function updatePauseButton() {
+        btnPause.textContent = running ? 'Pause' : 'Play';
+      }
+      function updateOutputs() {
+        gOut.textContent = parseFloat(gInput.value).toFixed(1);
+        speedOut.textContent = parseFloat(speedInput.value).toFixed(1);
+        trailOut.textContent = trailInput.value;
+        mergeOut.textContent = parseFloat(mergeInput.value).toFixed(1);
+        massOut.textContent = parseFloat(massInput.value).toFixed(1);
+      }
+
+      gInput.addEventListener('input', updateOutputs);
+      speedInput.addEventListener('input', updateOutputs);
+      trailInput.addEventListener('input', updateOutputs);
+      mergeInput.addEventListener('input', updateOutputs);
+      massInput.addEventListener('input', updateOutputs);
+
+      btnPause.addEventListener('click', () => { running = !running; updatePauseButton(); });
+      btnStep.addEventListener('click', () => { step(0.016); draw(); });
+      btnReset.addEventListener('click', () => loadPreset(presetSelect.value));
+      btnLoad.addEventListener('click', () => loadPreset(presetSelect.value));
+      window.addEventListener('resize', () => { resize(); draw(); });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT') {
+          e.preventDefault();
+          running = !running; updatePauseButton();
+        }
+      });
+
+      function getEventPos(e) {
+        if (e.touches && e.touches.length) {
+          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+      }
+
+      canvas.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size === 1) {
+          const rect = canvas.getBoundingClientRect();
+          const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+          const w = screenToWorld(sx, sy);
+          let hit = false;
+          for (const p of bodies) {
+            const sp = worldToScreen(p.x, p.y);
+            const dx = sp.x - sx, dy = sp.y - sy;
+            if (dx * dx + dy * dy <= 900) { hit = true; break; }
+          }
+          if (!hit) {
+            spawnDrag = { sx: w.x, sy: w.y, wx: w.x, wy: w.y, screenX: sx, screenY: sy };
+            dragHint.style.left = (e.clientX + 12) + 'px';
+            dragHint.style.top = (e.clientY - 24) + 'px';
+            dragHint.style.display = 'block';
+          }
+        } else if (pointers.size === 2) {
+          const pts = Array.from(pointers.values());
+          lastPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        }
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!pointers.has(e.pointerId)) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size === 1) {
+          if (spawnDrag) {
+            const rect = canvas.getBoundingClientRect();
+            const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+            const w = screenToWorld(sx, sy);
+            spawnDrag.wx = w.x; spawnDrag.wy = w.y;
+            spawnDrag.screenX = sx; spawnDrag.screenY = sy;
+            dragHint.style.left = (e.clientX + 12) + 'px';
+            dragHint.style.top = (e.clientY - 24) + 'px';
+          } else if (draggingView && dragStart) {
+            const dx = (e.clientX - dragStart.x) / view.zoom;
+            const dy = (e.clientY - dragStart.y) / view.zoom;
+            view.x = dragStartView.x - dx;
+            view.y = dragStartView.y - dy;
+          }
+        } else if (pointers.size === 2) {
+          const pts = Array.from(pointers.values());
+          const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+          if (lastPinchDist > 0) {
+            const factor = dist / lastPinchDist;
+            view.targetZoom = Math.max(0.15, Math.min(8, view.targetZoom * factor));
+          }
+          lastPinchDist = dist;
+        }
+      });
+
+      window.addEventListener('pointerup', (e) => {
+        if (spawnDrag) {
+          const m = parseFloat(massInput.value);
+          const k = 0.035;
+          const vx = (spawnDrag.sx - spawnDrag.wx) * k;
+          const vy = (spawnDrag.sy - spawnDrag.wy) * k;
+          bodies.push(makeBody(spawnDrag.sx, spawnDrag.sy, vx, vy, m, '', palette(bodies.length)));
+          spawnDrag = null;
+          dragHint.style.display = 'none';
+        }
+        pointers.delete(e.pointerId);
+        if (pointers.size < 2) lastPinchDist = 0;
+      });
+
+      window.addEventListener('pointercancel', (e) => {
+        pointers.delete(e.pointerId);
+        spawnDrag = null;
+        dragHint.style.display = 'none';
+        if (pointers.size < 2) lastPinchDist = 0;
+      });
+
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY > 0 ? 0.92 : 1.08;
+        view.targetZoom = Math.max(0.15, Math.min(8, view.targetZoom * zoomFactor));
+      }, { passive: false });
+
+      function init() {
+        resize();
+        makeStars();
+        loadPreset('figure8');
+        updateOutputs();
+        requestAnimationFrame((t) => { fpsTime = t; lastTime = t; loop(t); });
+      }
+      init();
+    })();
+  </script>
+</body>
+</html>

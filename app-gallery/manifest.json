@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-08",
-    "title": "Reaction-Diffusion Sandbox",
-    "slug": "reaction-diffusion-sandbox",
-    "publishedSlug": "2026-07-08-reaction-diffusion-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-08-reaction-diffusion-sandbox/"
+    "date": "2026-07-09",
+    "title": "Orbital Gravity Sandbox",
+    "slug": "orbital-gravity-sandbox",
+    "publishedSlug": "2026-07-09-orbital-gravity-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-09-orbital-gravity-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-07-09",
+      "title": "Orbital Gravity Sandbox",
+      "slug": "orbital-gravity-sandbox",
+      "publishedSlug": "2026-07-09-orbital-gravity-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-09-orbital-gravity-sandbox/",
+      "description": "Interactive n-body gravity sandbox with figure-eight three-body orbit, solar system, binary star, and drag-to-launch."
+    },
     {
       "date": "2026-07-08",
       "title": "Reaction-Diffusion Sandbox",
