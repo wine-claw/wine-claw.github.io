@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Firefly Sync Toy</title>
+  <style>
+    :root {
+      --bg: #05080a;
+      --panel: rgba(12, 22, 28, 0.78);
+      --panel-border: rgba(120, 220, 255, 0.18);
+      --accent: #a6ff3d;
+      --accent-dim: #6bc03a;
+      --text: #d8f0d8;
+      --muted: #8ba58b;
+      --knob: #4caf50;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      touch-action: none;
+    }
+    #canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      padding: 10px 14px;
+      font-size: 12px;
+      line-height: 1.45;
+      background: rgba(5, 10, 8, 0.86);
+      border-bottom: 1px solid rgba(166, 255, 61, 0.18);
+      color: #b8d8b0;
+      backdrop-filter: blur(6px);
+    }
+    .banner strong { color: var(--accent); }
+    .panel {
+      position: fixed;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 10;
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 14px 16px 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+    }
+    .panel h1 {
+      margin: 0 0 2px 0;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    .panel .subtitle {
+      margin: 0 0 12px 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px 14px;
+    }
+    .control { display: flex; flex-direction: column; gap: 5px; }
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .control label span.value { color: var(--accent); font-weight: 600; }
+    input[type=range] {
+      width: 100%;
+      margin: 0;
+      accent-color: var(--knob);
+      cursor: pointer;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    button {
+      appearance: none;
+      border: 1px solid rgba(166, 255, 61, 0.35);
+      background: rgba(166, 255, 61, 0.08);
+      color: var(--accent);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s ease, transform .05s ease;
+    }
+    button:hover { background: rgba(166, 255, 61, 0.18); }
+    button:active { transform: translateY(1px); }
+    button.secondary {
+      border-color: rgba(139, 165, 139, 0.35);
+      background: rgba(139, 165, 139, 0.08);
+      color: var(--text);
+    }
+    .hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    @media (max-width: 520px) {
+      .panel { bottom: 8px; left: 8px; right: 8px; padding: 12px 13px 14px; }
+      .panel h1 { font-size: 15px; }
+      .controls { grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>Experimental OpenClaw AI mini-app.</strong> Untested, not validated for any real use — just a toy to poke at.
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="panel">
+    <h1>Firefly Sync Toy</h1>
+    <p class="subtitle">Coupled oscillators in a summer field. Click or tap the sky to add fireflies.</p>
+    <div class="controls">
+      <div class="control">
+        <label>Count <span class="value" id="v-count">80</span></label>
+        <input type="range" id="count" min="10" max="240" value="80" step="10" />
+      </div>
+      <div class="control">
+        <label>Coupling <span class="value" id="v-coupling">0.25</span></label>
+        <input type="range" id="coupling" min="0" max="1" value="0.25" step="0.01" />
+      </div>
+      <div class="control">
+        <label>Flash speed <span class="value" id="v-speed">1.0</span></label>
+        <input type="range" id="speed" min="0.2" max="3" value="1" step="0.05" />
+      </div>
+      <div class="control">
+        <label>Variety <span class="value" id="v-variety">0.35</span></label>
+        <input type="range" id="variety" min="0" max="1" value="0.35" step="0.01" />
+      </div>
+      <div class="control">
+        <label>Noise <span class="value" id="v-noise">0.10</span></label>
+        <input type="range" id="noise" min="0" max="0.5" value="0.1" step="0.01" />
+      </div>
+      <div class="control">
+        <label>Range <span class="value" id="v-range">120</span></label>
+        <input type="range" id="range" min="30" max="260" value="120" step="10" />
+      </div>
+    </div>
+    <div class="actions">
+      <button id="reset">Resync / shuffle</button>
+      <button id="pulse" class="secondary">Pulse all</button>
+      <button id="clear" class="secondary">Clear sky</button>
+    </div>
+    <div class="hint" id="sync-hint">Sync order: measuring…</div>
+  </div>
+
+<script>
+(function() {
+  "use strict";
+
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  const params = {
+    count: 80,
+    coupling: 0.25,
+    speed: 1.0,
+    variety: 0.35,
+    noise: 0.10,
+    range: 120,
+  };
+
+  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  let width = 0, height = 0;
+
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.floor(width * DPR);
+    canvas.height = Math.floor(height * DPR);
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize, { passive: true });
+  resize();
+
+  function rand(min, max) { return min + Math.random() * (max - min); }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  class Firefly {
+    constructor(x, y) {
+      this.x = x == null ? rand(20, width - 20) : x;
+      this.y = y == null ? rand(20, height - 20) : y;
+      const angle = rand(0, Math.PI * 2);
+      const spd = rand(6, 22);
+      this.vx = Math.cos(angle) * spd;
+      this.vy = Math.sin(angle) * spd;
+      this.phase = rand(0, Math.PI * 2);
+      this.freq = 1.0 + rand(-params.variety, params.variety);
+      this.flashAge = 0;
+      this.dead = false;
+      this.size = rand(1.8, 3.2);
+      this.glow = rand(0.7, 1.0);
+      this.hue = rand(90, 115); // yellow-green
+    }
+    update(dt, neighbors) {
+      // Natural oscillator advance (flash cycle is 0..2π)
+      this.phase += this.freq * params.speed * dt;
+      if (this.phase > Math.PI * 2) {
+        this.flashAge = 1.0;
+        this.phase -= Math.PI * 2;
+      }
+
+      // Random phase noise
+      if (params.noise > 0) {
+        this.phase += rand(-params.noise, params.noise) * dt * 0.8;
+      }
+
+      // Coupling: neighbors' flashes pull our phase toward 0 (flash)
+      const range2 = params.range * params.range;
+      let nudge = 0;
+      let ncount = 0;
+      for (let other of neighbors) {
+        if (other === this || other.dead) continue;
+        const dx = other.x - this.x;
+        const dy = other.y - this.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 > range2 || d2 < 1) continue;
+        const strength = other.flashAge; // strongest right after a flash
+        if (strength <= 0.01) continue;
+        const falloff = 1 / (1 + d2 / (range2 * 0.25 + 1));
+        nudge += Math.sin(-this.phase) * strength * params.coupling * falloff * dt * 5;
+        ncount++;
+      }
+      this.phase += nudge;
+
+      // Soft-wrap phase to [0, 2π)
+      while (this.phase < 0) this.phase += Math.PI * 2;
+      while (this.phase >= Math.PI * 2) this.phase -= Math.PI * 2;
+
+      this.flashAge = Math.max(0, this.flashAge - dt * 2.2);
+
+      // Drift with gentle boundary wrap
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      if (this.x < 0) { this.x += width; }
+      if (this.x > width) { this.x -= width; }
+      if (this.y < 0) { this.y += height; }
+      if (this.y > height) { this.y -= height; }
+
+      // Very slight random walk in velocity
+      this.vx += rand(-2, 2) * dt;
+      this.vy += rand(-2, 2) * dt;
+      const v = Math.hypot(this.vx, this.vy);
+      if (v > 40) { this.vx *= 0.95; this.vy *= 0.95; }
+      if (v < 4) { this.vx *= 1.05; this.vy *= 1.05; }
+    }
+  }
+
+  let fireflies = [];
+  function spawn(n, x, y) {
+    for (let i = 0; i < n; i++) fireflies.push(new Firefly(x, y));
+  }
+  function resetField() {
+    fireflies = [];
+    spawn(params.count);
+  }
+
+  resetField();
+
+  // Spatial hash for neighbor queries
+  function updateNeighbors() {
+    // Just brute force; N is small enough (<300) and avoids spatial-hash bugs.
+    for (let f of fireflies) {
+      f.update(1/60, fireflies);
+    }
+  }
+
+  function draw() {
+    // Trail: dark fade
+    ctx.fillStyle = 'rgba(5, 8, 10, 0.32)';
+    ctx.fillRect(0, 0, width, height);
+
+    // Distant background glow from collective flashing
+    let totalFlash = 0;
+    for (let f of fireflies) totalFlash += f.flashAge;
+    const ambient = Math.min(0.18, totalFlash / (fireflies.length * 4));
+    if (ambient > 0.001) {
+      const g = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, Math.max(width, height)*0.6);
+      g.addColorStop(0, `rgba(120, 220, 100, ${ambient * 0.35})`);
+      g.addColorStop(1, 'rgba(5, 8, 10, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    for (let f of fireflies) {
+      const pulse = f.flashAge;
+      const resting = (1 + Math.sin(f.phase - Math.PI/2)) * 0.5; // gentle charge glow
+      const intensity = Math.max(pulse * 1.0, resting * 0.18);
+      if (intensity < 0.01) continue;
+
+      const alpha = clamp(intensity, 0, 1);
+      const r = f.size + pulse * 18;
+
+      // Glow halo
+      const g = ctx.createRadialGradient(f.x, f.y, f.size * 0.2, f.x, f.y, r);
+      g.addColorStop(0, `hsla(${f.hue}, 100%, 70%, ${alpha})`);
+      g.addColorStop(0.35, `hsla(${f.hue}, 100%, 55%, ${alpha * 0.45})`);
+      g.addColorStop(1, `hsla(${f.hue}, 100%, 45%, 0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core
+      ctx.fillStyle = `hsla(${f.hue}, 100%, 85%, ${clamp(alpha * 0.9 + 0.1, 0, 1)})`;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Order parameter for sync measurement
+  function syncOrder() {
+    let sx = 0, sy = 0;
+    for (let f of fireflies) {
+      sx += Math.cos(f.phase);
+      sy += Math.sin(f.phase);
+    }
+    const r = Math.hypot(sx, sy) / (fireflies.length || 1);
+    return r;
+  }
+
+  let lastT = performance.now();
+  function frame(now) {
+    const dt = clamp((now - lastT) / 1000, 0.001, 0.05);
+    lastT = now;
+    updateNeighbors();
+    draw();
+
+    // Update sync readout every ~10 frames
+    if (Math.random() < 0.15) {
+      const r = syncOrder();
+      const pct = Math.round(r * 100);
+      let label = 'scattered';
+      if (r > 0.9) label = 'fully synchronized';
+      else if (r > 0.65) label = 'mostly pulsing together';
+      else if (r > 0.35) label = 'clumping into groups';
+      else if (r > 0.15) label = 'faint pairs and waves';
+      document.getElementById('sync-hint').textContent = `Sync order: ${pct}% — ${label}`;
+    }
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // UI bindings
+  const ids = ['count','coupling','speed','variety','noise','range'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    const valEl = document.getElementById('v-' + id);
+    el.addEventListener('input', () => {
+      params[id] = parseFloat(el.value);
+      valEl.textContent = params[id];
+      if (id === 'count') {
+        const diff = params.count - fireflies.length;
+        if (diff > 0) spawn(diff);
+        else if (diff < 0) {
+          for (let i = 0; i < -diff; i++) fireflies.pop();
+        }
+      }
+      if (id === 'variety') {
+        fireflies.forEach(f => { f.freq = 1.0 + rand(-params.variety, params.variety); });
+      }
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', () => {
+    resetField();
+  });
+  document.getElementById('pulse').addEventListener('click', () => {
+    fireflies.forEach(f => { f.phase = 0; f.flashAge = 1.0; });
+  });
+  document.getElementById('clear').addEventListener('click', () => {
+    fireflies = [];
+  });
+
+  // Pointer interactions
+  let pointerDown = false;
+  function handlePointer(e) {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    spawn(3, x, y);
+  }
+  canvas.addEventListener('pointerdown', (e) => {
+    pointerDown = true;
+    handlePointer(e);
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (pointerDown) handlePointer(e);
+  });
+  window.addEventListener('pointerup', () => { pointerDown = false; });
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
+
+  // Double-tap to pulse all near pointer
+  let lastTap = 0;
+  canvas.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      const rect = canvas.getBoundingClientRect();
+      const t = e.changedTouches[0];
+      const x = t.clientX - rect.left;
+      const y = t.clientY - rect.top;
+      fireflies.forEach(f => {
+        const d2 = (f.x - x)**2 + (f.y - y)**2;
+        if (d2 < 18000) { f.phase = 0; f.flashAge = 1.0; }
+      });
+    }
+    lastTap = now;
+  }, { passive: true });
+
+})();
+</script>
+</body>
+</html>
