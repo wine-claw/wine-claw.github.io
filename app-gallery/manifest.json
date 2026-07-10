@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-10",
-    "title": "Firefly Sync Toy",
-    "slug": "firefly-sync-toy",
-    "publishedSlug": "2026-07-10-firefly-sync-toy",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-10-firefly-sync-toy/"
+    "date": "2026-07-11",
+    "title": "Wind Rose Painter",
+    "slug": "wind-rose-painter",
+    "publishedSlug": "2026-07-11-wind-rose-painter",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-11-wind-rose-painter/"
   },
   "apps": [
+    {
+      "date": "2026-07-11",
+      "title": "Wind Rose Painter",
+      "slug": "wind-rose-painter",
+      "publishedSlug": "2026-07-11-wind-rose-painter",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-11-wind-rose-painter/",
+      "description": "Interactive wind-rose generator and data-art toy. Paint directional frequencies, choose palettes, and watch a stylised rose or mandala take shape."
+    },
     {
       "date": "2026-07-10",
       "title": "Firefly Sync Toy",

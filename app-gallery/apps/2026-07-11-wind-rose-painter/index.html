@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Wind Rose Painter</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-2: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --warn-bg: #451a03;
+      --warn-text: #fdba74;
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 60%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    .warning {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      padding: 12px 18px;
+      text-align: center;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      border-bottom: 1px solid rgba(253,186,116,0.2);
+    }
+
+    header {
+      text-align: center;
+      padding: 28px 16px 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      letter-spacing: -0.02em;
+    }
+
+    .tagline {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+    }
+
+    .stage {
+      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      margin: 16px 0;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      max-width: 520px;
+      max-height: 520px;
+      display: block;
+    }
+
+    .controls {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 720px) {
+      .controls {
+        grid-template-columns: 1fr 1.4fr;
+      }
+      .sliders {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: flex-end;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      flex: 1 1 120px;
+    }
+
+    select, input[type="range"], button {
+      width: 100%;
+      font: inherit;
+      color: var(--text);
+    }
+
+    select {
+      background: var(--panel-2);
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    input[type="range"] {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    button {
+      background: var(--panel-2);
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+      flex: 1 1 100px;
+    }
+
+    button:hover { background: #475569; }
+    button:active { transform: translateY(1px); }
+    button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); }
+    button.primary:hover { background: #7dd3fc; }
+
+    .sliders {
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .sliders h3 {
+      margin: 0 0 12px;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .dir-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px 14px;
+    }
+
+    @media (min-width: 560px) {
+      .dir-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .dir {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+
+    .dir label {
+      flex: 0 0 auto;
+      min-width: 38px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .dir input[type="range"] { flex: 1; }
+    .dir .val {
+      min-width: 28px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+    }
+
+    .about {
+      margin-top: 16px;
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .about summary {
+      cursor: pointer;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .about p { margin: 10px 0 0; }
+  </style>
+</head>
+<body>
+  <div class="warning">
+    <strong>Experimental AI mini-app.</strong> Untested, not professionally validated, and not intended for real meteorological or operational decisions.
+  </div>
+
+  <header>
+    <h1>Wind Rose Painter</h1>
+    <div class="tagline">Paint directional winds, choose a palette, and watch a meteorological rose — or a wind mandala — take shape.</div>
+  </header>
+
+  <main>
+    <div class="stage">
+      <svg id="rose" viewBox="-230 -230 460 460" preserveAspectRatio="xMidYMid meet" aria-label="Wind rose visualisation"></svg>
+    </div>
+
+    <div class="controls">
+      <div class="panel">
+        <label>
+          Preset
+          <select id="preset">
+            <option value="calm">Calm</option>
+            <option value="patagonia">Westerly Gale (Patagonia)</option>
+            <option value="wellington">Northerly City (Wellington)</option>
+            <option value="cape">Katabatic Blast (Cape Denison)</option>
+            <option value="harmattan">Desert Wind (Harmattan)</option>
+            <option value="mistral">Mistral (NW)</option>
+            <option value="adelaide">Adelaide Gully Winds</option>
+            <option value="random">Random</option>
+          </select>
+        </label>
+
+        <label>
+          Mode
+          <select id="mode">
+            <option value="rose">Wind Rose</option>
+            <option value="mandala">Wind Mandala</option>
+          </select>
+        </label>
+
+        <label>
+          Style
+          <select id="style">
+            <option value="stacked">Stacked Bands</option>
+            <option value="smooth">Smooth Petals</option>
+            <option value="rays">Rays</option>
+          </select>
+        </label>
+
+        <label>
+          Palette
+          <select id="palette">
+            <option value="sunset">Sunset</option>
+            <option value="ocean">Ocean</option>
+            <option value="storm">Storm</option>
+            <option value="vineyard">Vineyard</option>
+            <option value="aurora">Aurora</option>
+            <option value="mono">Monochrome</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="panel">
+        <label>
+          Spin speed
+          <input type="range" id="spin" min="0" max="100" value="12">
+        </label>
+        <button id="pauseBtn">Pause</button>
+        <button id="downloadBtn">Download SVG</button>
+        <button id="resetBtn" class="primary">Reset</button>
+      </div>
+
+      <div class="sliders">
+        <h3>Wind from each direction (% frequency)</h3>
+        <div class="dir-grid" id="dirGrid"></div>
+      </div>
+    </div>
+
+    <details class="about">
+      <summary>About wind roses</summary>
+      <p>
+        A wind rose shows how often wind blows <em>from</em> each direction over a period of time.
+        Each spoke points the way the wind comes from — so a long northern spoke means the site spends a lot of time downwind of northerly air.
+        The presets here are stylised approximations of famous wind regimes: Patagonia's westerly gales, Wellington's gusty northerlies, Cape Denison's katabatic blasts, and Adelaide's summer gully winds.
+      </p>
+    </details>
+  </main>
+
+  <script>
+    (function () {
+      const svg = document.getElementById('rose');
+      const dirGrid = document.getElementById('dirGrid');
+      const els = {
+        preset: document.getElementById('preset'),
+        mode: document.getElementById('mode'),
+        style: document.getElementById('style'),
+        palette: document.getElementById('palette'),
+        spin: document.getElementById('spin'),
+        pause: document.getElementById('pauseBtn'),
+        download: document.getElementById('downloadBtn'),
+        reset: document.getElementById('resetBtn')
+      };
+
+      const DIRS = [
+        'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+        'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
+      ];
+      const STEP = 360 / DIRS.length; // 22.5
+      const STEP_RAD = (Math.PI * 2) / DIRS.length;
+      const MAX_R = 180;
+
+      const PALETTES = {
+        sunset: ['#fef3c7', '#fdba74', '#f97316', '#dc2626', '#7c2d12'],
+        ocean:  ['#ecfeff', '#a5f3fc', '#22d3ee', '#0ea5e9', '#1e3a8a'],
+        storm:  ['#f1f5f9', '#cbd5e1', '#94a3b8', '#64748b', '#334155'],
+        vineyard: ['#fef9c3', '#bef264', '#65a30d', '#3f6212', '#14532d'],
+        aurora: ['#f0fdf4', '#86efac', '#38bdf8', '#818cf8', '#4c1d95'],
+        mono:   ['#f8fafc', '#e2e8f0', '#94a3b8', '#64748b', '#1e293b']
+      };
+
+      const PRESETS = {
+        calm:       [12, 8, 6, 4, 5, 6, 8, 10, 12, 10, 8, 6, 5, 6, 8, 10],
+        patagonia:  [4, 2, 2, 1, 1, 2, 4, 10, 18, 28, 35, 25, 14, 8, 5, 3],
+        wellington: [28, 18, 10, 5, 3, 2, 3, 6, 10, 12, 14, 12, 10, 8, 5, 4],
+        cape:       [2, 2, 3, 5, 8, 14, 24, 32, 28, 16, 8, 4, 2, 2, 2, 2],
+        harmattan:  [5, 8, 26, 22, 12, 5, 2, 2, 2, 2, 4, 8, 10, 8, 6, 4],
+        mistral:    [8, 5, 3, 2, 2, 2, 4, 8, 12, 16, 18, 16, 12, 28, 18, 8],
+        adelaide:   [6, 3, 2, 2, 3, 6, 10, 16, 20, 24, 18, 10, 6, 4, 3, 2],
+        random:     DIRS.map(() => Math.floor(Math.random() * 80) + 5)
+      };
+
+      let values = PRESETS.calm.slice();
+      let rotation = 0;
+      let animating = true;
+      let raf = 0;
+      let needsRebuild = true;
+
+      function polar(angleDeg, r) {
+        const rad = (angleDeg - 90) * Math.PI / 180;
+        return [Math.cos(rad) * r, Math.sin(rad) * r];
+      }
+
+      function createEl(tag, attrs) {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+        return el;
+      }
+
+      function sectorPath(r0, r1, a0, a1) {
+        if (r0 < 0.5) r0 = 0.5;
+        if (r1 < 0.5) r1 = 0.5;
+        const [x0, y0] = polar(a0, r0);
+        const [x1, y1] = polar(a0, r1);
+        const [x2, y2] = polar(a1, r1);
+        const [x3, y3] = polar(a1, r0);
+        const large = (a1 - a0) > 180 ? 1 : 0;
+        return `M ${x0.toFixed(2)} ${y0.toFixed(2)} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r1.toFixed(2)} ${r1.toFixed(2)} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L ${x3.toFixed(2)} ${y3.toFixed(2)} A ${r0.toFixed(2)} ${r0.toFixed(2)} 0 ${large} 0 ${x0.toFixed(2)} ${y0.toFixed(2)} Z`;
+      }
+
+      function smoothPath(radii) {
+        // radii length === DIRS.length; build a closed smooth-ish curve through sector midpoints.
+        const pts = [];
+        const count = 120; // 7.5° increments
+        for (let i = 0; i < count; i++) {
+          const angle = i * (360 / count);
+          // sample radii by interpolating between sector centers
+          const sectorFloat = (angle / 360) * DIRS.length;
+          const i0 = Math.floor(sectorFloat) % DIRS.length;
+          const i1 = (i0 + 1) % DIRS.length;
+          const t = sectorFloat - Math.floor(sectorFloat);
+          const r = radii[i0] * (1 - t) + radii[i1] * t;
+          pts.push(polar(angle, r));
+        }
+        let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+        for (let i = 1; i < pts.length; i++) {
+          d += ` L ${pts[i][0].toFixed(2)} ${pts[i][1].toFixed(2)}`;
+        }
+        d += ' Z';
+        return d;
+      }
+
+      function makeGradient(id, colors) {
+        const grad = createEl('radialGradient', { id, cx: '0.5', cy: '0.5', r: '0.5' });
+        colors.forEach((c, i) => {
+          const stop = createEl('stop', { offset: `${(i / (colors.length - 1)) * 100}%`, 'stop-color': c });
+          grad.appendChild(stop);
+        });
+        return grad;
+      }
+
+      function buildScene() {
+        svg.innerHTML = '';
+        const defs = createEl('defs', {});
+        const palette = PALETTES[els.palette.value];
+        const gradId = 'roseGrad';
+        defs.appendChild(makeGradient(gradId, [palette[0], palette[2], palette[4]]));
+        svg.appendChild(defs);
+
+        const scene = createEl('g', { id: 'scene' });
+        svg.appendChild(scene);
+
+        // Rings
+        [60, 120, 180].forEach((r, i) => {
+          scene.appendChild(createEl('circle', { cx: 0, cy: 0, r, fill: 'none', stroke: '#334155', 'stroke-width': 1, 'stroke-dasharray': i === 2 ? '4 4' : '2 4', opacity: 0.6 }));
+        });
+
+        // Compass labels
+        const compass = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+        const compassAngles = [0, 45, 90, 135, 180, 225, 270, 315];
+        compass.forEach((txt, i) => {
+          const [x, y] = polar(compassAngles[i], 200);
+          const label = createEl('text', {
+            x: x.toFixed(1), y: y.toFixed(1),
+            fill: txt === 'N' ? '#f87171' : '#94a3b8',
+            'text-anchor': 'middle', 'dominant-baseline': 'middle',
+            'font-size': txt === 'N' ? 15 : 12, 'font-weight': txt === 'N' ? 700 : 500
+          });
+          label.textContent = txt;
+          scene.appendChild(label);
+        });
+
+        const mode = els.mode.value;
+        const style = els.style.value;
+        const maxVal = Math.max(...values, 10);
+        const radii = values.map(v => (v / maxVal) * MAX_R);
+
+        if (mode === 'mandala') {
+          // Decorative echo ring rotated half a sector
+          const echo = createEl('g', { opacity: 0.28 });
+          radii.forEach((r, i) => {
+            const a0 = i * STEP + STEP / 2;
+            const a1 = a0 + STEP;
+            const path = createEl('path', {
+              d: sectorPath(8, r * 0.65, a0, a1),
+              fill: `url(#${gradId})`, stroke: palette[3], 'stroke-width': 0.5
+            });
+            echo.appendChild(path);
+          });
+          echo.setAttribute('transform', `rotate(${STEP / 2})`);
+          scene.appendChild(echo);
+        }
+
+        const petals = createEl('g', { class: 'petals' });
+
+        if (style === 'stacked') {
+          const bands = 3;
+          radii.forEach((r, i) => {
+            const a0 = i * STEP - STEP / 2;
+            const a1 = a0 + STEP;
+            let inner = 4;
+            for (let b = 0; b < bands; b++) {
+              const share = r * ([0.5, 0.3, 0.2][b]);
+              const outer = inner + share;
+              const path = createEl('path', {
+                d: sectorPath(inner, outer, a0, a1),
+                fill: palette[b],
+                stroke: '#0f172a',
+                'stroke-width': 0.5,
+                opacity: 0.92
+              });
+              petals.appendChild(path);
+              inner = outer;
+            }
+          });
+        } else if (style === 'smooth') {
+          const path = createEl('path', {
+            d: smoothPath(radii),
+            fill: `url(#${gradId})`,
+            stroke: palette[4],
+            'stroke-width': 2,
+            opacity: 0.9
+          });
+          petals.appendChild(path);
+          // Add subtle stroke petals on top for definition
+          radii.forEach((r, i) => {
+            const a = i * STEP;
+            const [x, y] = polar(a, r);
+            const line = createEl('line', { x1: 0, y1: 0, x2: x.toFixed(2), y2: y.toFixed(2), stroke: palette[3], 'stroke-width': 1, opacity: 0.4 });
+            petals.appendChild(line);
+          });
+        } else if (style === 'rays') {
+          radii.forEach((r, i) => {
+            const a = i * STEP;
+            const [x, y] = polar(a, r);
+            const line = createEl('line', {
+              x1: 0, y1: 0, x2: x.toFixed(2), y2: y.toFixed(2),
+              stroke: palette[Math.min(4, Math.floor((r / MAX_R) * 4))],
+              'stroke-width': 3 + (r / MAX_R) * 5,
+              'stroke-linecap': 'round',
+              opacity: 0.85
+            });
+            petals.appendChild(line);
+          });
+        }
+
+        scene.appendChild(petals);
+
+        // Sparkle dots in mandala mode
+        if (mode === 'mandala') {
+          const dots = createEl('g', {});
+          radii.forEach((r, i) => {
+            if (r < 8) return;
+            const a = i * STEP;
+            const [x, y] = polar(a, r + 10);
+            const dot = createEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 2.5, fill: palette[1], opacity: 0.8 });
+            dots.appendChild(dot);
+            const a2 = a + STEP / 2;
+            const [x2, y2] = polar(a2, r * 0.55);
+            dots.appendChild(createEl('circle', { cx: x2.toFixed(1), cy: y2.toFixed(1), r: 1.5, fill: palette[3], opacity: 0.6 }));
+          });
+          scene.appendChild(dots);
+        }
+
+        // Center calm circle
+        scene.appendChild(createEl('circle', { cx: 0, cy: 0, r: 5, fill: palette[0], opacity: 0.9 }));
+      }
+
+      function render() {
+        if (needsRebuild) {
+          buildScene();
+          needsRebuild = false;
+        }
+        const scene = svg.querySelector('#scene');
+        if (scene) {
+          scene.setAttribute('transform', `rotate(${rotation.toFixed(2)})`);
+        }
+      }
+
+      function tick() {
+        if (animating) {
+          const speed = parseInt(els.spin.value, 10) / 100;
+          rotation += speed * 0.3;
+          if (rotation >= 360) rotation -= 360;
+          render();
+        }
+        raf = requestAnimationFrame(tick);
+      }
+
+      function updateDirVal(i, v) {
+        values[i] = parseInt(v, 10);
+        document.getElementById(`val-${i}`).textContent = values[i] + '%';
+        needsRebuild = true;
+      }
+
+      function buildSliders() {
+        dirGrid.innerHTML = '';
+        values.forEach((v, i) => {
+          const wrap = document.createElement('div');
+          wrap.className = 'dir';
+          wrap.innerHTML = `
+            <label for="dir-${i}">${DIRS[i]}</label>
+            <input id="dir-${i}" type="range" min="0" max="100" value="${v}" aria-label="${DIRS[i]} wind frequency">
+            <span class="val" id="val-${i}">${v}%</span>
+          `;
+          dirGrid.appendChild(wrap);
+          wrap.querySelector('input').addEventListener('input', e => updateDirVal(i, e.target.value));
+        });
+      }
+
+      function applyPreset(name) {
+        if (name === 'random') {
+          values = DIRS.map(() => Math.floor(Math.random() * 85) + 5);
+        } else {
+          values = PRESETS[name].slice();
+        }
+        values.forEach((v, i) => {
+          const input = document.getElementById(`dir-${i}`);
+          if (input) input.value = v;
+          const label = document.getElementById(`val-${i}`);
+          if (label) label.textContent = v + '%';
+        });
+        needsRebuild = true;
+      }
+
+      function triggerUpdate() { needsRebuild = true; }
+
+      els.preset.addEventListener('change', e => applyPreset(e.target.value));
+      ['mode', 'style', 'palette'].forEach(id => els[id].addEventListener('change', triggerUpdate));
+      els.spin.addEventListener('input', () => { if (!animating) render(); });
+
+      els.pause.addEventListener('click', () => {
+        animating = !animating;
+        els.pause.textContent = animating ? 'Pause' : 'Play';
+      });
+
+      els.reset.addEventListener('click', () => {
+        els.preset.value = 'calm';
+        applyPreset('calm');
+        els.mode.value = 'rose';
+        els.style.value = 'stacked';
+        els.palette.value = 'sunset';
+        els.spin.value = 12;
+        animating = true;
+        els.pause.textContent = 'Pause';
+        needsRebuild = true;
+      });
+
+      els.download.addEventListener('click', () => {
+        const clone = svg.cloneNode(true);
+        // flatten current rotation into the scene transform
+        const scene = clone.querySelector('#scene');
+        if (scene) scene.setAttribute('transform', `rotate(${rotation.toFixed(2)})`);
+        const serializer = new XMLSerializer();
+        const source = '<?xml version="1.0" standalone="no"?>\n' + serializer.serializeToString(clone);
+        const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `wind-rose-${new Date().toISOString().slice(0, 10)}.svg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      buildSliders();
+      applyPreset('calm');
+      tick();
+    })();
+  </script>
+</body>
+</html>
