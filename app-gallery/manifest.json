@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-11",
-    "title": "Wind Rose Painter",
-    "slug": "wind-rose-painter",
-    "publishedSlug": "2026-07-11-wind-rose-painter",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-11-wind-rose-painter/"
+    "date": "2026-07-12",
+    "title": "Antikythera Mechanism Explorer",
+    "slug": "antikythera-explorer",
+    "publishedSlug": "2026-07-12-antikythera-explorer",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-12-antikythera-explorer/"
   },
   "apps": [
+    {
+      "date": "2026-07-12",
+      "title": "Antikythera Mechanism Explorer",
+      "slug": "antikythera-explorer",
+      "publishedSlug": "2026-07-12-antikythera-explorer",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-12-antikythera-explorer/",
+      "description": "Interactive ancient Greek analogue computer with front dial, rear spiral dials, and stylised gear train."
+    },
     {
       "date": "2026-07-11",
       "title": "Wind Rose Painter",

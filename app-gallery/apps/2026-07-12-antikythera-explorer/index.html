@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Antikythera Mechanism Explorer</title>
+<style>
+  :root {
+    --bg: #0e0d0b;
+    --panel: #161512;
+    --card: #1f1c16;
+    --ink: #e8ddc6;
+    --muted: #9c8f76;
+    --gold: #d4a856;
+    --bronze: #b67a3e;
+    --copper: #b96b48;
+    --iron: #6e7378;
+    --rust: #8b4c30;
+    --accent: #d4a856;
+    --warn: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: ui-serif, Georgia, 'Times New Roman', serif; }
+  body { display: flex; flex-direction: column; }
+  .banner {
+    background: linear-gradient(90deg, rgba(212,168,86,.14), rgba(212,168,86,.04));
+    border-bottom: 1px solid rgba(212,168,86,.25);
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+  .banner strong { color: var(--warn); }
+  header {
+    padding: 16px 18px 8px;
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap;
+  }
+  h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: .3px; color: var(--gold); }
+  .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  button {
+    background: var(--card); color: var(--ink); border: 1px solid rgba(212,168,86,.35);
+    padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 13px;
+    font-family: ui-sans-serif, system-ui, sans-serif; transition: background .15s, border-color .15s;
+  }
+  button:hover { background: #2a251c; border-color: var(--gold); }
+  button.active { background: rgba(212,168,86,.18); border-color: var(--gold); color: var(--gold); }
+  .main { flex: 1; display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; padding: 10px 18px 18px; min-height: 0; }
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; }
+  }
+  .stage { background: var(--panel); border: 1px solid rgba(212,168,86,.18); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; min-height: 0; }
+  .stage svg { width: 100%; flex: 1; min-height: 420px; }
+  .side { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; }
+  .panel { background: var(--card); border: 1px solid rgba(212,168,86,.12); border-radius: 12px; padding: 14px; }
+  .panel h2 { margin: 0 0 10px; font-size: 15px; color: var(--gold); font-weight: 600; letter-spacing: .3px; }
+  .panel p { margin: 0 0 10px; font-size: 13px; line-height: 1.45; color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif; }
+  .readout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .readout .kv { background: rgba(0,0,0,.18); border-radius: 8px; padding: 9px 11px; }
+  .readout .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .readout .v { font-size: 15px; color: var(--ink); margin-top: 3px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; }
+  .chip span { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .slider-wrap { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  input[type=range] { flex: 1; }
+  .slider-label { font-size: 12px; color: var(--muted); min-width: 58px; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .mode-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .svg-text { font-family: ui-serif, Georgia, 'Times New Roman', serif; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="banner">
+    <strong>Experimental OpenClaw AI mini-app.</strong> This is an unverified interactive toy, not a scholarly reconstruction. Do not rely on it for any decisions.
+  </div>
+  <header>
+    <div>
+      <h1>Antikythera Mechanism Explorer</h1>
+      <p class="subtitle">A 2,000-year-old analogue computer — front dial, back dials, and gear trains.</p>
+    </div>
+    <div class="controls">
+      <button id="btnFront" class="active">Front dial</button>
+      <button id="btnBack">Back dials</button>
+      <button id="btnGears">Gears</button>
+      <button id="btnPlay">Pause</button>
+      <button id="btnReset">Reset</button>
+    </div>
+  </header>
+  <section class="main">
+    <div class="stage" id="stage">
+      <svg id="svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <radialGradient id="brass" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#f6e2a6"/>
+            <stop offset="40%" stop-color="#d4a856"/>
+            <stop offset="100%" stop-color="#7a4f20"/>
+          </radialGradient>
+          <radialGradient id="bronzePlate" cx="50%" cy="50%" r="80%">
+            <stop offset="0%" stop-color="#3b2e1c"/>
+            <stop offset="100%" stop-color="#1c150d"/>
+          </radialGradient>
+          <filter id="drop">
+            <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000" flood-opacity=".55"/>
+          </filter>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#d4a856"/>
+          </marker>
+        </defs>
+        <g id="layer"></g>
+      </svg>
+    </div>
+    <div class="side">
+      <div class="panel">
+        <h2>What am I seeing?</h2>
+        <p id="desc">The front of the mechanism shows the Sun and Moon pointers moving around a combined Zodiac and Egyptian calendar ring. Turn the crank to advance days, months, and years.</p>
+        <div class="legend" id="legend">
+          <span class="chip"><span style="background:var(--gold)"></span> Sun pointer</span>
+          <span class="chip"><span style="background:var(--iron)"></span> Moon pointer</span>
+          <span class="chip"><span style="background:var(--copper)"></span> Phase disc</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Live readout</h2>
+        <div class="readout">
+          <div class="kv"><div class="k">Date</div><div class="v" id="rDate">Year 1, Day 1</div></div>
+          <div class="kv"><div class="k">Sun</div><div class="v" id="rSun">0°</div></div>
+          <div class="kv"><div class="k">Moon</div><div class="v" id="rMoon">0°</div></div>
+          <div class="kv"><div class="k">Moon age</div><div class="v" id="rPhase">New</div></div>
+          <div class="kv"><div class="k">Metonic year</div><div class="v" id="rMetonic">1 / 19</div></div>
+          <div class="kv"><div class="k">Saros index</div><div class="v" id="rSaros">1 / 223</div></div>
+          <div class="kv"><div class="k">Olympiad</div><div class="v" id="rOlympiad">I</div></div>
+          <div class="kv"><div class="k">Crank turns</div><div class="v" id="rCrank">0.0</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Controls</h2>
+        <div class="slider-wrap"><span class="slider-label">Speed</span><input id="speed" type="range" min="0" max="120" value="45" /></div>
+        <div class="slider-wrap"><span class="slider-label">Crank</span><input id="crank" type="range" min="0" max="1000" value="0" /></div>
+        <p>Drag the sliders or click the stage to step forward. The animation uses approximate period ratios from published reconstructions.</p>
+      </div>
+    </div>
+  </section>
+
+<script>
+  const svg = document.getElementById('svg');
+  const layer = document.getElementById('layer');
+  const btnFront = document.getElementById('btnFront');
+  const btnBack = document.getElementById('btnBack');
+  const btnGears = document.getElementById('btnGears');
+  const btnPlay = document.getElementById('btnPlay');
+  const btnReset = document.getElementById('btnReset');
+  const desc = document.getElementById('desc');
+  const legend = document.getElementById('legend');
+  const speedInput = document.getElementById('speed');
+  const crankInput = document.getElementById('crank');
+
+  const zodiacNames = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+  const monthNames = ['Thoth','Phaophi','Hathyr','Choiak','Tybi','Mecheir','Phamenoth','Pharmouthi','Pachon','Payni','Epiphi','Mesore','Epagomenai'];
+  const monthDays = [30,30,30,30,30,30,30,30,30,30,30,30,5];
+
+  // Periods (approx days) from reconstructions: tropical year, synodic month, Metonic cycle, Saros cycle, Exeligmos, Olympiad.
+  const T_YEAR = 365.2422;
+  const T_SYNODIC = 29.53059;
+  const T_METONIC = 19 * T_YEAR; // ~6940 days
+  const T_SAROS = 223 * T_SYNODIC; // ~6585 days
+  const T_EXELIGMOS = 3 * T_SAROS; // ~19755 days
+  const T_OLYMPIAD = 4 * T_YEAR + 1; // includes leap-ish offset
+
+  // Gear train abstraction: each turn of the hand crank advances time by ~1 day. Crank ratio roughly matches published 1 turn/day estimates.
+  const CRANK_DAYS = 1.0;
+
+  let tDays = 0; // simulated days
+  let playing = true;
+  let mode = 'front'; // front, back, gears
+  let speed = 45;
+
+  function el(tag, attrs) {
+    const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    if (attrs) for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    return e;
+  }
+
+  function text(x, y, content, attrs) {
+    const t = el('text', { x, y, fill: '#e8ddc6', 'font-size': '12', 'text-anchor': 'middle', class: 'svg-text', ...(attrs || {}) });
+    t.textContent = content;
+    return t;
+  }
+
+  function ring(cx, cy, r, stroke, sw, fill) {
+    return el('circle', { cx, cy, r, fill: fill || 'none', stroke, 'stroke-width': sw });
+  }
+
+  function gear(cx, cy, r, teeth, phase, opts) {
+    const g = el('g', { transform: `rotate(${(phase || 0) * 180 / Math.PI}, ${cx}, ${cy})` });
+    const fill = opts?.fill || 'url(#brass)';
+    const stroke = opts?.stroke || '#5c3b16';
+    g.appendChild(el('circle', { cx, cy, r: r - 4, fill, stroke, 'stroke-width': 1.2 }));
+    // teeth
+    for (let i = 0; i < teeth; i++) {
+      const a = (i / teeth) * Math.PI * 2;
+      const w = Math.max(3, (2 * Math.PI * r) / teeth * 0.28);
+      const h = r * 0.14;
+      const tooth = el('rect', {
+        x: cx - w/2, y: cy - r - h + 3, width: w, height: h, fill, stroke, 'stroke-width': .5,
+        transform: `rotate(${a * 180 / Math.PI}, ${cx}, ${cy})`
+      });
+      g.appendChild(tooth);
+    }
+    // hub
+    g.appendChild(el('circle', { cx, cy, r: r * 0.18, fill: '#2a2117', stroke: '#a07f40', 'stroke-width': 1 }));
+    if (opts?.label) g.appendChild(text(cx, cy + 4, opts.label, { fill: '#1c150d', 'font-size': '9', 'font-weight': 'bold' }));
+    return g;
+  }
+
+  function hand(cx, cy, angle, len, color, width, head) {
+    const g = el('g', { transform: `rotate(${angle}, ${cx}, ${cy})` });
+    g.appendChild(el('line', { x1: cx, y1: cy, x2: cx, y2: cy - len, stroke: color, 'stroke-width': width, 'stroke-linecap': 'round' }));
+    if (head) {
+      g.appendChild(el('circle', { cx, cy, r: head, fill: color }));
+    }
+    return g;
+  }
+
+  function polarText(cx, cy, r, angleDeg, content, size=11) {
+    const a = (angleDeg - 90) * Math.PI / 180;
+    const x = cx + r * Math.cos(a);
+    const y = cy + r * Math.sin(a);
+    const t = text(x, y, content, { 'font-size': size });
+    // orient text upright-ish by toggling anchor
+    const norm = ((angleDeg % 360) + 360) % 360;
+    if (norm > 90 && norm < 270) {
+      t.setAttribute('text-anchor', 'end');
+      t.setAttribute('transform', `rotate(${angleDeg + 180}, ${x}, ${y})`);
+    } else {
+      t.setAttribute('text-anchor', 'start');
+      t.setAttribute('transform', `rotate(${angleDeg}, ${x}, ${y})`);
+    }
+    return t;
+  }
+
+  function drawFront() {
+    layer.innerHTML = '';
+    desc.textContent = 'The front dial tracks the Sun and Moon against a Zodiac ring and an Egyptian calendar ring. The small upper dial is the Moon phase indicator. Drag the crank slider to wind time forward.';
+    legend.innerHTML = `<span class="chip"><span style="background:var(--gold)"></span> Sun pointer</span>
+      <span class="chip"><span style="background:var(--iron)"></span> Moon pointer</span>
+      <span class="chip"><span style="background:var(--copper)"></span> Phase disc</span>`;
+
+    const cx = 400, cy = 300;
+    const plate = ring(cx, cy, 260, '#5c3b16', 2, 'url(#bronzePlate)');
+    layer.appendChild(plate);
+
+    // Calendar ring ticks/labels
+    for (let i = 0; i < 360; i += 5) {
+      const a = i * Math.PI / 180;
+      const r1 = 242, r2 = i % 10 === 0 ? 236 : 239;
+      const x1 = cx + r1 * Math.cos(a), y1 = cy + r1 * Math.sin(a);
+      const x2 = cx + r2 * Math.cos(a), y2 = cy + r2 * Math.sin(a);
+      layer.appendChild(el('line', { x1, y1, x2, y2, stroke: '#8a6a3e', 'stroke-width': 1 }));
+    }
+    // Egyptian months
+    let day = 0;
+    for (let m = 0; m < 13; m++) {
+      const days = monthDays[m];
+      const mid = day + days/2;
+      const a = (mid / 365) * 360;
+      layer.appendChild(polarText(cx, cy, 222, a, monthNames[m], 10));
+      day += days;
+    }
+
+    // Zodiac ring
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * 360;
+      layer.appendChild(el('line', { x1: cx + 194 * Math.cos(a * Math.PI/180), y1: cy + 194 * Math.sin(a * Math.PI/180),
+        x2: cx + 184 * Math.cos(a * Math.PI/180), y2: cy + 184 * Math.sin(a * Math.PI/180), stroke: '#c9a85e', 'stroke-width': 1.5 }));
+      layer.appendChild(polarText(cx, cy, 170, a + 15, zodiacNames[i], 11));
+    }
+
+    // Date readout ring
+    layer.appendChild(ring(cx, cy, 150, '#6e5940', 1));
+
+    const sunAngle = sunAngleDeg();
+    const moonAngle = moonAngleDeg();
+
+    // Moon phase disc (upper sub-dial)
+    const mx = cx, my = cy - 190;
+    layer.appendChild(ring(mx, my, 34, '#5c3b16', 1, '#2a2117'));
+    layer.appendChild(text(mx, my - 48, 'Moon phase', { 'font-size': '11', fill: '#9c8f76' }));
+    drawMoonPhase(mx, my, 30, moonPhase());
+
+    // Pointers
+    layer.appendChild(hand(cx, cy, sunAngle, 190, '#d4a856', 3, 5));
+    layer.appendChild(hand(cx, cy, moonAngle, 180, '#a8b0b5', 2.5, 4));
+
+    // Center sun symbol
+    layer.appendChild(el('circle', { cx, cy, r: 10, fill: '#d4a856' }));
+  }
+
+  function drawMoonPhase(cx, cy, r, phase) {
+    // phase 0=new, 0.5=full, 1=new
+    const g = el('g');
+    const lit = phase <= 0.5;
+    // Background dark
+    g.appendChild(el('circle', { cx, cy, r, fill: '#15130f' }));
+    // Simple crescent/gibbous approximation
+    const frac = 1 - 2 * Math.abs(phase - 0.5); // 0 at quarter, 1 at full/new
+    const sweep = lit ? 1 : 0;
+    if (phase < 0.5) {
+      // waxing
+      const d = `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx} ${cy + r} A ${r * Math.cos((phase - 0.25) * 2 * Math.PI)} ${r} 0 ${sweep} 0 ${cx} ${cy - r} z`;
+      // Fallback simpler: draw two arcs for the terminator ellipse
+      const ex = r * Math.cos((phase - 0.25) * 2 * Math.PI);
+      const path = el('path', { d: `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx} ${cy + r} A ${Math.abs(ex)} ${r} 0 ${phase < 0.25 ? 0 : 1} 0 ${cx} ${cy - r} z`, fill: '#d4c49a' });
+      g.appendChild(path);
+    } else {
+      const ex = r * Math.cos((phase - 0.75) * 2 * Math.PI);
+      const path = el('path', { d: `M ${cx} ${cy - r} A ${r} ${r} 0 1 0 ${cx} ${cy + r} A ${Math.abs(ex)} ${r} 0 ${phase < 0.75 ? 1 : 0} 0 ${cx} ${cy - r} z`, fill: '#d4c49a' });
+      g.appendChild(path);
+    }
+    g.appendChild(el('circle', { cx, cy, r, fill: 'none', stroke: '#8a6a3e', 'stroke-width': 1 }));
+    layer.appendChild(g);
+  }
+
+  function drawBack() {
+    layer.innerHTML = '';
+    desc.textContent = 'The rear plate carries spiral dials for the Metonic (19-year) luni-solar cycle, the Saros (223-month) eclipse cycle, and the Exeligmos (54-year) eclipse-epoch dial. The small lower dial tracks the Olympiad games cycle.';
+    legend.innerHTML = `<span class="chip"><span style="background:var(--gold)"></span> Metonic pointer</span>
+      <span class="chip"><span style="background:var(--bronze)"></span> Saros pointer</span>
+      <span class="chip"><span style="background:var(--copper)"></span> Olympiad dial</span>`;
+    const cx = 400, cy = 300;
+    layer.appendChild(ring(cx, cy, 260, '#5c3b16', 2, 'url(#bronzePlate)'));
+
+    function spiralDial(cx, cy, R, turns, color, label, subLabel, value, max, markerCount, markerColor) {
+      const g = el('g');
+      // spiral path
+      let d = '';
+      const steps = turns * 72;
+      for (let i = 0; i <= steps; i++) {
+        const a = (i / steps) * turns * 2 * Math.PI;
+        const rr = R - (i / steps) * (R - 30);
+        const x = cx + rr * Math.cos(a);
+        const y = cy + rr * Math.sin(a);
+        d += (i === 0 ? 'M' : 'L') + ` ${x.toFixed(2)} ${y.toFixed(2)}`;
+      }
+      g.appendChild(el('path', { d, fill: 'none', stroke: color, 'stroke-width': 1.8 }));
+      // radial month/year tick lines
+      for (let i = 0; i < markerCount; i++) {
+        const frac = i / markerCount;
+        const a = frac * turns * 2 * Math.PI;
+        const rIn = R - frac * (R - 30);
+        const rOut = rIn + 12;
+        const x1 = cx + rIn * Math.cos(a), y1 = cy + rIn * Math.sin(a);
+        const x2 = cx + rOut * Math.cos(a), y2 = cy + rOut * Math.sin(a);
+        g.appendChild(el('line', { x1, y1, x2, y2, stroke: markerColor, 'stroke-width': 1 }));
+      }
+      // pointer along spiral
+      const frac = Math.max(0, Math.min(0.999, value / max));
+      const a = frac * turns * 2 * Math.PI;
+      const rr = R - frac * (R - 34);
+      const px = cx + rr * Math.cos(a), py = cy + rr * Math.sin(a);
+      g.appendChild(el('circle', { cx: px, cy: py, r: 5, fill: color }));
+      g.appendChild(el('line', { x1: cx, y1: cy, x2: px, y2: py, stroke: color, 'stroke-width': 1.5, 'stroke-dasharray': '3,2' }));
+      g.appendChild(text(cx, cy - R - 20, label, { fill: color, 'font-size': '13', 'font-weight': 'bold' }));
+      g.appendChild(text(cx, cy - R - 6, subLabel, { fill: '#9c8f76', 'font-size': '10' }));
+      return g;
+    }
+
+    // Metonic spiral (19 years, 5 turns)
+    layer.appendChild(spiralDial(cx - 170, cy - 40, 105, 5, '#d4a856', 'Metonic cycle', '19 years · 235 months', metonicProgress(), 19, 19, '#8a6a3e'));
+    // Saros spiral (223 months, ~4 turns)
+    layer.appendChild(spiralDial(cx + 170, cy - 40, 105, 4, '#b67a3e', 'Saros cycle', '223 months · eclipse prediction', sarosProgress(), 223, 24, '#8a6a3e'));
+    // Exeligmos spiral (3 Saroi, ~3 turns)
+    layer.appendChild(spiralDial(cx, cy + 130, 90, 3, '#9c8f76', 'Exeligmos', '3 Saroi · eclipse correction', exeligmosProgress(), 3, 9, '#6e5a3e'));
+    // Olympiad dial
+    const ox = cx, oy = cy + 22;
+    layer.appendChild(ring(ox, oy, 34, '#5c3b16', 1, '#2a2117'));
+    layer.appendChild(text(ox, oy + 50, 'Olympiad dial', { 'font-size': '11', fill: '#9c8f76' }));
+    const olympiadAngle = ((tDays % T_OLYMPIAD) / T_OLYMPIAD) * 360;
+    layer.appendChild(hand(ox, oy, olympiadAngle, 30, '#b96b48', 2.5, 3));
+    const games = ['I','II','III','IV'];
+    for (let i = 0; i < 4; i++) {
+      const a = i * 90;
+      layer.appendChild(polarText(ox, oy, 22, a + 90, games[i], 10));
+    }
+  }
+
+  function drawGears() {
+    layer.innerHTML = '';
+    desc.textContent = 'A stylised view of the gear train logic: input crank drives a Sun gear, the Moon is stepped down through the sidereal and synodic ratios, and the back dials branch from the lunar and solar outputs. Tooth counts are illustrative, not an exact reconstruction.';
+    legend.innerHTML = `<span class="chip"><span style="background:var(--gold)"></span> Sun / input train</span>
+      <span class="chip"><span style="background:var(--iron)"></span> Moon / lunar train</span>
+      <span class="chip"><span style="background:var(--copper)"></span> Back-dial outputs</span>`;
+    const sunAngle = sunAngleDeg();
+    const moonAngle = moonAngleDeg();
+
+    // Input crank -> Sun gear
+    layer.appendChild(gear(220, 300, 55, 24, 0, { label: 'A1', fill: 'url(#brass)' }));
+    layer.appendChild(text(220, 360, 'Crank input', { 'font-size': '11', fill: '#9c8f76' }));
+    // Sun output
+    layer.appendChild(gear(400, 220, 48, 32, sunAngle * Math.PI / 180 * (1/3), { label: 'Sun', fill: '#d4a856' }));
+    // Moon train
+    layer.appendChild(gear(540, 300, 42, 28, moonAngle * Math.PI / 180 * (1/2), { label: 'Moon', fill: '#a8b0b5' }));
+    // Phase
+    layer.appendChild(gear(400, 420, 32, 22, moonPhase() * 2 * Math.PI, { label: 'Phase', fill: '#b96b48' }));
+    // Back dials
+    layer.appendChild(gear(260, 150, 30, 20, metonicProgress() / 19 * 2 * Math.PI, { label: 'Met', fill: '#c9a85e' }));
+    layer.appendChild(gear(560, 150, 30, 20, sarosProgress() / 223 * 2 * Math.PI, { label: 'Sar', fill: '#b67a3e' }));
+    layer.appendChild(gear(400, 510, 28, 18, exeligmosProgress() / 3 * 2 * Math.PI, { label: 'Exe', fill: '#9c8f76' }));
+
+    // Arrows / annotations
+    const anns = [
+      {x1:275,y1:300,x2:355,y2:245,label:'year gear'},
+      {x1:448,y1:257,x2:500,y2:290,label:'lunar ratio'},
+      {x1:400,y1:268,x2:400,y2:390,label:'phase'},
+      {x1:250,y1:250,x2:280,y2:170,label:'19 yr'},
+      {x1:510,y1:250,x2:560,y2:180,label:'223 mo'},
+    ];
+    for (const a of anns) {
+      layer.appendChild(el('line', { x1: a.x1, y1: a.y1, x2: a.x2, y2: a.y2, stroke: 'rgba(212,168,86,.45)', 'stroke-width': 1.2, markerEnd: 'url(#arrow)' }));
+      const mx = (a.x1 + a.x2) / 2, my = (a.y1 + a.y2) / 2;
+      layer.appendChild(text(mx, my - 6, a.label, { 'font-size': '10', fill: '#9c8f76' }));
+    }
+  }
+
+  function sunAngleDeg() { return ((tDays % T_YEAR) / T_YEAR) * 360; }
+  function moonAngleDeg() { return ((tDays % T_SYNODIC) / T_SYNODIC) * 360; }
+  function moonPhase() { return (tDays % T_SYNODIC) / T_SYNODIC; }
+  function metonicProgress() { return (tDays % T_METONIC) / T_YEAR; }
+  function sarosProgress() { return (tDays % T_SAROS) / T_SYNODIC; }
+  function exeligmosProgress() { return (tDays % T_EXELIGMOS) / T_SAROS; }
+
+  function render() {
+    if (mode === 'front') drawFront();
+    else if (mode === 'back') drawBack();
+    else drawGears();
+    updateReadout();
+  }
+
+  function updateReadout() {
+    const totalYears = Math.floor(tDays / T_YEAR);
+    const yearDay = Math.floor(tDays % T_YEAR) + 1;
+    const phase = moonPhase();
+    const phaseNames = ['New','Waxing crescent','First quarter','Waxing gibbous','Full','Waning gibbous','Third quarter','Waning crescent'];
+    const phaseName = phaseNames[Math.floor(phase * 8) % 8];
+    document.getElementById('rDate').textContent = `Year ${totalYears + 1}, Day ${yearDay}`;
+    document.getElementById('rSun').textContent = `${sunAngleDeg().toFixed(1)}°`;
+    document.getElementById('rMoon').textContent = `${moonAngleDeg().toFixed(1)}°`;
+    document.getElementById('rPhase').textContent = phaseName;
+    document.getElementById('rMetonic').textContent = `${(Math.floor(metonicProgress()) + 1)} / 19`;
+    document.getElementById('rSaros').textContent = `${(Math.floor(sarosProgress()) + 1)} / 223`;
+    document.getElementById('rOlympiad').textContent = ['I','II','III','IV'][Math.floor(((tDays % T_OLYMPIAD) / T_OLYMPIAD) * 4) % 4];
+    document.getElementById('rCrank').textContent = (tDays / CRANK_DAYS).toFixed(1);
+  }
+
+  function setMode(m) {
+    mode = m;
+    [btnFront, btnBack, btnGears].forEach(b => b.classList.toggle('active', b.id === 'btn' + (m[0].toUpperCase() + m.slice(1))));
+    render();
+  }
+
+  btnFront.addEventListener('click', () => setMode('front'));
+  btnBack.addEventListener('click', () => setMode('back'));
+  btnGears.addEventListener('click', () => setMode('gears'));
+  btnPlay.addEventListener('click', () => { playing = !playing; btnPlay.textContent = playing ? 'Pause' : 'Play'; });
+  btnReset.addEventListener('click', () => { tDays = 0; crankInput.value = 0; render(); });
+
+  speedInput.addEventListener('input', () => { speed = parseInt(speedInput.value, 10); });
+  crankInput.addEventListener('input', () => {
+    tDays = parseFloat(crankInput.value) * 10; // slider 0-1000 -> 0-10000 days
+    render();
+  });
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = (now - last) / 1000;
+    last = now;
+    if (playing && speed > 0) {
+      tDays += dt * (speed / 10);
+      const maxSlider = 10000;
+      crankInput.value = Math.min(1000, (tDays / maxSlider) * 1000);
+      render();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // Tap stage to step one day (useful on mobile)
+  svg.addEventListener('click', () => { tDays += 1; render(); });
+
+  render();
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>
