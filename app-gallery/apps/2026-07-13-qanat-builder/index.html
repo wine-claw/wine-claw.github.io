@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Qanat Builder — Ancient Water Engineering Sandbox</title>
+  <style>
+    :root {
+      --bg: #f5e8d6;
+      --paper: #fff8ec;
+      --ink: #2c241b;
+      --muted: #7d6b58;
+      --sand: #d6b482;
+      --rock: #b08a64;
+      --water: #2a9d8f;
+      --water-dark: #1f756b;
+      --accent: #e76f51;
+      --accent-2: #f4a261;
+      --sky: #e6f3f8;
+      --veg: #606c38;
+      --danger: #c0392b;
+      --ok: #27ae60;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .banner {
+      background: #fff3cd;
+      color: #664d03;
+      border-bottom: 1px solid #f0d89a;
+      padding: 10px 14px;
+      font-size: 13px;
+      text-align: center;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 18px 18px 40px; }
+    header { text-align: center; margin-bottom: 16px; }
+    h1 { margin: 0 0 4px; font-size: clamp(22px, 4vw, 34px); letter-spacing: -0.02em; }
+    p.sub { margin: 0; color: var(--muted); font-size: 14px; }
+    .layout { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    .card { background: var(--paper); border-radius: 14px; box-shadow: 0 2px 14px rgba(44,36,27,0.08); padding: 14px; }
+    .controls { display: flex; flex-direction: column; }
+    .controls-inner { flex: 1 1 auto; max-height: none; overflow-y: visible; padding-right: 4px; }
+    .canvas-wrap { position: relative; width: 100%; }
+    canvas { width: 100%; height: auto; display: block; border-radius: 10px; background: linear-gradient(180deg, var(--sky) 0%, #cde7ef 38%, var(--sand) 38%, var(--rock) 100%); }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .controls h2 { margin: 0 0 10px; font-size: 16px; }
+    .control { margin-bottom: 14px; }
+    .control label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .control label b { color: var(--ink); }
+    input[type=range] { width: 100%; accent-color: var(--accent); }
+    .presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    button { border: none; border-radius: 8px; padding: 8px 10px; font-size: 12px; cursor: pointer; background: var(--accent-2); color: #2c241b; font-weight: 600; }
+    button:hover { filter: brightness(1.05); }
+    button.primary { background: var(--accent); color: white; }
+    .readout { display: grid; gap: 8px; }
+    .metric { background: rgba(255,255,255,0.6); border-radius: 8px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    .metric b { font-size: 15px; }
+    .status { padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; text-align: center; }
+    .status.ok { background: #d4edda; color: #155724; }
+    .status.warn { background: #fff3cd; color: #856404; }
+    .status.bad { background: #f8d7da; color: #721c24; }
+    .facts { margin-top: 14px; font-size: 12px; color: var(--muted); line-height: 1.5; padding-bottom: 8px; }
+    .facts strong { color: var(--ink); }
+    footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 18px; padding-bottom: 24px; }
+    @media (max-width: 900px) { .wrap { padding-bottom: 34px; } canvas { max-height: 56vh; } .controls { padding-bottom: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    Experimental OpenClaw AI mini-app — not professionally validated. Do not rely on it for decisions.
+  </div>
+  <div class="wrap">
+    <header>
+      <h1>Qanat Builder</h1>
+      <p class="sub">Design an ancient Persian underground aqueduct and see if the water flows.</p>
+    </header>
+    <div class="layout">
+      <div class="card canvas-wrap">
+        <canvas id="scene" width="900" height="520"></canvas>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--water)"></span>Flowing water</span>
+          <span><span class="dot" style="background:#8d6e63"></span>Mother well / gallery</span>
+          <span><span class="dot" style="background:var(--veg)"></span>Fields</span>
+          <span><span class="dot" style="background:var(--accent-2)"></span>Access shafts</span>
+        </div>
+      </div>
+      <div class="card controls">
+        <h2>Engineering controls</h2>
+        <div class="controls-inner">
+        <div class="presets">
+          <button onclick="loadPreset('yazd')">Balanced Yazd</button>
+          <button onclick="loadPreset('long')">Long Mountain</button>
+          <button onclick="loadPreset('gentle')">Gentle Oasis</button>
+          <button onclick="loadPreset('dry')">Too Shallow</button>
+          <button class="primary" style="grid-column:1/-1" onclick="randomTerrain()">Random terrain</button>
+        </div>
+        <div class="control">
+          <label>Mother well depth <b id="v-depth">55 m</b></label>
+          <input id="depth" type="range" min="15" max="120" value="55" step="1" oninput="update()">
+        </div>
+        <div class="control">
+          <label>Tunnel length <b id="v-length">1500 m</b></label>
+          <input id="length" type="range" min="300" max="5000" value="1500" step="50" oninput="update()">
+        </div>
+        <div class="control">
+          <label>Tunnel gradient <b id="v-gradient">3.0 ‰</b></label>
+          <input id="gradient" type="range" min="0.5" max="7.0" value="3.0" step="0.1" oninput="update()">
+        </div>
+        <div class="control">
+          <label>Shaft spacing <b id="v-spacing">100 m</b></label>
+          <input id="spacing" type="range" min="20" max="250" value="100" step="5" oninput="update()">
+        </div>
+        <div class="control">
+          <label>Tunnel diameter <b id="v-diameter">0.8 m</b></label>
+          <input id="diameter" type="range" min="0.4" max="1.6" value="0.8" step="0.05" oninput="update()">
+        </div>
+        <div id="status" class="status ok">Flowing</div>
+        <div class="readout">
+          <div class="metric">Hydraulic head <b id="o-head">0.0 m</b></div>
+          <div class="metric">Discharge <b id="o-flow">0 L/s</b></div>
+          <div class="metric">Shaft count <b id="o-shafts">0</b></div>
+          <div class="metric">Outlet depth <b id="o-outlet">0 m</b></div>
+        </div>
+        <div class="facts">
+          <strong>How it works:</strong> A qanat is a gently sloping tunnel that carries groundwater from a mother well to the surface by gravity alone. Keep the outlet below the aquifer level or the tunnel runs dry.
+        </div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      Built by OpenClaw · Ancient water engineering sandbox · No data is collected
+    </footer>
+  </div>
+  <script>
+    const canvas = document.getElementById('scene');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+    let terrainSeed = Math.random();
+
+    function $(id) { return document.getElementById(id); }
+
+    function getInputs() {
+      return {
+        depth: parseFloat($('depth').value),
+        length: parseFloat($('length').value),
+        gradient: parseFloat($('gradient').value),
+        spacing: parseFloat($('spacing').value),
+        diameter: parseFloat($('diameter').value)
+      };
+    }
+
+    function fmt(n, d = 1) { return Number.isFinite(n) ? n.toFixed(d) : '0'; }
+
+    function compute() {
+      const s = getInputs();
+      const outletDepth = s.depth - (s.length * s.gradient / 1000);
+      const head = -outletDepth; // positive head when outlet is below water table
+      const area = Math.PI * Math.pow(s.diameter / 2, 2);
+      const friction = 1 + 0.0002 * s.length;
+      let q = 0;
+      if (head > 0) q = (area * Math.sqrt(Math.max(0, head)) / friction) * 1000; // L/s-ish
+      q = Math.max(0, q);
+      const shaftCount = Math.max(0, Math.floor(s.length / s.spacing));
+      return { head, outletDepth, q, shaftCount, area };
+    }
+
+    function update() {
+      const s = getInputs();
+      const c = compute();
+      $('v-depth').textContent = s.depth + ' m';
+      $('v-length').textContent = s.length + ' m';
+      $('v-gradient').textContent = fmt(s.gradient, 1) + ' ‰';
+      $('v-spacing').textContent = s.spacing + ' m';
+      $('v-diameter').textContent = fmt(s.diameter, 2) + ' m';
+      $('o-head').textContent = fmt(Math.max(0, c.head), 1) + ' m';
+      $('o-flow').textContent = fmt(c.q, 1) + ' L/s';
+      $('o-shafts').textContent = c.shaftCount;
+      $('o-outlet').textContent = fmt(Math.abs(c.outletDepth), 1) + ' m ' + (c.outletDepth < 0 ? 'above water table' : 'below surface');
+      const st = $('status');
+      if (c.head <= 0) { st.className = 'status bad'; st.textContent = 'Dry gallery — outlet above the aquifer'; }
+      else if (c.head > 35) { st.className = 'status warn'; st.textContent = 'Overflowing — very steep or short'; }
+      else { st.className = 'status ok'; st.textContent = 'Flowing'; }
+      draw();
+    }
+
+    function worldToScreen(depth, distRatio, w, h, groundY) {
+      const pxPerM = 0.15; // vertical scale exaggeration
+      const x = 70 + distRatio * (w - 140);
+      const y = groundY + depth * pxPerM;
+      return { x, y };
+    }
+
+    function draw() {
+      const s = getInputs();
+      const c = compute();
+      const w = canvas.width, h = canvas.height;
+      const groundY = h * 0.36;
+      ctx.clearRect(0, 0, w, h);
+
+      // Sky / background
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, groundY);
+      skyGrad.addColorStop(0, '#eef8fb');
+      skyGrad.addColorStop(1, '#cfeaf2');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, w, groundY);
+
+      // Distant mountains
+      ctx.fillStyle = '#d9c4a8';
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      for (let i = 0; i <= w; i += 40) {
+        const n = Math.sin(i * 0.01 + terrainSeed * 10) * 22 + Math.cos(i * 0.023 + terrainSeed * 20) * 14;
+        ctx.lineTo(i, groundY - 35 + n);
+      }
+      ctx.lineTo(w, groundY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Soil layers
+      const soilGrad = ctx.createLinearGradient(0, groundY, 0, h);
+      soilGrad.addColorStop(0, '#e3c699');
+      soilGrad.addColorStop(0.45, '#c9a678');
+      soilGrad.addColorStop(1, '#8d6e63');
+      ctx.fillStyle = soilGrad;
+      ctx.fillRect(0, groundY, w, h - groundY);
+
+      // Stratified soil lines
+      ctx.strokeStyle = 'rgba(120, 94, 74, 0.25)';
+      ctx.lineWidth = 1;
+      for (let y = groundY + 40; y < h; y += 38) {
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 30) {
+          const yy = y + Math.sin(x * 0.02 + y * 0.05) * 6;
+          if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+        }
+        ctx.stroke();
+      }
+
+      // Ground surface line
+      ctx.strokeStyle = '#a88563';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      const ridge = (x) => groundY - Math.sin(x * 0.002 + terrainSeed * 7) * 18 - Math.cos(x * 0.004) * 10;
+      for (let x = 0; x <= w; x += 20) ctx.lineTo(x, ridge(x));
+      ctx.stroke();
+
+      // Aquifer water table (sloping gently toward outlet)
+      const wtStartY = groundY + s.depth * 0.15;
+      const wtEndY = wtStartY + (s.length * s.gradient / 1000) * 0.15;
+      const aquiferGrad = ctx.createLinearGradient(0, wtStartY, 0, h);
+      aquiferGrad.addColorStop(0, 'rgba(42,157,143,0.22)');
+      aquiferGrad.addColorStop(1, 'rgba(42,157,143,0.42)');
+      ctx.fillStyle = aquiferGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, wtStartY);
+      for (let x = 0; x <= w; x += 20) {
+        const ratio = x / w;
+        const y = wtStartY + (wtEndY - wtStartY) * ratio;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(42,157,143,0.55)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Key geometry points
+      const mother = worldToScreen(s.depth, 0, w, h, groundY);
+      const outlet = worldToScreen(s.depth - (s.length * s.gradient / 1000), 1, w, h, groundY);
+
+      // Gallery tunnel (main hero)
+      ctx.strokeStyle = '#5d4037';
+      ctx.lineWidth = s.diameter * 14;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(mother.x, mother.y);
+      ctx.lineTo(outlet.x, outlet.y);
+      ctx.stroke();
+
+      // Water in tunnel if head positive
+      if (c.head > 0) {
+        ctx.strokeStyle = 'rgba(42,157,143,0.9)';
+        ctx.lineWidth = Math.max(4, s.diameter * 10);
+        ctx.beginPath();
+        const phase = t * 0.05;
+        ctx.moveTo(mother.x + Math.cos(phase) * 2, mother.y + Math.sin(phase) * 1.5);
+        ctx.lineTo(outlet.x + Math.cos(phase + 1) * 2, outlet.y + Math.sin(phase + 1) * 1.5);
+        ctx.stroke();
+
+        // Flow sparkles
+        ctx.fillStyle = 'rgba(200,245,240,0.85)';
+        for (let i = 0; i < 18; i++) {
+          const ratio = ((i / 18) + (t * 0.003)) % 1;
+          const sx = mother.x + (outlet.x - mother.x) * ratio;
+          const sy = mother.y + (outlet.y - mother.y) * ratio;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 1.8 + Math.sin(t * 0.08 + i) * 0.7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Mother well
+      ctx.fillStyle = '#4e342e';
+      ctx.fillRect(mother.x - 14, mother.y - 4, 28, 6);
+      ctx.strokeStyle = '#3e2723';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(mother.x - 12, groundY);
+      ctx.lineTo(mother.x - 12, mother.y);
+      ctx.moveTo(mother.x + 12, groundY);
+      ctx.lineTo(mother.x + 12, mother.y);
+      ctx.stroke();
+      // Mother well water
+      if (c.head > 0 || s.depth > 0) {
+        ctx.fillStyle = 'rgba(42,157,143,0.85)';
+        ctx.beginPath();
+        ctx.ellipse(mother.x, mother.y, 11, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Vertical shafts
+      const shaftCount = Math.max(0, Math.floor(s.length / s.spacing));
+      ctx.strokeStyle = '#8d6e63';
+      ctx.lineWidth = 2;
+      for (let i = 1; i < shaftCount; i++) {
+        const ratio = i * s.spacing / s.length;
+        const sx = mother.x + (outlet.x - mother.x) * ratio;
+        const sy = mother.y + (outlet.y - mother.y) * ratio;
+        ctx.beginPath();
+        ctx.moveTo(sx, groundY + 5);
+        ctx.lineTo(sx, sy);
+        ctx.stroke();
+        ctx.fillStyle = '#f4a261';
+        ctx.beginPath();
+        ctx.arc(sx, groundY + 5, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Outlet pool / jub
+      ctx.fillStyle = 'rgba(42,157,143,0.9)';
+      ctx.beginPath();
+      ctx.moveTo(outlet.x - 32, groundY + 4);
+      ctx.lineTo(outlet.x + 32, groundY + 4);
+      ctx.quadraticCurveTo(outlet.x + 32, groundY + 22, outlet.x, groundY + 24);
+      ctx.quadraticCurveTo(outlet.x - 32, groundY + 22, outlet.x - 32, groundY + 4);
+      ctx.fill();
+      // Outlet stream
+      if (c.head > 0) {
+        ctx.strokeStyle = 'rgba(42,157,143,0.85)';
+        ctx.lineWidth = 4 + Math.min(12, c.q / 8);
+        ctx.beginPath();
+        ctx.moveTo(outlet.x, groundY + 8);
+        ctx.quadraticCurveTo(outlet.x + 30, groundY + 30, outlet.x + 70 + Math.sin(t * 0.04) * 4, groundY + 42);
+        ctx.stroke();
+      }
+
+      // Village / fields on right
+      const fieldX = outlet.x + 90;
+      // Field rows as filled green patches
+      for (let row = 0; row < 3; row++) {
+        ctx.fillStyle = row % 2 === 0 ? '#7d8c48' : '#8f9d52';
+        ctx.beginPath();
+        const fx = fieldX + row * 12;
+        const fy = groundY + 6 + row * 7;
+        ctx.ellipse(fx, fy, 46, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Simple palm / tree
+      ctx.fillStyle = '#6d4c41';
+      ctx.fillRect(fieldX + 18, groundY - 28, 4, 30);
+      ctx.fillStyle = '#556b2f';
+      for (let a = 0; a < 7; a++) {
+        const ang = (a / 7) * Math.PI * 2 + t * 0.01;
+        ctx.beginPath();
+        ctx.ellipse(fieldX + 20 + Math.cos(ang) * 16, groundY - 32 + Math.sin(ang) * 6, 8, 3, ang, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Labels
+      ctx.fillStyle = 'rgba(44,36,27,0.85)';
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.fillText('Mountain aquifer', 18, groundY - 22);
+      ctx.fillText('Mother well', mother.x - 34, mother.y - 14);
+      ctx.fillText('Outlet / jub', outlet.x - 30, groundY - 12);
+      ctx.fillText('Fields & village', fieldX - 20, groundY - 22);
+
+      // Dimensions
+      ctx.strokeStyle = 'rgba(44,36,27,0.45)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(mother.x, groundY - 5);
+      ctx.lineTo(mother.x, mother.y);
+      ctx.stroke();
+      ctx.fillText(s.depth + ' m', mother.x + 8, groundY + (s.depth * 0.15) / 2);
+    }
+
+    function loadPreset(name) {
+      const presets = {
+        yazd: { depth: 55, length: 1500, gradient: 3.0, spacing: 100, diameter: 0.8 },
+        long: { depth: 95, length: 3500, gradient: 2.5, spacing: 150, diameter: 1.0 },
+        gentle: { depth: 30, length: 800, gradient: 1.5, spacing: 60, diameter: 0.6 },
+        dry: { depth: 25, length: 1800, gradient: 4.0, spacing: 80, diameter: 0.7 }
+      };
+      const p = presets[name];
+      $('depth').value = p.depth;
+      $('length').value = p.length;
+      $('gradient').value = p.gradient;
+      $('spacing').value = p.spacing;
+      $('diameter').value = p.diameter;
+      update();
+    }
+
+    function randomTerrain() {
+      terrainSeed = Math.random();
+      update();
+    }
+
+    function animate() {
+      t++;
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    update();
+    animate();
+  </script>
+</body>
+</html>

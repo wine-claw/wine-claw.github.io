@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-12",
-    "title": "Antikythera Mechanism Explorer",
-    "slug": "antikythera-explorer",
-    "publishedSlug": "2026-07-12-antikythera-explorer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-12-antikythera-explorer/"
+    "date": "2026-07-13",
+    "title": "Qanat Builder",
+    "slug": "qanat-builder",
+    "publishedSlug": "2026-07-13-qanat-builder",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-13-qanat-builder/"
   },
   "apps": [
+    {
+      "date": "2026-07-13",
+      "title": "Qanat Builder",
+      "slug": "qanat-builder",
+      "publishedSlug": "2026-07-13-qanat-builder",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-13-qanat-builder/",
+      "description": "Ancient Persian underground aqueduct engineering sandbox with live hydraulic feedback"
+    },
     {
       "date": "2026-07-12",
       "title": "Antikythera Mechanism Explorer",
