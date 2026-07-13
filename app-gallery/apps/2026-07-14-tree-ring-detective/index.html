@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tree-Ring Detective — Dendrochronology Puzzle</title>
+  <style>
+    :root {
+      --bg: #f8f4ea;
+      --panel: #fffdf7;
+      --ink: #2e2419;
+      --wood: #a9744b;
+      --wood-dark: #6d4429;
+      --ring-light: #d6b998;
+      --ring-dark: #9c6644;
+      --green: #5a8f4a;
+      --green-soft: #e6f0e2;
+      --amber: #d9a441;
+      --danger: #c65b4f;
+      --blue: #4a7a9c;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .banner {
+      background: #fff3cd;
+      color: #5c4813;
+      font-size: 0.86rem;
+      padding: 0.65rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid #e9d5a0;
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    header { text-align: center; margin-bottom: 1rem; }
+    h1 { font-size: 1.55rem; margin: 0 0 0.25rem; }
+    .subtitle { color: #6b5b4d; font-size: 0.95rem; }
+
+    .intro {
+      background: var(--panel);
+      border: 1px solid #e5e0d4;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .intro h2 { font-size: 1.05rem; margin: 0 0 0.5rem; }
+    .intro p { margin: 0.35rem 0; font-size: 0.94rem; }
+    .intro button {
+      margin-top: 0.6rem;
+      background: var(--wood);
+      color: #fff;
+      border: none;
+      padding: 0.55rem 1.2rem;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .intro button:hover { background: var(--wood-dark); }
+
+    .game {
+      background: var(--panel);
+      border: 1px solid #e5e0d4;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+    .difficulty {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .difficulty button {
+      background: #ece6da;
+      border: none;
+      color: var(--ink);
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .difficulty button.active { background: var(--wood); color: #fff; }
+    .actions { display: flex; gap: 0.45rem; }
+    .actions button {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .actions button.secondary { background: var(--blue); }
+    .actions button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .meter {
+      margin-bottom: 0.8rem;
+    }
+    .meter-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #5c4f42;
+      margin-bottom: 0.25rem;
+    }
+    .meter-caption {
+      font-size: 0.74rem;
+      color: #7d6c5a;
+      margin-top: 0.2rem;
+    }
+    .meter-track {
+      height: 10px;
+      background: #e5dfd3;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--danger), var(--amber), var(--green));
+      transition: width 0.15s ease;
+    }
+
+    .board-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 10px;
+      border: 1px solid #d8cfc0;
+      background: linear-gradient(180deg, #fdfbf7, #f3eee4);
+    }
+    .board {
+      position: relative;
+      min-width: 100%;
+      user-select: none;
+      touch-action: pan-y;
+    }
+    .ruler {
+      display: flex;
+      align-items: flex-end;
+      height: 28px;
+      padding: 0 10px 2px 10px;
+      border-bottom: 1px solid #d8cfc0;
+      background: #efe9dd;
+      font-size: 0.65rem;
+      color: #6b5b4d;
+      position: relative;
+    }
+    .ruler span {
+      position: absolute;
+      bottom: 2px;
+      transform: translateX(-50%);
+      padding-left: 0;
+      min-width: 28px;
+      text-align: center;
+      background: transparent;
+    }
+    .ruler span:first-child { transform: translateX(0); text-align: left; }
+    .ruler span:last-child { transform: translateX(-100%); text-align: right; }
+    .lane {
+      position: relative;
+      height: 82px;
+      overflow: hidden;
+    }
+    .lane-label {
+      position: absolute;
+      left: 8px;
+      top: 2px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #5c4a3a;
+      background: rgba(255,255,255,0.95);
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      z-index: 15;
+      max-width: calc(100% - 80px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .strip {
+      position: absolute;
+      top: 12px;
+      height: 58px;
+      display: flex;
+      align-items: flex-end;
+      will-change: transform;
+      padding-left: 14px;
+    }
+    .ring {
+      flex-shrink: 0;
+      border-right: 1px solid rgba(60,40,20,0.18);
+      border-radius: 4px 4px 0 0;
+      background: var(--ring-light);
+      transition: background 0.2s;
+    }
+    .ring.wide { background: var(--wood); }
+    .ring.narrow { background: var(--ring-dark); }
+    .master-strip { left: 0; }
+    .sample-strip {
+      top: 14px;
+      height: 54px;
+      cursor: grab;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.12));
+      z-index: 10;
+      border: 2px dashed rgba(90,70,50,0.35);
+      border-radius: 6px;
+      padding-right: 48px;
+      box-sizing: content-box;
+    }
+    .sample-strip::after {
+      content: '≡';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(90,70,50,0.55);
+      font-size: 1.2rem;
+      line-height: 1;
+      pointer-events: none;
+      margin-right: 8px;
+    }
+    .sample-strip:active { cursor: grabbing; }
+    .sample-strip.matched { border-color: var(--green); }
+    .ghost-strip {
+      top: 14px;
+      height: 54px;
+      opacity: 0.35;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .touch-hint {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #7d6c5a;
+      margin-top: 0.5rem;
+    }
+    .nudge {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-top: 0.6rem;
+    }
+    .nudge button {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid #d8cfc0;
+      background: #fff;
+      color: var(--wood-dark);
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nudge button:active { background: #efe9dd; }
+
+    .result {
+      margin-top: 0.9rem;
+      padding: 0.9rem 1rem;
+      border-radius: 10px;
+      background: #f3eee4;
+      display: none;
+      border: 1px solid #e0d6c5;
+    }
+    .result.show { display: block; }
+    .result.miss { background: #fff0e9; border-color: #e9c7b6; }
+    .result.hit { background: var(--green-soft); border-color: #b6c7ae; }
+    .result h3 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+    .result p { margin: 0.3rem 0; font-size: 0.92rem; }
+    .result .score { font-size: 1.25rem; font-weight: 700; }
+    .result.hit .score { color: var(--green); }
+    .result.miss .score { color: var(--danger); }
+    .result .fact { font-size: 0.88rem; color: #4f4438; border-top: 1px dashed #b6c7ae; padding-top: 0.5rem; margin-top: 0.55rem; }
+
+    footer {
+      text-align: center;
+      font-size: 0.78rem;
+      color: #8c7c6a;
+      margin: 1.2rem 0 0.5rem;
+    }
+
+    @media (max-width: 560px) {
+      h1 { font-size: 1.25rem; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .actions { justify-content: center; }
+      .lane { height: 72px; }
+      .strip { height: 50px; }
+      .sample-strip, .ghost-strip { height: 46px; }
+      .ruler { font-size: 0.6rem; }
+      .ruler span { min-width: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">Experimental OpenClaw AI mini-app. Untested, not professionally validated — do not rely on it for decisions.</div>
+  <div class="wrap">
+    <header>
+      <h1>🌲 Tree-Ring Detective</h1>
+      <div class="subtitle">Match the mystery sample to the master chronology — just like a dendrochronologist.</div>
+    </header>
+
+    <section class="intro" id="intro">
+      <h2>How crossdating works</h2>
+      <p>Every year a tree adds a ring. <strong>Wide rings</strong> usually mean good growing conditions; <strong>narrow rings</strong> mean stress like drought or cold.</p>
+      <p>Dendrochronologists slide an unknown sample against a long record of known dates. When the wide/narrow pattern lines up, the tree's age is revealed.</p>
+      <button id="startBtn">Start a puzzle</button>
+    </section>
+
+    <section class="game" id="game" style="display:none;">
+      <div class="controls">
+        <div class="difficulty" id="difficulty">
+          <button data-level="easy" class="active">Easy</button>
+          <button data-level="medium">Medium</button>
+          <button data-level="hard">Hard</button>
+        </div>
+        <div class="actions">
+          <button id="newBtn" class="secondary">New sample</button>
+          <button id="lockBtn">Lock in match</button>
+        </div>
+      </div>
+
+      <div class="meter">
+        <div class="meter-label"><span>Pattern alignment correlation</span><span id="matchValue">0%</span></div>
+        <div class="meter-track"><div class="meter-fill" id="matchFill"></div></div>
+        <div class="meter-caption">Higher means the overlapping ring widths look more alike — but the exact felling year still has to line up.</div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board">
+          <div class="ruler" id="ruler"></div>
+          <div class="lane">
+            <div class="lane-label">Master chronology (known years)</div>
+            <div class="strip master-strip" id="masterStrip"></div>
+          </div>
+          <div class="lane">
+            <div class="lane-label">Mystery sample (drag to align)</div>
+            <div class="strip sample-strip" id="sampleStrip"></div>
+            <div class="strip ghost-strip" id="ghostStrip"></div>
+          </div>
+        </div>
+      </div>
+      <div class="nudge">
+        <button id="nudgeLeft" aria-label="nudge left"><span>‹</span></button>
+        <button id="nudgeRight" aria-label="nudge right"><span>›</span></button>
+      </div>
+      <div class="touch-hint">Drag the sample, tap the arrows, or use ← → keys. Line up wide and narrow years.</div>
+
+      <div class="result" id="result">
+        <h3 id="resultTitle">Match result</h3>
+        <p>Your felling year: <span id="yourYear">—</span> • Correct felling year: <span id="correctYear">—</span></p>
+        <p class="score" id="score">0</p>
+        <p id="scoreNote"></p>
+        <div class="fact" id="fact"></div>
+      </div>
+    </section>
+
+    <footer>
+      Single-file mini-app generated by OpenClaw · No tracking · <a href="https://wine-claw.github.io/app-gallery/">Gallery</a>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      'use strict';
+
+      const CONFIG = {
+        easy:   { sampleLen: 14, noise: 0.10, droughtChance: 0.12, bonusChance: 0.12, masterYears: 40 },
+        medium: { sampleLen: 18, noise: 0.18, droughtChance: 0.14, bonusChance: 0.12, masterYears: 45 },
+        hard:   { sampleLen: 22, noise: 0.26, droughtChance: 0.16, bonusChance: 0.12, masterYears: 50 }
+      };
+      const RING_WIDTH = 20;
+      const START_YEAR = 1900;
+      const GHOST_HINT = true;
+
+      let level = 'easy';
+      let master = [];
+      let sample = [];
+      let correctOffset = 0;
+      let currentOffset = 0;
+      let dragging = false;
+      let dragStartX = 0;
+      let dragStartOffset = 0;
+      let boardWidth = 0;
+      let maxOffset = 0;
+      let solved = false;
+
+      const intro = document.getElementById('intro');
+      const game = document.getElementById('game');
+      const startBtn = document.getElementById('startBtn');
+      const newBtn = document.getElementById('newBtn');
+      const lockBtn = document.getElementById('lockBtn');
+      const difficulty = document.getElementById('difficulty');
+      const boardWrap = document.querySelector('.board-wrap');
+      const board = document.getElementById('board');
+      const ruler = document.getElementById('ruler');
+      const masterStrip = document.getElementById('masterStrip');
+      const sampleStrip = document.getElementById('sampleStrip');
+      const ghostStrip = document.getElementById('ghostStrip');
+      const matchFill = document.getElementById('matchFill');
+      const matchValue = document.getElementById('matchValue');
+      const result = document.getElementById('result');
+      const resultTitle = document.getElementById('resultTitle');
+      const yourYear = document.getElementById('yourYear');
+      const correctYear = document.getElementById('correctYear');
+      const scoreEl = document.getElementById('score');
+      const scoreNote = document.getElementById('scoreNote');
+      const factEl = document.getElementById('fact');
+
+      const nudgeLeft = document.getElementById('nudgeLeft');
+      const nudgeRight = document.getElementById('nudgeRight');
+
+      function mulberry32(a) {
+        return function() {
+          let t = a += 0x6D2B79F5;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      let rng = mulberry32(Date.now() & 0xffffffff);
+
+      function generateMaster(cfg) {
+        const n = cfg.masterYears;
+        const years = [];
+        let climate = 0;
+        for (let i = 0; i < n; i++) {
+          const r = rng();
+          climate += (r - 0.5) * 0.6;
+          climate *= 0.72;
+          const drought = rng() < cfg.droughtChance ? -0.55 - rng()*0.5 : 0;
+          const bonus = rng() < cfg.bonusChance ? 0.4 + rng()*0.35 : 0;
+          const signal = 0.5 + climate*0.35 + drought + bonus;
+          let width = Math.max(0.25, Math.min(1.0, signal));
+          years.push({ year: START_YEAR + i, width: width, type: drought ? 'narrow' : (bonus ? 'wide' : 'normal') });
+        }
+        return years;
+      }
+
+      function generatePuzzle(cfg) {
+        master = generateMaster(cfg);
+        const sampleLen = cfg.sampleLen;
+        const startIndex = Math.floor(rng() * (master.length - sampleLen - 4)) + 2;
+        correctOffset = -startIndex * RING_WIDTH;
+        sample = master.slice(startIndex, startIndex + sampleLen).map((y, i) => {
+          let w = y.width + (rng() - 0.5) * cfg.noise;
+          w = Math.max(0.18, Math.min(1.05, w));
+          return { year: y.year, width: w, original: y.width, type: w < 0.42 ? 'narrow' : (w > 0.72 ? 'wide' : 'normal') };
+        });
+        currentOffset = 0;
+        solved = false;
+        maxOffset = Math.max(0, (master.length) * RING_WIDTH - boardWidth);
+      }
+
+      function buildRing(y, i) {
+        const el = document.createElement('div');
+        el.className = 'ring ' + y.type;
+        el.style.width = RING_WIDTH + 'px';
+        el.style.height = Math.round(y.width * 54) + 'px';
+        el.title = 'Ring ' + (y.year || '?');
+        return el;
+      }
+
+      function renderBoard() {
+        masterStrip.innerHTML = '';
+        sampleStrip.innerHTML = '';
+        ghostStrip.innerHTML = '';
+        for (let i = 0; i < master.length; i++) masterStrip.appendChild(buildRing(master[i], i));
+        for (let i = 0; i < sample.length; i++) sampleStrip.appendChild(buildRing(sample[i], i));
+        for (let i = 0; i < sample.length; i++) ghostStrip.appendChild(buildRing(sample[i], i));
+        masterStrip.style.width = (master.length * RING_WIDTH) + 'px';
+        sampleStrip.style.width = (sample.length * RING_WIDTH) + 'px';
+        ghostStrip.style.width = (sample.length * RING_WIDTH) + 'px';
+
+        ruler.innerHTML = '';
+        const step = Math.max(1, Math.floor(56 / RING_WIDTH));
+        for (let i = 0; i < master.length; i += step) {
+          const span = document.createElement('span');
+          span.textContent = master[i].year;
+          span.style.left = (i * RING_WIDTH + 14) + 'px';
+          ruler.appendChild(span);
+        }
+
+        updatePositions();
+        updateMatch();
+      }
+
+      function setOffset(x) {
+        const sampleRight = sample.length * RING_WIDTH;
+        const min = Math.min(0, boardWidth - sampleRight - 34);
+        const max = Math.max(0, boardWidth - RING_WIDTH);
+        currentOffset = Math.max(min, Math.min(max, x));
+        updatePositions();
+        updateMatch();
+      }
+
+      function updatePositions() {
+        sampleStrip.style.transform = 'translateX(' + currentOffset + 'px)';
+        ghostStrip.style.transform = 'translateX(' + correctOffset + 'px)';
+        ghostStrip.style.display = solved ? 'none' : (GHOST_HINT ? 'block' : 'none');
+      }
+
+      function computeOverlapQuality() {
+        const sampleLeftPx = currentOffset;
+        const startIndex = Math.round(-sampleLeftPx / RING_WIDTH);
+        let sumProd = 0, sumA = 0, sumB = 0, sumA2 = 0, sumB2 = 0, count = 0;
+        for (let i = 0; i < sample.length; i++) {
+          const mi = startIndex + i;
+          if (mi < 0 || mi >= master.length) continue;
+          const a = sample[i].width;
+          const b = master[mi].width;
+          sumProd += a * b;
+          sumA += a; sumB += b;
+          sumA2 += a * a; sumB2 += b * b;
+          count++;
+        }
+        if (count < 5) return 0;
+        const num = count * sumProd - sumA * sumB;
+        const den = Math.sqrt((count * sumA2 - sumA * sumA) * (count * sumB2 - sumB * sumB));
+        if (!den || den <= 0) return 0;
+        let r = num / den;
+        r = Math.max(-1, Math.min(1, r));
+        return (r + 1) / 2;
+      }
+
+      function updateMatch() {
+        const q = computeOverlapQuality();
+        const pct = Math.round(q * 100);
+        matchFill.style.width = pct + '%';
+        matchValue.textContent = pct + '%';
+        const close = Math.abs(currentOffset - correctOffset) < RING_WIDTH * 0.6;
+        sampleStrip.classList.toggle('matched', close);
+      }
+
+      function getSelectedYear() {
+        const idx = Math.round(-currentOffset / RING_WIDTH);
+        const lastIdx = idx + sample.length - 1;
+        if (lastIdx >= 0 && lastIdx < master.length) return master[lastIdx].year;
+        return START_YEAR + lastIdx;
+      }
+
+      function factForYear(year) {
+        const facts = [
+          "Narrow rings around this time often signal a regional drought year.",
+          "Wide rings like this can mean a cool, wet summer with plenty of growing days.",
+          "Dendrochronologists use this exact pattern-matching method to date wooden artefacts.",
+          "A sequence of narrow rings may follow a volcanic eruption that cooled the climate.",
+          "Master chronologies can be built by overlapping many samples from living and dead trees.",
+          "Some chronologies stretch back thousands of years using ancient stumps and beams.",
+          "In dry regions, ring width tracks rainfall more strongly than temperature."
+        ];
+        return facts[(year + sample.length) % facts.length];
+      }
+
+      function lockIn() {
+        if (solved) return;
+        solved = true;
+        const selected = getSelectedYear();
+        const correctIndex = Math.round(-correctOffset / RING_WIDTH) + sample.length - 1;
+        const correct = master[correctIndex].year;
+        const offBy = Math.abs(selected - correct);
+        let score = Math.max(0, 100 - offBy * 4);
+        if (offBy === 0) score = 100;
+        score = Math.round(score);
+
+        const isHit = offBy === 0;
+        result.classList.remove('miss', 'hit');
+        result.classList.add(isHit ? 'hit' : 'miss');
+        resultTitle.textContent = isHit ? 'Perfect match!' : (offBy <= 2 ? 'Very close!' : (offBy <= 5 ? 'Close' : 'Match checked'));
+        yourYear.textContent = String(selected);
+        correctYear.textContent = String(correct);
+        scoreEl.textContent = score + '/100';
+        scoreNote.textContent = offBy === 0
+          ? 'The pattern alignment is exact — dendrochronologists call this a crossdate.'
+          : (offBy <= 2 ? 'You were within ' + offBy + ' year' + (offBy===1?'':'s') + ' — close enough to refine by hand.' : 'Off by ' + offBy + ' years. Look for a drought or bumper year signature and try again.');
+        factEl.textContent = factForYear(correct);
+        result.classList.add('show');
+        updatePositions();
+      }
+
+      function startGame() {
+        intro.style.display = 'none';
+        game.style.display = 'block';
+        boardWidth = boardWrap.clientWidth;
+        generatePuzzle(CONFIG[level]);
+        renderBoard();
+        result.classList.remove('show');
+      }
+
+      function centreOnSample() {
+        const sampleRight = sample.length * RING_WIDTH;
+        const target = Math.min(0, boardWidth - sampleRight - 34);
+        currentOffset = target;
+        updatePositions();
+        updateMatch();
+      }
+
+      function newPuzzle() {
+        boardWidth = boardWrap.clientWidth;
+        rng = mulberry32(Date.now() & 0xffffffff);
+        generatePuzzle(CONFIG[level]);
+        renderBoard();
+        centreOnSample();
+        result.classList.remove('show');
+      }
+
+      sampleStrip.addEventListener('pointerdown', (e) => {
+        if (solved) return;
+        dragging = true;
+        try { sampleStrip.setPointerCapture(e.pointerId); } catch(_) {}
+        dragStartX = e.clientX;
+        dragStartOffset = currentOffset;
+        sampleStrip.style.cursor = 'grabbing';
+      });
+      sampleStrip.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - dragStartX;
+        setOffset(dragStartOffset + dx);
+      });
+      sampleStrip.addEventListener('pointerup', (e) => {
+        dragging = false;
+        sampleStrip.style.cursor = 'grab';
+        try { sampleStrip.releasePointerCapture(e.pointerId); } catch(_) {}
+      });
+      sampleStrip.addEventListener('pointercancel', () => { dragging = false; sampleStrip.style.cursor = 'grab'; });
+
+      // keyboard nudge
+      document.addEventListener('keydown', (e) => {
+        if (game.style.display === 'none' || solved) return;
+        if (e.key === 'ArrowLeft') { setOffset(currentOffset - RING_WIDTH); e.preventDefault(); }
+        if (e.key === 'ArrowRight') { setOffset(currentOffset + RING_WIDTH); e.preventDefault(); }
+      });
+
+      board.addEventListener('touchstart', (e) => { if (e.target === board || e.target.classList.contains('lane')) e.preventDefault(); }, { passive: false });
+
+      difficulty.addEventListener('click', (e) => {
+        if (!e.target.dataset.level) return;
+        level = e.target.dataset.level;
+        for (const btn of difficulty.children) btn.classList.toggle('active', btn.dataset.level === level);
+        newPuzzle();
+      });
+
+      nudgeLeft.addEventListener('click', () => { if (!solved) setOffset(currentOffset - RING_WIDTH); });
+      nudgeRight.addEventListener('click', () => { if (!solved) setOffset(currentOffset + RING_WIDTH); });
+
+      startBtn.addEventListener('click', startGame);
+      newBtn.addEventListener('click', newPuzzle);
+      lockBtn.addEventListener('click', lockIn);
+
+      window.addEventListener('resize', () => {
+        boardWidth = boardWrap.clientWidth;
+        maxOffset = Math.max(0, (master.length) * RING_WIDTH - boardWidth);
+        updatePositions();
+      });
+    })();
+  </script>
+</body>
+</html>
