@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-14",
-    "title": "Tree-Ring Detective",
-    "slug": "tree-ring-detective",
-    "publishedSlug": "2026-07-14-tree-ring-detective",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-14-tree-ring-detective/"
+    "date": "2026-07-15",
+    "title": "Fourier Epicycle Drawing Machine",
+    "slug": "fourier-epicycle-machine",
+    "publishedSlug": "2026-07-15-fourier-epicycle-machine",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-15-fourier-epicycle-machine/"
   },
   "apps": [
+    {
+      "date": "2026-07-15",
+      "title": "Fourier Epicycle Drawing Machine",
+      "slug": "fourier-epicycle-machine",
+      "publishedSlug": "2026-07-15-fourier-epicycle-machine",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-15-fourier-epicycle-machine/",
+      "description": "Draw any closed shape and watch a chain of spinning circles reconstruct it with a live Fourier series."
+    },
     {
       "date": "2026-07-14",
       "title": "Tree-Ring Detective",
