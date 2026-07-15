@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Patch Synth Toy — Modular Web Audio Playground</title>
+  <style>
+    :root {
+      --bg: #0d0c11;
+      --panel: #161520;
+      --ink: #f3f0fa;
+      --muted: #9b94a8;
+      --accent: #ff4ecd;
+      --accent-2: #4ec9ff;
+      --accent-3: #9eff4e;
+      --accent-4: #ffd24e;
+      --line: #2d2840;
+      --warn-bg: #2a1e0f;
+      --warn-text: #f0c070;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+    html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; touch-action: none; }
+    .warning {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      padding: 10px 16px;
+      font-size: 13px;
+      line-height: 1.45;
+      text-align: center;
+      border-bottom: 1px solid rgba(240,192,112,0.12);
+    }
+    header {
+      padding: 14px 18px 8px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 19px;
+      letter-spacing: -0.3px;
+    }
+    header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 520px;
+    }
+    .top-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    button {
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform .08s, border-color .15s, background .15s;
+    }
+    button:hover { border-color: var(--accent); }
+    button:active { transform: scale(0.96); }
+    button.primary { background: var(--accent); color: #100812; border-color: var(--accent); font-weight: 600; }
+    button.secondary { background: transparent; color: var(--muted); }
+    .rack {
+      position: relative;
+      flex: 1;
+      margin: 10px 12px 14px;
+      background: radial-gradient(circle at 30% 20%, rgba(255,78,205,0.08), transparent 50%), var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      touch-action: none;
+    }
+    .module {
+      position: absolute;
+      width: 172px;
+      background: #1e1b2a;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 0 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 2;
+    }
+    .module.dragging { cursor: grabbing; z-index: 100; box-shadow: 0 16px 44px rgba(0,0,0,0.55); }
+    .module-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      padding: 0 12px;
+    }
+    .control {
+      padding: 0 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .control label {
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .ports {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+    }
+    .port {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #100d18;
+      border: 2px solid var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: crosshair;
+      font-size: 10px;
+      color: var(--muted);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .port.in { border-color: var(--accent-2); }
+    .port.out { border-color: var(--accent); }
+    .port:hover, .port.active { box-shadow: 0 0 0 4px rgba(255,78,205,0.18); border-color: var(--accent); color: var(--ink); }
+    .port-label {
+      position: absolute;
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      pointer-events: none;
+    }
+    .ports-in { position: relative; height: 28px; }
+    .ports-out { position: relative; height: 28px; }
+    .port.in { position: absolute; left: 10px; top: 0; }
+    .port.out { position: absolute; right: 10px; top: 0; }
+    .port.cv { border-color: var(--accent-3); }
+    .port.gate { border-color: var(--accent-4); }
+    svg.patches {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    svg.patches path {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      opacity: 0.75;
+    }
+    svg.patches path.cv { stroke: var(--accent-3); }
+    svg.patches path.gate { stroke: var(--accent-4); }
+    svg.patches path.active { opacity: 1; stroke-width: 3; filter: drop-shadow(0 0 5px var(--accent)); }
+    .palette {
+      display: flex;
+      gap: 8px;
+      padding: 0 12px 12px;
+      overflow-x: auto;
+    }
+    .palette button {
+      white-space: nowrap;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+    .kbd { color: var(--accent-2); font-weight: 600; }
+    .help {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 0 18px 12px;
+    }
+    @media (max-width: 600px) {
+      header h1 { font-size: 16px; }
+      header p { font-size: 11px; }
+      .module { width: 148px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">Experimental OpenClaw AI mini-app — untested and not professionally validated. Do not rely on it for any decisions.</div>
+  <header>
+    <div>
+      <h1>Patch Synth Toy</h1>
+      <p>Drag modules, patch output → input with a cable, power on, then click the keyboard or drag the ribbon.</p>
+    </div>
+    <div class="top-controls">
+      <button id="powerBtn" class="primary">Power On</button>
+      <button id="resetBtn" class="secondary">Reset</button>
+    </div>
+  </header>
+  <div class="palette" id="palette">
+    <button data-kind="vco">+ VCO</button>
+    <button data-kind="lfo">+ LFO</button>
+    <button data-kind="vca">+ VCA</button>
+    <button data-kind="filter">+ Filter</button>
+    <button data-kind="env">+ Envelope</button>
+    <button data-kind="delay">+ Delay</button>
+    <button data-kind="speaker">+ Speaker</button>
+  </div>
+  <div class="rack" id="rack">
+    <svg class="patches" id="patchLayer" xmlns="http://www.w3.org/2000/svg"><defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></svg>
+  </div>
+  <div class="help">Tap a <span class="kbd">pink output</span>, then a <span class="kbd">blue input</span> to connect. Pink = audio, green = modulation, yellow = gate. Double-tap a module title to delete it.</div>
+
+  <script>
+    // --- Audio engine ---
+    let ctx = null;
+    const modules = new Map();
+    let nextId = 1;
+    const cables = [];
+    let draggingModule = null;
+    let dragOffset = { x: 0, y: 0 };
+    let sourcePort = null;
+    const rack = document.getElementById('rack');
+    const patchLayer = document.getElementById('patchLayer');
+    const powerBtn = document.getElementById('powerBtn');
+
+    function ensureCtx() {
+      if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        ctx.resume();
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+    }
+
+    function makeNode(kind, id) {
+      if (!ctx) return null;
+      switch (kind) {
+        case 'vco': {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          g.gain.value = 0;
+          o.connect(g);
+          o.start();
+          return { out: g, freqParam: o.frequency, gainParam: g.gain, osc: o, params: { freq: 440, shape: 'sawtooth', level: 0.5 } };
+        }
+        case 'lfo': {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.frequency.value = 2;
+          g.gain.value = 1;
+          o.connect(g);
+          o.start();
+          return { out: g, freqParam: o.frequency, ampParam: g.gain, osc: o, params: { freq: 2, shape: 'sine', amp: 100 } };
+        }
+        case 'vca': {
+          const g = ctx.createGain();
+          g.gain.value = 0;
+          return { out: g, gainParam: g.gain, params: { gain: 0.8 } };
+        }
+        case 'filter': {
+          const f = ctx.createBiquadFilter();
+          f.frequency.value = 1000;
+          f.Q.value = 1;
+          return { out: f, freqParam: f.frequency, qParam: f.Q, params: { freq: 1000, q: 1, type: 'lowpass' } };
+        }
+        case 'env': {
+          const g = ctx.createGain();
+          g.gain.value = 0;
+          return { out: g, gainParam: g.gain, params: { attack: 0.02, decay: 0.2, sustain: 0.6, release: 0.4 } };
+        }
+        case 'delay': {
+          const d = ctx.createDelay(2);
+          const g = ctx.createGain();
+          const wg = ctx.createGain();
+          d.delayTime.value = 0.3;
+          g.gain.value = 0.5;
+          wg.gain.value = 0.35;
+          d.connect(g);
+          g.connect(wg);
+          wg.connect(d);
+          return { out: g, inNode: d, timeParam: d.delayTime, mixParam: g.gain, feedbackParam: wg.gain, params: { time: 0.3, mix: 0.5, feedback: 0.35 } };
+        }
+        case 'speaker': {
+          const g = ctx.createGain();
+          g.gain.value = 0.25;
+          g.connect(ctx.destination);
+          return { out: null, inNode: g, gainParam: g.gain, params: { level: 0.25 } };
+        }
+      }
+      return null;
+    }
+
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function noteToFreq(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+
+    const moduleTemplates = {
+      vco: { title: 'VCO', ins: ['freq'], outs: ['out'], color: 'out' },
+      lfo: { title: 'LFO', ins: ['freq'], outs: ['out'], color: 'cv' },
+      vca: { title: 'VCA', ins: ['in','cv'], outs: ['out'], color: 'out' },
+      filter: { title: 'Filter', ins: ['in','freq','res'], outs: ['out'], color: 'out' },
+      env: { title: 'Envelope', ins: ['gate'], outs: ['out'], color: 'cv' },
+      delay: { title: 'Delay', ins: ['in'], outs: ['out'], color: 'out' },
+      speaker: { title: 'Speaker', ins: ['in'], outs: [], color: 'out' }
+    };
+
+    function createModule(kind, x, y) {
+      ensureCtx();
+      const id = 'm' + nextId++;
+      const tmpl = moduleTemplates[kind];
+      const audio = makeNode(kind, id);
+      if (!audio) return;
+      modules.set(id, { id, kind, audio, tmpl, el: null, ins: new Map(), outs: new Map() });
+
+      const el = document.createElement('div');
+      el.className = 'module';
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.dataset.id = id;
+
+      const title = document.createElement('div');
+      title.className = 'module-title';
+      title.textContent = tmpl.title;
+      title.addEventListener('dblclick', () => { removeModule(id); });
+      el.appendChild(title);
+
+      const controls = document.createElement('div');
+      controls.className = 'controls';
+      if (kind === 'vco' || kind === 'lfo') {
+        controls.appendChild(sliderControl(id, 'freq', kind === 'vco' ? 55 : 0.1, kind === 'vco' ? 880 : 20, kind === 'vco' ? 440 : 2, 'Hz'));
+        controls.appendChild(selectControl(id, 'shape', ['sine','square','sawtooth','triangle']));
+        if (kind === 'vco') controls.appendChild(sliderControl(id, 'level', 0, 1, 0.5, ''));
+        if (kind === 'lfo') controls.appendChild(sliderControl(id, 'amp', 0, 500, 100, ''));
+      }
+      if (kind === 'vca') {
+        controls.appendChild(sliderControl(id, 'gain', 0, 1, 0.8, ''));
+      }
+      if (kind === 'filter') {
+        controls.appendChild(sliderControl(id, 'freq', 80, 8000, 1000, 'Hz'));
+        controls.appendChild(sliderControl(id, 'q', 0.1, 12, 1, ''));
+        controls.appendChild(selectControl(id, 'type', ['lowpass','highpass','bandpass','notch','allpass']));
+      }
+      if (kind === 'env') {
+        controls.appendChild(sliderControl(id, 'attack', 0.001, 1, 0.02, 's'));
+        controls.appendChild(sliderControl(id, 'decay', 0.01, 1.5, 0.2, 's'));
+        controls.appendChild(sliderControl(id, 'sustain', 0, 1, 0.6, ''));
+        controls.appendChild(sliderControl(id, 'release', 0.01, 2, 0.4, 's'));
+      }
+      if (kind === 'delay') {
+        controls.appendChild(sliderControl(id, 'time', 0.01, 1.5, 0.3, 's'));
+        controls.appendChild(sliderControl(id, 'mix', 0, 1, 0.5, ''));
+        controls.appendChild(sliderControl(id, 'feedback', 0, 0.8, 0.35, ''));
+      }
+      if (kind === 'speaker') {
+        controls.appendChild(sliderControl(id, 'level', 0, 1, 0.25, ''));
+      }
+      el.appendChild(controls);
+
+      const insRow = document.createElement('div');
+      insRow.className = 'ports ports-in';
+      tmpl.ins.forEach((name, i) => {
+        const p = document.createElement('div');
+        p.className = 'port in';
+        p.dataset.side = 'in';
+        p.dataset.name = name;
+        p.dataset.id = id;
+        p.style.left = (10 + i * 38) + 'px';
+        const lbl = document.createElement('span');
+        lbl.className = 'port-label';
+        lbl.textContent = name;
+        lbl.style.left = (10 + i * 38 + 14 - name.length * 2.5) + 'px';
+        lbl.style.top = '32px';
+        p.appendChild(lbl);
+        p.addEventListener('pointerdown', (e) => { e.stopPropagation(); portPointerDown(e, p); });
+        insRow.appendChild(p);
+        modules.get(id).ins.set(name, p);
+      });
+      el.appendChild(insRow);
+
+      const outsRow = document.createElement('div');
+      outsRow.className = 'ports ports-out';
+      tmpl.outs.forEach((name, i) => {
+        const p = document.createElement('div');
+        p.className = 'port out';
+        p.dataset.side = 'out';
+        p.dataset.name = name;
+        p.dataset.id = id;
+        p.style.right = (10 + i * 38) + 'px';
+        const lbl = document.createElement('span');
+        lbl.className = 'port-label';
+        lbl.textContent = name;
+        lbl.style.right = (10 + i * 38 + 14 - name.length * 2.5) + 'px';
+        lbl.style.top = '32px';
+        p.appendChild(lbl);
+        p.addEventListener('pointerdown', (e) => { e.stopPropagation(); portPointerDown(e, p); });
+        outsRow.appendChild(p);
+        modules.get(id).outs.set(name, p);
+      });
+      el.appendChild(outsRow);
+
+      rack.appendChild(el);
+      modules.get(id).el = el;
+
+      el.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.port, input, select')) return;
+        el.classList.add('dragging');
+        draggingModule = id;
+        const rect = el.getBoundingClientRect();
+        const rackRect = rack.getBoundingClientRect();
+        dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      });
+      drawCables();
+    }
+
+    function sliderControl(id, param, min, max, value, unit) {
+      const wrap = document.createElement('div');
+      wrap.className = 'control';
+      const label = document.createElement('label');
+      const span = document.createElement('span');
+      span.textContent = `${param}: ${value}${unit}`;
+      label.appendChild(span);
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = min;
+      input.max = max;
+      input.step = (max - min) / 200;
+      input.value = value;
+      input.addEventListener('input', () => {
+        const mod = modules.get(id);
+        if (!mod) return;
+        const v = parseFloat(input.value);
+        span.textContent = `${param}: ${v.toFixed(param === 'freq' || param === 'time' ? (v < 1 ? 3 : 1) : 2)}${unit}`;
+        mod.audio.params[param] = v;
+        if (param === 'freq') {
+          if (mod.kind === 'vco') mod.audio.freqParam.setTargetAtTime(v, ctx.currentTime, 0.01);
+          else mod.audio.freqParam.setValueAtTime(v, ctx.currentTime);
+        }
+        if (param === 'shape' || param === 'type') {
+          if (param === 'shape') mod.audio.osc.type = v;
+          if (param === 'type') mod.audio.node.type = v;
+        }
+        if (param === 'level') mod.audio.gainParam.setTargetAtTime(v, ctx.currentTime, 0.01);
+        if (param === 'amp') mod.audio.ampParam.setValueAtTime(v / 1000, ctx.currentTime);
+        if (param === 'gain') mod.audio.gainParam.setValueAtTime(v, ctx.currentTime);
+        if (param === 'q') mod.audio.qParam.setValueAtTime(v, ctx.currentTime);
+        if (param === 'attack' || param === 'decay' || param === 'sustain' || param === 'release') mod.audio.params[param] = v;
+        if (param === 'time') mod.audio.timeParam.setValueAtTime(v, ctx.currentTime);
+        if (param === 'mix') mod.audio.mixParam.setValueAtTime(v, ctx.currentTime);
+        if (param === 'feedback') mod.audio.feedbackParam.setValueAtTime(v, ctx.currentTime);
+      });
+      wrap.appendChild(label);
+      wrap.appendChild(input);
+      return wrap;
+    }
+
+    function selectControl(id, param, options) {
+      const wrap = document.createElement('div');
+      wrap.className = 'control';
+      const label = document.createElement('label');
+      label.textContent = param;
+      const select = document.createElement('select');
+      select.style.width = '100%';
+      select.style.background = '#100d18';
+      select.style.color = 'var(--ink)';
+      select.style.border = '1px solid var(--line)';
+      select.style.borderRadius = '6px';
+      select.style.padding = '4px';
+      options.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; select.appendChild(opt); });
+      select.addEventListener('change', () => {
+        const mod = modules.get(id);
+        if (!mod) return;
+        if (param === 'shape') mod.audio.osc.type = select.value;
+        if (param === 'type') mod.audio.node.type = select.value;
+        mod.audio.params[param] = select.value;
+      });
+      wrap.appendChild(label);
+      wrap.appendChild(select);
+      return wrap;
+    }
+
+    function portPointerDown(e, port) {
+      ensureCtx();
+      if (!sourcePort) {
+        if (port.dataset.side === 'out') {
+          sourcePort = port;
+          port.classList.add('active');
+        }
+        return;
+      }
+      if (port.dataset.side === 'in' && sourcePort.dataset.id !== port.dataset.id) {
+        addCable(sourcePort, port);
+        sourcePort.classList.remove('active');
+        sourcePort = null;
+      } else {
+        sourcePort.classList.remove('active');
+        sourcePort = port.dataset.side === 'out' ? port : null;
+        if (sourcePort) sourcePort.classList.add('active');
+      }
+    }
+
+    function addCable(outPort, inPort) {
+      // remove existing cable to this input
+      const existing = cables.findIndex(c => c.toId === inPort.dataset.id && c.toName === inPort.dataset.name);
+      if (existing >= 0) {
+        disconnectCable(cables[existing]);
+        cables.splice(existing, 1);
+      }
+      const outMod = modules.get(outPort.dataset.id);
+      const inMod = modules.get(inPort.dataset.id);
+      const kind = outPort.classList.contains('cv') ? 'cv' : (outPort.classList.contains('gate') ? 'gate' : 'audio');
+      try {
+        if (kind === 'cv' || kind === 'gate') {
+          outMod.audio.out.connect(inMod.audio.gainParam);
+        } else if (inMod.kind === 'delay') {
+          outMod.audio.out.connect(inMod.audio.inNode);
+        } else if (inMod.kind === 'speaker') {
+          outMod.audio.out.connect(inMod.audio.inNode);
+        } else if (inMod.kind === 'filter') {
+          if (inPort.dataset.name === 'freq') outMod.audio.out.connect(inMod.audio.freqParam);
+          else outMod.audio.out.connect(inMod.audio.node || inMod.audio.out);
+        } else if (inMod.kind === 'vca' && inPort.dataset.name === 'cv') {
+          outMod.audio.out.connect(inMod.audio.gainParam);
+        } else {
+          outMod.audio.out.connect(inMod.audio.inNode || inMod.audio.node || inMod.audio.out);
+        }
+      } catch (err) { console.warn('connection error', err); }
+      cables.push({ fromId: outPort.dataset.id, fromName: outPort.dataset.name, toId: inPort.dataset.id, toName: inPort.dataset.name, kind });
+      drawCables();
+    }
+
+    function disconnectCable(c) {
+      const outMod = modules.get(c.fromId);
+      const inMod = modules.get(c.toId);
+      if (!outMod || !inMod) return;
+      try {
+        if (c.kind === 'cv' || c.kind === 'gate') {
+          outMod.audio.out.disconnect(inMod.audio.gainParam);
+        } else if (inMod.kind === 'delay') {
+          outMod.audio.out.disconnect(inMod.audio.inNode);
+        } else if (inMod.kind === 'speaker') {
+          outMod.audio.out.disconnect(inMod.audio.inNode);
+        } else if (inMod.kind === 'filter' && c.toName === 'freq') {
+          outMod.audio.out.disconnect(inMod.audio.freqParam);
+        } else if (inMod.kind === 'vca' && c.toName === 'cv') {
+          outMod.audio.out.disconnect(inMod.audio.gainParam);
+        } else {
+          outMod.audio.out.disconnect(inMod.audio.inNode || inMod.audio.node || inMod.audio.out);
+        }
+      } catch (err) {}
+    }
+
+    function removeModule(id) {
+      const mod = modules.get(id);
+      if (!mod) return;
+      for (let i = cables.length - 1; i >= 0; i--) {
+        if (cables[i].fromId === id || cables[i].toId === id) {
+          disconnectCable(cables[i]);
+          cables.splice(i, 1);
+        }
+      }
+      try {
+        if (mod.audio.osc) mod.audio.osc.stop();
+        if (mod.audio.out) mod.audio.out.disconnect();
+        if (mod.audio.inNode) mod.audio.inNode.disconnect();
+      } catch (e) {}
+      mod.el.remove();
+      modules.delete(id);
+      drawCables();
+    }
+
+    function getPortCenter(port) {
+      const rect = port.getBoundingClientRect();
+      const rackRect = rack.getBoundingClientRect();
+      return { x: rect.left - rackRect.left + rect.width / 2, y: rect.top - rackRect.top + rect.height / 2 };
+    }
+
+    function drawCables() {
+      patchLayer.innerHTML = '<defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+      cables.forEach(c => {
+        const fromMod = modules.get(c.fromId);
+        const toMod = modules.get(c.toId);
+        if (!fromMod || !toMod) return;
+        const fromPort = fromMod.outs.get(c.fromName) || fromMod.ins.get(c.fromName);
+        const toPort = toMod.ins.get(c.toName) || toMod.outs.get(c.toName);
+        if (!fromPort || !toPort) return;
+        const a = getPortCenter(fromPort);
+        const b = getPortCenter(toPort);
+        const dx = Math.abs(b.x - a.x);
+        const cp1 = { x: a.x + dx * 0.5, y: a.y };
+        const cp2 = { x: b.x - dx * 0.5, y: b.y };
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${a.x} ${a.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${b.x} ${b.y}`);
+        path.classList.add(c.kind);
+        patchLayer.appendChild(path);
+      });
+    }
+
+    window.addEventListener('pointermove', (e) => {
+      if (draggingModule) {
+        const mod = modules.get(draggingModule);
+        if (!mod) return;
+        const rackRect = rack.getBoundingClientRect();
+        let x = e.clientX - rackRect.left - dragOffset.x;
+        let y = e.clientY - rackRect.top - dragOffset.y;
+        x = clamp(x, 0, rackRect.width - mod.el.offsetWidth);
+        y = clamp(y, 0, rackRect.height - mod.el.offsetHeight);
+        mod.el.style.left = x + 'px';
+        mod.el.style.top = y + 'px';
+        drawCables();
+      }
+    });
+    window.addEventListener('pointerup', () => {
+      if (draggingModule) {
+        modules.get(draggingModule)?.el.classList.remove('dragging');
+        draggingModule = null;
+      }
+    });
+    window.addEventListener('resize', drawCables);
+
+    // --- Startup patch: a playable default voice ---
+    function seedPatch() {
+      const r = rack.getBoundingClientRect();
+      createModule('vco', 20, 20);
+      createModule('filter', 220, 20);
+      createModule('env', 20, 220);
+      createModule('vca', 220, 220);
+      createModule('speaker', 420, 120);
+      // VCO -> filter -> VCA -> speaker
+      setTimeout(() => {
+        const m = Array.from(modules.values());
+        const vco = m.find(x => x.kind === 'vco');
+        const filt = m.find(x => x.kind === 'filter');
+        const vca = m.find(x => x.kind === 'vca');
+        const env = m.find(x => x.kind === 'env');
+        const spk = m.find(x => x.kind === 'speaker');
+        if (vco && filt) addCable(vco.outs.get('out'), filt.ins.get('in'));
+        if (filt && vca) addCable(filt.outs.get('out'), vca.ins.get('in'));
+        if (vca && spk) addCable(vca.outs.get('out'), spk.ins.get('in'));
+        if (env && vca) addCable(env.outs.get('out'), vca.ins.get('cv'));
+      }, 0);
+    }
+
+    // --- Keyboard ribbon ---
+    let currentNote = null;
+    let currentVCO = null;
+    function triggerNote(note, on) {
+      ensureCtx();
+      const env = Array.from(modules.values()).find(m => m.kind === 'env');
+      if (env) {
+        const now = ctx.currentTime;
+        const { attack, decay, sustain, release } = env.audio.params;
+        if (on) {
+          env.audio.gainParam.cancelScheduledValues(now);
+          env.audio.gainParam.setValueAtTime(0, now);
+          env.audio.gainParam.linearRampToValueAtTime(1, now + attack);
+          env.audio.gainParam.linearRampToValueAtTime(sustain, now + attack + decay);
+        } else {
+          const rel = env.audio.params.release;
+          env.audio.gainParam.cancelScheduledValues(now);
+          env.audio.gainParam.setValueAtTime(env.audio.gainParam.value, now);
+          env.audio.gainParam.exponentialRampToValueAtTime(0.001, now + rel);
+        }
+      }
+      // update first VCO frequency
+      const vcos = Array.from(modules.values()).filter(m => m.kind === 'vco');
+      vcos.forEach(vco => {
+        vco.audio.freqParam.setTargetAtTime(noteToFreq(note), ctx.currentTime, 0.01);
+      });
+    }
+
+    // --- Power + UI ---
+    powerBtn.addEventListener('click', () => {
+      ensureCtx();
+      powerBtn.textContent = 'Power On';
+      powerBtn.classList.add('primary');
+      // Just ensures context; synth is live once modules exist
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      modules.forEach(m => removeModule(m.id));
+      seedPatch();
+    });
+
+    document.getElementById('palette').addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') return;
+      const kind = e.target.dataset.kind;
+      const r = rack.getBoundingClientRect();
+      createModule(kind, 20 + Math.random() * Math.max(20, r.width - 200), 20 + Math.random() * Math.max(20, r.height - 220));
+    });
+
+    // Global keyboard on screen
+    function buildRibbon() {
+      const ribbon = document.createElement('div');
+      ribbon.style.display = 'none'; // use computer keyboard instead; keep code compact
+      document.body.appendChild(ribbon);
+    }
+
+    const keyMap = {
+      a: 60, w: 61, s: 62, e: 63, d: 64, f: 65, t: 66, g: 67, y: 68, h: 69, u: 70, j: 71,
+      k: 72, o: 73, l: 74, p: 75, ';': 76
+    };
+    const held = new Set();
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat || held.has(e.key)) return;
+      const note = keyMap[e.key.toLowerCase()];
+      if (note !== undefined) {
+        held.add(e.key);
+        triggerNote(note, true);
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      const note = keyMap[e.key.toLowerCase()];
+      if (note !== undefined) {
+        held.delete(e.key);
+        triggerNote(note, false);
+      }
+    });
+
+    // Add a simple on-screen ribbon for touch
+    function addTouchRibbon() {
+      const ribbon = document.createElement('div');
+      ribbon.id = 'ribbon';
+      ribbon.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;height:78px;background:#1e1b2a;border:1px solid var(--line);border-radius:14px;display:flex;overflow:hidden;touch-action:none;z-index:50;';
+      const notes = [48,50,52,53,55,57,59,60,62,64,65,67,69,71,72];
+      notes.forEach((n, i) => {
+        const key = document.createElement('div');
+        key.style.cssText = 'flex:1;border-right:1px solid var(--line);display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:10px;color:var(--muted);' + (i % 2 === 0 ? 'background:#100d18;' : 'background:#161520;');
+        key.textContent = ['C','D','E','F','G','A','B','C','D','E','F','G','A','B','C'][i];
+        key.addEventListener('pointerdown', (e) => { e.preventDefault(); triggerNote(n, true); });
+        key.addEventListener('pointerup', () => triggerNote(n, false));
+        key.addEventListener('pointerleave', () => triggerNote(n, false));
+        ribbon.appendChild(key);
+      });
+      document.body.appendChild(ribbon);
+    }
+
+    // Tap on empty rack clears active source port
+    rack.addEventListener('pointerdown', () => {
+      if (sourcePort) { sourcePort.classList.remove('active'); sourcePort = null; }
+    });
+
+    seedPatch();
+    addTouchRibbon();
+  </script>
+</body>
+</html>
