@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>MONIAC Machine Simulator</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --panel:#ffffff;
+      --ink:#1a2234;
+      --muted:#5e6a7e;
+      --water:#2f8fc8;
+      --water-lite:#87c9ed;
+      --water-dark:#1e5f8a;
+      --copper:#b87333;
+      --copper-lite:#e6b88a;
+      --accent:#d65a31;
+      --shadow:0 6px 22px rgba(26,34,52,.10);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+      line-height:1.45;
+    }
+    .warning{
+      background:#fff3cd;
+      color:#664d03;
+      border-bottom:1px solid #f0d29a;
+      padding:10px 14px;
+      font-size:13px;
+      text-align:center;
+    }
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:18px;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 340px;
+      gap:18px;
+      align-items:start;
+    }
+    header{grid-column:1/-1}
+    h1{margin:0 0 4px;font-size:clamp(24px,4vw,34px);letter-spacing:-.02em}
+    .subtitle{color:var(--muted);font-size:15px;margin:0 0 8px}
+    .card{
+      background:var(--panel);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .stage{position:relative;min-height:520px;overflow:hidden}
+    #diagram{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+    #water{position:absolute;inset:0;width:100%;height:100%;z-index:2}
+    .controls h2{margin:0 0 12px;font-size:18px}
+    .control{position:relative;margin-bottom:18px}
+    .control label{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+    .control .value{color:var(--ink);font-variant-numeric:tabular-nums}
+    input[type=range]{
+      width:100%;
+      -webkit-appearance:none;
+      appearance:none;
+      height:8px;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--water-lite),var(--water));
+      outline:none;
+    }
+    input[type=range]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width:22px;height:22px;border-radius:50%;
+      background:#fff;border:3px solid var(--water);
+      box-shadow:0 2px 6px rgba(0,0,0,.18);
+      cursor:pointer;
+    }
+    input[type=range]::-moz-range-thumb{
+      width:22px;height:22px;border-radius:50%;
+      background:#fff;border:3px solid var(--water);
+      box-shadow:0 2px 6px rgba(0,0,0,.18);
+      cursor:pointer;
+    }
+    .readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+    .readout .box{
+      background:#eef5fb;border-radius:10px;padding:10px 12px;font-size:12px;
+    }
+    .readout .box strong{display:block;font-size:15px;color:var(--water-dark);font-variant-numeric:tabular-nums}
+    .legend{font-size:12px;color:var(--muted);margin-top:14px;padding-top:14px;border-top:1px solid #e1e8f0}
+    .legend p{margin:0 0 6px}
+    footer{grid-column:1/-1;font-size:12px;color:var(--muted);text-align:center;padding:8px 0 24px}
+    @media (max-width:820px){
+      .wrap{grid-template-columns:1fr}
+      .stage{min-height:420px}
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">
+    <strong>Experimental AI mini-app.</strong> Untested, not professionally validated, and not intended for real decisions.
+  </div>
+  <div class="wrap">
+    <header>
+      <h1>MONIAC Machine Simulator</h1>
+      <p class="subtitle">A hydraulic analogue computer for a tiny economy. Adjust the taps and watch money flow like water.</p>
+    </header>
+
+    <section class="card stage" aria-label="MONIAC diagram">
+      <svg id="diagram" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="tankGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#e8f4fc"/>
+          </linearGradient>
+          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#87c9ed"/>
+            <stop offset="100%" stop-color="#2f8fc8"/>
+          </linearGradient>
+          <filter id="glass">
+            <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.08"/>
+          </filter>
+        </defs>
+
+        <!-- Pipes behind tanks -->
+        <g fill="none" stroke="#c49a6c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Treasury -> Gov -->
+          <path d="M400 75 L400 130" />
+          <!-- National income -> pump -> treasury -->
+          <path d="M400 425 L400 460 L760 460 L760 75 L720 75" />
+          <!-- National income -> Consumption -->
+          <path d="M180 360 L180 425 L180 460 L400 460 L400 500" />
+          <!-- National income -> Savings -->
+          <path d="M260 360 L260 400 L620 400 L620 425" />
+          <!-- National income -> Tax -->
+          <path d="M340 360 L340 380 L500 380 L500 425" />
+          <!-- National income -> Imports -->
+          <path d="M460 360 L460 380 L300 380 L300 425" />
+          <!-- Investment -> National income -->
+          <path d="M700 360 L700 400 L540 400 L540 425" />
+          <!-- Exports -> National income -->
+          <path d="M780 360 L780 440 L460 440 L460 425" />
+          <!-- Gov -> National income -->
+          <path d="M400 190 L400 425" />
+        </g>
+
+        <!-- Tank outlines -->
+        <g fill="url(#tankGrad)" stroke="#9bb8cf" stroke-width="2" filter="url(#glass)">
+          <!-- Treasury top -->
+          <rect x="320" y="30" width="160" height="45" rx="8" />
+          <!-- National income base -->
+          <rect x="280" y="425" width="240" height="70" rx="8" />
+          <!-- Consumption -->
+          <rect x="90" y="315" width="180" height="70" rx="8" />
+          <!-- Government -->
+          <rect x="340" y="150" width="120" height="70" rx="8" />
+          <!-- Savings -->
+          <rect x="560" y="315" width="120" height="70" rx="8" />
+          <!-- Tax -->
+          <rect x="440" y="315" width="120" height="70" rx="8" />
+          <!-- Investment -->
+          <rect x="640" y="315" width="120" height="70" rx="8" />
+          <!-- Imports -->
+          <rect x="240" y="315" width="120" height="70" rx="8" />
+          <!-- Exports -->
+          <rect x="720" y="315" width="120" height="70" rx="8" />
+        </g>
+
+        <!-- Labels -->
+        <g text-anchor="middle" font-size="12" fill="#3a4a61" font-weight="600">
+          <text x="400" y="58">Treasury (reservoir)</text>
+          <text x="400" y="465">National Income</text>
+          <text x="180" y="350">Consumption</text>
+          <text x="400" y="185">Government</text>
+          <text x="620" y="350">Savings</text>
+          <text x="500" y="350">Tax</text>
+          <text x="700" y="350">Investment</text>
+          <text x="300" y="350">Imports</text>
+          <text x="780" y="350">Exports</text>
+        </g>
+
+        <!-- Pump icon -->
+        <g transform="translate(720,45)">
+          <circle cx="20" cy="20" r="18" fill="#f4f7fb" stroke="#9bb8cf" stroke-width="2"/>
+          <path d="M20 10 L20 20 L28 24" stroke="#d65a31" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <canvas id="water"></canvas>
+    </section>
+
+    <aside class="card controls">
+      <h2>Policy taps</h2>
+      <div class="control">
+        <label>Tax rate <span class="value" id="taxVal">20%</span></label>
+        <input type="range" id="tax" min="0" max="60" value="20" step="1">
+      </div>
+      <div class="control">
+        <label>Propensity to consume <span class="value" id="apcVal">70%</span></label>
+        <input type="range" id="apc" min="20" max="95" value="70" step="1">
+      </div>
+      <div class="control">
+        <label>Gov't spending rate <span class="value" id="govVal">25%</span></label>
+        <input type="range" id="gov" min="0" max="60" value="25" step="1">
+      </div>
+      <div class="control">
+        <label>Investment rate <span class="value" id="invVal">15%</span></label>
+        <input type="range" id="inv" min="0" max="60" value="15" step="1">
+      </div>
+      <div class="control">
+        <label>Propensity to import <span class="value" id="apmVal">20%</span></label>
+        <input type="range" id="apm" min="0" max="60" value="20" step="1">
+      </div>
+      <div class="control">
+        <label>Export level <span class="value" id="expVal">18%</span></label>
+        <input type="range" id="exp" min="0" max="60" value="18" step="1">
+      </div>
+
+      <div class="readout">
+        <div class="box">National income <strong id="yOut">100</strong></div>
+        <div class="box">Flow balance <strong id="balOut">0</strong></div>
+        <div class="box">Consumption <strong id="cOut">70</strong></div>
+        <div class="box">Savings <strong id="sOut">30</strong></div>
+        <div class="box">Tax revenue <strong id="tOut">20</strong></div>
+        <div class="box">Imports <strong id="mOut">20</strong></div>
+      </div>
+
+      <div class="legend">
+        <p><strong>How it works:</strong> Water represents money. The pump lifts income back to Treasury. Taps split income into consumption, savings, tax and imports. Government, investment and exports pour back into national income.</p>
+        <p>Built after Bill Phillips' 1949 MONIAC — a hydraulic analogue computer that modelled the UK economy.</p>
+      </div>
+    </aside>
+
+    <footer>
+      OpenClaw 2am Mini-App · 2026-07-17 · moniac-machine
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      const svg = document.getElementById('diagram');
+      const canvas = document.getElementById('water');
+      const ctx = canvas.getContext('2d');
+
+      // Tanks in SVG viewBox coordinates (x,y,width,height)
+      const tanks = {
+        treasury:  {x:320, y:30,  w:160, h:45},
+        income:    {x:280, y:425, w:240, h:70},
+        cons:      {x:90,  y:315, w:180, h:70},
+        gov:       {x:340, y:150, w:120, h:70},
+        save:      {x:560, y:315, w:120, h:70},
+        tax:       {x:440, y:315, w:120, h:70},
+        invest:    {x:640, y:315, w:120, h:70},
+        import:    {x:240, y:315, w:120, h:70},
+        export:    {x:720, y:315, w:120, h:70}
+      };
+
+      // Pipe segments for particle animation
+      const paths = [
+        // from -> to, source fraction -> dest fraction, color, speed factor
+        {from:'treasury', to:'gov',      sx:0.5, sy:1, dx:0.5, dy:0, color:'#2f8fc8'},
+        {from:'gov',      to:'income',   sx:0.5, sy:1, dx:0.5, dy:0, color:'#2f8fc8'},
+        {from:'income',   to:'treasury', sx:0.5, sy:0, dx:1,  dy:0.3, color:'#2f8fc8', long:true},
+        {from:'income',   to:'cons',     sx:0.22,sy:0, dx:0.5, dy:0, color:'#2f8fc8'},
+        {from:'income',   to:'save',     sx:0.32,sy:0, dx:0.5, dy:0, color:'#2f8fc8'},
+        {from:'income',   to:'tax',      sx:0.42,sy:0, dx:0.5, dy:0, color:'#2f8fc8'},
+        {from:'income',   to:'import',   sx:0.28,sy:0, dx:0.5, dy:0, color:'#2f8fc8'},
+        {from:'invest',   to:'income',   sx:0,   sy:0.5, dx:0.65,dy:0, color:'#2f8fc8'},
+        {from:'export',   to:'income',   sx:0,   sy:0.5, dx:0.82,dy:0, color:'#2f8fc8'}
+      ];
+
+      const controls = {
+        tax:  document.getElementById('tax'),
+        apc:  document.getElementById('apc'),
+        gov:  document.getElementById('gov'),
+        inv:  document.getElementById('inv'),
+        apm:  document.getElementById('apm'),
+        exp:  document.getElementById('exp')
+      };
+
+      const readouts = {
+        tax:  document.getElementById('taxVal'),
+        apc:  document.getElementById('apcVal'),
+        gov:  document.getElementById('govVal'),
+        inv:  document.getElementById('invVal'),
+        apm:  document.getElementById('apmVal'),
+        exp:  document.getElementById('expVal')
+      };
+
+      const outputs = {
+        y:    document.getElementById('yOut'),
+        bal:  document.getElementById('balOut'),
+        c:    document.getElementById('cOut'),
+        s:    document.getElementById('sOut'),
+        t:    document.getElementById('tOut'),
+        m:    document.getElementById('mOut')
+      };
+
+      let state = { Y: 100, C: 70, S: 30, T: 20, G: 25, I: 15, M: 20, X: 18 };
+      let particles = [];
+      let lastT = performance.now();
+      let svgRect = svg.getBoundingClientRect();
+
+      function vboxToCanvas(pt){
+        const scaleX = svgRect.width / 800;
+        const scaleY = svgRect.height / 520;
+        return { x: pt.x * scaleX, y: pt.y * scaleY };
+      }
+
+      function resize(){
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        svgRect = svg.getBoundingClientRect();
+      }
+
+      function getParams(){
+        return {
+          tax: +controls.tax.value / 100,
+          apc: +controls.apc.value / 100,
+          gov: +controls.gov.value / 100,
+          inv: +controls.inv.value / 100,
+          apm: +controls.apm.value / 100,
+          exp: +controls.exp.value / 100
+        };
+      }
+
+      function updateReadouts(){
+        readouts.tax.textContent = controls.tax.value + '%';
+        readouts.apc.textContent = controls.apc.value + '%';
+        readouts.gov.textContent = controls.gov.value + '%';
+        readouts.inv.textContent = controls.inv.value + '%';
+        readouts.apm.textContent = controls.apm.value + '%';
+        readouts.exp.textContent = controls.exp.value + '%';
+      }
+
+      function step(dt){
+        const p = getParams();
+        // Target income from aggregate demand identity
+        const denom = 1 - p.apc * (1 - p.tax) + p.apm;
+        const targetY = denom > 0.05 ? (p.gov + p.inv + p.exp) / denom : 10;
+        // Smooth approach
+        const k = 1 - Math.exp(-dt * 1.2);
+        state.Y += (targetY * 100 - state.Y) * k;
+        state.C = state.Y * p.apc;
+        state.S = state.Y * (1 - p.apc);
+        state.T = state.Y * p.tax;
+        state.G = state.Y * p.gov;
+        state.I = state.Y * p.inv;
+        state.M = state.Y * p.apm;
+        state.X = state.Y * p.exp;
+      }
+
+      function spawnParticles(){
+        // Number of particles proportional to flow magnitude
+        const p = getParams();
+        const flows = [
+          {id:'treasury->gov',  mag: p.gov},
+          {id:'gov->income',    mag: p.gov},
+          {id:'income->treasury', mag: 1},
+          {id:'income->cons',   mag: p.apc},
+          {id:'income->save',   mag: 1 - p.apc},
+          {id:'income->tax',    mag: p.tax},
+          {id:'income->import', mag: p.apm},
+          {id:'invest->income', mag: p.inv},
+          {id:'export->income', mag: p.exp}
+        ];
+        for (let i = 0; i < paths.length; i++){
+          const rate = Math.min(0.08 + flows[i].mag * 0.18, 0.45);
+          if (Math.random() < rate){
+            particles.push({pathIdx: i, t: 0, speed: 0.4 + Math.random() * 0.4});
+          }
+        }
+      }
+
+      function drawTank(name, level01){
+        const t = tanks[name];
+        const a = vboxToCanvas({x:t.x, y:t.y});
+        const b = vboxToCanvas({x:t.x + t.w, y:t.y + t.h});
+        const pad = 4;
+        const x = a.x + pad, y = a.y + pad;
+        const w = b.x - a.x - pad * 2;
+        const h = b.y - a.y - pad * 2;
+        const waterH = Math.max(0, h * Math.min(level01, 1));
+
+        // Water fill
+        ctx.fillStyle = 'rgba(135,201,237,0.55)';
+        ctx.fillRect(x, y + h - waterH, w, waterH);
+        ctx.fillStyle = 'rgba(47,143,200,0.35)';
+        ctx.fillRect(x, y + h - waterH, w, 4);
+
+        // Glass shine
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 6, y + 6);
+        ctx.lineTo(x + 6, y + h - 6);
+        ctx.stroke();
+      }
+
+      function drawParticles(){
+        ctx.fillStyle = 'rgba(47,143,200,0.75)';
+        for (let i = particles.length - 1; i >= 0; i--){
+          const pt = particles[i];
+          const path = paths[pt.pathIdx];
+          const from = tanks[path.from];
+          const to = tanks[path.to];
+          const a = vboxToCanvas({x: from.x + from.w * path.sx, y: from.y + from.h * path.sy});
+          const b = vboxToCanvas({x: to.x + to.w * path.dx,     y: to.y + to.h * path.dy});
+
+          let x, y;
+          if (path.long){
+            // income -> treasury wraps around right side
+            const c1 = vboxToCanvas({x: 400, y: 460});
+            const c2 = vboxToCanvas({x: 760, y: 460});
+            const c3 = vboxToCanvas({x: 760, y: 75});
+            const d = vboxToCanvas({x: 720, y: 75});
+            if (pt.t < 0.25){
+              const u = pt.t / 0.25;
+              x = a.x + (c1.x - a.x) * u;
+              y = a.y + (c1.y - a.y) * u;
+            } else if (pt.t < 0.50){
+              const u = (pt.t - 0.25) / 0.25;
+              x = c1.x + (c2.x - c1.x) * u;
+              y = c1.y + (c2.y - c1.y) * u;
+            } else if (pt.t < 0.75){
+              const u = (pt.t - 0.50) / 0.25;
+              x = c2.x + (c3.x - c2.x) * u;
+              y = c2.y + (c3.y - c2.y) * u;
+            } else {
+              const u = (pt.t - 0.75) / 0.25;
+              x = c3.x + (d.x - c3.x) * u;
+              y = c3.y + (d.y - c3.y) * u;
+            }
+          } else {
+            // Straight or simple elbow via horizontal/vertical midpoint
+            const midX = (a.x + b.x) / 2;
+            const midY = (a.y + b.y) / 2;
+            if (Math.abs(a.x - b.x) < 4 || Math.abs(a.y - b.y) < 4){
+              x = a.x + (b.x - a.x) * pt.t;
+              y = a.y + (b.y - a.y) * pt.t;
+            } else {
+              // L-shaped: vertical then horizontal or horizontal then vertical
+              if (Math.random() < 0.5){
+                if (pt.t < 0.5){
+                  const u = pt.t * 2;
+                  x = a.x;
+                  y = a.y + (midY - a.y) * u;
+                } else {
+                  const u = (pt.t - 0.5) * 2;
+                  x = a.x + (b.x - a.x) * u;
+                  y = midY + (b.y - midY) * u;
+                }
+              } else {
+                if (pt.t < 0.5){
+                  const u = pt.t * 2;
+                  x = a.x + (midX - a.x) * u;
+                  y = a.y;
+                } else {
+                  const u = (pt.t - 0.5) * 2;
+                  x = midX + (b.x - midX) * u;
+                  y = a.y + (b.y - a.y) * u;
+                }
+              }
+            }
+          }
+
+          ctx.beginPath();
+          ctx.arc(x, y, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          pt.t += pt.speed * 0.012;
+          if (pt.t >= 1) particles.splice(i, 1);
+        }
+      }
+
+      function updateOutputs(){
+        outputs.y.textContent   = state.Y.toFixed(1);
+        outputs.c.textContent   = state.C.toFixed(1);
+        outputs.s.textContent   = state.S.toFixed(1);
+        outputs.t.textContent   = state.T.toFixed(1);
+        outputs.m.textContent   = state.M.toFixed(1);
+        const bal = state.C + state.I + state.G + state.X - state.M - state.Y;
+        outputs.bal.textContent = bal.toFixed(1);
+      }
+
+      function frame(now){
+        const dt = Math.min((now - lastT) / 1000, 0.1);
+        lastT = now;
+
+        step(dt);
+        spawnParticles();
+        updateOutputs();
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw water levels in each tank
+        const maxY = 200;
+        drawTank('treasury',  state.Y / maxY);
+        drawTank('income',    state.Y / maxY);
+        drawTank('cons',      state.C / maxY);
+        drawTank('gov',       state.G / maxY);
+        drawTank('save',      state.S / maxY);
+        drawTank('tax',       state.T / maxY);
+        drawTank('invest',    state.I / maxY);
+        drawTank('import',    state.M / maxY);
+        drawTank('export',    state.X / maxY);
+
+        drawParticles();
+
+        requestAnimationFrame(frame);
+      }
+
+      Object.values(controls).forEach(el => el.addEventListener('input', updateReadouts));
+
+      window.addEventListener('resize', resize);
+      resize();
+      updateReadouts();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>

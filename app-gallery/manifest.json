@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-16",
-    "title": "Patch Synth Toy",
-    "slug": "patch-synth-toy",
-    "publishedSlug": "2026-07-16-patch-synth-toy",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-16-patch-synth-toy/"
+    "date": "2026-07-17",
+    "title": "MONIAC Machine Simulator",
+    "slug": "moniac-machine",
+    "publishedSlug": "2026-07-17-moniac-machine",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-17-moniac-machine/"
   },
   "apps": [
+    {
+      "date": "2026-07-17",
+      "title": "MONIAC Machine Simulator",
+      "slug": "moniac-machine",
+      "publishedSlug": "2026-07-17-moniac-machine",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-17-moniac-machine/",
+      "description": "Interactive hydraulic analogue computer that models a national economy with flowing water"
+    },
     {
       "date": "2026-07-16",
       "title": "Patch Synth Toy",
