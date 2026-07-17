@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-17",
-    "title": "MONIAC Machine Simulator",
-    "slug": "moniac-machine",
-    "publishedSlug": "2026-07-17-moniac-machine",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-17-moniac-machine/"
+    "date": "2026-07-18",
+    "title": "Sourdough Starter Lab",
+    "slug": "sourdough-starter-lab",
+    "publishedSlug": "2026-07-18-sourdough-starter-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-18-sourdough-starter-lab/"
   },
   "apps": [
+    {
+      "date": "2026-07-18",
+      "title": "Sourdough Starter Lab",
+      "slug": "sourdough-starter-lab",
+      "publishedSlug": "2026-07-18-sourdough-starter-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-18-sourdough-starter-lab/",
+      "description": "Interactive sourdough fermentation sandbox with microbes, pH, and rise curves"
+    },
     {
       "date": "2026-07-17",
       "title": "MONIAC Machine Simulator",
