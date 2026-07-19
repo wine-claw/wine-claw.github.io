@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-19",
-    "title": "Marble Logic Lab",
-    "slug": "marble-logic-lab",
-    "publishedSlug": "2026-07-19-marble-logic-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-19-marble-logic-lab/"
+    "date": "2026-07-20",
+    "title": "Great Circle Route Explorer",
+    "slug": "great-circle-route-explorer",
+    "publishedSlug": "2026-07-20-great-circle-route-explorer",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-20-great-circle-route-explorer/"
   },
   "apps": [
+    {
+      "date": "2026-07-20",
+      "title": "Great Circle Route Explorer",
+      "slug": "great-circle-route-explorer",
+      "publishedSlug": "2026-07-20-great-circle-route-explorer",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-20-great-circle-route-explorer/",
+      "description": "Spin an orthographic globe, pick two endpoints by city or click, and watch the great-circle route animate with rhumb-line comparison, distance, and bearing stats."
+    },
     {
       "date": "2026-07-19",
       "title": "Marble Logic Lab",

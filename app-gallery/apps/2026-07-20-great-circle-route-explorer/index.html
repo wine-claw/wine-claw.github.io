@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Great Circle Route Explorer</title>
+<style>
+  :root{
+    --bg:#0b1220;
+    --panel:#111a2b;
+    --panel-2:#152238;
+    --text:#e6eef8;
+    --muted:#9fb0c7;
+    --accent:#4fc3f7;
+    --accent-2:#81c784;
+    --accent-3:#ff8a65;
+    --line:#2a3b55;
+    --warn:#ffd54f;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  .banner{background:#1a2332;color:var(--warn);font-size:12px;padding:8px 14px;text-align:center;border-bottom:1px solid #2a3b55}
+  .layout{display:flex;height:calc(100% - 34px)}
+  .map-wrap{flex:1;position:relative;min-width:0}
+  #map{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+  .sidebar{width:340px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+  .sidebar h1{font-size:18px;margin:0;padding:16px 18px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
+  .sidebar h1 span{font-size:22px}
+  .scroll{flex:1;overflow:auto;padding:18px}
+  .card{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px}
+  .row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+  .row label{font-size:12px;color:var(--muted);width:70px;flex-shrink:0}
+  input[type="text"]{background:#0d1525;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13px;flex:1;outline:none}
+  input[type="text"]:focus{border-color:var(--accent)}
+  button{background:var(--accent);color:#05121a;border:none;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer}
+  button.secondary{background:transparent;color:var(--text);border:1px solid var(--line)}
+  button:hover{filter:brightness(1.1)}
+  .suggestions{max-height:120px;overflow:auto;background:#0d1525;border:1px solid var(--line);border-radius:8px;margin-top:-6px;margin-bottom:10px;display:none}
+  .suggestions div{padding:8px 10px;font-size:13px;cursor:pointer}
+  .suggestions div:hover{background:#1a2a42}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{background:#0d1525;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+  .stat .num{font-size:20px;font-weight:700;color:var(--accent)}
+  .stat .lbl{font-size:11px;color:var(--muted);margin-top:4px}
+  .explain{font-size:13px;line-height:1.55;color:var(--muted)}
+  .explain strong{color:var(--text)}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-top:10px}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .controls{display:flex;gap:8px;margin-top:12px}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .waypoints{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .wp{display:flex;align-items:center;gap:8px;background:#0d1525;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px}
+  .wp .badge{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700}
+  .wp .coord{color:var(--muted);font-size:11px;margin-left:auto}
+  @media (max-width:760px){
+    .layout{flex-direction:column}
+    .sidebar{width:100%;height:45%;border-left:none;border-top:1px solid var(--line)}
+    #map{position:relative;height:55%}
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  ⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for navigation decisions.
+</div>
+<div class="layout">
+  <div class="map-wrap"><canvas id="map"></canvas></div>
+  <div class="sidebar">
+    <h1><span>🌐</span> Great Circle Route Explorer</h1>
+    <div class="scroll">
+      <div class="card">
+        <h2>Choose endpoints</h2>
+        <div class="row"><label>From</label><input id="fromIn" type="text" placeholder="City or airport (e.g. Adelaide)"></div>
+        <div id="fromSuggest" class="suggestions"></div>
+        <div class="row"><label>To</label><input id="toIn" type="text" placeholder="City or airport (e.g. London)"></div>
+        <div id="toSuggest" class="suggestions"></div>
+        <div class="controls">
+          <button id="calcBtn">Plot route</button>
+          <button id="clearBtn" class="secondary">Clear</button>
+          <button id="swapBtn" class="secondary">Swap</button>
+        </div>
+        <div class="hint">Or click directly on the globe to set points A → B.</div>
+        <div class="waypoints" id="waypoints"></div>
+      </div>
+
+      <div class="card">
+        <h2>Route stats</h2>
+        <div class="stats">
+          <div class="stat"><div id="gcDist" class="num">—</div><div class="lbl">Great-circle km</div></div>
+          <div class="stat"><div id="rhDist" class="num">—</div><div class="lbl">Rhumb-line km</div></div>
+          <div class="stat"><div id="bearing" class="num">—</div><div class="lbl">Initial bearing</div></div>
+          <div class="stat"><div id="saved" class="num">—</div><div class="lbl">% shorter vs rhumb</div></div>
+        </div>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--accent)"></span>Great circle</span>
+          <span><span class="dot" style="background:var(--accent-3)"></span>Rhumb line</span>
+          <span><span class="dot" style="background:var(--accent-2)"></span>Start</span>
+          <span><span class="dot" style="background:#ef5350"></span>End</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Why the curve?</h2>
+        <p class="explain">
+          A <strong>great circle</strong> is the shortest path between two points on a sphere — it slices straight through the Earth’s centre. Pilots and ships often follow it (or a series of short straight segments) because it saves fuel and time.<br><br>
+          A <strong>rhumb line</strong> keeps a constant compass bearing, so it looks straight on a Mercator map, but it is usually longer. The difference is tiny for short trips and dramatic for long east-west crossings.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas=document.getElementById('map');
+const ctx=canvas.getContext('2d');
+let width,height,cx,cy,r;
+let rotation=0, pitch=0.35;
+let dragging=false,lastX,lastY;
+let zoom=1;
+let animT=0, animating=false;
+
+const R_EARTH=6371;
+const D2R=Math.PI/180;
+const R2D=180/Math.PI;
+
+const cities=[
+  {name:"Adelaide",lat:-34.9285,lon:138.6007},
+  {name:"Melbourne",lat:-37.8136,lon:144.9631},
+  {name:"Sydney",lat:-33.8688,lon:151.2093},
+  {name:"Perth",lat:-31.9505,lon:115.8605},
+  {name:"Brisbane",lat:-27.4698,lon:153.0251},
+  {name:"London",lat:51.5074,lon:-0.1278},
+  {name:"New York",lat:40.7128,lon:-74.0060},
+  {name:"Tokyo",lat:35.6762,lon:139.6503},
+  {name:"Singapore",lat:1.3521,lon:103.8198},
+  {name:"Dubai",lat:25.2048,lon:55.2708},
+  {name:"Los Angeles",lat:34.0522,lon:-118.2437},
+  {name:"San Francisco",lat:37.7749,lon:-122.4194},
+  {name:"Paris",lat:48.8566,lon:2.3522},
+  {name:"Berlin",lat:52.5200,lon:13.4050},
+  {name:"Cape Town",lat:-33.9249,lon:18.4241},
+  {name:"Mumbai",lat:19.0760,lon:72.8777},
+  {name:"Hong Kong",lat:22.3193,lon:114.1694},
+  {name:"São Paulo",lat:-23.5505,lon:-46.6333},
+  {name:"Buenos Aires",lat:-34.6037,lon:-58.3816},
+  {name:"Auckland",lat:-36.8485,lon:174.7633},
+  {name:"Reykjavik",lat:64.1466,lon:-21.9426},
+  {name:"Moscow",lat:55.7558,lon:37.6173},
+  {name:"Cairo",lat:30.0444,lon:31.2357},
+  {name:"Bangkok",lat:13.7563,lon:100.5018},
+  {name:"Seoul",lat:37.5665,lon:126.9780},
+];
+
+let A=null,B=null;
+
+function resize(){
+  const rect=canvas.parentElement.getBoundingClientRect();
+  width=rect.width;
+  height=rect.height;
+  canvas.width=width*window.devicePixelRatio;
+  canvas.height=height*window.devicePixelRatio;
+  canvas.style.width=width+'px';
+  canvas.style.height=height+'px';
+  ctx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
+  cx=width/2;
+  cy=height/2;
+  r=Math.min(width,height)*0.42*zoom;
+  draw();
+}
+
+function sphToCart(lat,lon){
+  const phi=(90-lat)*D2R, theta=(lon+rotation)*D2R;
+  const x=Math.sin(phi)*Math.cos(theta);
+  const y=Math.cos(phi);
+  const z=Math.sin(phi)*Math.sin(theta);
+  // pitch rotation around x axis
+  const cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const yp=y*cp-z*sp;
+  const zp=y*sp+z*cp;
+  return {x,y:yp,z:zp};
+}
+
+function project(lat,lon){
+  const v=sphToCart(lat,lon);
+  if(v.z>0) return null; // back side
+  const scale=r/(-v.z+0.001);
+  return {x:cx+v.x*scale,y:cy-v.y*scale,v};
+}
+
+function haversine(p1,p2){
+  const dLat=(p2.lat-p1.lat)*D2R;
+  const dLon=(p2.lon-p1.lon)*D2R;
+  const a=Math.sin(dLat/2)**2+Math.cos(p1.lat*D2R)*Math.cos(p2.lat*D2R)*Math.sin(dLon/2)**2;
+  return 2*R_EARTH*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function initialBearing(p1,p2){
+  const y=Math.sin((p2.lon-p1.lon)*D2R)*Math.cos(p2.lat*D2R);
+  const x=Math.cos(p1.lat*D2R)*Math.sin(p2.lat*D2R)-Math.sin(p1.lat*D2R)*Math.cos(p2.lat*D2R)*Math.cos((p2.lon-p1.lon)*D2R);
+  return (Math.atan2(y,x)*R2D+360)%360;
+}
+
+function rhumbDistance(p1,p2){
+  const dLat=(p2.lat-p1.lat)*D2R;
+  let dLon=(p2.lon-p1.lon)*D2R;
+  const dPsi=Math.log(Math.tan(Math.PI/4+p2.lat*D2R/2)/Math.tan(Math.PI/4+p1.lat*D2R/2));
+  let q=Math.abs(dPsi)>1e-12 ? dLat/dPsi : Math.cos(p1.lat*D2R);
+  dLon=((dLon+Math.PI)%(2*Math.PI))-Math.PI;
+  return R_EARTH*Math.sqrt(dLon*dLon*q*q+dLat*dLat);
+}
+
+function greatCirclePoints(p1,p2,n=200){
+  const pts=[];
+  const lat1=p1.lat*D2R, lon1=p1.lon*D2R, lat2=p2.lat*D2R, lon2=p2.lon*D2R;
+  const d=2*Math.asin(Math.sqrt(Math.sin((lat2-lat1)/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin((lon2-lon1)/2)**2));
+  for(let i=0;i<=n;i++){
+    const f=i/n;
+    const A=Math.sin((1-f)*d)/Math.sin(d||1e-9);
+    const B=Math.sin(f*d)/Math.sin(d||1e-9);
+    const x=A*Math.cos(lat1)*Math.cos(lon1)+B*Math.cos(lat2)*Math.cos(lon2);
+    const y=A*Math.cos(lat1)*Math.sin(lon1)+B*Math.cos(lat2)*Math.sin(lon2);
+    const z=A*Math.sin(lat1)+B*Math.sin(lat2);
+    const lat=Math.atan2(z,Math.sqrt(x*x+y*y))*R2D;
+    let lon=Math.atan2(y,x)*R2D;
+    pts.push({lat,lon});
+  }
+  return pts;
+}
+
+function rhumbPoints(p1,p2,n=80){
+  const pts=[];
+  const lat1=p1.lat*D2R,lat2=p2.lat*D2R;
+  let dLon=(p2.lon-p1.lon)*D2R;
+  dLon=((dLon+Math.PI)%(2*Math.PI))-Math.PI;
+  const dLat=lat2-lat1;
+  const dPsi=Math.log(Math.tan(Math.PI/4+lat2/2)/Math.tan(Math.PI/4+lat1/2));
+  const q=Math.abs(dPsi)>1e-12 ? dLat/dPsi : Math.cos(lat1);
+  const brng=Math.atan2(dLon*q,dLat);
+  const dist=R_EARTH*Math.sqrt(dLon*dLon*q*q+dLat*dLat);
+  for(let i=0;i<=n;i++){
+    const d=i/n*dist/R_EARTH;
+    const lat=lat1+d*Math.cos(brng);
+    const lon=lon1+d*Math.sin(brng)/Math.cos(lat);
+    pts.push({lat:lat*R2D,lon:lon*R2D});
+  }
+  return pts;
+}
+
+function drawGlobe(){
+  // ocean
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle='#0e1a30';
+  ctx.fill();
+
+  // graticule
+  ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(79,195,247,0.12)';
+  for(let lat=-75;lat<=75;lat+=15){
+    ctx.beginPath();
+    let first=true;
+    for(let lon=-180;lon<=180;lon+=3){
+      const p=project(lat,lon);
+      if(p){if(first){ctx.moveTo(p.x,p.y);first=false;}else ctx.lineTo(p.x,p.y);}
+      else first=true;
+    }
+    ctx.stroke();
+  }
+  for(let lon=-180;lon<=180;lon+=30){
+    ctx.beginPath();
+    let first=true;
+    for(let lat=-90;lat<=90;lat+=3){
+      const p=project(lat,lon);
+      if(p){if(first){ctx.moveTo(p.x,p.y);first=false;}else ctx.lineTo(p.x,p.y);}
+      else first=true;
+    }
+    ctx.stroke();
+  }
+
+  // rim
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.lineWidth=2;
+  ctx.strokeStyle='rgba(79,195,247,0.35)';
+  ctx.stroke();
+}
+
+function drawRoute(){
+  if(!A||!B) return;
+  const gc=greatCirclePoints(A,B);
+  const rh=rhumbPoints(A,B);
+
+  // rhumb line
+  ctx.beginPath();
+  let first=true;
+  for(const p of rh){
+    const q=project(p.lat,p.lon);
+    if(q){if(first){ctx.moveTo(q.x,q.y);first=false;}else ctx.lineTo(q.x,q.y);}
+    else first=true;
+  }
+  ctx.lineWidth=2;
+  ctx.strokeStyle='rgba(255,138,101,0.55)';
+  ctx.setLineDash([4,4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // great circle animated
+  const limit=Math.floor(gc.length*animT);
+  if(limit>1){
+    ctx.beginPath();
+    first=true;
+    for(let i=0;i<=limit;i++){
+      const p=project(gc[i].lat,gc[i].lon);
+      if(p){if(first){ctx.moveTo(p.x,p.y);first=false;}else ctx.lineTo(p.x,p.y);}
+      else first=true;
+    }
+    ctx.lineWidth=3;
+    ctx.strokeStyle='var(--accent)';
+    ctx.stroke();
+  }
+
+  // endpoints
+  for(const [pt,color] of [[A,'var(--accent-2)'],[B,'#ef5350']]){
+    const p=project(pt.lat,pt.lon);
+    if(p){
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,6,0,Math.PI*2);
+      ctx.fillStyle=color;
+      ctx.fill();
+      ctx.lineWidth=2;
+      ctx.strokeStyle='white';
+      ctx.stroke();
+    }
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,width,height);
+  drawGlobe();
+  drawRoute();
+}
+
+function startAnim(){
+  animT=0;
+  animating=true;
+  function step(){
+    animT+=0.015;
+    if(animT>1) animT=1;
+    draw();
+    if(animT<1) requestAnimationFrame(step);
+    else animating=false;
+  }
+  step();
+}
+
+function updateStats(){
+  if(!A||!B){
+    document.getElementById('gcDist').textContent='—';
+    document.getElementById('rhDist').textContent='—';
+    document.getElementById('bearing').textContent='—';
+    document.getElementById('saved').textContent='—';
+    document.getElementById('waypoints').innerHTML='';
+    return;
+  }
+  const gc=haversine(A,B);
+  const rh=rhumbDistance(A,B);
+  const br=initialBearing(A,B);
+  const savedPct=Math.max(0,((rh-gc)/rh*100));
+  document.getElementById('gcDist').textContent=gc.toFixed(0);
+  document.getElementById('rhDist').textContent=rh.toFixed(0);
+  document.getElementById('bearing').textContent=br.toFixed(1)+'°';
+  document.getElementById('saved').textContent=savedPct.toFixed(1)+'%';
+  document.getElementById('waypoints').innerHTML=
+    `<div class="wp"><span class="badge" style="background:var(--accent-2);color:#0b1220">A</span><span>${A.name||A.lat.toFixed(2)+', '+A.lon.toFixed(2)}</span><span class="coord">${A.lat.toFixed(2)}°, ${A.lon.toFixed(2)}°</span></div>`+
+    `<div class="wp"><span class="badge" style="background:#ef5350;color:#0b1220">B</span><span>${B.name||B.lat.toFixed(2)+', '+B.lon.toFixed(2)}</span><span class="coord">${B.lat.toFixed(2)}°, ${B.lon.toFixed(2)}°</span></div>`;
+}
+
+function setPoint(lat,lon,name){
+  const pt={lat,lon,name};
+  if(!A||B){A=pt;B=null;}
+  else if(!B){B=pt;}
+  updateStats();
+  startAnim();
+}
+
+function findCity(query){
+  const q=query.toLowerCase();
+  return cities.filter(c=>c.name.toLowerCase().includes(q));
+}
+
+function setupSuggest(inputId,suggestId,isFrom){
+  const input=document.getElementById(inputId);
+  const box=document.getElementById(suggestId);
+  input.addEventListener('input',()=>{
+    const v=input.value.trim();
+    box.innerHTML='';
+    if(!v){box.style.display='none';return;}
+    const hits=findCity(v).slice(0,6);
+    if(!hits.length){box.style.display='none';return;}
+    hits.forEach(c=>{
+      const d=document.createElement('div');
+      d.textContent=c.name;
+      d.addEventListener('click',()=>{
+        input.value=c.name;
+        box.style.display='none';
+        if(isFrom){A={...c};B=null;}
+        else {if(!A){A={...c};}else B={...c};}
+        updateStats();
+        if(A&&B) startAnim(); else draw();
+      });
+      box.appendChild(d);
+    });
+    box.style.display='block';
+  });
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){box.style.display='none';document.getElementById('calcBtn').click();}});
+}
+
+setupSuggest('fromIn','fromSuggest',true);
+setupSuggest('toIn','toSuggest',false);
+
+document.getElementById('calcBtn').addEventListener('click',()=>{
+  const f=document.getElementById('fromIn').value.trim();
+  const t=document.getElementById('toIn').value.trim();
+  const fc=cities.find(c=>c.name.toLowerCase()===f.toLowerCase());
+  const tc=cities.find(c=>c.name.toLowerCase()===t.toLowerCase());
+  if(fc) A={...fc};
+  if(tc) B={...tc};
+  updateStats();
+  if(A&&B) startAnim();
+});
+
+document.getElementById('clearBtn').addEventListener('click',()=>{
+  A=null;B=null;
+  document.getElementById('fromIn').value='';
+  document.getElementById('toIn').value='';
+  updateStats();
+  draw();
+});
+
+document.getElementById('swapBtn').addEventListener('click',()=>{
+  const tmp=A;A=B;B=tmp;
+  const fi=document.getElementById('fromIn'),ti=document.getElementById('toIn');
+  const ft=fi.value;fi.value=ti.value;ti.value=ft;
+  updateStats();
+  if(A&&B) startAnim();
+});
+
+// Map interaction
+canvas.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;});
+window.addEventListener('pointerup',()=>{dragging=false;});
+window.addEventListener('pointermove',e=>{
+  if(!dragging) return;
+  const dx=e.clientX-lastX;
+  const dy=e.clientY-lastY;
+  rotation+=dx*0.3;
+  pitch=Math.max(-1.2,Math.min(1.2,pitch-dy*0.005));
+  lastX=e.clientX;
+  lastY=e.clientY;
+  draw();
+});
+
+canvas.addEventListener('click',e=>{
+  if(dragging) return;
+  const rect=canvas.getBoundingClientRect();
+  const x=(e.clientX-rect.left)-cx;
+  const y=(e.clientY-rect.top)-cy;
+  const dist=Math.sqrt(x*x+y*y);
+  if(dist>r) return;
+  const z=-Math.sqrt(Math.max(0,r*r-dist*dist));
+  const v={x:x,y:-y,z:z};
+  // reverse pitch
+  const cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const y2=v.y*cp+v.z*sp;
+  const z2=-v.y*sp+v.z*cp;
+  const lat=Math.asin(y2/r)*R2D;
+  const theta=Math.atan2(z2,v.x);
+  let lon=theta*R2D-rotation;
+  lon=((lon+180)%360+360)%360-180;
+  setPoint(lat,lon,null);
+});
+
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  zoom*=e.deltaY>0?0.9:1.1;
+  zoom=Math.max(0.6,Math.min(2.5,zoom));
+  resize();
+},{passive:false});
+
+window.addEventListener('resize',resize);
+resize();
+updateStats();
+
+// demo route
+A={...cities[0]};
+B={...cities[5]};
+document.getElementById('fromIn').value=A.name;
+document.getElementById('toIn').value=B.name;
+updateStats();
+setTimeout(startAnim,300);
+</script>
+</body>
+</html>
