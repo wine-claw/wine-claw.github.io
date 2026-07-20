@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-20",
-    "title": "Great Circle Route Explorer",
-    "slug": "great-circle-route-explorer",
-    "publishedSlug": "2026-07-20-great-circle-route-explorer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-20-great-circle-route-explorer/"
+    "date": "2026-07-21",
+    "title": "Watershed Rainfall–Runoff Sandbox",
+    "slug": "watershed-runoff-sandbox",
+    "publishedSlug": "2026-07-21-watershed-runoff-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-21-watershed-runoff-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-07-21",
+      "title": "Watershed Rainfall–Runoff Sandbox",
+      "slug": "watershed-runoff-sandbox",
+      "publishedSlug": "2026-07-21-watershed-runoff-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-21-watershed-runoff-sandbox/",
+      "description": "Paint terrain and land cover, make it rain, and watch water split into infiltration, runoff, evapotranspiration, and surface storage."
+    },
     {
       "date": "2026-07-20",
       "title": "Great Circle Route Explorer",
