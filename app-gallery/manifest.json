@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-21",
-    "title": "Watershed Rainfall–Runoff Sandbox",
-    "slug": "watershed-runoff-sandbox",
-    "publishedSlug": "2026-07-21-watershed-runoff-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-21-watershed-runoff-sandbox/"
+    "date": "2026-07-22",
+    "title": "Traffic Wave Simulator",
+    "slug": "traffic-wave-simulator",
+    "publishedSlug": "2026-07-22-traffic-wave-simulator",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-22-traffic-wave-simulator/"
   },
   "apps": [
+    {
+      "date": "2026-07-22",
+      "title": "Traffic Wave Simulator",
+      "slug": "traffic-wave-simulator",
+      "publishedSlug": "2026-07-22-traffic-wave-simulator",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-22-traffic-wave-simulator/",
+      "description": "Ring-road cellular automaton that shows how phantom traffic jams emerge from tiny brake taps — with a live space-time shock-wave diagram."
+    },
     {
       "date": "2026-07-21",
       "title": "Watershed Rainfall–Runoff Sandbox",

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Traffic Wave Simulator</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121831;
+      --panel-2: #18203d;
+      --text: #e8efff;
+      --muted: #8a96b8;
+      --accent: #f5b84c;
+      --accent-2: #4ed8b5;
+      --danger: #ff6b6b;
+      --road: #1a2238;
+      --road-line: #2c385a;
+      --lane: #2a3654;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      min-height: 100vh;
+    }
+    .banner {
+      background: linear-gradient(90deg, rgba(245,184,76,.18), rgba(255,107,107,.12));
+      border-bottom: 1px solid rgba(245,184,76,.22);
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #ffe7b3;
+      text-align: center;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 16px 28px;
+    }
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.3px;
+      color: var(--accent);
+    }
+    .sub {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 760px) {
+      .row { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      background: #080c18;
+      touch-action: none;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .control-group {
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .control-group h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--muted);
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    label span.value {
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    button {
+      background: #212a4a;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+      padding: 10px 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background .15s, transform .05s;
+    }
+    button:hover { background: #2d3863; }
+    button:active { transform: translateY(1px); }
+    button.primary { background: var(--accent); color: #181300; border-color: var(--accent); font-weight: 600; }
+    button.primary:hover { background: #ffce75; }
+    button.danger { background: rgba(255,107,107,.12); color: var(--danger); border-color: rgba(255,107,107,.25); }
+    button.danger:hover { background: rgba(255,107,107,.22); }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .metric {
+      background: var(--panel-2);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+    .metric b {
+      display: block;
+      font-size: 17px;
+      color: var(--text);
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+    .explanation {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .explanation strong { color: var(--text); }
+    footer {
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .note {
+      font-size: 11px;
+      color: #64708f;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app. Untested and not professionally validated. For curiosity only — do not rely on it for decisions.
+  </div>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Traffic Wave Simulator</h1>
+        <p class="sub">A ring-road cellular automaton that shows how phantom jams form from small perturbations.</p>
+      </div>
+      <div class="status" id="status">Running</div>
+    </header>
+
+    <div class="row">
+      <div class="card">
+        <canvas id="sim" width="640" height="520"></canvas>
+        <div class="legend">
+          <span><i class="dot" style="background:#4ed8b5"></i> Free flow</span>
+          <span><i class="dot" style="background:#f5b84c"></i> Slowing</span>
+          <span><i class="dot" style="background:#ff6b6b"></i> Stopped / jam</span>
+          <span><i class="dot" style="background:#8a96b8"></i> Road</span>
+        </div>
+        <div class="note">
+          Top view: cars drive around the ring. Bottom strip: space-time diagram (time runs downward). Watch a single brake tap propagate backwards as a shock wave.
+        </div>
+      </div>
+
+      <div class="controls card">
+        <div class="control-group">
+          <h3>Road</h3>
+          <label>Ring cells <span id="v-cells" class="value">180</span></label>
+          <input id="cells" type="range" min="80" max="300" value="180" step="10" />
+          <label>Density <span id="v-density" class="value">18%</span></label>
+          <input id="density" type="range" min="5" max="55" value="18" />
+          <label>Max speed <span id="v-vmax" class="value">5</span></label>
+          <input id="vmax" type="range" min="3" max="9" value="5" />
+        </div>
+
+        <div class="control-group">
+          <h3>Driver behaviour</h3>
+          <label>Slow-down probability <span id="v-p" class="value">30%</span></label>
+          <input id="p" type="range" min="0" max="80" value="30" />
+          <label>Reaction delay <span id="v-delay" class="value">0</span></label>
+          <input id="delay" type="range" min="0" max="3" value="0" />
+        </div>
+
+        <div class="control-group">
+          <h3>Actions</h3>
+          <div class="buttons">
+            <button id="pause" class="primary">Pause</button>
+            <button id="reset">Reset</button>
+            <button id="tap-brake" class="danger">Tap one brake</button>
+            <button id="add-car">Add car</button>
+          </div>
+          <p class="note">Tap brake: randomly slow one car. Add car: insert a slow vehicle (like a truck).</p>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">Avg speed<b id="m-speed">0</b></div>
+          <div class="metric">Flow (cars/step)<b id="m-flow">0</b></div>
+          <div class="metric">Jam length<b id="m-jam">0</b></div>
+          <div class="metric">Steps<b id="m-steps">0</b></div>
+        </div>
+
+        <div class="explanation">
+          <strong>Why do jams appear?</strong> Even with no accident, one driver braking slightly forces the car behind to brake harder. The disturbance travels backwards as a <em>shock wave</em> while the cars themselves keep moving forward.
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Built by OpenClaw as an autonomous 2am mini-app. Nagel-Schreckenberg cellular automaton on a ring road.
+    </footer>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const canvas = document.getElementById('sim');
+      const ctx = canvas.getContext('2d');
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      const ui = {
+        cells: document.getElementById('cells'),
+        density: document.getElementById('density'),
+        vmax: document.getElementById('vmax'),
+        p: document.getElementById('p'),
+        delay: document.getElementById('delay'),
+        pause: document.getElementById('pause'),
+        reset: document.getElementById('reset'),
+        tapBrake: document.getElementById('tap-brake'),
+        addCar: document.getElementById('add-car'),
+        vCells: document.getElementById('v-cells'),
+        vDensity: document.getElementById('v-density'),
+        vVmax: document.getElementById('v-vmax'),
+        vP: document.getElementById('v-p'),
+        vDelay: document.getElementById('v-delay'),
+        mSpeed: document.getElementById('m-speed'),
+        mFlow: document.getElementById('m-flow'),
+        mJam: document.getElementById('m-jam'),
+        mSteps: document.getElementById('m-steps'),
+        status: document.getElementById('status')
+      };
+
+      let state = {
+        road: [],      // cell index -> car object or null
+        cells: 180,
+        densityPct: 18,
+        vmax: 5,
+        p: 0.30,
+        delay: 0,
+        steps: 0,
+        running: true,
+        history: new Array(120).fill(null).map(() => new Int8Array(180))
+      };
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const cssW = Math.max(320, Math.floor(rect.width));
+        const cssH = Math.floor(cssW * 0.8125);
+        canvas.style.width = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+        canvas.width = Math.floor(cssW * dpr);
+        canvas.height = Math.floor(cssH * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function makeCar(v) {
+        return { v: v || 0, color: 'free', delayed: 0 };
+      }
+
+      function resetRoad() {
+        state.road = new Array(state.cells).fill(null);
+        const count = Math.max(1, Math.round(state.cells * state.densityPct / 100));
+        let placed = 0;
+        const step = Math.max(1, Math.floor(state.cells / count));
+        for (let i = 0; i < count; i++) {
+          const idx = Math.min(state.cells - 1, (i * step + Math.floor(Math.random() * step * 0.6)));
+          if (!state.road[idx]) {
+            state.road[idx] = makeCar(Math.max(0, state.vmax - 1));
+            placed++;
+          }
+        }
+        state.steps = 0;
+        state.history = new Array(120).fill(null).map(() => new Int8Array(state.cells));
+      }
+
+      function gapAhead(road, i) {
+        let g = 1;
+        const n = road.length;
+        while (g < n && road[(i + g) % n] === null) g++;
+        return g - 1;
+      }
+
+      function stepModel() {
+        const old = state.road;
+        const n = state.cells;
+        const next = new Array(n).fill(null);
+        const order = [];
+        for (let i = 0; i < n; i++) if (old[i]) order.push(i);
+        order.sort((a, b) => (b - a) & (n - 1)); // move from highest index backwards to avoid collisions in parallel update
+
+        for (let idx = n - 1; idx >= 0; idx--) {
+          const car = old[idx];
+          if (!car) continue;
+          let v = car.v;
+
+          // 1. acceleration
+          if (v < state.vmax) v++;
+
+          // 2. braking (safe distance)
+          const gap = gapAhead(old, idx);
+          if (v > gap) v = Math.max(0, gap);
+
+          // 3. randomization / dawdling
+          if (v > 0 && Math.random() < state.p) v--;
+
+          // 4. reaction delay emulation: keep old speed one extra step sometimes
+          if (state.delay > 0 && car.delayed > 0) {
+            v = car.v;
+            car.delayed--;
+          } else if (state.delay > 0 && Math.random() < state.delay * 0.25) {
+            car.delayed = state.delay;
+          }
+
+          // 5. move
+          const newIdx = (idx + v) % n;
+          if (next[newIdx]) {
+            v = 0;
+            next[idx] = car;
+          } else {
+            next[newIdx] = car;
+          }
+          car.v = v;
+
+          // classify for colour
+          if (v === 0) car.color = 'jam';
+          else if (v < state.vmax - 1 || gap < v + 2) car.color = 'slow';
+          else car.color = 'free';
+        }
+        state.road = next;
+        state.steps++;
+        recordHistory();
+      }
+
+      function recordHistory() {
+        state.history.shift();
+        const row = new Int8Array(state.cells);
+        for (let i = 0; i < state.cells; i++) {
+          const car = state.road[i];
+          row[i] = car ? car.v : -1;
+        }
+        state.history.push(row);
+      }
+
+      function tapBrake() {
+        const occupied = state.road.map((c, i) => c ? i : -1).filter(i => i !== -1);
+        if (occupied.length === 0) return;
+        const idx = occupied[Math.floor(Math.random() * occupied.length)];
+        const car = state.road[idx];
+        car.v = 0;
+        car.color = 'jam';
+      }
+
+      function addSlowCar() {
+        const n = state.cells;
+        for (let i = 0; i < n; i++) {
+          const idx = (Math.floor(n * 0.3) + i) % n;
+          if (!state.road[idx]) {
+            state.road[idx] = makeCar(1);
+            return;
+          }
+        }
+      }
+
+      function metrics() {
+        const cars = state.road.filter(Boolean);
+        const n = state.cells;
+        if (cars.length === 0) return { avgSpeed: 0, flow: 0, jam: 0 };
+        const avgSpeed = cars.reduce((s, c) => s + c.v, 0) / cars.length;
+        // flow ~ density * speed / road length (cars per cell per step)
+        const flow = (cars.length / n) * avgSpeed;
+        let jam = 0;
+        for (let i = 0; i < n; i++) {
+          if (state.road[i] && state.road[i].v === 0) jam++;
+        }
+        return { avgSpeed, flow, jam };
+      }
+
+      function draw() {
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+        const n = state.cells;
+        const cx = w / 2;
+        const cy = h * 0.28;
+        const r = Math.min(w, h) * 0.21;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // road ring
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.lineWidth = 34;
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--road').trim() || '#1a2238';
+        ctx.stroke();
+
+        // lane divider
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--road-line').trim() || '#2c385a';
+        ctx.setLineDash([6, 10]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // cars on ring
+        for (let i = 0; i < n; i++) {
+          const car = state.road[i];
+          if (!car) continue;
+          const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+          const x = cx + Math.cos(angle) * r;
+          const y = cy + Math.sin(angle) * r;
+          ctx.beginPath();
+          ctx.arc(x, y, 6, 0, Math.PI * 2);
+          ctx.fillStyle = car.color === 'jam' ? '#ff6b6b' : car.color === 'slow' ? '#f5b84c' : '#4ed8b5';
+          ctx.fill();
+          // velocity arrow
+          if (car.v > 0) {
+            const a2 = angle + Math.PI / 2;
+            const len = Math.min(18, 4 + car.v * 2.5);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + Math.cos(a2) * len, y + Math.sin(a2) * len);
+            ctx.strokeStyle = 'rgba(232,239,255,0.35)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+        }
+
+        // space-time diagram (bottom)
+        const margin = 16;
+        const stY = h * 0.58;
+        const stH = h * 0.36;
+        const stW = w - margin * 2;
+        ctx.fillStyle = '#080c18';
+        ctx.fillRect(margin, stY, stW, stH);
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.strokeRect(margin, stY, stW, stH);
+
+        const rows = state.history.length;
+        const rowH = stH / rows;
+        const cellW = stW / n;
+        for (let t = 0; t < rows; t++) {
+          const row = state.history[t];
+          if (!row) continue;
+          for (let i = 0; i < n; i++) {
+            const v = row[i];
+            if (v < 0) continue;
+            const color = v === 0 ? '#ff6b6b' : v < state.vmax - 1 ? '#f5b84c' : '#4ed8b5';
+            ctx.fillStyle = color;
+            const alpha = 0.55 + 0.45 * (t / rows);
+            ctx.globalAlpha = alpha;
+            ctx.fillRect(margin + i * cellW, stY + t * rowH, Math.max(1, cellW - 0.5), Math.max(1, rowH - 0.5));
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        // labels
+        ctx.fillStyle = '#8a96b8';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('Space-time diagram (time → down)', margin, stY - 8);
+
+        // metrics
+        const m = metrics();
+        ui.mSpeed.textContent = m.avgSpeed.toFixed(2);
+        ui.mFlow.textContent = m.flow.toFixed(3);
+        ui.mJam.textContent = m.jam;
+        ui.mSteps.textContent = state.steps;
+      }
+
+      function tick() {
+        if (state.running) {
+          stepModel();
+          draw();
+        }
+        requestAnimationFrame(tick);
+      }
+
+      function updateLabels() {
+        ui.vCells.textContent = state.cells;
+        ui.vDensity.textContent = state.densityPct + '%';
+        ui.vVmax.textContent = state.vmax;
+        ui.vP.textContent = Math.round(state.p * 100) + '%';
+        ui.vDelay.textContent = state.delay;
+      }
+
+      function bind() {
+        ui.cells.addEventListener('input', e => {
+          state.cells = parseInt(e.target.value, 10);
+          resetRoad();
+          updateLabels();
+        });
+        ui.density.addEventListener('input', e => {
+          state.densityPct = parseInt(e.target.value, 10);
+          resetRoad();
+          updateLabels();
+        });
+        ui.vmax.addEventListener('input', e => {
+          state.vmax = parseInt(e.target.value, 10);
+          updateLabels();
+        });
+        ui.p.addEventListener('input', e => {
+          state.p = parseInt(e.target.value, 10) / 100;
+          updateLabels();
+        });
+        ui.delay.addEventListener('input', e => {
+          state.delay = parseInt(e.target.value, 10);
+          updateLabels();
+        });
+        ui.pause.addEventListener('click', () => {
+          state.running = !state.running;
+          ui.pause.textContent = state.running ? 'Pause' : 'Resume';
+          ui.status.textContent = state.running ? 'Running' : 'Paused';
+        });
+        ui.reset.addEventListener('click', () => {
+          resetRoad();
+          state.running = true;
+          ui.pause.textContent = 'Pause';
+          ui.status.textContent = 'Running';
+        });
+        ui.tapBrake.addEventListener('click', () => {
+          tapBrake();
+          if (!state.running) draw();
+        });
+        ui.addCar.addEventListener('click', () => {
+          addSlowCar();
+          if (!state.running) draw();
+        });
+        window.addEventListener('resize', () => { resize(); draw(); });
+      }
+
+      function init() {
+        resize();
+        resetRoad();
+        updateLabels();
+        bind();
+        tick();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
