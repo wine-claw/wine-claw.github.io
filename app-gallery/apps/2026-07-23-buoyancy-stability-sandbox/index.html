@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Ship Stability Sandbox</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #162032;
+      --panel2: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent2: #f97316;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --water: rgba(56, 189, 248, 0.35);
+      --water-line: #38bdf8;
+      --hull: #cbd5e1;
+      --cargo: #f59e0b;
+      --ballast: #475569;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .banner {
+      background: #451a1a;
+      color: #fecaca;
+      padding: 10px 16px;
+      font-size: 13px;
+      text-align: center;
+      border-bottom: 1px solid #7f1d1d;
+    }
+    header {
+      padding: 18px 20px 6px;
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: 22px; letter-spacing: -0.3px; }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(300px, 1fr) 360px;
+      gap: 18px;
+      padding: 14px 20px 22px;
+    }
+    @media (max-width: 820px) {
+      main { grid-template-columns: 1fr; padding: 12px; }
+      header { padding: 14px 12px 4px; }
+    }
+    .stage {
+      background: var(--panel);
+      border-radius: 14px;
+      border: 1px solid #334155;
+      padding: 14px;
+      position: relative;
+      min-height: 460px;
+      display: flex;
+      flex-direction: column;
+    }
+    canvas { width: 100%; height: 100%; border-radius: 10px; background: linear-gradient(180deg, #0b1220 0%, #0f172a 60%, #143049 60%, #0c4a6e 100%); }
+    .readout {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .metric {
+      background: var(--panel2);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .metric .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric .value { font-size: 18px; font-weight: 600; margin-top: 2px; }
+    .metric .value small { font-size: 12px; color: var(--muted); font-weight: 400; }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .card h3 { margin: 0 0 12px; font-size: 14px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.6px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .row label { font-size: 13px; color: var(--text); }
+    .row span { font-size: 12px; color: var(--muted); min-width: 58px; text-align: right; }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      margin-bottom: 2px;
+    }
+    .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+    button {
+      background: var(--panel2);
+      border: 1px solid #475569;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); }
+    button.active { background: var(--accent); color: #082f49; border-color: var(--accent); font-weight: 600; }
+    .toggle { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .capsize { color: var(--danger); font-weight: 700; }
+    .stable { color: var(--ok); font-weight: 700; }
+    footer {
+      padding: 10px 20px 24px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .mini-canvas { width: 100%; height: 110px; border-radius: 8px; background: var(--panel2); border: 1px solid #334155; }
+  </style>
+</head>
+<body>
+  <div class="banner">Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for real vessel decisions.</div>
+  <header>
+    <h1>Ship Stability Sandbox</h1>
+    <div class="subtitle">Drag weights to shift the centre of gravity. Watch the metacentre decide if she rights herself.</div>
+  </header>
+  <main>
+    <section class="stage">
+      <canvas id="shipCanvas"></canvas>
+      <div class="readout">
+        <div class="metric"><div class="label">Draft</div><div class="value" id="draft">— <small>m</small></div></div>
+        <div class="metric"><div class="label">Heel angle</div><div class="value" id="heel">— <small>°</small></div></div>
+        <div class="metric"><div class="label">GM (metacentric height)</div><div class="value" id="gm">— <small>m</small></div></div>
+        <div class="metric"><div class="label">Righting lever</div><div class="value" id="gz">— <small>m</small></div></div>
+        <div class="metric"><div class="label">Status</div><div class="value" id="status">—</div></div>
+      </div>
+    </section>
+    <aside class="controls">
+      <div class="card">
+        <h3>Vessel</h3>
+        <div class="row"><label>Hull length</label><span id="lenVal">40 m</span></div>
+        <input id="length" type="range" min="20" max="80" value="40" step="1" />
+        <div class="row"><label>Hull beam (width)</label><span id="beamVal">12 m</span></div>
+        <input id="beam" type="range" min="6" max="24" value="12" step="0.5" />
+        <div class="row"><label>Hull depth</label><span id="depthVal">8 m</span></div>
+        <input id="depth" type="range" min="4" max="16" value="8" step="0.5" />
+        <div class="row"><label>Total mass</label><span id="massVal">800 t</span></div>
+        <input id="mass" type="range" min="200" max="3000" value="800" step="50" />
+        <div class="hint">Mass fixes displacement. Higher density cargo lowers CG but raises mass.</div>
+      </div>
+      <div class="card">
+        <h3>Weights</h3>
+        <div class="row"><label>Deck cargo mass</label><span id="cargoMassVal">100 t</span></div>
+        <input id="cargoMass" type="range" min="0" max="600" value="100" step="10" />
+        <div class="row"><label>Cargo height on deck</label><span id="cargoHeightVal">3 m</span></div>
+        <input id="cargoHeight" type="range" min="0.5" max="8" value="3" step="0.25" />
+        <div class="row"><label>Ballast mass (low)</label><span id="ballastMassVal">200 t</span></div>
+        <input id="ballastMass" type="range" min="0" max="800" value="200" step="10" />
+        <div class="hint">High cargo raises CG; low ballast lowers it. A high GM feels stiff; negative GM capsizes.</div>
+      </div>
+      <div class="card">
+        <h3>Try a preset</h3>
+        <div class="presets">
+          <button data-preset="stable">Stable freighter</button>
+          <button data-preset="tender">Tender yacht</button>
+          <button data-preset="topheavy">Top-heavy ferry</button>
+          <button data-preset="ballasted">Ballasted racer</button>
+        </div>
+        <div class="hint" style="margin-top:12px">Drag the pink weight block left/right on the ship to heel her manually.</div>
+      </div>
+      <div class="card">
+        <h3>Righting-arm curve</h3>
+        <canvas id="curveCanvas" class="mini-canvas"></canvas>
+        <div class="hint">GZ vs heel angle. Positive means self-righting.</div>
+      </div>
+    </aside>
+  </main>
+  <footer>OpenClaw overnight mini-app — July 23, 2026. Physics is simplified; hull is treated as a uniform rectangular barge for demonstration.</footer>
+  <script>
+    const canvas = document.getElementById('shipCanvas');
+    const ctx = canvas.getContext('2d');
+    const curveCanvas = document.getElementById('curveCanvas');
+    const curveCtx = curveCanvas.getContext('2d');
+
+    const ship = {
+      length: 40,
+      beam: 12,
+      depth: 8,
+      hullMass: 600,
+      cargoMass: 100,
+      cargoHeight: 3,
+      ballastMass: 200,
+      heelDeg: 8,
+      dragX: 0,
+      waterDensity: 1025,
+      g: 9.81
+    };
+
+    let dragging = false;
+    let dragOffsetX = 0;
+
+    const inputs = {
+      length: document.getElementById('length'),
+      beam: document.getElementById('beam'),
+      depth: document.getElementById('depth'),
+      mass: document.getElementById('mass'),
+      cargoMass: document.getElementById('cargoMass'),
+      cargoHeight: document.getElementById('cargoHeight'),
+      ballastMass: document.getElementById('ballastMass')
+    };
+    const displays = {
+      lenVal: document.getElementById('lenVal'),
+      beamVal: document.getElementById('beamVal'),
+      depthVal: document.getElementById('depthVal'),
+      massVal: document.getElementById('massVal'),
+      cargoMassVal: document.getElementById('cargoMassVal'),
+      cargoHeightVal: document.getElementById('cargoHeightVal'),
+      ballastMassVal: document.getElementById('ballastMassVal'),
+      draft: document.getElementById('draft'),
+      heel: document.getElementById('heel'),
+      gm: document.getElementById('gm'),
+      gz: document.getElementById('gz'),
+      status: document.getElementById('status')
+    };
+
+    function resize() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = Math.floor(rect.width - 28);
+      canvas.height = Math.max(360, Math.floor(rect.height - 28));
+      const crect = curveCanvas.parentElement.getBoundingClientRect();
+      curveCanvas.width = Math.floor(crect.width - 28);
+      curveCanvas.height = 110;
+      draw();
+    }
+
+    function readInputs() {
+      ship.length = parseFloat(inputs.length.value);
+      ship.beam = parseFloat(inputs.beam.value);
+      ship.depth = parseFloat(inputs.depth.value);
+      const totalMass = parseFloat(inputs.mass.value);
+      ship.hullMass = Math.max(100, totalMass - ship.cargoMass - ship.ballastMass);
+      ship.cargoMass = parseFloat(inputs.cargoMass.value);
+      ship.cargoHeight = parseFloat(inputs.cargoHeight.value);
+      ship.ballastMass = parseFloat(inputs.ballastMass.value);
+      // adjust hull mass to keep total displacement close to slider
+      ship.hullMass = Math.max(50, totalMass - ship.cargoMass - ship.ballastMass);
+      displays.lenVal.textContent = ship.length.toFixed(0) + ' m';
+      displays.beamVal.textContent = ship.beam.toFixed(1) + ' m';
+      displays.depthVal.textContent = ship.depth.toFixed(1) + ' m';
+      displays.massVal.textContent = totalMass.toFixed(0) + ' t';
+      displays.cargoMassVal.textContent = ship.cargoMass.toFixed(0) + ' t';
+      displays.cargoHeightVal.textContent = ship.cargoHeight.toFixed(2) + ' m';
+      displays.ballastMassVal.textContent = ship.ballastMass.toFixed(0) + ' t';
+    }
+
+    function compute() {
+      const totalMass = ship.hullMass + ship.cargoMass + ship.ballastMass;
+      const totalVol = totalMass / ship.waterDensity; // m^3 (waterline tonnes ≈ mass t)
+      const underwaterLength = ship.length;
+      const draft = totalVol / (underwaterLength * ship.beam);
+
+      // Centres of gravity (relative to keel, + up)
+      const hullCG = 0.5 * ship.depth;
+      const cargoCG = ship.depth + 0.5 * ship.cargoHeight;
+      const ballastCG = 0.15 * ship.depth;
+      const KG = (ship.hullMass * hullCG + ship.cargoMass * cargoCG + ship.ballastMass * ballastCG) / totalMass;
+
+      // Centre of buoyancy for rectangular barge at small angles
+      const KB = 0.5 * draft;
+      // Second moment of waterplane area about longitudinal axis
+      const I = (underwaterLength * Math.pow(ship.beam, 3)) / 12;
+      const BM = I / totalVol;
+      const GM = KB + BM - KG;
+
+      const heelRad = ship.heelDeg * Math.PI / 180;
+      // Righting lever GZ = GM * sin(heel) for small angles; add a cubic correction to simulate decreasing stability at large angles
+      const vanishingFactor = Math.max(0, 1 - Math.pow(ship.heelDeg / 55, 2));
+      const GZ = GM * Math.sin(heelRad) * vanishingFactor;
+
+      const rightingMoment = totalMass * ship.g * GZ;
+      const status = GM > 0 ? (GM < 0.5 ? 'Tender but upright' : 'Stable') : (rightingMoment < 0 ? 'Capsizing moment' : 'Neutral/unstable');
+
+      return { totalMass, draft, KG, KB, BM, GM, GZ, rightingMoment, status };
+    }
+
+    function worldTransform(cx, cy, scale) {
+      return { x: cx, y: cy, scale };
+    }
+
+    function draw() {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Sky/water gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#0b1220');
+      grad.addColorStop(0.55, '#0f172a');
+      grad.addColorStop(0.55, 'rgba(6,182,212,0.22)');
+      grad.addColorStop(1, 'rgba(8,145,178,0.35)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      readInputs();
+      const data = compute();
+
+      const margin = 70;
+      const scale = Math.min((w - margin * 2) / ship.length, (h - margin * 2) / (ship.depth + ship.cargoHeight + 2));
+      const cx = w / 2;
+      const waterY = h * 0.58;
+      const shipBottomY = waterY + data.draft * scale;
+      const shipTopY = waterY - (ship.depth - data.draft) * scale;
+      const halfL = (ship.length * scale) / 2;
+
+      // Save ship transform state
+      ctx.save();
+      ctx.translate(cx, waterY);
+      ctx.rotate(-ship.heelDeg * Math.PI / 180);
+      ctx.translate(-cx, -waterY);
+
+      // Hull block
+      ctx.fillStyle = '#94a3b8';
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(cx - halfL, shipTopY, ship.length * scale, ship.depth * scale, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Waterline inside hull (now rotated with hull)
+      ctx.strokeStyle = 'rgba(56,189,248,0.9)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - halfL - 10, waterY);
+      ctx.lineTo(cx + halfL + 10, waterY);
+      ctx.stroke();
+
+      // Deck cargo block
+      const cargoW = ship.length * scale * 0.55;
+      const cargoH = ship.cargoHeight * scale;
+      const cargoY = shipTopY - cargoH;
+      ctx.fillStyle = 'rgba(245,158,11,0.85)';
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(cx - cargoW / 2, cargoY, cargoW, cargoH, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('CARGO', cx, shipTopY - cargoH / 2 + 4);
+
+      // Ballast block at bottom
+      const ballastH = ship.depth * scale * 0.25;
+      ctx.fillStyle = 'rgba(71,85,105,0.9)';
+      ctx.strokeStyle = '#64748b';
+      ctx.beginPath();
+      ctx.roundRect(cx - halfL + 8, shipBottomY - ballastH, ship.length * scale - 16, ballastH - 4, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      // Centres
+      const KG = data.KG;
+      const KB = data.KB;
+      const KG_y = shipBottomY - KG * scale;
+      const KB_y = shipBottomY - KB * scale;
+      const KM_y = shipBottomY - (KB + data.BM) * scale;
+
+      function drawCentre(x, y, color, label, letter) {
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // undo rotation for labels
+        ctx.translate(cx, waterY);
+        ctx.rotate(-ship.heelDeg * Math.PI / 180);
+        ctx.translate(-cx, -waterY);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = color;
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(letter, x + 8, y - 8);
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#cbd5e8';
+        ctx.fillText(label, x + 8, y + 6);
+        ctx.restore();
+      }
+
+      drawCentre(cx, KG_y, '#f472b6', 'Centre of gravity', 'G');
+      drawCentre(cx, KB_y, '#38bdf8', 'Centre of buoyancy', 'B');
+      drawCentre(cx, KM_y, '#a78bfa', 'Metacentre', 'M');
+
+      // GM vertical line
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.translate(cx, waterY);
+      ctx.rotate(-ship.heelDeg * Math.PI / 180);
+      ctx.translate(-cx, -waterY);
+      ctx.strokeStyle = '#a78bfa';
+      ctx.setLineDash([4, 3]);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, KM_y);
+      ctx.lineTo(cx, KG_y);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.restore(); // end ship rotation
+
+      // Global water surface line (reference)
+      ctx.strokeStyle = 'rgba(165,243,252,0.55)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(18, waterY);
+      ctx.lineTo(w - 18, waterY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draggable weight handle on deck
+      const deckWorldY = shipTopY - ship.cargoHeight * scale;
+      // approximate deck x after rotation at top-centre
+      const rad = -ship.heelDeg * Math.PI / 180;
+      const handleLen = (ship.dragX / ship.length) * halfL * 2;
+      const handleX0 = cx + handleLen * Math.cos(rad) - (deckWorldY - waterY) * Math.sin(rad);
+      const handleY0 = waterY + handleLen * Math.sin(rad) + (deckWorldY - waterY) * Math.cos(rad);
+      ctx.fillStyle = dragging ? '#f472b6' : '#ec4899';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(handleX0, handleY0, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('DRAG', handleX0, handleY0 + 4);
+
+      // Update readout
+      displays.draft.textContent = data.draft.toFixed(2) + ' m';
+      displays.heel.textContent = ship.heelDeg.toFixed(1) + '°';
+      displays.gm.textContent = data.GM.toFixed(2) + ' m';
+      displays.gz.textContent = data.GZ.toFixed(2) + ' m';
+      displays.status.textContent = data.status;
+      displays.status.className = 'value ' + (data.status === 'Stable' ? 'stable' : (data.status === 'Tender but upright' ? '' : 'capsize'));
+
+      drawCurve(data);
+    }
+
+    function drawCurve(data) {
+      const w = curveCanvas.width, h = curveCanvas.height;
+      curveCtx.clearRect(0, 0, w, h);
+      curveCtx.strokeStyle = '#334155';
+      curveCtx.lineWidth = 1;
+      curveCtx.beginPath();
+      curveCtx.moveTo(0, h / 2);
+      curveCtx.lineTo(w, h / 2);
+      curveCtx.stroke();
+
+      const maxAngle = 50;
+      const maxGZ = Math.max(0.5, Math.abs(data.GM) * 1.5);
+      const points = [];
+      for (let a = -maxAngle; a <= maxAngle; a += 1) {
+        const rad = a * Math.PI / 180;
+        const vanishing = Math.max(0, 1 - Math.pow(Math.abs(a) / 55, 2));
+        const gz = data.GM * Math.sin(rad) * vanishing;
+        const x = ((a + maxAngle) / (maxAngle * 2)) * w;
+        const y = h / 2 - (gz / maxGZ) * (h / 2 - 14);
+        points.push({ x, y });
+      }
+      curveCtx.beginPath();
+      curveCtx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) curveCtx.lineTo(points[i].x, points[i].y);
+      curveCtx.strokeStyle = data.GM > 0 ? '#22c55e' : '#ef4444';
+      curveCtx.lineWidth = 2.5;
+      curveCtx.stroke();
+
+      // Current heel marker
+      const curX = ((ship.heelDeg + maxAngle) / (maxAngle * 2)) * w;
+      const curRad = ship.heelDeg * Math.PI / 180;
+      const curVan = Math.max(0, 1 - Math.pow(Math.abs(ship.heelDeg) / 55, 2));
+      const curGZ = data.GM * Math.sin(curRad) * curVan;
+      const curY = h / 2 - (curGZ / maxGZ) * (h / 2 - 14);
+      curveCtx.fillStyle = '#f8fafc';
+      curveCtx.beginPath();
+      curveCtx.arc(curX, curY, 4, 0, Math.PI * 2);
+      curveCtx.fill();
+    }
+
+    function update() {
+      readInputs();
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    canvas.addEventListener('pointerdown', e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      const waterY = canvas.height * 0.58;
+      const rad = -ship.heelDeg * Math.PI / 180;
+      const halfL = (ship.length * (Math.min((canvas.width - 140) / ship.length, (canvas.height - 140) / (ship.depth + ship.cargoHeight + 2)))) / 2;
+      const deckWorldY = waterY - (ship.depth + ship.cargoHeight) * (Math.min((canvas.width - 140) / ship.length, (canvas.height - 140) / (ship.depth + ship.cargoHeight + 2)));
+      const handleLen = (ship.dragX / ship.length) * halfL * 2;
+      const handleX = canvas.width / 2 + handleLen * Math.cos(rad) - (deckWorldY - waterY) * Math.sin(rad);
+      const handleY = waterY + handleLen * Math.sin(rad) + (deckWorldY - waterY) * Math.cos(rad);
+      const dx = x - handleX, dy = y - handleY;
+      if (dx * dx + dy * dy < 28 * 28) {
+        dragging = true;
+        dragOffsetX = ship.dragX;
+        canvas.setPointerCapture(e.pointerId);
+      }
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const scale = Math.min((canvas.width - 140) / ship.length, (canvas.height - 140) / (ship.depth + ship.cargoHeight + 2));
+      const halfL = (ship.length * scale) / 2;
+      ship.dragX = Math.max(-ship.length / 2, Math.min(ship.length / 2, (x - canvas.width / 2) / scale));
+      // moving weight shifts heel angle based on leverage
+      ship.heelDeg = ship.dragX * 2.2;
+    });
+    canvas.addEventListener('pointerup', e => { dragging = false; canvas.releasePointerCapture(e.pointerId); });
+
+    Object.values(inputs).forEach(el => el.addEventListener('input', () => { readInputs(); draw(); }));
+
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyPreset(btn.dataset.preset);
+      });
+    });
+
+    function applyPreset(name) {
+      if (name === 'stable') {
+        setVals({ length: 50, beam: 14, depth: 9, mass: 1200, cargoMass: 120, cargoHeight: 2.5, ballastMass: 300, heel: 8, dragX: 3.6 });
+      } else if (name === 'tender') {
+        setVals({ length: 36, beam: 9, depth: 7, mass: 400, cargoMass: 80, cargoHeight: 4, ballastMass: 60, heel: 18, dragX: 8.2 });
+      } else if (name === 'topheavy') {
+        setVals({ length: 45, beam: 13, depth: 8, mass: 900, cargoMass: 350, cargoHeight: 6, ballastMass: 50, heel: 4, dragX: 1.8 });
+      } else if (name === 'ballasted') {
+        setVals({ length: 32, beam: 8, depth: 6, mass: 300, cargoMass: 40, cargoHeight: 2, ballastMass: 180, heel: 25, dragX: 11.4 });
+      }
+    }
+    function setVals(v) {
+      inputs.length.value = v.length;
+      inputs.beam.value = v.beam;
+      inputs.depth.value = v.depth;
+      inputs.mass.value = v.mass;
+      inputs.cargoMass.value = v.cargoMass;
+      inputs.cargoHeight.value = v.cargoHeight;
+      inputs.ballastMass.value = v.ballastMass;
+      ship.heelDeg = v.heel;
+      ship.dragX = v.dragX;
+      readInputs();
+      draw();
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    applyPreset('stable');
+    requestAnimationFrame(update);
+  </script>
+</body>
+</html>

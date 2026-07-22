@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-22",
-    "title": "Traffic Wave Simulator",
-    "slug": "traffic-wave-simulator",
-    "publishedSlug": "2026-07-22-traffic-wave-simulator",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-22-traffic-wave-simulator/"
+    "date": "2026-07-23",
+    "title": "Ship Stability Sandbox",
+    "slug": "buoyancy-stability-sandbox",
+    "publishedSlug": "2026-07-23-buoyancy-stability-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-23-buoyancy-stability-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-07-23",
+      "title": "Ship Stability Sandbox",
+      "slug": "buoyancy-stability-sandbox",
+      "publishedSlug": "2026-07-23-buoyancy-stability-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-23-buoyancy-stability-sandbox/",
+      "description": "Drag the deck weight to heel the ship and watch GM decide whether she rights herself or capsizes."
+    },
     {
       "date": "2026-07-22",
       "title": "Traffic Wave Simulator",
