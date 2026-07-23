@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Laser Maze Deflector</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --panel: #111827;
+      --panel2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22d3ee;
+      --accent2: #f472b6;
+      --danger: #ef4444;
+      --ok: #34d399;
+      --wall: #374151;
+      --wall-line: #4b5563;
+      --mirror: rgba(255, 255, 255, 0.85);
+      --target: #facc15;
+      --target-lit: #34d399;
+      --source: #f472b6;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      overflow-x: hidden;
+    }
+    .banner {
+      background: #451a1a;
+      color: #fecaca;
+      padding: 10px 14px;
+      font-size: 13px;
+      text-align: center;
+      border-bottom: 1px solid #7f1d1d;
+    }
+    header {
+      padding: 16px 18px 8px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: 22px; letter-spacing: -0.3px; }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) 320px;
+      gap: 16px;
+      padding: 10px 18px 22px;
+      align-items: start;
+    }
+    @media (max-width: 760px) {
+      main { grid-template-columns: 1fr; padding: 10px 12px 18px; }
+      header { padding: 12px 12px 6px; }
+      h1 { font-size: 20px; }
+    }
+    .stage {
+      background: var(--panel);
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    canvas {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: radial-gradient(circle at 50% 40%, #111827 0%, #0b0f19 80%);
+      border-radius: 10px;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .toolbar label { color: var(--muted); font-size: 13px; margin-right: 4px; }
+    select, button {
+      appearance: none;
+      border: 1px solid #374151;
+      background: var(--panel2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    select { min-width: 140px; }
+    button:hover { background: #374151; }
+    button:active { transform: translateY(1px); }
+    .panel {
+      background: var(--panel);
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .panel h2 { margin: 0 0 4px; font-size: 16px; color: var(--accent); }
+    .panel p { margin: 0; font-size: 14px; color: var(--muted); }
+    .tools {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .tool {
+      border: 2px solid #374151;
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--panel2);
+      transition: border-color .15s, background .15s;
+    }
+    .tool.active { border-color: var(--accent); background: #172554; }
+    .tool .icon { font-size: 22px; line-height: 1; display: block; margin-bottom: 4px; }
+    .tool .label { font-size: 12px; color: var(--muted); }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+    }
+    .dot.lit { background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+    .legend {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 6px 10px;
+      font-size: 13px;
+      color: var(--muted);
+      align-items: center;
+    }
+    .legend span {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border-radius: 3px;
+    }
+    .win {
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid var(--ok);
+      color: var(--ok);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+    }
+    .win.show { display: block; }
+    footer {
+      padding: 0 18px 18px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for decisions.
+  </div>
+  <header>
+    <h1>Laser Maze Deflector</h1>
+    <span class="subtitle">Place mirrors, bend the beam, light every target.</span>
+  </header>
+  <main>
+    <section class="stage">
+      <div class="toolbar">
+        <label for="level">Level</label>
+        <select id="level"></select>
+        <button id="reset">Reset level</button>
+        <button id="hint">Hint</button>
+      </div>
+      <canvas id="board"></canvas>
+    </section>
+    <aside class="panel">
+      <div>
+        <h2>Tools</h2>
+        <p>Tap a cell to apply the selected tool.</p>
+      </div>
+      <div class="tools" id="tools">
+        <div class="tool active" data-tool="slash" title="Mirror /">
+          <span class="icon">╱</span>
+          <span class="label">Mirror /</span>
+        </div>
+        <div class="tool" data-tool="back" title="Mirror \">
+          <span class="icon">╲</span>
+          <span class="label">Mirror \\</span>
+        </div>
+        <div class="tool" data-tool="erase" title="Erase">
+          <span class="icon">✕</span>
+          <span class="label">Erase</span>
+        </div>
+      </div>
+      <div class="status">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Targets lit: 0 / 0</span>
+      </div>
+      <div class="win" id="winMsg">All targets lit — level complete!</div>
+      <div class="legend">
+        <span style="background:var(--source);box-shadow:0 0 6px var(--source)"></span> Laser source
+        <span style="background:var(--target)"></span> Target
+        <span style="background:var(--wall);border:1px solid var(--wall-line)"></span> Wall
+        <span style="background:linear-gradient(45deg,transparent 48%,var(--mirror) 49%,var(--mirror) 51%,transparent 52%)"></span> Mirror
+      </div>
+      <p>Drag the level selector to switch puzzles, or choose <strong>Sandbox</strong> to build your own beam maze.</p>
+    </aside>
+  </main>
+  <footer>
+    Built overnight by OpenClaw · Single-file canvas toy · No external assets.
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    const levelSelect = document.getElementById('level');
+    const resetBtn = document.getElementById('reset');
+    const hintBtn = document.getElementById('hint');
+    const tools = document.querySelectorAll('.tool');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const winMsg = document.getElementById('winMsg');
+
+    const COLS = 12, ROWS = 12;
+    let cellSize = 40;
+    let currentTool = 'slash';
+    let currentLevel = 0;
+    let placed = []; // 2D array of null | '/' | '\\'
+    let hint = false;
+
+    const LEVELS = [
+      {
+        title: '01 Bounce',
+        source: { c: 0, r: 5, dir: { x: 1, y: 0 } },
+        targets: [{ c: 11, r: 5 }],
+        walls: [],
+        hints: [{ c: 9, r: 5, type: 'back' }, { c: 9, r: 7, type: 'slash' }]
+      },
+      {
+        title: '02 Around the corner',
+        source: { c: 0, r: 1, dir: { x: 1, y: 0 } },
+        targets: [{ c: 11, r: 10 }],
+        walls: [
+          { c: 6, r: 0 }, { c: 6, r: 1 }, { c: 6, r: 2 }, { c: 6, r: 3 },
+          { c: 6, r: 4 }, { c: 6, r: 5 }, { c: 6, r: 6 }
+        ],
+        hints: [{ c: 4, r: 6, type: 'slash' }, { c: 11, r: 6, type: 'back' }]
+      },
+      {
+        title: '03 Split path',
+        source: { c: 0, r: 6, dir: { x: 1, y: 0 } },
+        targets: [{ c: 11, r: 2 }, { c: 11, r: 10 }],
+        walls: [
+          { c: 5, r: 0 }, { c: 5, r: 1 }, { c: 5, r: 2 }, { c: 5, r: 3 },
+          { c: 5, r: 8 }, { c: 5, r: 9 }, { c: 5, r: 10 }, { c: 5, r: 11 }
+        ],
+        hints: [{ c: 4, r: 3, type: 'slash' }, { c: 4, r: 8, type: 'back' }, { c: 10, r: 2, type: 'slash' }, { c: 10, r: 10, type: 'back' }]
+      },
+      {
+        title: '04 Zig-zag hall',
+        source: { c: 0, r: 11, dir: { x: 1, y: 0 } },
+        targets: [{ c: 11, r: 0 }],
+        walls: [
+          { c: 3, r: 0 }, { c: 3, r: 1 }, { c: 3, r: 2 }, { c: 3, r: 3 },
+          { c: 3, r: 4 }, { c: 3, r: 5 }, { c: 3, r: 6 }, { c: 3, r: 7 },
+          { c: 3, r: 8 }, { c: 3, r: 9 }, { c: 3, r: 10 },
+          { c: 8, r: 1 }, { c: 8, r: 2 }, { c: 8, r: 3 }, { c: 8, r: 4 },
+          { c: 8, r: 5 }, { c: 8, r: 6 }, { c: 8, r: 7 }, { c: 8, r: 8 },
+          { c: 8, r: 9 }, { c: 8, r: 10 }, { c: 8, r: 11 }
+        ],
+        hints: [{ c: 2, r: 10, type: 'slash' }, { c: 7, r: 1, type: 'slash' }, { c: 11, r: 1, type: 'back' }]
+      },
+      {
+        title: '05 Three rooms',
+        source: { c: 0, r: 1, dir: { x: 1, y: 0 } },
+        targets: [{ c: 11, r: 1 }, { c: 11, r: 5 }, { c: 11, r: 9 }],
+        walls: [
+          { c: 4, r: 0 }, { c: 4, r: 2 }, { c: 4, r: 3 }, { c: 4, r: 4 },
+          { c: 4, r: 6 }, { c: 4, r: 7 }, { c: 4, r: 8 }, { c: 4, r: 10 }, { c: 4, r: 11 },
+          { c: 8, r: 0 }, { c: 8, r: 1 }, { c: 8, r: 2 }, { c: 8, r: 4 },
+          { c: 8, r: 5 }, { c: 8, r: 6 }, { c: 8, r: 8 }, { c: 8, r: 9 }, { c: 8, r: 10 }, { c: 8, r: 11 }
+        ],
+        hints: [
+          { c: 3, r: 2, type: 'slash' }, { c: 7, r: 2, type: 'back' }, { c: 11, r: 2, type: 'slash' },
+          { c: 11, r: 4, type: 'back' }, { c: 11, r: 8, type: 'slash' }
+        ]
+      },
+      {
+        title: 'Sandbox',
+        source: { c: 0, r: 6, dir: { x: 1, y: 0 } },
+        targets: [{ c: 11, r: 3 }, { c: 11, r: 9 }],
+        walls: [
+          { c: 5, r: 5 }, { c: 5, r: 6 }, { c: 5, r: 7 }, { c: 6, r: 5 }, { c: 6, r: 7 }
+        ],
+        hints: []
+      }
+    ];
+
+    function init() {
+      LEVELS.forEach((lvl, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = lvl.title;
+        levelSelect.appendChild(opt);
+      });
+      loadLevel(0);
+      resize();
+      window.addEventListener('resize', resize);
+      levelSelect.addEventListener('change', () => loadLevel(parseInt(levelSelect.value, 10)));
+      resetBtn.addEventListener('click', () => loadLevel(currentLevel));
+      hintBtn.addEventListener('click', () => { hint = !hint; draw(); });
+      tools.forEach(t => t.addEventListener('click', () => {
+        currentTool = t.dataset.tool;
+        tools.forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+      }));
+      canvas.addEventListener('pointerdown', onPointer);
+    }
+
+    function loadLevel(idx) {
+      currentLevel = idx;
+      levelSelect.value = idx;
+      placed = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      hint = false;
+      winMsg.classList.remove('show');
+      draw();
+    }
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      cellSize = rect.width / COLS;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
+    }
+
+    function onPointer(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left);
+      const y = (e.clientY - rect.top);
+      const c = Math.floor(x / cellSize);
+      const r = Math.floor(y / cellSize);
+      if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return;
+      const lvl = LEVELS[currentLevel];
+      if (isSource(c, r) || isTarget(c, r) || isWall(c, r)) return;
+      if (currentTool === 'erase') {
+        placed[r][c] = null;
+      } else if (currentTool === 'slash') {
+        placed[r][c] = placed[r][c] === '/' ? null : '/';
+      } else if (currentTool === 'back') {
+        placed[r][c] = placed[r][c] === '\\' ? null : '\\';
+      }
+      draw();
+    }
+
+    function isSource(c, r) {
+      const s = LEVELS[currentLevel].source;
+      return s.c === c && s.r === r;
+    }
+    function isTarget(c, r) {
+      return LEVELS[currentLevel].targets.some(t => t.c === c && t.r === r);
+    }
+    function isWall(c, r) {
+      return LEVELS[currentLevel].walls.some(w => w.c === c && w.r === r);
+    }
+
+    function reflect(dir, mirror) {
+      if (mirror === '/') {
+        // / mirror: (dx,dy) -> (-dy,-dx)
+        return { x: -dir.y, y: -dir.x };
+      } else if (mirror === '\\') {
+        // \ mirror: (dx,dy) -> (dy,dx)
+        return { x: dir.y, y: dir.x };
+      }
+      return dir;
+    }
+
+    function traceBeam() {
+      const lvl = LEVELS[currentLevel];
+      const start = { x: lvl.source.c + 0.5, y: lvl.source.r + 0.5 };
+      const dir = { ...lvl.source.dir };
+      const path = [{ x: start.x, y: start.y }];
+      const litTargets = new Set();
+      let x = start.x, y = start.y;
+      let dx = dir.x, dy = dir.y;
+      const maxSteps = COLS * ROWS * 2;
+      for (let i = 0; i < maxSteps; i++) {
+        const nextX = x + dx * 0.5;
+        const nextY = y + dy * 0.5;
+        const nc = Math.floor(nextX);
+        const nr = Math.floor(nextY);
+        if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) break;
+        const mirror = placed[nr][nc];
+        if (mirror && (Math.floor(x) !== nc || Math.floor(y) !== nr)) {
+          // entering a cell that contains a mirror
+          const nd = reflect({ x: dx, y: dy }, mirror);
+          dx = nd.x; dy = nd.y;
+          x = nextX; y = nextY;
+          path.push({ x, y });
+          continue;
+        }
+        if (isWall(nc, nr)) {
+          // hit wall face: determine hit point at cell edge
+          const cellLeft = nc, cellRight = nc + 1, cellTop = nr, cellBottom = nr + 1;
+          let hitX = nextX, hitY = nextY;
+          if (dx > 0) hitX = Math.min(hitX, cellRight - 0.001);
+          if (dx < 0) hitX = Math.max(hitX, cellLeft + 0.001);
+          if (dy > 0) hitY = Math.min(hitY, cellBottom - 0.001);
+          if (dy < 0) hitY = Math.max(hitY, cellTop + 0.001);
+          path.push({ x: hitX, y: hitY });
+          break;
+        }
+        if (isTarget(nc, nr)) {
+          path.push({ x: nextX, y: nextY });
+          litTargets.add(`${nc},${nr}`);
+          // beam passes through target (glass sensor)
+          x = nextX; y = nextY;
+          continue;
+        }
+        x = nextX; y = nextY;
+      }
+      return { path, litTargets };
+    }
+
+    function draw() {
+      const lvl = LEVELS[currentLevel];
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      cellSize = rect.width / COLS;
+
+      // Grid
+      ctx.strokeStyle = 'rgba(75, 85, 99, 0.35)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= COLS; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * cellSize, 0);
+        ctx.lineTo(i * cellSize, rect.height);
+        ctx.stroke();
+      }
+      for (let i = 0; i <= ROWS; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, i * cellSize);
+        ctx.lineTo(rect.width, i * cellSize);
+        ctx.stroke();
+      }
+
+      // Walls
+      ctx.fillStyle = 'var(--wall)';
+      ctx.strokeStyle = 'var(--wall-line)';
+      for (const w of lvl.walls) {
+        ctx.fillRect(w.c * cellSize + 2, w.r * cellSize + 2, cellSize - 4, cellSize - 4);
+        ctx.strokeRect(w.c * cellSize + 4, w.r * cellSize + 4, cellSize - 8, cellSize - 8);
+      }
+
+      // Targets
+      for (const t of lvl.targets) {
+        const cx = (t.c + 0.5) * cellSize;
+        const cy = (t.r + 0.5) * cellSize;
+        const lit = beamResult && beamResult.litTargets.has(`${t.c},${t.r}`);
+        ctx.beginPath();
+        ctx.arc(cx, cy, cellSize * 0.28, 0, Math.PI * 2);
+        ctx.fillStyle = lit ? 'var(--target-lit)' : 'var(--target)';
+        ctx.shadowColor = lit ? 'var(--target-lit)' : 'var(--target)';
+        ctx.shadowBlur = lit ? 18 : 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#000';
+        ctx.font = `bold ${Math.floor(cellSize * 0.3)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('T', cx, cy);
+      }
+
+      // Source
+      const s = lvl.source;
+      const sx = (s.c + 0.5) * cellSize;
+      const sy = (s.r + 0.5) * cellSize;
+      ctx.beginPath();
+      ctx.arc(sx, sy, cellSize * 0.28, 0, Math.PI * 2);
+      ctx.fillStyle = 'var(--source)';
+      ctx.shadowColor = 'var(--source)';
+      ctx.shadowBlur = 16;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#000';
+      ctx.font = `bold ${Math.floor(cellSize * 0.3)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('S', sx, sy);
+      // Direction arrow
+      ctx.beginPath();
+      ctx.moveTo(sx + s.dir.x * cellSize * 0.45, sy + s.dir.y * cellSize * 0.45);
+      ctx.lineTo(sx + s.dir.x * cellSize * 0.25, sy + s.dir.y * cellSize * 0.25);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Mirrors
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const m = placed[r][c];
+          if (!m) continue;
+          const cx = (c + 0.5) * cellSize;
+          const cy = (r + 0.5) * cellSize;
+          const len = cellSize * 0.6;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(m === '/' ? -Math.PI / 4 : Math.PI / 4);
+          ctx.beginPath();
+          ctx.roundRect(-len / 2, -4, len, 8, 4);
+          ctx.fillStyle = 'var(--mirror)';
+          ctx.shadowColor = 'var(--accent)';
+          ctx.shadowBlur = 8;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = 'var(--accent)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      // Beam trace
+      beamResult = traceBeam();
+      ctx.beginPath();
+      for (let i = 0; i < beamResult.path.length; i++) {
+        const p = beamResult.path[i];
+        const px = p.x * cellSize;
+        const py = p.y * cellSize;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = 'var(--accent)';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = 'var(--accent)';
+      ctx.shadowBlur = 14;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Core glow
+      if (beamResult.path.length > 1) {
+        ctx.beginPath();
+        for (let i = 0; i < beamResult.path.length; i++) {
+          const p = beamResult.path[i];
+          const px = p.x * cellSize;
+          const py = p.y * cellSize;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Hints overlay
+      if (hint && lvl.hints) {
+        for (const h of lvl.hints) {
+          if (placed[h.r][h.c]) continue;
+          const cx = (h.c + 0.5) * cellSize;
+          const cy = (h.r + 0.5) * cellSize;
+          const len = cellSize * 0.5;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(h.type === '/' ? -Math.PI / 4 : Math.PI / 4);
+          ctx.beginPath();
+          ctx.moveTo(-len / 2, 0);
+          ctx.lineTo(len / 2, 0);
+          ctx.strokeStyle = 'rgba(34, 211, 238, 0.35)';
+          ctx.setLineDash([6, 4]);
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      // Status update
+      const total = lvl.targets.length;
+      const lit = beamResult.litTargets.size;
+      statusText.textContent = `Targets lit: ${lit} / ${total}`;
+      statusDot.classList.toggle('lit', lit === total && total > 0);
+      if (lit === total && total > 0 && !winMsg.classList.contains('show')) {
+        winMsg.classList.add('show');
+      } else if (lit !== total) {
+        winMsg.classList.remove('show');
+      }
+    }
+
+    let beamResult = { path: [], litTargets: new Set() };
+    init();
+  </script>
+</body>
+</html>

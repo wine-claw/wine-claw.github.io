@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-23",
-    "title": "Ship Stability Sandbox",
-    "slug": "buoyancy-stability-sandbox",
-    "publishedSlug": "2026-07-23-buoyancy-stability-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-23-buoyancy-stability-sandbox/"
+    "date": "2026-07-24",
+    "title": "Laser Maze Deflector",
+    "slug": "laser-maze-deflector",
+    "publishedSlug": "2026-07-24-laser-maze-deflector",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-24-laser-maze-deflector/"
   },
   "apps": [
+    {
+      "date": "2026-07-24",
+      "title": "Laser Maze Deflector",
+      "slug": "laser-maze-deflector",
+      "publishedSlug": "2026-07-24-laser-maze-deflector",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-24-laser-maze-deflector/",
+      "description": "Place mirrors on a grid to bend a laser beam and light every target — five levels plus a sandbox."
+    },
     {
       "date": "2026-07-23",
       "title": "Ship Stability Sandbox",
