@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-25",
-    "title": "Shortwave Numbers Station Tuner",
-    "slug": "shortwave-numbers-tuner",
-    "publishedSlug": "2026-07-25-shortwave-numbers-tuner",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-25-shortwave-numbers-tuner/"
+    "date": "2026-07-26",
+    "title": "Paper Plane Launcher",
+    "slug": "paper-plane-launcher",
+    "publishedSlug": "2026-07-26-paper-plane-launcher",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-26-paper-plane-launcher/"
   },
   "apps": [
+    {
+      "date": "2026-07-26",
+      "title": "Paper Plane Launcher",
+      "slug": "paper-plane-launcher",
+      "publishedSlug": "2026-07-26-paper-plane-launcher",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-26-paper-plane-launcher/",
+      "description": "Pick a fold, drag back, and release — a playful aerodynamics sandbox with wind, gravity, and lift/drag physics."
+    },
     {
       "date": "2026-07-25",
       "title": "Shortwave Numbers Station Tuner",

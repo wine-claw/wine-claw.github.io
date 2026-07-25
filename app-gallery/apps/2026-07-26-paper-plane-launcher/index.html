@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Paper Plane Launcher</title>
+  <style>
+    :root {
+      --sky-top: #6DD5FA;
+      --sky-bottom: #FF758C;
+      --paper: #FDFBF7;
+      --ink: #2A2A2A;
+      --accent: #FF6B6B;
+      --accent-2: #4ECDC4;
+      --panel: rgba(255, 255, 255, 0.85);
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    .banner {
+      width: 100%;
+      padding: 10px 16px;
+      background: rgba(30, 30, 30, 0.88);
+      color: #F5F5F5;
+      font-size: 13px;
+      text-align: center;
+      line-height: 1.4;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .wrap {
+      width: min(920px, 100%);
+      padding: 18px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 5vw, 32px);
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      color: #fff;
+    }
+
+    .subtitle {
+      color: rgba(255,255,255,0.92);
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .canvas-card {
+      position: relative;
+      width: 100%;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, #A8E6FF 0%, #E6F3FF 60%, #D2F5E3 100%);
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .canvas-card:active { cursor: grabbing; }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      touch-action: none;
+    }
+
+    .hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      pointer-events: none;
+    }
+
+    .hud span {
+      background: var(--panel);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: 14px;
+      padding: 14px;
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+    }
+
+    .panel h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #555;
+    }
+
+    .plane-select {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border: 2px solid rgba(0,0,0,0.08);
+      background: #fff;
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform .12s, border-color .12s, box-shadow .12s;
+    }
+
+    .chip:hover { transform: translateY(-1px); }
+    .chip.active {
+      border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(255,107,107,0.25);
+      font-weight: 600;
+    }
+
+    label.row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      min-width: 80px;
+    }
+
+    .value {
+      font-variant-numeric: tabular-nums;
+      min-width: 44px;
+      text-align: right;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .1s, filter .1s;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+    }
+
+    button:active { transform: translateY(1px); }
+    .primary { background: var(--accent); color: #fff; }
+    .secondary { background: #fff; color: var(--ink); }
+    .ghost { background: transparent; color: #fff; box-shadow: none; border: 1px solid rgba(255,255,255,0.4); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.55);
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 18px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat small { font-size: 11px; color: #555; }
+
+    .hint {
+      color: rgba(255,255,255,0.9);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 520px) {
+      .wrap { padding: 12px; gap: 10px; }
+      .panel { padding: 12px; }
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app — untested, just-for-fun physics toy. Not validated for any decisions.
+  </div>
+
+  <div class="wrap">
+    <div>
+      <h1>✈️ Paper Plane Launcher</h1>
+      <div class="subtitle">Pull back and release. Pick a fold, tune the wind, and chase distance.</div>
+    </div>
+
+    <div class="canvas-card" id="scene">
+      <canvas id="sky" width="900" height="420"></canvas>
+      <div class="hud">
+        <span id="hudDist">Distance: 0 m</span>
+        <span id="hudAlt">Altitude: 0 m</span>
+        <span id="hudSpd">Speed: 0 m/s</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="panel">
+        <h3>Folding style</h3>
+        <div class="plane-select" id="planeSelect"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Flight conditions</h3>
+        <label class="row">
+          Wind <input id="wind" type="range" min="-12" max="12" step="0.5" value="2"><span class="value" id="windVal">2</span>
+        </label>
+        <label class="row">
+          Gravity <input id="gravity" type="range" min="1" max="20" step="0.5" value="9.8"><span class="value" id="gravityVal">9.8</span>
+        </label>
+        <label class="row">
+          Air density <input id="air" type="range" min="0.3" max="1.6" step="0.05" value="1.0"><span class="value" id="airVal">1.0</span>
+        </label>
+      </div>
+
+      <div class="panel">
+        <h3>Launch stats</h3>
+        <div class="stats">
+          <div class="stat"><b id="best">0</b><small>Best (m)</small></div>
+          <div class="stat"><b id="last">0</b><small>Last (m)</small></div>
+          <div class="stat"><b id="flights">0</b><small>Flights</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="btnLaunch">Launch again</button>
+      <button class="secondary" id="btnReset">Reset stats</button>
+      <button class="ghost" id="btnSandbox">Random wind</button>
+    </div>
+
+    <div class="hint">
+      Tip: a dart flies fast and straight; a glider loves a headwind for lift; a canard is steady but short.
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('sky');
+    const ctx = canvas.getContext('2d');
+    const scene = document.getElementById('scene');
+    const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+    function resize() {
+      const rect = scene.getBoundingClientRect();
+      canvas.width = Math.floor(rect.width * DPR);
+      canvas.height = Math.floor(rect.height * DPR);
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+
+    const W = () => canvas.clientWidth;
+    const H = () => canvas.clientHeight;
+
+    const planeTypes = {
+      dart: { name: 'Dart', lift: 0.55, drag: 0.42, mass: 0.9, stability: 1.3, color: '#FF6B6B' },
+      glider: { name: 'Glider', lift: 1.05, drag: 0.62, mass: 1.2, stability: 0.9, color: '#4ECDC4' },
+      canard: { name: 'Canard', lift: 0.75, drag: 0.55, mass: 1.05, stability: 1.6, color: '#FFD166' },
+      stealth: { name: 'Stealth', lift: 0.65, drag: 0.38, mass: 1.15, stability: 0.7, color: '#9B5DE5' }
+    };
+
+    let currentType = 'glider';
+    let best = 0, last = 0, flights = 0;
+    let dragging = false;
+    let dragStart = { x: 80, y: H() * 0.55 };
+    let dragCurrent = { x: 80, y: H() * 0.55 };
+    let state = 'aim'; // aim | flying | landed
+    let plane = null;
+    let particles = [];
+    let clouds = [];
+    let trail = [];
+    let animId;
+    let lastT = performance.now();
+
+    function setType(key) {
+      currentType = key;
+      document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.type === key));
+      resetAim();
+    }
+
+    function buildPlaneSelect() {
+      const wrap = document.getElementById('planeSelect');
+      Object.keys(planeTypes).forEach(k => {
+        const b = document.createElement('button');
+        b.className = 'chip';
+        b.dataset.type = k;
+        b.textContent = planeTypes[k].name;
+        b.addEventListener('click', () => setType(k));
+        wrap.appendChild(b);
+      });
+    }
+
+    function initClouds() {
+      clouds = [];
+      for (let i = 0; i < 7; i++) {
+        clouds.push({
+          x: Math.random() * W(),
+          y: 20 + Math.random() * (H() * 0.45),
+          w: 70 + Math.random() * 90,
+          h: 24 + Math.random() * 20,
+          speed: 0.05 + Math.random() * 0.12,
+          alpha: 0.35 + Math.random() * 0.25
+        });
+      }
+    }
+
+    function resetAim() {
+      state = 'aim';
+      plane = null;
+      trail = [];
+      dragStart = { x: 80, y: H() * 0.55 };
+      dragCurrent = { x: 80, y: H() * 0.55 };
+      draw();
+    }
+
+    function launch() {
+      const t = planeTypes[currentType];
+      const dx = dragStart.x - dragCurrent.x;
+      const dy = dragStart.y - dragCurrent.y;
+      const power = Math.min(24, Math.sqrt(dx * dx + dy * dy) / 12);
+      const angle = Math.atan2(dy, dx);
+
+      if (power < 1.5) return;
+
+      plane = {
+        x: dragStart.x,
+        y: dragStart.y,
+        vx: Math.cos(angle) * power * 2.4,
+        vy: Math.sin(angle) * power * 2.4,
+        angle: angle,
+        spin: 0,
+        type: t,
+        dist: 0,
+        ground: H() * 0.82
+      };
+      state = 'flying';
+      trail = [];
+      particles = [];
+      flights++;
+      document.getElementById('flights').textContent = flights;
+    }
+
+    function update(dt) {
+      const wind = parseFloat(document.getElementById('wind').value);
+      const g = parseFloat(document.getElementById('gravity').value);
+      const rho = parseFloat(document.getElementById('air').value);
+
+      // Animate clouds
+      clouds.forEach(c => {
+        c.x += c.speed + wind * 0.05;
+        if (c.x - c.w > W()) c.x = -c.w;
+        if (c.x + c.w < 0) c.x = W() + c.w;
+      });
+
+      if (state === 'flying' && plane) {
+        const t = plane.type;
+        const v = Math.sqrt(plane.vx * plane.vx + plane.vy * plane.vy);
+        const flightAngle = Math.atan2(plane.vy, plane.vx);
+
+        // Effective velocity relative to air
+        const vRelX = plane.vx - wind;
+        const vRel = Math.sqrt(vRelX * vRelX + plane.vy * plane.vy);
+
+        // Drag opposes relative velocity
+        const drag = 0.012 * t.drag * rho * vRel * vRel;
+        const dragAngle = Math.atan2(plane.vy, vRelX);
+        const axDrag = -Math.cos(dragAngle) * drag / t.mass;
+        const ayDrag = -Math.sin(dragAngle) * drag / t.mass;
+
+        // Lift is perpendicular to relative velocity, scaled by angle of attack
+        const aoa = flightAngle - plane.angle; // simplified
+        const liftMag = 0.018 * t.lift * rho * vRel * vRel * Math.max(0, Math.cos(aoa));
+        const liftAngle = dragAngle - Math.PI / 2;
+        const axLift = Math.cos(liftAngle) * liftMag / t.mass;
+        const ayLift = Math.sin(liftAngle) * liftMag / t.mass;
+
+        // Gravity
+        const ayGrav = g * 0.25;
+
+        plane.vx += (axDrag + axLift) * dt * 60;
+        plane.vy += (ayDrag + ayLift + ayGrav) * dt * 60;
+
+        // Natural pitch damping toward velocity vector
+        const targetAngle = Math.atan2(plane.vy, plane.vx);
+        const diff = ((targetAngle - plane.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
+        plane.angle += diff * (0.06 * t.stability) * dt * 60;
+        plane.spin = diff * 0.4;
+
+        plane.x += plane.vx * dt * 60;
+        plane.y += plane.vy * dt * 60;
+        plane.dist = Math.max(0, plane.x - 80) / 4;
+
+        // Trail
+        if (trail.length === 0 || Math.hypot(trail[trail.length - 1].x - plane.x, trail[trail.length - 1].y - plane.y) > 8) {
+          trail.push({ x: plane.x, y: plane.y, age: 0 });
+        }
+
+        // Ground collision
+        if (plane.y >= plane.ground) {
+          plane.y = plane.ground;
+          state = 'landed';
+          last = Math.round(plane.dist);
+          best = Math.max(best, last);
+          document.getElementById('last').textContent = last;
+          document.getElementById('best').textContent = best;
+          for (let i = 0; i < 12; i++) {
+            particles.push({
+              x: plane.x, y: plane.y,
+              vx: (Math.random() - 0.5) * 4, vy: -Math.random() * 3,
+              life: 1.0, color: '#fff'
+            });
+          }
+        }
+
+        // Out of bounds
+        if (plane.x > W() + 80 || plane.x < -80) {
+          state = 'landed';
+          last = Math.round(plane.dist);
+          best = Math.max(best, last);
+          document.getElementById('last').textContent = last;
+          document.getElementById('best').textContent = best;
+        }
+      }
+
+      // Update particles
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.03;
+      });
+      particles = particles.filter(p => p.life > 0);
+
+      // Trail age
+      trail.forEach(p => p.age += dt);
+      if (trail.length > 120) trail.shift();
+    }
+
+    function drawPlane(ctx, x, y, angle, color, scale = 1) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.scale(scale, scale);
+
+      ctx.beginPath();
+      ctx.moveTo(18, 0);
+      ctx.lineTo(-14, -10);
+      ctx.lineTo(-8, 0);
+      ctx.lineTo(-14, 10);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Fold line / shading
+      ctx.beginPath();
+      ctx.moveTo(10, 0);
+      ctx.lineTo(-10, -7);
+      ctx.moveTo(10, 0);
+      ctx.lineTo(-10, 7);
+      ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Center crease
+      ctx.beginPath();
+      ctx.moveTo(-8, 0);
+      ctx.lineTo(18, 0);
+      ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function draw() {
+      const w = W();
+      const h = H();
+      ctx.clearRect(0, 0, w, h);
+
+      // Sky gradient is CSS background, but canvas draws ground + objects
+      const groundY = h * 0.82;
+
+      // Draw clouds
+      clouds.forEach(c => {
+        ctx.save();
+        ctx.globalAlpha = c.alpha;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.ellipse(c.x, c.y, c.w / 2, c.h / 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(c.x + c.w * 0.18, c.y + c.h * 0.2, c.w * 0.35, c.h * 0.55, 0, 0, Math.PI * 2);
+        ctx.ellipse(c.x - c.w * 0.18, c.y + c.h * 0.15, c.w * 0.3, c.h * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Ground
+      const grad = ctx.createLinearGradient(0, groundY, 0, h);
+      grad.addColorStop(0, '#A8D08D');
+      grad.addColorStop(1, '#7FB069');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, groundY, w, h - groundY);
+
+      // Distance markers every 50 virtual metres
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      for (let m = 0; m <= 400; m += 50) {
+        const mx = 80 + m * 4;
+        if (mx > w - 10) break;
+        ctx.fillRect(mx, groundY - 4, 1, 8);
+        ctx.fillText(m + ' m', mx, groundY + 18);
+      }
+
+      // Trail
+      if (trail.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(trail[0].x, trail[0].y);
+        for (let i = 1; i < trail.length; i++) ctx.lineTo(trail[i].x, trail[i].y);
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([6, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Plane
+      if (plane) {
+        drawPlane(ctx, plane.x, plane.y, plane.angle, plane.type.color);
+      }
+
+      // Aim sling
+      if (state === 'aim') {
+        const startX = dragStart.x;
+        const startY = dragStart.y;
+        const curX = dragCurrent.x;
+        const curY = dragCurrent.y;
+
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(curX, curY);
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Ghost plane preview
+        const dx = startX - curX;
+        const dy = startY - curY;
+        const ang = Math.atan2(dy, dx);
+        drawPlane(ctx, startX, startY, ang, planeTypes[currentType].color, 0.85);
+
+        // Pull-back circle
+        ctx.beginPath();
+        ctx.arc(curX, curY, 10, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.fill();
+      }
+
+      // Particles
+      particles.forEach(p => {
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      // HUD values
+      if (plane) {
+        document.getElementById('hudDist').textContent = 'Distance: ' + Math.round(plane.dist) + ' m';
+        document.getElementById('hudAlt').textContent = 'Altitude: ' + Math.max(0, Math.round(groundY - plane.y)) + ' m';
+        document.getElementById('hudSpd').textContent = 'Speed: ' + Math.round(Math.sqrt(plane.vx * plane.vx + plane.vy * plane.vy)) + ' m/s';
+      } else {
+        document.getElementById('hudDist').textContent = 'Distance: 0 m';
+        document.getElementById('hudAlt').textContent = 'Altitude: 0 m';
+        document.getElementById('hudSpd').textContent = 'Speed: 0 m/s';
+      }
+    }
+
+    function loop(t) {
+      const dt = Math.min(0.05, (t - lastT) / 1000);
+      lastT = t;
+      update(dt);
+      draw();
+      animId = requestAnimationFrame(loop);
+    }
+
+    function localPos(ev) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      return { x: cx - rect.left, y: cy - rect.top };
+    }
+
+    scene.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      if (state === 'flying') return;
+      dragging = true;
+      const p = localPos(e);
+      dragStart = { x: 80, y: H() * 0.55 };
+      dragCurrent = p;
+    });
+
+    scene.addEventListener('pointermove', e => {
+      e.preventDefault();
+      if (!dragging) return;
+      const p = localPos(e);
+      const dx = p.x - dragStart.x;
+      const dy = p.y - dragStart.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const maxLen = 160;
+      if (len > maxLen) {
+        const ang = Math.atan2(dy, dx);
+        dragCurrent = { x: dragStart.x + Math.cos(ang) * maxLen, y: dragStart.y + Math.sin(ang) * maxLen };
+      } else {
+        dragCurrent = p;
+      }
+    });
+
+    scene.addEventListener('pointerup', e => {
+      e.preventDefault();
+      if (!dragging) return;
+      dragging = false;
+      launch();
+    });
+
+    scene.addEventListener('pointerleave', e => {
+      if (dragging) {
+        dragging = false;
+        launch();
+      }
+    });
+
+    document.getElementById('btnLaunch').addEventListener('click', () => {
+      if (state === 'flying') return;
+      resetAim();
+    });
+
+    document.getElementById('btnReset').addEventListener('click', () => {
+      best = 0; last = 0; flights = 0;
+      document.getElementById('best').textContent = 0;
+      document.getElementById('last').textContent = 0;
+      document.getElementById('flights').textContent = 0;
+    });
+
+    document.getElementById('btnSandbox').addEventListener('click', () => {
+      document.getElementById('wind').value = (Math.random() * 20 - 10).toFixed(1);
+      document.getElementById('windVal').textContent = document.getElementById('wind').value;
+    });
+
+    ['wind', 'gravity', 'air'].forEach(id => {
+      const el = document.getElementById(id);
+      const out = document.getElementById(id + 'Val');
+      el.addEventListener('input', () => out.textContent = el.value);
+    });
+
+    window.addEventListener('resize', () => {
+      resize();
+      initClouds();
+      resetAim();
+    });
+
+    buildPlaneSelect();
+    resize();
+    initClouds();
+    setType('glider');
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
