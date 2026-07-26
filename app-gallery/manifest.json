@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-26",
-    "title": "Paper Plane Launcher",
-    "slug": "paper-plane-launcher",
-    "publishedSlug": "2026-07-26-paper-plane-launcher",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-26-paper-plane-launcher/"
+    "date": "2026-07-27",
+    "title": "Map Projection Lab",
+    "slug": "map-projection-lab",
+    "publishedSlug": "2026-07-27-map-projection-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-27-map-projection-lab/"
   },
   "apps": [
+    {
+      "date": "2026-07-27",
+      "title": "Map Projection Lab",
+      "slug": "map-projection-lab",
+      "publishedSlug": "2026-07-27-map-projection-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-27-map-projection-lab/",
+      "description": "Twist a 3D globe into ten classic map projections and watch graticules and Tissot ellipses reveal where area, shape, and distance get stretched."
+    },
     {
       "date": "2026-07-26",
       "title": "Paper Plane Launcher",

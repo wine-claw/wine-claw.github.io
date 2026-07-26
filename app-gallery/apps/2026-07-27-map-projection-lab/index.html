@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Map Projection Lab</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-2: #1c2128;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-2: #f0883e;
+      --warning: #d29922;
+      --danger: #f85149;
+      --border: #30363d;
+      --font: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      overflow: hidden;
+    }
+    #app {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+    @media (max-width: 900px) {
+      #app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        overflow: auto;
+      }
+      #mapWrap { min-height: 60vh; }
+    }
+    aside {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    @media (max-width: 900px) {
+      aside {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        max-height: 55vh;
+      }
+    }
+    .banner {
+      background: linear-gradient(90deg, rgba(210,153,34,0.18), rgba(210,153,34,0.06));
+      color: var(--warning);
+      border-bottom: 1px solid rgba(210,153,34,0.25);
+      padding: 10px 16px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    header {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .controls {
+      padding: 14px 16px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .section { margin-bottom: 18px; }
+    .label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .label b { color: var(--text); }
+    select, button {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    select:focus, button:focus, input:focus { outline: 2px solid rgba(88,166,255,0.4); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .toggles { display: flex; gap: 8px; flex-wrap: wrap; }
+    .toggles button { flex: 1; min-width: 80px; font-size: 12px; padding: 7px 4px; }
+    .toggles button.active {
+      border-color: var(--accent);
+      background: rgba(88,166,255,0.12);
+      color: var(--accent);
+    }
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--accent);
+      margin: 4px 0 8px;
+    }
+    .note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      padding: 10px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .legend {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--muted);
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    #mapWrap {
+      position: relative;
+      background: radial-gradient(circle at 50% 50%, #11161d 0%, #0a0c10 100%);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    svg { max-width: 100%; max-height: 100%; }
+    .graticule { fill: none; stroke: rgba(139,148,158,0.18); stroke-width: 1; }
+    .land { fill: rgba(88,166,255,0.22); stroke: rgba(88,166,255,0.45); stroke-width: 0.6; }
+    .outline { fill: none; stroke: rgba(139,148,158,0.25); stroke-width: 1.2; }
+    .indicatrix { fill: none; stroke: var(--accent-2); stroke-width: 1.4; }
+    .indicatrix-center { fill: var(--accent-2); r: 1.6; }
+    .equator { fill: none; stroke: rgba(248,81,73,0.5); stroke-width: 1.2; stroke-dasharray: 4 3; }
+    .meridian-0 { fill: none; stroke: rgba(248,81,73,0.5); stroke-width: 1.2; stroke-dasharray: 4 3; }
+    .ai-banner {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(13,17,23,0.85);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      pointer-events: none;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) {
+      .ai-banner { font-size: 10px; bottom: 6px; }
+    }
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <div class="banner">
+      ⚠️ Experimental OpenClaw AI mini-app. Untested, not professionally validated — do not rely on it for decisions.
+    </div>
+    <header>
+      <h1>🗺️ Map Projection Lab</h1>
+      <p>Twist a 3D globe into flat maps and see where area, shape, and distance get stretched.</p>
+    </header>
+    <div class="controls">
+      <div class="section">
+        <div class="label"><b>Projection</b><span id="projName">Orthographic</span></div>
+        <select id="projectionSelect"></select>
+        <div class="hint">All projections use real d3-geo math; drag on the map to rotate where supported.</div>
+      </div>
+
+      <div class="section" id="rotateControls">
+        <div class="label"><b>Longitude</b><span id="lonVal">0°</span></div>
+        <input id="lon" type="range" min="-180" max="180" step="1" value="0" />
+        <div class="label"><b>Latitude</b><span id="latVal">0°</span></div>
+        <input id="lat" type="range" min="-90" max="90" step="1" value="0" />
+      </div>
+
+      <div class="section">
+        <div class="label"><b>Extras</b></div>
+        <div class="toggles">
+          <button id="tGraticule" class="active">Graticule</button>
+          <button id="tTissot" class="active">Tissot</button>
+          <button id="tEquator">Equator</button>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--accent-2)"></i>Stretch ellipses</span>
+          <span><i class="dot" style="background:rgba(248,81,73,0.7)"></i>Equator / prime meridian</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="label"><b>Presets</b></div>
+        <div class="row">
+          <button id="presetGlobe">Face Australia</button>
+          <button id="presetCompare">Greenland vs Africa</button>
+        </div>
+        <div class="row">
+          <button id="presetPole">North Pole</button>
+          <button id="presetEqualArea">Equal-area check</button>
+        </div>
+      </div>
+
+      <div class="section note" id="projectionNote">
+        Orthographic looks like a real globe; straight lines near the rim are compressed, and the far side is hidden.
+      </div>
+    </div>
+  </aside>
+
+  <div id="mapWrap">
+    <svg id="map"></svg>
+    <div class="ai-banner">
+      Built overnight by OpenClaw. Map data: Natural Earth via world-atlas TopoJSON. Projections: d3-geo / d3-geo-projection. For fun only.
+    </div>
+  </div>
+</div>
+
+<script>
+  (async function() {
+    const svg = d3.select('#map');
+    let width = 0, height = 0;
+    const margin = 14;
+
+    const projections = [
+      { name: 'Orthographic (globe)', key: 'geoOrthographic', rotate: true, note: 'Orthographic looks like a real globe; straight lines near the rim are compressed, and the far side is hidden.' },
+      { name: 'Mercator', key: 'geoMercator', rotate: true, note: 'Mercator preserves angles (good for navigation) but inflates areas near the poles — Greenland looks huge.' },
+      { name: 'Equirectangular', key: 'geoEquirectangular', rotate: true, note: 'Simple plate carrée: x = longitude, y = latitude. Stretches horizontally near the poles.' },
+      { name: 'Winkel Tripel', key: 'geoWinkel3', rotate: true, note: 'A compromise projection used by National Geographic. Tries to balance area, shape, and distance.' },
+      { name: 'Mollweide (equal-area)', key: 'geoMollweide', rotate: true, note: 'An ellipse equal-area projection; area is true but shapes stretch toward the edges.' },
+      { name: 'Robinson', key: 'geoRobinson', rotate: true, note: 'A pseudo-cylindrical compromise popular in classroom wall maps.' },
+      { name: 'Stereographic', key: 'geoStereographic', rotate: true, note: 'Conformal (angle-preserving) azimuthal projection. Circles stay circles, but areas blow up away from the centre.' },
+      { name: 'Azimuthal Equal-Area', key: 'geoAzimuthalEqualArea', rotate: true, note: 'Preserves area from a centre point; useful for comparing region sizes around a chosen pole.' },
+      { name: 'Natural Earth 1/2', key: 'geoNaturalEarth1', rotate: true, note: 'A modern compromise projection with pleasant curves, used by many vector world maps.' },
+      { name: 'Conic Equal-Area', key: 'geoConicEqualArea', rotate: true, note: 'Good for mid-latitude regions (e.g. USA, Russia): preserves area along chosen standard parallels.' },
+    ];
+
+    const select = document.getElementById('projectionSelect');
+    projections.forEach((p, i) => { const o = document.createElement('option'); o.value = i; o.textContent = p.name; select.appendChild(o); });
+
+    // Load world data
+    const worldUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json';
+    const world = await d3.json(worldUrl);
+    const countries = topojson.feature(world, world.objects.countries);
+    const graticule = d3.geoGraticule();
+
+    let state = {
+      projIndex: 0,
+      lon: 135,
+      lat: -25,
+      showGraticule: true,
+      showTissot: true,
+      showEquator: false,
+      scaleRatio: 0.92
+    };
+
+    const controls = {
+      lon: document.getElementById('lon'),
+      lat: document.getElementById('lat'),
+      tGraticule: document.getElementById('tGraticule'),
+      tTissot: document.getElementById('tTissot'),
+      tEquator: document.getElementById('tEquator'),
+      note: document.getElementById('projectionNote'),
+      projName: document.getElementById('projName'),
+      lonVal: document.getElementById('lonVal'),
+      latVal: document.getElementById('latVal')
+    };
+
+    function fitProjection(projection, geojson, w, h, pad) {
+      const path = d3.geoPath().projection(projection);
+      projection.fitExtent([[pad, pad], [w - pad, h - pad]], geojson);
+      return projection;
+    }
+
+    function currentProjection() {
+      const def = projections[state.projIndex];
+      const ctor = d3[def.key];
+      let p;
+      if (def.key === 'geoConicEqualArea') {
+        p = ctor().parallels([20, 50]).rotate([0, 0]);
+      } else {
+        p = ctor();
+      }
+      if (def.rotate && state.projIndex !== 0) {
+        p.rotate([-state.lon, -state.lat]);
+      } else if (def.rotate) {
+        p.rotate([state.lon, state.lat]);
+      }
+      return p;
+    }
+
+    function tissotPoints(step) {
+      const pts = [];
+      for (let lat = -75; lat <= 75; lat += step) {
+        for (let lon = -165; lon <= 165; lon += step) {
+          pts.push([lon, lat]);
+        }
+      }
+      return pts;
+    }
+
+    function render() {
+      const wrap = document.getElementById('mapWrap');
+      width = wrap.clientWidth;
+      height = wrap.clientHeight;
+      svg.attr('width', width).attr('height', height);
+      svg.selectAll('*').remove();
+
+      const p = currentProjection();
+      fitProjection(p, { type: 'Sphere' }, width, height, margin);
+      const path = d3.geoPath().projection(p);
+
+      // Sphere outline
+      svg.append('path').datum({ type: 'Sphere' }).attr('class', 'outline').attr('d', path);
+
+      // Graticule
+      if (state.showGraticule) {
+        svg.append('path').datum(graticule()).attr('class', 'graticule').attr('d', path);
+      }
+
+      // Equator and prime meridian
+      if (state.showEquator) {
+        svg.append('path').datum({ type: 'LineString', coordinates: [[-180, 0], [180, 0]] }).attr('class', 'equator').attr('d', path);
+        svg.append('path').datum({ type: 'LineString', coordinates: [[0, -90], [0, 90]] }).attr('class', 'meridian-0').attr('d', path);
+      }
+
+      // Countries
+      svg.append('path').datum(countries).attr('class', 'land').attr('d', path);
+
+      // Tissot indicatrices
+      if (state.showTissot) {
+        const step = state.projIndex === 0 ? 30 : 30;
+        const centres = tissotPoints(step);
+        const radiusDeg = 4;
+        centres.forEach(([lon, lat]) => {
+          const ring = [];
+          for (let a = 0; a <= 2 * Math.PI; a += Math.PI / 16) {
+            const dLon = radiusDeg * Math.cos(a) / Math.cos(lat * Math.PI / 180);
+            const dLat = radiusDeg * Math.sin(a);
+            ring.push([lon + dLon, lat + dLat]);
+          }
+          const d = path({ type: 'Polygon', coordinates: [ring] });
+          if (d) {
+            svg.append('path').attr('class', 'indicatrix').attr('d', d);
+            const c = path({ type: 'Point', coordinates: [lon, lat] });
+            if (c) svg.append('path').attr('class', 'indicatrix-center').attr('d', c);
+          }
+        });
+      }
+    }
+
+    function updateUI() {
+      const def = projections[state.projIndex];
+      controls.projName.textContent = def.name;
+      controls.note.textContent = def.note;
+      controls.lon.value = state.lon;
+      controls.lat.value = state.lat;
+      controls.lonVal.textContent = state.lon + '°';
+      controls.latVal.textContent = state.lat + '°';
+      controls.tGraticule.classList.toggle('active', state.showGraticule);
+      controls.tTissot.classList.toggle('active', state.showTissot);
+      controls.tEquator.classList.toggle('active', state.showEquator);
+      document.getElementById('rotateControls').style.opacity = def.rotate ? '1' : '0.35';
+    }
+
+    function refresh() { updateUI(); render(); }
+
+    select.addEventListener('change', () => { state.projIndex = parseInt(select.value, 10); refresh(); });
+    controls.lon.addEventListener('input', e => { state.lon = parseInt(e.target.value, 10); refresh(); });
+    controls.lat.addEventListener('input', e => { state.lat = parseInt(e.target.value, 10); refresh(); });
+    controls.tGraticule.addEventListener('click', () => { state.showGraticule = !state.showGraticule; refresh(); });
+    controls.tTissot.addEventListener('click', () => { state.showTissot = !state.showTissot; refresh(); });
+    controls.tEquator.addEventListener('click', () => { state.showEquator = !state.showEquator; refresh(); });
+
+    document.getElementById('presetGlobe').addEventListener('click', () => {
+      state.projIndex = 0; state.lon = 135; state.lat = -25; refresh();
+    });
+    document.getElementById('presetCompare').addEventListener('click', () => {
+      state.projIndex = 1; state.lon = 0; state.lat = 10; state.showEquator = true; refresh();
+    });
+    document.getElementById('presetPole').addEventListener('click', () => {
+      state.projIndex = 7; state.lon = 0; state.lat = 90; state.showEquator = true; refresh();
+    });
+    document.getElementById('presetEqualArea').addEventListener('click', () => {
+      state.projIndex = 4; state.lon = 0; state.lat = 0; state.showTissot = true; refresh();
+    });
+
+    // Simple drag-to-rotate for supported projections
+    let dragStart = null;
+    svg.call(d3.drag()
+      .on('start', event => {
+        const def = projections[state.projIndex];
+        if (!def.rotate) return;
+        dragStart = { x: event.x, y: event.y, lon: state.lon, lat: state.lat };
+      })
+      .on('drag', event => {
+        if (!dragStart) return;
+        const dx = event.x - dragStart.x;
+        const dy = event.y - dragStart.y;
+        state.lon = Math.max(-180, Math.min(180, dragStart.lon + dx * 0.35));
+        state.lat = Math.max(-90, Math.min(90, dragStart.lat - dy * 0.35));
+        refresh();
+      })
+      .on('end', () => { dragStart = null; })
+    );
+
+    window.addEventListener('resize', () => render());
+    refresh();
+  })();
+</script>
+</body>
+</html>
