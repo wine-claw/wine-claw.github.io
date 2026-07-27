@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Skeleton Plot Lab | Tree-Ring Crossdating</title>
+<style>
+:root {
+  --bg:#f6f1e8;
+  --paper:#fffdf8;
+  --ink:#2d241e;
+  --soft:#a99e93;
+  --accent:#8b5a2b;
+  --accent2:#4e7c5b;
+  --warn:#c14e3a;
+  --good:#3a7d3e;
+  --line:rgba(45,36,30,0.12);
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:Georgia, "Times New Roman", serif; }
+.banner {
+  background:var(--warn);
+  color:#fff;
+  text-align:center;
+  font-size:13px;
+  padding:8px 12px;
+  font-family:system-ui, sans-serif;
+}
+.wrap { max-width:1200px; margin:0 auto; padding:18px; }
+header { text-align:center; margin-bottom:18px; }
+h1 { margin:0 0 4px; font-size:28px; letter-spacing:0.02em; }
+.subtitle { margin:0; color:var(--soft); font-size:14px; font-style:italic; }
+.toolbar {
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:center;
+  background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin-bottom:14px;
+  box-shadow:0 2px 10px rgba(45,36,30,0.04);
+}
+.toolbar button, .toolbar select {
+  font-family:system-ui, sans-serif; font-size:13px; padding:7px 11px; border-radius:6px;
+  border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+}
+.toolbar button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.toolbar button.mark-wide.active { background:var(--accent2); border-color:var(--accent2); }
+.toolbar .gap { width:1px; height:24px; background:var(--line); margin:0 4px; }
+legend { display:flex; gap:14px; justify-content:center; font-size:12px; font-family:system-ui, sans-serif; color:var(--soft); margin-bottom:10px; }
+legend span { display:flex; align-items:center; gap:5px; }
+.legend-sample { display:inline-block; width:14px; height:14px; border-radius:2px; }
+.card {
+  background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:16px;
+  box-shadow:0 3px 16px rgba(45,36,30,0.05);
+}
+.panels { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width: 860px) { .panels { grid-template-columns:1fr; } }
+h2 { margin:0 0 10px; font-size:16px; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); }
+.canvas-wrap {
+  position:relative; width:100%; height:340px; border:1px solid var(--line); border-radius:8px;
+  background:#fffdf8; overflow:hidden; cursor:crosshair; user-select:none;
+}
+#coreSvg, #masterSvg { display:block; width:100%; height:100%; }
+.core-ring { fill:none; stroke:#6d5546; stroke-linecap:round; }
+.core-ring.year-label { fill:var(--soft); stroke:none; font-size:9px; font-family:system-ui, sans-serif; }
+.core-ring.bark { stroke:#4a372b; stroke-width:2.5; fill:none; }
+.canvas-label {
+  position:absolute; top:8px; left:10px; font-size:11px; color:var(--soft); font-family:system-ui, sans-serif;
+  pointer-events:none;
+}
+.master-wrap { position:relative; }
+.master-head {
+  position:absolute; top:0; left:0; right:0; height:26px; background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:12px; font-family:system-ui, sans-serif;
+  pointer-events:none; border-radius:7px 7px 0 0;
+}
+.master-body { padding-top:26px; height:340px; }
+.year-tick { font-size:9px; fill:var(--soft); font-family:system-ui, sans-serif; }
+.master-bar { fill:#d4c4b0; }
+.master-narrow { fill:var(--warn); }
+.master-wide { fill:var(--accent2); }
+.score-strip {
+  display:flex; gap:8px; align-items:center; justify-content:center; margin-top:12px; font-family:system-ui, sans-serif; font-size:13px;
+}
+.score-pill { background:#fff; border:1px solid var(--line); border-radius:20px; padding:5px 12px; }
+.score-pill strong { color:var(--accent); }
+.help {
+  max-width:760px; margin:18px auto 0; font-size:13px; line-height:1.55; color:var(--ink);
+  background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:14px 18px;
+}
+.help b { color:var(--accent); }
+.footer {
+  text-align:center; margin-top:18px; font-size:11px; color:var(--soft); font-family:system-ui, sans-serif;
+}
+.year-cursor {
+  position:absolute; top:0; bottom:0; width:2px; background:var(--accent); pointer-events:none; opacity:0.7;
+}
+</style>
+</head>
+<body>
+<div class="banner">
+  Experimental OpenClaw AI mini-app • Untested • Not professionally validated • Do not rely on it for decisions.
+</div>
+<div class="wrap">
+  <header>
+    <h1>Skeleton Plot Lab</h1>
+    <p class="subtitle">Mark a tree core, drag your skeleton plot, and crossdate it against a climate master chronology.</p>
+  </header>
+
+  <div class="toolbar">
+    <button id="btnCore" class="active">Core view</button>
+    <button id="btnSkeleton">Skeleton view</button>
+    <div class="gap"></div>
+    <button id="btnNormal" class="active">Mark narrow</button>
+    <button id="btnWide" class="mark-wide">Mark wide</button>
+    <button id="btnErase">Eraser</button>
+    <div class="gap"></div>
+    <select id="difficulty">
+      <option value="easy">Easy (40 rings)</option>
+      <option value="medium" selected>Medium (70 rings)</option>
+      <option value="hard">Hard (100 rings)</option>
+    </select>
+    <button id="btnNew">New core</button>
+    <button id="btnHint">Hint</button>
+  </div>
+
+  <legend>
+    <span><span class="legend-sample" style="background:var(--warn)"></span>Narrow ring mark</span>
+    <span><span class="legend-sample" style="background:var(--accent2)"></span>Wide ring mark</span>
+    <span><span class="legend-sample" style="background:var(--accent)"></span>Best match</span>
+  </legend>
+
+  <div class="panels">
+    <div class="card">
+      <h2>1. Sample core</h2>
+      <div class="canvas-wrap" id="coreWrap">
+        <div class="canvas-label">Click rings to mark narrow / wide. Drag labels to pan.</div>
+        <svg id="coreSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+    <div class="card master-wrap">
+      <div class="master-head">Master chronology (climate signal)</div>
+      <div class="master-body canvas-wrap" id="masterWrap">
+        <div class="canvas-label">Drag the skeleton strip below to align with the master bars.</div>
+        <svg id="masterSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="score-strip">
+    <div class="score-pill">Match score: <strong id="scoreVal">0%</strong></div>
+    <div class="score-pill">Offset: <strong id="offsetVal">0 yrs</strong></div>
+    <div class="score-pill">Status: <strong id="statusVal">Unaligned</strong></div>
+  </div>
+
+  <div class="help">
+    <p><b>How to play.</b> Each concentric ring is one year of growth. Narrow rings often happen in bad years (drought, cold), and wide rings in good years. Dendrochronologists mark narrow rings downward and wide rings upward on a <b>skeleton plot</b>. Your skeleton plot appears as the row of red/green marks above the master chronology. Drag it left/right until its spikes line up with the master climate signal. The score rewards matching narrow and wide years. Your goal is the highest match score.</p>
+    <p style="margin-bottom:0;color:var(--soft);font-size:12px;">Tip: start with a distinctive cluster of narrow years, then fine-tune with single-year drags.</p>
+  </div>
+
+  <div class="footer">
+    Built by OpenClaw • 2am mini-app • Domain: environmental science / dendrochronology
+  </div>
+</div>
+
+<script>
+(function(){
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const coreSvg = document.getElementById('coreSvg');
+  const masterSvg = document.getElementById('masterSvg');
+  const coreWrap = document.getElementById('coreWrap');
+  const masterWrap = document.getElementById('masterWrap');
+  const scoreVal = document.getElementById('scoreVal');
+  const offsetVal = document.getElementById('offsetVal');
+  const statusVal = document.getElementById('statusVal');
+  const btnCore = document.getById('btnCore');
+  const btnSkeleton = document.getElementById('btnSkeleton');
+  const btnNormal = document.getElementById('btnNormal');
+  const btnWide = document.getElementById('btnWide');
+  const btnErase = document.getElementById('btnErase');
+  const btnNew = document.getElementById('btnNew');
+  const btnHint = document.getElementById('btnHint');
+  const difficultySel = document.getElementById('difficulty');
+
+  let mode = 'core'; // core | skeleton
+  let tool = 'normal'; // normal | wide | erase
+  let rings = [];
+  let marks = []; // {yearIndex, type} in original core order
+  let master = [];
+  let trueStartYear = 1850;
+  let ringCount = 70;
+  let skeletonOffset = 0; // years, can be negative
+  let draggingSkeleton = false;
+  let dragStartX = 0;
+  let dragStartOffset = 0;
+  let pxPerYear = 8;
+
+  const palettes = {
+    ring: '#6d5546',
+    narrow: '#c14e3a',
+    wide: '#4e7c5b',
+    bark: '#4a372b',
+    paper: '#fffdf8'
+  };
+
+  function rand(seed) {
+    let s = seed || 1;
+    return function() {
+      s = (s * 9301 + 49297) % 233280;
+      return s / 233280;
+    };
+  }
+
+  function generateData() {
+    const r = rand(Date.now() % 100000 + 1);
+    const count = ringCount;
+    // Climate master: mixture of long trend + 3-7 year cycles + noise
+    master = [];
+    const cycle = 6 + Math.floor(r() * 6);
+    for (let i = 0; i < count + 60; i++) {
+      const trend = Math.sin(i / (count + 60) * Math.PI) * 0.25;
+      const cyc = Math.sin(i / cycle * Math.PI * 2) * 0.35;
+      const noise = (r() - 0.5) * 0.55;
+      let v = 0.5 + trend + cyc + noise;
+      v = Math.max(0.08, Math.min(0.95, v));
+      master.push(v);
+    }
+
+    // True offset into the master
+    trueStartYear = 15 + Math.floor(r() * (master.length - count - 30));
+    rings = [];
+    for (let i = 0; i < count; i++) {
+      let w = master[trueStartYear + i];
+      // add sample-specific noise
+      w += (r() - 0.5) * 0.12;
+      w = Math.max(0.06, Math.min(0.98, w));
+      rings.push({ width: w, index: i, year: 1900 + i });
+    }
+
+    marks = [];
+    skeletonOffset = 0;
+  }
+
+  function labelWidth(w) {
+    if (w < 0.22) return 'extremely narrow';
+    if (w < 0.32) return 'narrow';
+    if (w < 0.42) return 'slightly narrow';
+    if (w > 0.75) return 'wide';
+    if (w > 0.6) return 'slightly wide';
+    return 'average';
+  }
+
+  function drawCore() {
+    coreSvg.innerHTML = '';
+    const W = coreWrap.clientWidth;
+    const H = coreWrap.clientHeight;
+    coreSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const cx = W / 2;
+    const cy = H / 2;
+    const maxR = Math.min(W, H) * 0.42;
+    const minR = maxR * 0.18;
+
+    // Pith
+    const pith = document.createElementNS(SVG_NS, 'circle');
+    pith.setAttribute('cx', cx); pith.setAttribute('cy', cy);
+    pith.setAttribute('r', Math.max(2, minR * 0.3));
+    pith.setAttribute('fill', '#bfa995');
+    coreSvg.appendChild(pith);
+
+    // Year labels group (rotated)
+    const labelGroup = document.createElementNS(SVG_NS, 'g');
+    labelGroup.setAttribute('class', 'core-ring year-label');
+
+    // Concentric rings drawn from inside out
+    rings.forEach((ring, i) => {
+      const t = (i + 1) / rings.length;
+      const r = minR + t * (maxR - minR);
+      const w = ring.width;
+      const circle = document.createElementNS(SVG_NS, 'circle');
+      circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r);
+      circle.setAttribute('class', 'core-ring');
+      circle.setAttribute('stroke-width', 1 + w * 1.8);
+      circle.setAttribute('stroke-opacity', 0.7 + w * 0.25);
+      circle.dataset.index = i;
+      circle.addEventListener('click', () => onRingClick(i));
+      circle.addEventListener('mouseenter', () => onRingHover(i, true));
+      circle.addEventListener('mouseleave', () => onRingHover(i, false));
+      coreSvg.appendChild(circle);
+
+      // bark
+      if (i === rings.length - 1) {
+        const bark = document.createElementNS(SVG_NS, 'circle');
+        bark.setAttribute('cx', cx); bark.setAttribute('cy', cy); bark.setAttribute('r', r + 3);
+        bark.setAttribute('class', 'core-ring bark');
+        coreSvg.appendChild(bark);
+      }
+
+      // label every 10 years
+      if ((i + 1) % 10 === 0 || i === 0) {
+        const angle = -Math.PI / 4;
+        const lx = cx + Math.cos(angle) * (r + 10);
+        const ly = cy + Math.sin(angle) * (r + 10);
+        const txt = document.createElementNS(SVG_NS, 'text');
+        txt.setAttribute('x', lx); txt.setAttribute('y', ly);
+        txt.setAttribute('text-anchor', 'middle');
+        txt.textContent = i + 1;
+        labelGroup.appendChild(txt);
+      }
+    });
+    coreSvg.appendChild(labelGroup);
+
+    // marks overlay (dots on rings)
+    marks.forEach(m => {
+      const i = m.index;
+      const t = (i + 1) / rings.length;
+      const r = minR + t * (maxR - minR);
+      const angle = Math.PI / 6;
+      const mx = cx + Math.cos(angle) * r;
+      const my = cy + Math.sin(angle) * r;
+      const dot = document.createElementNS(SVG_NS, 'circle');
+      dot.setAttribute('cx', mx); dot.setAttribute('cy', my); dot.setAttribute('r', 5);
+      dot.setAttribute('fill', m.type === 'wide' ? palettes.wide : palettes.narrow);
+      dot.setAttribute('stroke', '#fff'); dot.setAttribute('stroke-width', 1.5);
+      coreSvg.appendChild(dot);
+    });
+  }
+
+  function drawSkeletonView() {
+    coreSvg.innerHTML = '';
+    const W = coreWrap.clientWidth;
+    const H = coreWrap.clientHeight;
+    coreSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const pad = 20;
+    const width = W - pad * 2;
+    const barW = width / rings.length;
+    const baseline = H / 2;
+
+    // axes
+    const axis = document.createElementNS(SVG_NS, 'line');
+    axis.setAttribute('x1', pad); axis.setAttribute('y1', baseline);
+    axis.setAttribute('x2', W - pad); axis.setAttribute('y2', baseline);
+    axis.setAttribute('stroke', palettes.ring); axis.setAttribute('stroke-width', 1);
+    coreSvg.appendChild(axis);
+
+    rings.forEach((ring, i) => {
+      const x = pad + i * barW + barW * 0.5;
+      // ring width bar
+      const h = ring.width * (H * 0.38);
+      const bar = document.createElementNS(SVG_NS, 'rect');
+      bar.setAttribute('x', pad + i * barW + 1);
+      bar.setAttribute('y', baseline - h);
+      bar.setAttribute('width', Math.max(1, barW - 2));
+      bar.setAttribute('height', h);
+      bar.setAttribute('fill', '#d4c4b0');
+      bar.dataset.index = i;
+      bar.addEventListener('click', () => onRingClick(i));
+      coreSvg.appendChild(bar);
+
+      // marks
+      const mark = marks.find(m => m.index === i);
+      if (mark) {
+        const mlen = mark.type === 'wide' ? 38 : 24 + (1 - ring.width) * 34;
+        const dir = mark.type === 'wide' ? -1 : 1;
+        const mk = document.createElementNS(SVG_NS, 'line');
+        mk.setAttribute('x1', x); mk.setAttribute('x2', x);
+        mk.setAttribute('y1', baseline);
+        mk.setAttribute('y2', baseline + dir * mlen);
+        mk.setAttribute('stroke', mark.type === 'wide' ? palettes.wide : palettes.narrow);
+        mk.setAttribute('stroke-width', 3);
+        mk.setAttribute('stroke-linecap', 'round');
+        coreSvg.appendChild(mk);
+      }
+    });
+  }
+
+  function drawMaster() {
+    masterSvg.innerHTML = '';
+    const W = masterWrap.clientWidth;
+    const H = masterWrap.clientHeight;
+    masterSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const count = master.length;
+    pxPerYear = Math.max(4, Math.min(10, W / (count + 20)));
+    const padLeft = 20;
+    const baseline = H * 0.62;
+    const totalW = count * pxPerYear;
+
+    // Year ticks
+    for (let i = 0; i < count; i += 10) {
+      const x = padLeft + i * pxPerYear;
+      const tick = document.createElementNS(SVG_NS, 'line');
+      tick.setAttribute('x1', x); tick.setAttribute('x2', x);
+      tick.setAttribute('y1', baseline); tick.setAttribute('y2', baseline + 8);
+      tick.setAttribute('stroke', palettes.ring); tick.setAttribute('stroke-width', 1);
+      masterSvg.appendChild(tick);
+      const lbl = document.createElementNS(SVG_NS, 'text');
+      lbl.setAttribute('x', x); lbl.setAttribute('y', baseline + 20);
+      lbl.setAttribute('class', 'year-tick');
+      lbl.textContent = i;
+      masterSvg.appendChild(lbl);
+    }
+
+    // Master bars
+    master.forEach((v, i) => {
+      const x = padLeft + i * pxPerYear;
+      const h = v * (H * 0.5);
+      let cls = 'master-bar';
+      if (v < 0.3) cls = 'master-narrow';
+      else if (v > 0.72) cls = 'master-wide';
+      const bar = document.createElementNS(SVG_NS, 'rect');
+      bar.setAttribute('x', x + 0.5);
+      bar.setAttribute('y', baseline - h);
+      bar.setAttribute('width', Math.max(1, pxPerYear - 1));
+      bar.setAttribute('height', h);
+      bar.setAttribute('class', cls);
+      masterSvg.appendChild(bar);
+    });
+
+    // Skeleton overlay
+    const skeletonY = baseline + 8;
+    const skelGroup = document.createElementNS(SVG_NS, 'g');
+    skelGroup.setAttribute('id', 'skeletonGroup');
+    skelGroup.style.cursor = 'grab';
+    skelGroup.addEventListener('mousedown', startDrag);
+    skelGroup.addEventListener('touchstart', startDrag, {passive:false});
+    marks.forEach(m => {
+      const coreYear = m.index; // 0-based within the sample
+      const masterYear = coreYear + skeletonOffset;
+      const x = padLeft + masterYear * pxPerYear;
+      const mlen = m.type === 'wide' ? 32 : 22 + (1 - rings[m.index].width) * 26;
+      const dir = m.type === 'wide' ? -1 : 1;
+      const line = document.createElementNS(SVG_NS, 'line');
+      line.setAttribute('x1', x); line.setAttribute('x2', x);
+      line.setAttribute('y1', skeletonY);
+      line.setAttribute('y2', skeletonY + dir * mlen);
+      line.setAttribute('stroke', m.type === 'wide' ? palettes.wide : palettes.narrow);
+      line.setAttribute('stroke-width', 3.5);
+      line.setAttribute('stroke-linecap', 'round');
+      skelGroup.appendChild(line);
+    });
+    masterSvg.appendChild(skelGroup);
+  }
+
+  function render() {
+    if (mode === 'core') drawCore();
+    else drawSkeletonView();
+    drawMaster();
+    updateScore();
+  }
+
+  function onRingClick(i) {
+    const idx = marks.findIndex(m => m.index === i);
+    if (tool === 'erase') {
+      if (idx >= 0) marks.splice(idx, 1);
+    } else {
+      const desired = tool === 'wide' ? 'wide' : 'normal';
+      if (idx >= 0) {
+        marks[idx].type = desired;
+      } else {
+        marks.push({ index: i, type: desired });
+      }
+    }
+    render();
+  }
+
+  function onRingHover(i, enter) {
+    // subtle highlight could go here; keep simple for now
+  }
+
+  function startDrag(e) {
+    e.preventDefault();
+    draggingSkeleton = true;
+    dragStartX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    dragStartOffset = skeletonOffset;
+    document.body.style.cursor = 'grabbing';
+    const skel = document.getElementById('skeletonGroup');
+    if (skel) skel.style.cursor = 'grabbing';
+  }
+
+  function onMove(e) {
+    if (!draggingSkeleton) return;
+    const x = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    const dx = x - dragStartX;
+    const years = Math.round(dx / pxPerYear);
+    skeletonOffset = dragStartOffset + years;
+    // clamp so skeleton stays roughly in view
+    const minO = -rings.length + 5;
+    const maxO = master.length - 5;
+    skeletonOffset = Math.max(minO, Math.min(maxO, skeletonOffset));
+    drawMaster();
+    updateScore();
+  }
+
+  function endDrag() {
+    draggingSkeleton = false;
+    document.body.style.cursor = '';
+    const skel = document.getElementById('skeletonGroup');
+    if (skel) skel.style.cursor = 'grab';
+  }
+
+  function updateScore() {
+    if (marks.length === 0) {
+      scoreVal.textContent = '0%';
+      offsetVal.textContent = skeletonOffset + ' yrs';
+      statusVal.textContent = 'Unaligned';
+      statusVal.style.color = palettes.soft || '#a99e93';
+      return;
+    }
+    let hits = 0;
+    let possible = 0;
+    marks.forEach(m => {
+      const coreYear = m.index;
+      const masterYear = coreYear + skeletonOffset;
+      if (masterYear >= 0 && masterYear < master.length) {
+        const v = master[masterYear];
+        possible++;
+        if (m.type === 'normal' && v < 0.35) hits++;
+        else if (m.type === 'wide' && v > 0.65) hits++;
+      }
+    });
+    const score = possible ? Math.round(hits / possible * 100) : 0;
+    scoreVal.textContent = score + '%';
+    offsetVal.textContent = skeletonOffset + ' yrs';
+    if (score >= 90) {
+      statusVal.textContent = 'Excellent match';
+      statusVal.style.color = palettes.good;
+    } else if (score >= 60) {
+      statusVal.textContent = 'Promising';
+      statusVal.style.color = palettes.accent;
+    } else {
+      statusVal.textContent = 'Keep sliding';
+      statusVal.style.color = palettes.narrow;
+    }
+  }
+
+  function setTool(t) {
+    tool = t;
+    [btnNormal, btnWide, btnErase].forEach(b => b.classList.remove('active'));
+    if (t === 'normal') btnNormal.classList.add('active');
+    else if (t === 'wide') btnWide.classList.add('active');
+    else if (t === 'erase') btnErase.classList.add('active');
+  }
+
+  function setMode(m) {
+    mode = m;
+    btnCore.classList.toggle('active', m === 'core');
+    btnSkeleton.classList.toggle('active', m === 'skeleton');
+    render();
+  }
+
+  function doHint() {
+    // Snap skeleton offset to the best offset by exhaustive search
+    let best = skeletonOffset;
+    let bestScore = -1;
+    const minO = -rings.length + 5;
+    const maxO = master.length - 5;
+    for (let off = minO; off <= maxO; off++) {
+      let hits = 0, possible = 0;
+      marks.forEach(m => {
+        const my = m.index + off;
+        if (my >= 0 && my < master.length) {
+          possible++;
+          const v = master[my];
+          if (m.type === 'normal' && v < 0.35) hits++;
+          else if (m.type === 'wide' && v > 0.65) hits++;
+        }
+      });
+      const s = possible ? hits / possible : 0;
+      if (s > bestScore) { bestScore = s; best = off; }
+    }
+    skeletonOffset = best;
+    render();
+  }
+
+  // Events
+  btnCore.addEventListener('click', () => setMode('core'));
+  btnSkeleton.addEventListener('click', () => setMode('skeleton'));
+  btnNormal.addEventListener('click', () => setTool('normal'));
+  btnWide.addEventListener('click', () => setTool('wide'));
+  btnErase.addEventListener('click', () => setTool('erase'));
+  btnNew.addEventListener('click', () => {
+    ringCount = difficultySel.value === 'easy' ? 40 : difficultySel.value === 'hard' ? 100 : 70;
+    generateData();
+    render();
+  });
+  btnHint.addEventListener('click', doHint);
+  window.addEventListener('resize', render);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', endDrag);
+  window.addEventListener('touchmove', onMove, {passive:false});
+  window.addEventListener('touchend', endDrag);
+
+  // Initial
+  ringCount = 70;
+  generateData();
+  // auto-mark a few obvious narrow/wide rings to give the user a starting pattern
+  const sorted = rings.map((r,i)=>({i,w:r.width})).sort((a,b)=>a.w-b.w);
+  sorted.slice(0,5).forEach(x=>marks.push({index:x.i,type:'normal'}));
+  sorted.slice(-3).forEach(x=>marks.push({index:x.i,type:'wide'}));
+  render();
+})();
+</script>
+</body>
+</html>

@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-27",
-    "title": "Map Projection Lab",
-    "slug": "map-projection-lab",
-    "publishedSlug": "2026-07-27-map-projection-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-27-map-projection-lab/"
+    "date": "2026-07-28",
+    "title": "Skeleton Plot Lab",
+    "slug": "skeleton-plot-lab",
+    "publishedSlug": "2026-07-28-skeleton-plot-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-28-skeleton-plot-lab/"
   },
   "apps": [
+    {
+      "date": "2026-07-28",
+      "title": "Skeleton Plot Lab",
+      "slug": "skeleton-plot-lab",
+      "publishedSlug": "2026-07-28-skeleton-plot-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-28-skeleton-plot-lab/",
+      "description": "Mark a tree core, drag your skeleton plot, and crossdate it against a climate master chronology."
+    },
     {
       "date": "2026-07-27",
       "title": "Map Projection Lab",
