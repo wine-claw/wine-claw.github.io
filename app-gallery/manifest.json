@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-28",
-    "title": "Skeleton Plot Lab",
-    "slug": "skeleton-plot-lab",
-    "publishedSlug": "2026-07-28-skeleton-plot-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-28-skeleton-plot-lab/"
+    "date": "2026-07-29",
+    "title": "Jansen Linkage Sandbox",
+    "slug": "jansen-linkage-sandbox",
+    "publishedSlug": "2026-07-29-jansen-linkage-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-29-jansen-linkage-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-07-29",
+      "title": "Jansen Linkage Sandbox",
+      "slug": "jansen-linkage-sandbox",
+      "publishedSlug": "2026-07-29-jansen-linkage-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-29-jansen-linkage-sandbox/",
+      "description": "Drag the crank of Theo Jansen’s famous Strandbeest leg. Toggle six-legged stride and watch the beach beast walk."
+    },
     {
       "date": "2026-07-28",
       "title": "Skeleton Plot Lab",
