@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Cocoa Fermenter — Bean-to-Bar Simulator</title>
+<style>
+:root{
+  --bg:#1a1410;
+  --panel:#251e18;
+  --card:#322820;
+  --text:#f0e6dc;
+  --muted:#b8a99a;
+  --accent:#e8a24d;
+  --yeast:#f4d03f;
+  --lab:#58d68d;
+  --aab:#e74c3c;
+  --bad:#7a4cff;
+  --good:#27ae60;
+  --warn:#f39c12;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text)}
+body{display:flex;flex-direction:column}
+header{padding:18px 20px 8px}
+h1{margin:0 0 4px;font-size:1.35rem;letter-spacing:.2px}
+.subtitle{color:var(--muted);font-size:.9rem;max-width:760px;line-height:1.45}
+.app{flex:1;display:flex;flex-direction:row;gap:16px;padding:14px 20px 20px;min-height:0}
+@media(max-width:900px){.app{flex-direction:column}}
+.left,.right{min-width:0}
+.left{flex:1 1 58%;display:flex;flex-direction:column;gap:12px}
+.right{flex:1 1 42%;display:flex;flex-direction:column;gap:12px}
+.box{background:var(--panel);border-radius:14px;padding:14px 16px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.heap-wrap{position:relative;flex:1;min-height:260px;background:#0f0a07;border-radius:16px;overflow:hidden;border:2px solid #3b2f26}
+#heap{position:absolute;inset:0;width:100%;height:100%}
+.overlay{position:absolute;inset:0;pointer-events:none;padding:10px;display:flex;flex-direction:column;justify-content:space-between}
+.pile-tag{align-self:flex-start;background:rgba(0,0,0,.55);padding:4px 10px;border-radius:8px;font-size:.78rem;color:var(--muted)}
+.stage-tag{align-self:flex-end;background:rgba(0,0,0,.55);padding:4px 10px;border-radius:8px;font-size:.78rem;color:var(--accent)}
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:900px){.controls{grid-template-columns:repeat(2,1fr)}}
+button{border:0;border-radius:10px;padding:12px 14px;font-size:.9rem;font-weight:600;cursor:pointer;background:var(--card);color:var(--text);transition:transform .05s,background .15s}
+button:hover{background:#3e3229}
+button:active{transform:translateY(1px)}
+button.primary{background:var(--accent);color:#1a120a}
+button.primary:hover{background:#f2b867}
+button.danger{background:#7a3e32}
+button.danger:hover{background:#8f4a3c}
+.sliderbox{display:flex;flex-direction:column;gap:8px}
+.sliderbox label{display:flex;justify-content:space-between;font-size:.83rem;color:var(--muted)}
+.sliderbox input[type=range]{width:100%}
+.gauges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.gauge{background:var(--card);border-radius:10px;padding:10px;text-align:center}
+.gauge .num{font-size:1.25rem;font-weight:700}
+.gauge .unit{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.gauge .bar{height:5px;border-radius:3px;background:#00000045;margin-top:8px;overflow:hidden}
+.gauge .bar>i{display:block;height:100%;width:0%;background:var(--accent);transition:width .25s}
+.log{flex:1;min-height:140px;max-height:340px;overflow:auto;font-size:.82rem;line-height:1.45;background:var(--card);border-radius:10px;padding:10px 12px;color:#e6d9cc}
+.log .line{margin-bottom:5px;padding-left:12px;position:relative}
+.log .line::before{content:"";position:absolute;left:0;top:5px;width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.log .line.good .txt{color:var(--good)}
+.log .line.good::before{background:var(--good)}
+.log .line.warn .txt{color:var(--warn)}
+.log .line.warn::before{background:var(--warn)}
+.log .line.bad .txt{color:#ff6b6b}
+.log .line.bad::before{background:#ff6b6b}
+.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:.75rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:4px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.status{background:var(--card);border-radius:10px;padding:12px 14px}
+.status h3{margin:0 0 6px;font-size:.9rem}
+.status p{margin:0;color:var(--muted);font-size:.82rem;line-height:1.45}
+.banner{background:#3b2f26;border:1px solid #5c4a3d;border-radius:10px;padding:10px 12px;color:#d9c7b6;font-size:.78rem;line-height:1.35}
+.warn-strip{background:linear-gradient(90deg,#7a4cff,#e74c3c,#f39c12);height:4px;border-radius:2px;margin-top:8px;opacity:.6}
+</style>
+</head>
+<body>
+<header>
+  <h1>🍫 Cocoa Fermenter</h1>
+  <div class="subtitle">You are the fermenter. Turn a heap of fresh cocoa beans and manage temperature, aeration, and time to coax yeast, lactic acid bacteria, and acetic acid bacteria through a successful 5–7 day fermentation — without burning, rotting, or under-fermenting the batch.</div>
+</header>
+<div class="app">
+  <section class="left">
+    <div class="heap-wrap">
+      <canvas id="heap"></canvas>
+      <div class="overlay">
+        <div class="pile-tag">Beans in heap: <b id="bean-count">0</b></div>
+        <div class="stage-tag" id="stage-name">Fresh pulp</div>
+      </div>
+    </div>
+    <div class="box gauges">
+      <div class="gauge"><div class="num" id="g-temp">25</div><div class="unit">°C pile core</div><div class="bar"><i id="b-temp"></i></div></div>
+      <div class="gauge"><div class="num" id="g-ph">3.8</div><div class="unit">pH</div><div class="bar"><i id="b-ph"></i></div></div>
+      <div class="gauge"><div class="num" id="g-day">0.0</div><div class="unit">days elapsed</div><div class="bar"><i id="b-day"></i></div></div>
+    </div>
+    <div class="box controls">
+      <button class="primary" id="btn-turn" title="Mix the heap: equalise temperature and add oxygen">Turn heap</button>
+      <button id="btn-cover" title="Cover with banana leaves to trap heat">Cover / insulate</button>
+      <button id="btn-spray" title="Sprinkle clean water if pile is too hot/dry">Sprinkle water</button>
+      <button class="danger" id="btn-empty" title="Empty the heap and score the batch">Empty &amp; score</button>
+    </div>
+    <div class="box sliderbox">
+      <label><span>Simulation speed</span><span id="speed-label">1×</span></label>
+      <input id="speed" type="range" min="0" max="5" step="1" value="2">
+    </div>
+  </section>
+  <section class="right">
+    <div class="box status">
+      <h3>Batch status</h3>
+      <p id="status-text">Fresh beans loaded. Yeasts will begin anaerobic fermentation of sugars once the pulp warms. Turn the heap daily to aerate and control temperature.</p>
+      <div class="warn-strip" id="risk-strip"></div>
+    </div>
+    <div class="box">
+      <div class="legend">
+        <span><i class="dot" style="background:var(--yeast)"></i>Yeast</span>
+        <span><i class="dot" style="background:var(--lab)"></i>Lactic acid bacteria</span>
+        <span><i class="dot" style="background:var(--aab)"></i>Acetic acid bacteria</span>
+        <span><i class="dot" style="background:#a06c45"></i>Bean</span>
+        <span><i class="dot" style="background:#4d3b30"></i>Pulp</span>
+        <span><i class="dot" style="background:#87ceeb"></i>Steam/heat</span>
+      </div>
+    </div>
+    <div class="box log" id="log"></div>
+    <div class="banner"><b>Experimental OpenClaw AI mini-app.</b> This simulator is a playful simplification of cocoa fermentation microbiology. It is not professionally validated and should not be used for real process decisions.</div>
+  </section>
+</div>
+<script>
+(function(){
+const canvas=document.getElementById('heap');
+const ctx=canvas.getContext('2d');
+let W=0,H=0;
+function resize(){
+  const r=canvas.parentElement.getBoundingClientRect();
+  W=Math.floor(r.width);H=Math.floor(r.height);
+  canvas.width=W;canvas.height=H;
+}
+window.addEventListener('resize',resize);resize();
+
+const beans=[];
+const BEAN_COUNT=420;
+const GRAVITY=0.18,FRICTION=0.96,REPEL=0.04;
+function resetBeans(){
+  beans.length=0;
+  for(let i=0;i<BEAN_COUNT;i++){
+    beans.push({
+      x:W*0.1+Math.random()*W*0.8,
+      y:Math.random()*H*0.3-H*0.2,
+      vx:(Math.random()-0.5)*2,
+      vy:(Math.random()-0.5)*2,
+      r:3.2+Math.random()*2.2,
+      state:0,
+      germ:'none',
+      ferment:0,
+      color:'#a06c45'
+    });
+  }
+}
+
+let sim={day:0,hour:0,temp:24,pH:3.8,turnCooldown:0,covered:false,moisture:1.0,finished:false,score:null};
+let speed=2;
+const speeds=[0,1/60,1/20,1/8,1/3,1];
+let last=performance.now(),acc=0;
+const logEl=document.getElementById('log');
+function log(msg,type=''){
+  const d=document.createElement('div');d.className='line '+type;
+  const t=document.createElement('span');t.className='txt';t.textContent='Day '+sim.day.toFixed(1)+': '+msg;
+  d.appendChild(t);logEl.prepend(d);
+  while(logEl.children>80)logEl.lastChild.remove();
+}
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function lerp(a,b,t){return a+(b-a)*t;}
+
+const microbes={yeast:0.02,lab:0.001,aab:0.001};
+const ideal={yeast:[30,42],lab:[42,50],aab:[45,55]};
+
+function tempTarget(){
+  let t=24;
+  t+=microbes.yeast*180;
+  t+=microbes.lab*240;
+  t+=microbes.aab*260;
+  if(sim.covered)t+=3.5;
+  if(sim.moisture<0.55)t-=6;
+  t-=Math.max(0,sim.temp-52)*0.18;
+  return t;
+}
+
+function updatePhysics(dt){
+  for(let i=0;i<beans.length;i++){
+    const b=beans[i];
+    b.vy+=GRAVITY*dt*60;
+    b.vx*=FRICTION;b.vy*=FRICTION;
+    b.x+=b.vx;b.y+=b.vy;
+    if(b.x<b.r){b.x=b.r;b.vx*=-0.6;}
+    if(b.x>W-b.r){b.x=W-b.r;b.vx*=-0.6;}
+    if(b.y>H-b.r){b.y=H-b.r;b.vy*=-0.35;}
+    if(b.y<b.r){b.y=b.r;b.vy*=-0.5;}
+  }
+  for(let i=0;i<beans.length;i++){
+    for(let j=i+1;j<beans.length;j++){
+      const a=beans[i],b=beans[j];
+      const dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy)||1;
+      const min=a.r+b.r;
+      if(d<min){
+        const overlap=(min-d)*0.5;
+        const nx=dx/d,ny=dy/d;
+        a.x+=nx*overlap;a.y+=ny*overlap;
+        b.x-=nx*overlap;b.y-=ny*overlap;
+        const rv=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+        a.vx-=rv*nx*0.3;b.vx+=rv*nx*0.3;
+        a.vy-=rv*ny*0.3;b.vy+=rv*ny*0.3;
+      }
+    }
+  }
+}
+
+let turning=0;
+function turnHeap(){
+  if(sim.finished)return;
+  turning=1;
+  sim.turnCooldown=8;
+  for(const b of beans){
+    b.vx=(Math.random()-0.5)*10;
+    b.vy=-6-Math.random()*9;
+    b.x=W*0.15+Math.random()*W*0.7;
+  }
+  microbes.yeast+=0.004;
+  microbes.lab+=0.002;
+  microbes.aab+=0.003;
+  sim.temp-=4.5;
+  sim.moisture=Math.min(1,sim.moisture+0.08);
+  log('Heap turned. Temperature dropped and aeration boosted bacterial growth.','good');
+}
+
+function setStageName(){
+  const d=sim.day;
+  let s='Fresh pulp';
+  if(d>=0.6&&d<2.0)s='Anaerobic yeast phase';
+  else if(d>=2.0&&d<4.0)s='Lactic acid bacteria rise';
+  else if(d>=4.0&&d<5.5)s='Acetic acid bacteria peak';
+  else if(d>=5.5&&d<7.5)s='Drainage & cooling';
+  else if(d>=7.5)s='Fermentation complete';
+  document.getElementById('stage-name').textContent=s;
+}
+
+function updateSim(dt){
+  if(sim.finished)return;
+  const dayStep=dt*speeds[speed];
+  sim.hour+=dayStep*24;
+  if(sim.hour>=24){sim.hour-=24;sim.day+=1;}
+
+  // Temperature dynamics
+  const target=tempTarget();
+  sim.temp=lerp(sim.temp,target,0.004*dt*60);
+  sim.temp+=Math.sin(sim.day*2.1)*0.12;
+  if(sim.temp>55)sim.temp=lerp(sim.temp,55,0.02*dt*60);
+  if(sim.temp<22)sim.temp=lerp(sim.temp,22,0.01*dt*60);
+
+  // Moisture / drainage
+  sim.moisture-=dayStep*0.035;
+  if(sim.temp>50)sim.moisture-=dayStep*0.04;
+  sim.moisture=clamp(sim.moisture,0.15,1.0);
+
+  // Microbial growth
+  const t=sim.temp;
+  const yRate=tempGrowth(t,ideal.yeast[0],ideal.yeast[1],0.018)*nutrientFactor()*clamp(1-microbes.yeast*2,0,1);
+  const lRate=tempGrowth(t,ideal.lab[0],ideal.lab[1],0.012)*nutrientFactor()*clamp(1-microbes.lab*3,0,1)*Math.min(1,microbes.yeast*8);
+  const aRate=tempGrowth(t,ideal.aab[0],ideal.aab[1],0.016)*nutrientFactor()*clamp(1-microbes.aab*4,0,1)*Math.min(1,microbes.lab*10);
+  microbes.yeast+=yRate*dayStep;
+  microbes.lab+=lRate*dayStep;
+  microbes.aab+=aRate*dayStep;
+  microbes.yeast=clamp(microbes.yeast,0,1);
+  microbes.lab=clamp(microbes.lab,0,1);
+  microbes.aab=clamp(microbes.aab,1);
+
+  // pH drop from acids
+  const acid=microbes.lab*0.18+microbes.aab*0.35+microbes.yeast*0.04;
+  sim.pH=lerp(sim.pH,3.8-acid,0.003*dt*60);
+  sim.pH=clamp(sim.pH,3.3,6.0);
+
+  // Bean state progression
+  for(const b of beans){
+    if(b.state===0 && microbes.yeast>0.08 && sim.day>0.4){
+      if(Math.random()<0.0006*dt*60)b.state=1;
+    }
+    if(b.state===1 && microbes.lab>0.12 && sim.day>2.2){
+      if(Math.random()<0.0005*dt*60)b.state=2;
+    }
+    if(b.state===2 && microbes.aab>0.25 && sim.day>4.0){
+      if(Math.random()<0.0006*dt*60)b.state=3;
+    }
+    if(b.state===3 && sim.day>6.0 && sim.temp<45 && microbes.aab<0.35){
+      if(Math.random()<0.0008*dt*60)b.state=4;
+    }
+  }
+
+  if(sim.turnCooldown>0)sim.turnCooldown-=dayStep*24;
+
+  // Status events
+  if(sim.day>0.9 && !sim.events?.yeastStart){markEvent('yeastStart');log('Yeasts are consuming sugars and producing ethanol. Pulp is liquefying.','good');}
+  if(sim.day>2.2 && !sim.events?.labStart){markEvent('labStart');log('Lactic acid bacteria dominate. Acidity is climbing and pH is dropping.','warn');}
+  if(sim.day>4.1 && !sim.events?.aabStart){markEvent('aabStart');log('Acetic acid bacteria peak — ethanol is oxidising to acetic acid, generating heat.','warn');}
+  if(sim.day>6.5 && !sim.events?.drainStart){markEvent('drainStart');log('Sweatings have drained. Core is cooling and beans are entering the drying phase.','good');}
+
+  if(sim.temp>52 && !sim.events?.hotWarning){markEvent('hotWarning');log('Core temperature is very high — risk of over-heating and off-flavours.','bad');}
+  if(sim.moisture<0.35 && !sim.events?.dryWarning){markEvent('dryWarning');log('Heap is getting dry. Fermentation may stall without enough moisture.','warn');}
+  if(sim.pH>4.5 && sim.day>4 && !sim.events?.phWarning){markEvent('phWarning');log('pH is still high. Beans may not be acidifying enough to prevent spoilage.','warn');}
+  if(sim.turnCooldown<=0 && sim.day>0.7 && sim.day<6.5 && (sim.day%1.2)<0.03 && !sim.events?.['turn'+Math.floor(sim.day)]){
+    markEvent('turn'+Math.floor(sim.day));
+    log('Pile has sat unturned for ~24 hours. Consider turning to aerate.','warn');
+  }
+}
+
+function tempGrowth(t,min,max,rate){
+  if(t<min-8||t>max+10)return 0;
+  const peak=(min+max)/2;
+  const spread=(max-min)/2+6;
+  return rate*Math.exp(-Math.pow(t-peak,2)/(2*spread*spread));
+}
+function nutrientFactor(){return clamp(1-sim.day/9,0.25,1);}
+function markEvent(k){if(!sim.events)sim.events={};sim.events[k]=true;}
+
+function colorForBean(b){
+  if(b.state===4)return '#6e4a32';
+  if(b.state===3)return '#7e563c';
+  if(b.state===2)return '#9b6b4a';
+  if(b.state===1)return '#c48b5f';
+  return '#a06c45';
+}
+
+let steam=[];
+function draw(){
+  ctx.fillStyle='#0f0a07';ctx.fillRect(0,0,W,H);
+
+  // Microbe density glow
+  const total=microbes.yeast+microbes.lab+microbes.aab;
+  const cx=W/2,cy=H*0.7;
+  const g=ctx.createRadialGradient(cx,cy,10,cx,cy,Math.max(W,H)*0.65);
+  g.addColorStop(0,`rgba(${Math.floor(232+microbes.aab*20)},${Math.floor(162+microbes.lab*40)},${Math.floor(77-microbes.aab*30)},${0.08+total*0.08})`);
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+  // Beans
+  for(const b of beans){
+    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    ctx.fillStyle=colorForBean(b);ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=0.6;ctx.stroke();
+  }
+
+  // Steam / heat wisps
+  if(sim.temp>35){
+    if(Math.random()<0.15)steam.push({x:W*0.2+Math.random()*W*0.6,y:H-10,vy:-0.5-Math.random()*1.5,life:1});
+    for(let i=steam.length-1;i>=0;i--){
+      const s=steam[i];
+      s.y+=s.vy*(speed>0?1:0);s.life-=0.008*(speed>0?1:0);
+      ctx.beginPath();ctx.arc(s.x,s.y,2+Math.random()*5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(200,220,235,${s.life*0.12})`;ctx.fill();
+      if(s.life<=0)steam.splice(i,1);
+    }
+  }
+}
+
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  updatePhysics(dt);
+  updateSim(dt);
+  draw();
+  updateUI();
+  requestAnimationFrame(loop);
+}
+
+function updateUI(){
+  document.getElementById('bean-count').textContent=BEAN_COUNT;
+  document.getElementById('g-temp').textContent=sim.temp.toFixed(1);
+  document.getElementById('b-temp').style.width=clamp((sim.temp-20)/(60-20)*100,0,100)+'%';
+  document.getElementById('g-ph').textContent=sim.pH.toFixed(2);
+  document.getElementById('b-ph').style.width=clamp((6.0-sim.pH)/(6.0-3.3)*100,0,100)+'%';
+  document.getElementById('g-day').textContent=sim.day.toFixed(1);
+  document.getElementById('b-day').style.width=clamp(sim.day/8*100,0,100)+'%';
+  setStageName();
+
+  let txt='';
+  if(sim.finished){
+    txt=sim.score.summary;
+  } else if(sim.temp>52){txt='Core is hot. Turn or sprinkle water to cool it.';}
+  else if(sim.moisture<0.35){txt='Heap is dry. Add water or turn to redistribute moisture.';}
+  else if(sim.pH>4.5 && sim.day>4){txt='Acidification is slow. Bacteria need more time or warmth.';}
+  else if(sim.day<1){txt='Fresh beans loaded. Yeasts will begin anaerobic fermentation once the pulp warms.';}
+  else if(sim.day<3){txt='Yeasts dominate. Keep the heap warm and avoid over-aerating.';}
+  else if(sim.day<5){txt='Lactic acid bacteria build acidity. Turning now helps aeration and AAB growth.';}
+  else if(sim.day<6.5){txt='Acetic acid bacteria generate heat. Monitor temperature closely.';}
+  else {txt='Fermentation is finishing. Let the heap drain and cool before scoring.';}
+  document.getElementById('status-text').textContent=txt;
+  document.getElementById('risk-strip').style.opacity=clamp((sim.temp-40)/20,0,1);
+}
+
+function scoreBatch(){
+  if(sim.finished)return;
+  sim.finished=true;
+  let quality=50;
+  const ripe=beans.filter(b=>b.state===4).length/beans.length;
+  const ok=beans.filter(b=>b.state>=3).length/beans.length;
+  quality+=ripe*40+ok*20;
+  if(sim.day>=5.5 && sim.day<=7.5)quality+=15;
+  if(sim.day<5)quality-=20;
+  if(sim.day>9)quality-=15;
+  if(sim.temp>52)quality-=18;
+  if(sim.moisture<0.35)quality-=12;
+  if(sim.pH>4.2)quality-=10;
+  if(sim.pH<3.5)quality+=5;
+  quality=clamp(quality,0,100);
+  let grade='Fair',color='warn';
+  if(quality>=85){grade='Excellent';color='good';}
+  else if(quality>=70){grade='Good';color='good';}
+  else if(quality>=55){grade='Fair';color='warn';}
+  else {grade='Poor';color='bad';}
+  sim.score={quality,grade,summary:`Batch scored ${Math.round(quality)}/100 — ${grade}. Ripe beans: ${Math.round(ripe*100)}%. Final pH ${sim.pH.toFixed(2)}, peak temp ${sim.temp.toFixed(1)}°C after ${sim.day.toFixed(1)} days.`};
+  log(sim.score.summary,color);
+  document.getElementById('status-text').textContent=sim.score.summary+' Press Empty & score again to restart.';
+}
+
+function resetGame(){
+  sim={day:0,hour:0,temp:24,pH:3.8,turnCooldown:0,covered:false,moisture:1.0,finished:false,score:null,events:{}};
+  microbes.yeast=0.02;microbes.lab=0.001;microbes.aab=0.001;
+  resetBeans();
+  logEl.innerHTML='';
+  log('New heap loaded. Fresh beans, sweet pulp, wild microbes waiting for warmth.','good');
+}
+
+// Controls
+document.getElementById('btn-turn').addEventListener('click',turnHeap);
+document.getElementById('btn-cover').addEventListener('click',()=>{
+  sim.covered=!sim.covered;
+  log(sim.covered?'Covered with banana leaves to trap heat.':'Uncovered — heat can escape more easily.',sim.covered?'warn':'good');
+});
+document.getElementById('btn-spray').addEventListener('click',()=>{
+  sim.moisture=Math.min(1,sim.moisture+0.22);
+  sim.temp-=2.2;
+  log('Sprinkled water. Moisture up, temperature down slightly.','good');
+});
+document.getElementById('btn-empty').addEventListener('click',()=>{
+  if(!sim.finished)scoreBatch(); else resetGame();
+});
+document.getElementById('speed').addEventListener('input',e=>{
+  speed=+e.target.value;
+  const labels=['Pause','Slow','Normal','Fast','Very fast','Instant'];
+  document.getElementById('speed-label').textContent=labels[speed];
+});
+
+// Init
+resetGame();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

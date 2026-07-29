@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-29",
-    "title": "Jansen Linkage Sandbox",
-    "slug": "jansen-linkage-sandbox",
-    "publishedSlug": "2026-07-29-jansen-linkage-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-29-jansen-linkage-sandbox/"
+    "date": "2026-07-30",
+    "title": "Cocoa Fermenter — Bean-to-Bar Simulator",
+    "slug": "cocoa-fermenter",
+    "publishedSlug": "2026-07-30-cocoa-fermenter",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-30-cocoa-fermenter/"
   },
   "apps": [
+    {
+      "date": "2026-07-30",
+      "title": "Cocoa Fermenter — Bean-to-Bar Simulator",
+      "slug": "cocoa-fermenter",
+      "publishedSlug": "2026-07-30-cocoa-fermenter",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-30-cocoa-fermenter/",
+      "description": "You are the fermenter. Turn a heap of fresh cocoa beans and manage temperature, aeration, and time to coax yeast, lactic acid bacteria, and acetic acid bacteria through a successful 5–7 day fermentation."
+    },
     {
       "date": "2026-07-29",
       "title": "Jansen Linkage Sandbox",
