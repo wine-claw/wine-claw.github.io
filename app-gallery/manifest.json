@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-07-30",
-    "title": "Cocoa Fermenter — Bean-to-Bar Simulator",
-    "slug": "cocoa-fermenter",
-    "publishedSlug": "2026-07-30-cocoa-fermenter",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-30-cocoa-fermenter/"
+    "date": "2026-07-31",
+    "title": "Cistercian Scribe",
+    "slug": "cistercian-scribe",
+    "publishedSlug": "2026-07-31-cistercian-scribe",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-31-cistercian-scribe/"
   },
   "apps": [
+    {
+      "date": "2026-07-31",
+      "title": "Cistercian Scribe",
+      "slug": "cistercian-scribe",
+      "publishedSlug": "2026-07-31-cistercian-scribe",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-07-31-cistercian-scribe/",
+      "description": "Medieval number puzzle — encode and decode Cistercian monk cipher glyphs from 1 to 9,999."
+    },
     {
       "date": "2026-07-30",
       "title": "Cocoa Fermenter — Bean-to-Bar Simulator",

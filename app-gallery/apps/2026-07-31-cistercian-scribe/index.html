@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Cistercian Scribe — Medieval Number Puzzle</title>
+<style>
+  :root {
+    --ink: #2b2218;
+    --parchment: #f7f1e3;
+    --parchment-dark: #e8dcc8;
+    --accent: #8b5a2b;
+    --accent-light: #b8834f;
+    --danger: #a94442;
+    --success: #556b2f;
+    --shadow: rgba(43,34,24,0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: Georgia, "Times New Roman", serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .banner {
+    width: 100%;
+    background: #3d2f22;
+    color: #f7f1e3;
+    text-align: center;
+    padding: 10px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .banner a { color: #e8c98f; text-decoration: underline; }
+  header {
+    width: 100%;
+    max-width: 900px;
+    padding: 22px 20px 8px;
+    text-align: center;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 28px;
+    font-weight: normal;
+    letter-spacing: 0.5px;
+  }
+  .subtitle {
+    font-size: 15px;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+  main {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 900px;
+    padding: 0 16px 26px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  @media (min-width: 760px) {
+    main { grid-template-columns: 1.1fr 0.9fr; gap: 24px; }
+    h1 { font-size: 34px; }
+  }
+  .panel {
+    background: #fff;
+    border: 1px solid var(--parchment-dark);
+    border-radius: 10px;
+    box-shadow: 0 4px 14px var(--shadow);
+    padding: 16px;
+  }
+  .glyph-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .glyph-meta {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .glyph-label {
+    font-size: 15px;
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .mode-tag {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--parchment);
+    border: 1px solid var(--parchment-dark);
+    color: var(--accent);
+  }
+  #glyph {
+    width: 100%;
+    max-width: 360px;
+    height: auto;
+    aspect-ratio: 1 / 1.2;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .control-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .control-row label {
+    min-width: 90px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .digit-group {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    min-width: 180px;
+  }
+  .digit-btn {
+    flex: 1;
+    min-width: 34px;
+    padding: 8px 4px;
+    border: 1px solid var(--parchment-dark);
+    background: #fff;
+    color: var(--ink);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 15px;
+    transition: background .15s, border-color .15s, transform .05s;
+  }
+  .digit-btn:hover { background: var(--parchment); }
+  .digit-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .digit-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+  .number-display {
+    font-size: 22px;
+    min-width: 62px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  button.action {
+    flex: 1 1 120px;
+    padding: 10px 14px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    transition: background .15s, transform .05s;
+  }
+  button.action:hover { background: var(--accent-light); }
+  button.action.secondary {
+    background: #fff;
+    color: var(--accent);
+  }
+  button.action.secondary:hover { background: var(--parchment); }
+  .hint-box {
+    background: var(--parchment);
+    border-left: 3px solid var(--accent-light);
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .hint-box p { margin: 0 0 6px; }
+  .hint-box ul { margin: 4px 0; padding-left: 18px; }
+  .score-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--parchment);
+    border: 1px solid var(--parchment-dark);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  .feedback {
+    text-align: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 15px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .feedback.correct { background: #e8f0d8; color: var(--success); border: 1px solid #c3d6a8; }
+  .feedback.wrong { background: #f5dede; color: var(--danger); border: 1px solid #e0b6b6; }
+  .feedback.neutral { background: var(--parchment); border: 1px solid var(--parchment-dark); color: var(--accent); }
+  .legend {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #6b5d4d;
+  }
+  .legend strong { color: var(--accent); }
+  footer {
+    width: 100%;
+    max-width: 900px;
+    padding: 14px 20px 24px;
+    text-align: center;
+    font-size: 12px;
+    color: #8a7d6d;
+  }
+</style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Don't rely on it for decisions.
+  </div>
+
+  <header>
+    <h1>Cistercian Scribe</h1>
+    <p class="subtitle">A medieval number puzzle. Decode or encode the monk's compact cipher (1–9,999).</p>
+  </header>
+
+  <main>
+    <section class="panel glyph-stage">
+      <div class="glyph-meta">
+        <span class="glyph-label">Cipher glyph</span>
+        <span id="modeTag" class="mode-tag">Decode</span>
+      </div>
+      <svg id="glyph" viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg" aria-label="Cistercian numeral glyph">
+        <rect width="220" height="260" fill="#fff" />
+        <g id="grid" opacity="0.08">
+          <line x1="0" y1="65" x2="220" y2="65" stroke="#2b2218" stroke-width="1" />
+          <line x1="0" y1="195" x2="220" y2="195" stroke="#2b2218" stroke-width="1" />
+          <line x1="110" y1="0" x2="110" y2="260" stroke="#2b2218" stroke-width="1" />
+        </g>
+        <line id="stave" x1="110" y1="20" x2="110" y2="240" stroke="#2b2218" stroke-width="5" stroke-linecap="round" />
+        <g id="marks" stroke="#2b2218" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"></g>
+      </svg>
+      <div class="legend">
+        <strong>Stave:</strong> vertical spine. Digits attach at <strong>top right</strong> (units), <strong>top left</strong> (tens), <strong>bottom right</strong> (hundreds), and <strong>bottom left</strong> (thousands).
+      </div>
+    </section>
+
+    <section class="panel controls">
+      <div class="score-bar">
+        <span>Score: <strong id="score">0</strong></span>
+        <span>Streak: <strong id="streak">0</strong></span>
+        <span>Round: <strong id="round">1</strong></span>
+      </div>
+
+      <div id="feedback" class="feedback neutral">
+        Press <strong>New cipher</strong> to begin decoding.
+      </div>
+
+      <div class="control-row">
+        <label for="numberSlider">Target</label>
+        <div class="slider-row">
+          <input id="numberSlider" type="range" min="1" max="9999" value="2026" />
+          <span id="numberDisplay" class="number-display">2026</span>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <label>Digits</label>
+        <div class="digit-group" id="digitGroup">
+          <button class="digit-btn active" data-d="0">0</button>
+          <button class="digit-btn" data-d="1">1</button>
+          <button class="digit-btn" data-d="2">2</button>
+          <button class="digit-btn" data-d="3">3</button>
+          <button class="digit-btn" data-d="4">4</button>
+          <button class="digit-btn" data-d="5">5</button>
+          <button class="digit-btn" data-d="6">6</button>
+          <button class="digit-btn" data-d="7">7</button>
+          <button class="digit-btn" data-d="8">8</button>
+          <button class="digit-btn" data-d="9">9</button>
+        </div>
+      </div>
+
+      <div class="hint-box">
+        <p><strong>How the cipher works</strong></p>
+        <p>A single glyph encodes 1–9,999 by combining four digit signs on one stave:</p>
+        <ul>
+          <li><strong>Units</strong> sit on the top right, mirrored.</li>
+          <li><strong>Tens</strong> sit on the top left, flipped vertically.</li>
+          <li><strong>Hundreds</strong> sit on the bottom right, flipped horizontally.</li>
+          <li><strong>Thousands</strong> sit on the bottom left, flipped both ways.</li>
+        </ul>
+      </div>
+
+      <div class="action-row">
+        <button id="newBtn" class="action">New cipher</button>
+        <button id="checkBtn" class="action secondary">Check answer</button>
+        <button id="encodeBtn" class="action secondary">Encode mode</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Built overnight by OpenClaw · Cistercian numerals: 13th-century monastic cipher · Not historically or mathematically authoritative
+  </footer>
+
+  <script>
+    (function () {
+      const staveX = 110;
+      const topY = 20;
+      const bottomY = 240;
+      const halfH = 110;
+      const w = 78;
+      const h = 88;
+      const pad = 10;
+
+      // Standard Cistercian digit strokes for the units (top-right) quadrant.
+      // Coordinates assume origin at (0,0), stave right edge at x=0, extending right.
+      // Positive x goes right; positive y goes down.
+      const digitStrokes = {
+        1: [[0, 0], [w, 0]],
+        2: [[0, h], [w, h]],
+        3: [[0, 0], [w, h]],
+        4: [[0, h], [w, 0]],
+        5: [[0, 0], [w, 0], [0, h / 2], [w * 0.55, h / 2]],
+        6: [[w, 0], [w, h]],
+        7: [[0, 0], [w, 0], [w, h]],
+        8: [[0, h], [w, h], [w, 0]],
+        9: [[0, 0], [w, 0], [w, h], [0, h]]
+      };
+
+      function getQuadrantStrokes(d, place) {
+        // place: 'units','tens','hundreds','thousands'
+        const base = digitStrokes[d];
+        if (!base) return [];
+        let mx = 1, my = 1, ox = 0, oy = 0;
+        if (place === 'units') {
+          ox = staveX + pad; oy = topY + 6;
+        } else if (place === 'tens') {
+          mx = -1; ox = staveX - pad; oy = topY + 6;
+        } else if (place === 'hundreds') {
+          my = -1; ox = staveX + pad; oy = bottomY - 6;
+        } else if (place === 'thousands') {
+          mx = -1; my = -1; ox = staveX - pad; oy = bottomY - 6;
+        }
+        return base.map(stroke => stroke.map(([x, y]) => {
+          const nx = staveX + (x * mx) + (ox - staveX);
+          const ny = oy + (y * my);
+          return [nx, ny];
+        }));
+      }
+
+      function renderGlyph(value) {
+        const g = document.getElementById('marks');
+        g.innerHTML = '';
+        const s = String(value).padStart(4, '0');
+        const places = ['thousands', 'hundreds', 'tens', 'units'];
+        for (let i = 0; i < 4; i++) {
+          const d = parseInt(s[i], 10);
+          if (d === 0) continue;
+          const strokes = getQuadrantStrokes(d, places[i]);
+          strokes.forEach(stroke => {
+            const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+            const pts = stroke.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+            poly.setAttribute('points', pts);
+            poly.setAttribute('stroke', '#2b2218');
+            poly.setAttribute('stroke-width', '4');
+            poly.setAttribute('fill', 'none');
+            poly.setAttribute('stroke-linecap', 'round');
+            poly.setAttribute('stroke-linejoin', 'round');
+            g.appendChild(poly);
+          });
+        }
+      }
+
+      let mode = 'decode'; // 'decode' or 'encode'
+      let target = 0;
+      let guess = 0;
+      let score = 0;
+      let streak = 0;
+      let round = 1;
+      let sliderDragging = false;
+
+      const numberSlider = document.getElementById('numberSlider');
+      const numberDisplay = document.getElementById('numberDisplay');
+      const digitGroup = document.getElementById('digitGroup');
+      const newBtn = document.getElementById('newBtn');
+      const checkBtn = document.getElementById('checkBtn');
+      const encodeBtn = document.getElementById('encodeBtn');
+      const feedback = document.getElementById('feedback');
+      const scoreEl = document.getElementById('score');
+      const streakEl = document.getElementById('streak');
+      const roundEl = document.getElementById('round');
+      const modeTag = document.getElementById('modeTag');
+      const digitButtons = Array.from(digitGroup.querySelectorAll('button'));
+
+      function randomTarget() {
+        return Math.floor(Math.random() * 9999) + 1;
+      }
+
+      function updateModeUI() {
+        if (mode === 'decode') {
+          modeTag.textContent = 'Decode';
+          numberSlider.disabled = true;
+          digitGroup.style.opacity = '1';
+          checkBtn.textContent = 'Check answer';
+        } else {
+          modeTag.textContent = 'Encode';
+          numberSlider.disabled = false;
+          digitGroup.style.opacity = '0.35';
+          digitGroup.style.pointerEvents = 'none';
+          checkBtn.textContent = 'Show glyph';
+        }
+      }
+
+      function setFeedback(cls, text) {
+        feedback.className = 'feedback ' + cls;
+        feedback.innerHTML = text;
+      }
+
+      function startDecode() {
+        mode = 'decode';
+        target = randomTarget();
+        guess = 0;
+        updateModeUI();
+        renderGlyph(target);
+        numberSlider.value = 1;
+        numberDisplay.textContent = '1';
+        digitButtons.forEach(b => b.classList.toggle('active', parseInt(b.dataset.d, 10) === 0));
+        setFeedback('neutral', 'What number does the monk’s glyph show? Use the slider to guess, then check.');
+      }
+
+      function startEncode() {
+        mode = 'encode';
+        target = randomTarget();
+        updateModeUI();
+        numberSlider.value = target;
+        numberDisplay.textContent = target;
+        renderGlyph(0);
+        setFeedback('neutral', 'What does <strong>' + target + '</strong> look like? Press <strong>Show glyph</strong> to reveal.');
+      }
+
+      newBtn.addEventListener('click', () => {
+        round += 1;
+        roundEl.textContent = round;
+        if (mode === 'decode') startEncode();
+        else startDecode();
+      });
+
+      encodeBtn.addEventListener('click', () => {
+        if (mode === 'decode') startEncode();
+        else startDecode();
+      });
+
+      checkBtn.addEventListener('click', () => {
+        if (mode === 'decode') {
+          const val = parseInt(numberSlider.value, 10);
+          if (val === target) {
+            score += 10 + Math.min(streak * 2, 20);
+            streak += 1;
+            setFeedback('correct', 'Correct! The glyph is <strong>' + target + '</strong>.');
+          } else {
+            streak = 0;
+            setFeedback('wrong', 'Not quite. The glyph was <strong>' + target + '</strong>.');
+          }
+          scoreEl.textContent = score;
+          streakEl.textContent = streak;
+          renderGlyph(target);
+        } else {
+          renderGlyph(target);
+          setFeedback('correct', 'Here is <strong>' + target + '</strong> rendered as a Cistercian glyph.');
+        }
+      });
+
+      numberSlider.addEventListener('input', () => {
+        numberDisplay.textContent = numberSlider.value;
+      });
+
+      digitGroup.addEventListener('click', (e) => {
+        if (mode === 'encode') return;
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        digitButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+
+      // Keyboard support for quick digit selection in encode mode is not needed;
+      // slider already supports arrow keys.
+
+      // Initialize with encode mode so the user can see a glyph appear by choosing a number.
+      startEncode();
+    })();
+  </script>
+</body>
+</html>
