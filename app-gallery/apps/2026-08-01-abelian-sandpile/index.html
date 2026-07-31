@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Abelian Sandpile — Self-Organised Criticality Toy</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --panel: #ffffff;
+      --ink: #1e293b;
+      --muted: #64748b;
+      --accent: #b45309;
+      --accent2: #0f766e;
+      --border: #e2e8f0;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .warning {
+      width: 100%;
+      max-width: 980px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #7c2d12;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    header {
+      width: 100%;
+      max-width: 980px;
+      margin-bottom: 14px;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.5rem; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; }
+    .wrap {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+      align-items: start;
+    }
+    .stage {
+      background: var(--panel);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      cursor: crosshair;
+      touch-action: none;
+      max-width: 100%;
+      image-rendering: pixelated;
+    }
+    .controls {
+      background: var(--panel);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 16px;
+    }
+    .control-group { margin-bottom: 16px; }
+    .control-group:last-child { margin-bottom: 0; }
+    label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+    label span.value { color: var(--accent); font-weight: 700; }
+    input[type=range] { width: 100%; }
+    select, button {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+      background: #fff;
+      color: var(--ink);
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: background 0.15s, transform 0.05s;
+    }
+    button.secondary {
+      background: #fff;
+      color: var(--ink);
+      border-color: var(--border);
+    }
+    button:hover { filter: brightness(1.05); }
+    button:active { transform: translateY(1px); }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .stat {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat .num {
+      display: block;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--accent2);
+    }
+    .stat .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .legend {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-top: 10px;
+    }
+    @media (max-width: 760px) {
+      .wrap { grid-template-columns: 1fr; }
+      .controls { order: 2; }
+      .stage { order: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">
+    <strong>Experimental OpenClaw AI mini-app:</strong> untested, not scientifically validated, and provided for curiosity only. Do not rely on it for research or decisions.
+  </div>
+
+  <header>
+    <h1>Abelian Sandpile</h1>
+    <div class="subtitle">Drop grains of sand on a grid and watch avalanches cascade toward self-organised criticality.</div>
+  </header>
+
+  <div class="wrap">
+    <div class="stage">
+      <canvas id="pile" width="600" height="600"></canvas>
+      <div class="legend" id="legend"></div>
+      <div class="hint">Click or tap the grid to drop a grain at that spot. The threshold is the number of grains a cell can hold before it topples and shares one grain with each of its four neighbours.</div>
+    </div>
+
+    <div class="controls">
+      <div class="btn-row">
+        <button id="toggleBtn">Pause</button>
+        <button id="resetBtn" class="secondary">Reset</button>
+      </div>
+      <button id="dropNowBtn" class="secondary">Drop 100 grains now</button>
+
+      <div class="control-group">
+        <label>Drop mode</label>
+        <select id="modeSelect">
+          <option value="center">Drop at centre</option>
+          <option value="random">Drop at random</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Drops per step <span id="rateVal" class="value">5</span></label>
+        <input id="rateRange" type="range" min="1" max="100" value="5">
+      </div>
+
+      <div class="control-group">
+        <label>Topple threshold <span id="thrVal" class="value">4</span></label>
+        <input id="thrRange" type="range" min="2" max="8" value="4">
+      </div>
+
+      <div class="control-group">
+        <label>Grid size <span id="sizeVal" class="value">61</span></label>
+        <input id="sizeRange" type="range" min="21" max="151" step="2" value="61">
+      </div>
+
+      <div class="control-group">
+        <label>Palette</label>
+        <select id="paletteSelect">
+          <option value="sand">Sand & stone</option>
+          <option value="ocean">Ocean depths</option>
+          <option value="heat">Heatmap</option>
+          <option value="ink">Ink on paper</option>
+        </select>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span class="num" id="grainStat">0</span><span class="label">Grains added</span></div>
+        <div class="stat"><span class="num" id="toppleStat">0</span><span class="label">Topples this run</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('pile');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const toggleBtn = document.getElementById('toggleBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const dropNowBtn = document.getElementById('dropNowBtn');
+    const modeSelect = document.getElementById('modeSelect');
+    const rateRange = document.getElementById('rateRange');
+    const rateVal = document.getElementById('rateVal');
+    const thrRange = document.getElementById('thrRange');
+    const thrVal = document.getElementById('thrVal');
+    const sizeRange = document.getElementById('sizeRange');
+    const sizeVal = document.getElementById('sizeVal');
+    const paletteSelect = document.getElementById('paletteSelect');
+    const grainStat = document.getElementById('grainStat');
+    const toppleStat = document.getElementById('toppleStat');
+    const legendEl = document.getElementById('legend');
+
+    const palettes = {
+      sand: ['#f8fafc', '#fde68a', '#d97706', '#92400e'],
+      ocean: ['#f0f9ff', '#7dd3fc', '#0284c7', '#0c4a6e'],
+      heat: ['#ffffff', '#fca5a5', '#dc2626', '#7f1d1d'],
+      ink: ['#ffffff', '#94a3b8', '#475569', '#0f172a']
+    };
+
+    let n = parseInt(sizeRange.value, 10);
+    let threshold = parseInt(thrRange.value, 10);
+    let rate = parseInt(rateRange.value, 10);
+    let paletteName = paletteSelect.value;
+    let mode = modeSelect.value;
+    let running = true;
+    let grainsAdded = 0;
+    let topplesTotal = 0;
+    let grid;
+    let active;
+    let workerPending = false;
+    let activeCells;
+    let cellSize;
+    let mouseX = -1;
+    let mouseY = -1;
+
+    function initGrid() {
+      grid = new Uint8Array(n * n);
+      active = new Uint8Array(n * n);
+      activeCells = [];
+      grainsAdded = 0;
+      topplesTotal = 0;
+      updateStats();
+      drawFull();
+    }
+
+    function resizeCanvas() {
+      const stage = canvas.parentElement;
+      const maxWidth = stage.clientWidth - 28;
+      const size = Math.min(600, maxWidth);
+      canvas.width = size;
+      canvas.height = size;
+      cellSize = size / n;
+      drawFull();
+    }
+
+    function idx(r, c) { return r * n + c; }
+
+    function drawCell(r, c, value, isActive) {
+      const x = c * cellSize;
+      const y = r * cellSize;
+      const pal = palettes[paletteName];
+      let color = pal[value] || pal[pal.length - 1];
+      if (isActive) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x, y, cellSize, cellSize);
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.85;
+        ctx.fillRect(x + 1, y + 1, cellSize - 2, cellSize - 2);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(cellSize), Math.ceil(cellSize));
+      }
+    }
+
+    function drawFull() {
+      ctx.fillStyle = palettes[paletteName][0];
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const len = n * n;
+      for (let i = 0; i < len; i++) {
+        if (grid[i]) drawCell(Math.floor(i / n), i % n, grid[i], active[i]);
+      }
+    }
+
+    function addGrainAt(r, c) {
+      if (r < 0 || r >= n || c < 0 || c >= n) return;
+      const i = idx(r, c);
+      grid[i]++;
+      grainsAdded++;
+      if (grid[i] >= threshold) {
+        if (!active[i]) {
+          active[i] = 1;
+          activeCells.push([r, c]);
+        }
+      } else {
+        drawCell(r, c, grid[i], false);
+      }
+    }
+
+    function step() {
+      let localTopples = 0;
+      const current = activeCells;
+      activeCells = [];
+      const nextActiveSet = new Set();
+      for (let k = 0; k < current.length; k++) {
+        const [r, c] = current[k];
+        const i = idx(r, c);
+        active[i] = 0;
+        if (grid[i] < threshold) continue;
+        const share = 1;
+        grid[i] -= threshold;
+        localTopples++;
+        const neighbours = [[r-1,c], [r+1,c], [r,c-1], [r,c+1]];
+        for (let q = 0; q < neighbours.length; q++) {
+          const [nr, nc] = neighbours[q];
+          if (nr < 0 || nr >= n || nc < 0 || nc >= n) continue;
+          const ni = idx(nr, nc);
+          grid[ni]++;
+          if (grid[ni] >= threshold) nextActiveSet.add(ni);
+        }
+      }
+      nextActiveSet.forEach(i => {
+        if (!active[i]) {
+          active[i] = 1;
+          activeCells.push([Math.floor(i / n), i % n]);
+        }
+      });
+      topplesTotal += localTopples;
+      updateStats();
+      drawFull();
+      return localTopples;
+    }
+
+    function autoDrop() {
+      for (let i = 0; i < rate; i++) {
+        let r, c;
+        if (mode === 'center') {
+          r = Math.floor(n / 2);
+          c = Math.floor(n / 2);
+        } else {
+          r = Math.floor(Math.random() * n);
+          c = Math.floor(Math.random() * n);
+        }
+        addGrainAt(r, c);
+      }
+      settle();
+    }
+
+    function settle() {
+      let guard = 0;
+      while (activeCells.length && guard < 1000) {
+        step();
+        guard++;
+      }
+    }
+
+    function updateStats() {
+      grainStat.textContent = grainsAdded.toLocaleString();
+      toppleStat.textContent = topplesTotal.toLocaleString();
+    }
+
+    function buildLegend() {
+      legendEl.innerHTML = '';
+      const pal = palettes[paletteName];
+      for (let i = 0; i < 4; i++) {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.style.background = pal[i];
+        chip.appendChild(dot);
+        chip.appendChild(document.createTextNode(i + ' grains'));
+        legendEl.appendChild(chip);
+      }
+    }
+
+    function loop() {
+      if (running) autoDrop();
+      requestAnimationFrame(loop);
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      running = !running;
+      toggleBtn.textContent = running ? 'Pause' : 'Resume';
+    });
+
+    resetBtn.addEventListener('click', () => {
+      initGrid();
+      running = false;
+      toggleBtn.textContent = 'Resume';
+    });
+
+    dropNowBtn.addEventListener('click', () => {
+      running = false;
+      toggleBtn.textContent = 'Resume';
+      for (let i = 0; i < 100; i++) {
+        let r, c;
+        if (mode === 'center') {
+          r = Math.floor(n / 2); c = Math.floor(n / 2);
+        } else {
+          r = Math.floor(Math.random() * n);
+          c = Math.floor(Math.random() * n);
+        }
+        addGrainAt(r, c);
+      }
+      settle();
+    });
+
+    modeSelect.addEventListener('change', () => { mode = modeSelect.value; });
+    paletteSelect.addEventListener('change', () => {
+      paletteName = paletteSelect.value;
+      buildLegend();
+      drawFull();
+    });
+    rateRange.addEventListener('input', () => {
+      rate = parseInt(rateRange.value, 10);
+      rateVal.textContent = rate;
+    });
+    thrRange.addEventListener('input', () => {
+      threshold = parseInt(thrRange.value, 10);
+      thrVal.textContent = threshold;
+    });
+    sizeRange.addEventListener('change', () => {
+      n = parseInt(sizeRange.value, 10);
+      sizeVal.textContent = n;
+      initGrid();
+      resizeCanvas();
+    });
+
+    function pointerToCell(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
+      const y = (e.clientY || e.touches?.[0]?.clientY || 0) - rect.top;
+      const c = Math.floor(x / cellSize);
+      const r = Math.floor(y / cellSize);
+      return [r, c];
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const [r, c] = pointerToCell(e);
+      addGrainAt(r, c);
+      settle();
+      running = false;
+      toggleBtn.textContent = 'Resume';
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+
+    initGrid();
+    resizeCanvas();
+    buildLegend();
+    loop();
+  </script>
+</body>
+</html>
