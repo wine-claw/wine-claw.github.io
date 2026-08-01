@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Horizontal Sundial Designer</title>
+  <style>
+    :root {
+      --paper: #f6f1e8;
+      --panel: #fffdf8;
+      --ink: #2b211b;
+      --muted: #6e5d53;
+      --bronze: #8c5e3c;
+      --bronze-dark: #5f3b24;
+      --accent: #b86d38;
+      --line: #e0d6c8;
+      --shadow: 0 4px 14px rgba(43, 33, 27, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(160deg, #e9e1d6, var(--paper));
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    .warning {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      background: #fff7ed;
+      border: 1px solid #fbbf24;
+      color: #78350f;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    header {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px 16px 10px;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.6rem; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 820px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin: 12px 0 4px;
+      font-weight: 600;
+    }
+    input[type="range"] { width: 100%; margin: 4px 0 2px; }
+    input[type="number"], input[type="text"], input[type="date"], input[type="time"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 0.95rem;
+    }
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .preset-grid button, .actions button {
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--bronze-dark);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .preset-grid button:hover, .actions button:hover { background: #faf5ef; }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .actions .primary {
+      background: var(--bronze);
+      border-color: var(--bronze);
+      color: #fff;
+    }
+    .actions .primary:hover { background: var(--bronze-dark); }
+    .value-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .dial-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    #dial {
+      width: 100%;
+      max-width: 560px;
+      height: auto;
+      background: #fffdf8;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+    }
+    .live-readout {
+      font-size: 1.05rem;
+      text-align: center;
+      color: var(--bronze-dark);
+    }
+    .live-readout b { color: var(--ink); }
+    .details {
+      width: 100%;
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .details p { margin: 6px 0; }
+    .angles {
+      columns: 2;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.78rem;
+      margin-top: 8px;
+    }
+    .angles div { break-inside: avoid; }
+    @media print {
+      .warning, .controls, .actions, .details, header .subtitle { display: none; }
+      body { background: #fff; }
+      #dial { max-width: 100%; border: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">
+    <strong>Experimental OpenClaw AI mini-app.</strong> Untested, not professionally validated, and should not be relied on for any decisions — especially not for navigation, construction, or precise timekeeping.
+  </div>
+
+  <header>
+    <h1>Horizontal Sundial Designer</h1>
+    <div class="subtitle">Design a printable horizontal sundial for any latitude. Drag the time slider to watch the gnomon shadow sweep across the dial.</div>
+  </header>
+
+  <main>
+    <section class="panel controls">
+      <label for="location">Location name</label>
+      <input id="location" type="text" placeholder="e.g. Adelaide, South Australia" value="Adelaide, South Australia">
+
+      <label for="latSlider">Latitude</label>
+      <input id="latSlider" type="range" min="-60" max="60" step="0.1" value="-34.9">
+      <div class="row">
+        <input id="latNumber" type="number" min="-60" max="60" step="0.1" value="-34.9">
+        <input id="hemisphere" type="text" value="Southern" readonly>
+      </div>
+
+      <label>Quick presets</label>
+      <div class="preset-grid">
+        <button data-lat="51.5" data-name="London">London</button>
+        <button data-lat="40.7" data-name="New York">New York</button>
+        <button data-lat="-33.9" data-name="Sydney">Sydney</button>
+        <button data-lat="-34.9" data-name="Adelaide">Adelaide</button>
+        <button data-lat="35.7" data-name="Tokyo">Tokyo</button>
+        <button data-lat="-33.9" data-name="Cape Town">Cape Town</button>
+      </div>
+
+      <label for="timeSlider">Local apparent time</label>
+      <input id="timeSlider" type="range" min="4" max="20" step="0.02" value="12">
+      <div class="value-row">
+        <span id="timeReadout">12:00</span>
+        <span id="dateReadout">—</span>
+      </div>
+
+      <label for="dateInput">Date (for solar equation of time)</label>
+      <input id="dateInput" type="date">
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="animate">Animate shadow</label>
+          <input id="animate" type="checkbox">
+        </div>
+        <div>
+          <label for="showAngles">Show angles</label>
+          <input id="showAngles" type="checkbox">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnNow" class="primary">Set to now</button>
+        <button id="btnPrint">Print dial</button>
+        <button id="btnSvg">Download SVG</button>
+      </div>
+    </section>
+
+    <section class="panel dial-wrap">
+      <svg id="dial" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="shadowBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.2" />
+          </filter>
+        </defs>
+        <g id="dialFace"></g>
+        <g id="dialGnomon"></g>
+        <g id="dialShadow"></g>
+      </svg>
+      <div class="live-readout">
+        <span id="liveLine">Local apparent time <b>12:00</b>. Latitude <b>34.9° S</b>.</span>
+      </div>
+      <div class="details">
+        <p id="solarLine">Equation of time: <b>0.0 min</b>. Solar declination: <b>0.0°</b>.</p>
+        <p>
+          The gnomon angle equals the latitude. In the northern hemisphere the gnomon points north (up on this drawing);
+          in the southern hemisphere it points south (down). Hour-line angles are measured from the noon line using
+          <em>tan θ = sin φ · tan H</em>, where <em>φ</em> is latitude and <em>H</em> is the sun’s hour angle from noon.
+        </p>
+        <div id="anglesBox" class="angles" style="display:none;"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const dial = document.getElementById('dial');
+    const faceGroup = document.getElementById('dialFace');
+    const gnomonGroup = document.getElementById('dialGnomon');
+    const shadowGroup = document.getElementById('dialShadow');
+    const latSlider = document.getElementById('latSlider');
+    const latNumber = document.getElementById('latNumber');
+    const hemisphereInput = document.getElementById('hemisphere');
+    const timeSlider = document.getElementById('timeSlider');
+    const timeReadout = document.getElementById('timeReadout');
+    const dateReadout = document.getElementById('dateReadout');
+    const dateInput = document.getElementById('dateInput');
+    const locationInput = document.getElementById('location');
+    const liveLine = document.getElementById('liveLine');
+    const solarLine = document.getElementById('solarLine');
+    const anglesBox = document.getElementById('anglesBox');
+    const showAngles = document.getElementById('showAngles');
+    const animateBox = document.getElementById('animate');
+    const CX = 210, CY = 210, R = 176;
+    const HOURS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
+    function toRad(d) { return d * Math.PI / 180; }
+    function toDeg(r) { return r * 180 / Math.PI; }
+    function fmtTime(dec) {
+      const h = Math.floor(dec);
+      const m = Math.floor((dec - h) * 60);
+      const s = Math.floor(((dec - h) * 60 - m) * 60);
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    }
+
+    function sunPosition(jd) {
+      // Approximate NOAA solar algorithm, returns { declinationDeg, eqTimeMin }.
+      const n = jd - 2451545.0;
+      const L0 = mod(280.46061837 + 360.98564736629 * n, 360);
+      const M = mod(357.52911 + 359.0502900 * n, 360);
+      const Mr = toRad(M);
+      const e = 0.016708634 - 0.000042037 * n;
+      const C = (1.914602 - 0.004817 * n) * Math.sin(Mr) +
+                0.019993 * Math.sin(2 * Mr) +
+                0.000289 * Math.sin(3 * Mr);
+      const trueLon = mod(L0 + C, 360);
+      const trueAnom = mod(M + C, 360);
+      const R = 1.000001018 * (1 - e * e) / (1 + e * Math.cos(toRad(trueAnom)));
+      const Omega = mod(125.04 - 1934.136 * n, 360);
+      const appLon = mod(trueLon - 0.00569 - 0.00478 * Math.sin(toRad(Omega)), 360);
+      const epsilon0 = 23.439302 - 0.0000003563 * n;
+      const epsilon = epsilon0 + 0.00256 * Math.cos(toRad(Omega));
+      const epsr = toRad(epsilon);
+      const dec = toDeg(Math.asin(Math.sin(epsr) * Math.sin(toRad(appLon))));
+      const y = Math.tan(epsr / 2) ** 2;
+      const eqr = y * Math.sin(2 * toRad(L0))
+                - 2 * e * Math.sin(Mr)
+                + 4 * e * y * Math.sin(Mr) * Math.cos(2 * toRad(L0))
+                - 0.5 * y * y * Math.sin(4 * toRad(L0))
+                - 1.25 * e * e * Math.sin(2 * Mr);
+      const eqTime = eqr * 4 * 180 / Math.PI; // radians -> minutes
+      return { declinationDeg: dec, eqTimeMin: eqTime };
+    }
+
+    function mod(x, m) {
+      let r = x % m;
+      return r < 0 ? r + m : r;
+    }
+
+    function hourLineAngle(lat, hour) {
+      const H = (hour - 12) * 15;
+      const Hr = toRad(H);
+      const latr = toRad(lat);
+      const theta = Math.atan(Math.sin(latr) * Math.tan(Hr));
+      return theta;
+    }
+
+    function polarToScreen(theta, radius) {
+      // theta positive clockwise from north (up). SVG y increases downward.
+      return {
+        x: CX + radius * Math.sin(theta),
+        y: CY - radius * Math.cos(theta)
+      };
+    }
+
+    function setDateToToday() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      dateInput.value = `${y}-${m}-${d}`;
+    }
+
+    function draw() {
+      const lat = parseFloat(latSlider.value);
+      const latAbs = Math.abs(lat);
+      const poleDir = lat >= 0 ? -1 : 1; // -1 = up (north), +1 = down (south) in SVG coords
+
+      faceGroup.innerHTML = '';
+      gnomonGroup.innerHTML = '';
+      shadowGroup.innerHTML = '';
+
+      // Dial plate circle
+      const plate = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      plate.setAttribute('cx', CX);
+      plate.setAttribute('cy', CY);
+      plate.setAttribute('r', R);
+      plate.setAttribute('fill', '#fffdf8');
+      plate.setAttribute('stroke', '#c9b69b');
+      plate.setAttribute('stroke-width', '2');
+      faceGroup.appendChild(plate);
+
+      // Substyle (noon line) dashes
+      const noonOuter = polarToScreen(0, R);
+      const noonInner = polarToScreen(0, R - 12);
+      const noonLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      noonLine.setAttribute('x1', noonInner.x);
+      noonLine.setAttribute('y1', noonInner.y);
+      noonLine.setAttribute('x2', noonOuter.x);
+      noonLine.setAttribute('y2', noonOuter.y);
+      noonLine.setAttribute('stroke', '#a38b75');
+      noonLine.setAttribute('stroke-width', '1.5');
+      noonLine.setAttribute('stroke-dasharray', '4 4');
+      faceGroup.appendChild(noonLine);
+
+      // Compass rose tick at pole direction
+      const poleTick = polarToScreen(0, R - 6);
+      const tick = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      tick.setAttribute('cx', poleTick.x);
+      tick.setAttribute('cy', poleTick.y);
+      tick.setAttribute('r', '3');
+      tick.setAttribute('fill', '#8c5e3c');
+      faceGroup.appendChild(tick);
+
+      const angles = [];
+      for (const h of HOURS) {
+        const theta = hourLineAngle(lat, h);
+        angles.push({ h, theta });
+        const isNoon = h === 12;
+        const inner = polarToScreen(theta, isNoon ? 22 : 28);
+        const outer = polarToScreen(theta, R - 10);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', inner.x);
+        line.setAttribute('y1', inner.y);
+        line.setAttribute('x2', outer.x);
+        line.setAttribute('y2', outer.y);
+        line.setAttribute('stroke', isNoon ? '#8c5e3c' : '#b8a896');
+        line.setAttribute('stroke-width', isNoon ? '2.5' : '1.2');
+        line.setAttribute('stroke-linecap', 'round');
+        faceGroup.appendChild(line);
+
+        // Hour numerals
+        const numRadius = R - 22;
+        const pos = polarToScreen(theta, numRadius);
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        let label;
+        if (h === 0 || h === 24) label = '12';
+        else if (h < 12) label = String(h);
+        else label = String(h - 12);
+        text.textContent = label;
+        text.setAttribute('x', pos.x);
+        text.setAttribute('y', pos.y);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dominant-baseline', 'middle');
+        text.setAttribute('fill', '#4a3b32');
+        text.setAttribute('font-size', isNoon ? '15' : '12');
+        text.setAttribute('font-weight', isNoon ? '700' : '500');
+        faceGroup.appendChild(text);
+      }
+
+      // Gnomon triangle (top-down projection)
+      const gnomonLen = R * 0.28;
+      const gnomonHalfW = 8;
+      const apex = { x: CX, y: CY };
+      const baseCenter = {
+        x: CX,
+        y: CY + poleDir * gnomonLen
+      };
+      const baseP1 = { x: baseCenter.x - gnomonHalfW, y: baseCenter.y };
+      const baseP2 = { x: baseCenter.x + gnomonHalfW, y: baseCenter.y };
+      const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      poly.setAttribute('points', `${apex.x},${apex.y} ${baseP1.x},${baseP1.y} ${baseP2.x},${baseP2.y}`);
+      poly.setAttribute('fill', 'url(#gnomonGrad)' || '#9e7354');
+      poly.setAttribute('stroke', '#5f3b24');
+      poly.setAttribute('stroke-width', '1.2');
+      poly.setAttribute('fill', '#9e7354');
+      gnomonGroup.appendChild(poly);
+
+      // Gnomon angle annotation
+      const arcR = gnomonLen * 0.55;
+      const arcStart = { x: CX + arcR, y: CY };
+      const arcEnd = {
+        x: CX + arcR * Math.cos(toRad(latAbs)),
+        y: CY + poleDir * arcR * Math.sin(toRad(latAbs))
+      };
+      const large = latAbs > 90 ? 1 : 0;
+      const sweep = poleDir < 0 ? 1 : 0;
+      const arcPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      arcPath.setAttribute('d', `M ${arcStart.x} ${arcStart.y} A ${arcR} ${arcR} 0 ${large} ${sweep} ${arcEnd.x} ${arcEnd.y}`);
+      arcPath.setAttribute('fill', 'none');
+      arcPath.setAttribute('stroke', '#b86d38');
+      arcPath.setAttribute('stroke-width', '1.2');
+      arcPath.setAttribute('stroke-dasharray', '3 2');
+      gnomonGroup.appendChild(arcPath);
+      const arcLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      arcLabel.textContent = `${latAbs.toFixed(1)}°`;
+      arcLabel.setAttribute('x', CX + (poleDir < 0 ? 26 : -26));
+      arcLabel.setAttribute('y', CY + poleDir * arcR * 0.7);
+      arcLabel.setAttribute('text-anchor', 'middle');
+      arcLabel.setAttribute('dominant-baseline', 'middle');
+      arcLabel.setAttribute('fill', '#8c5e3c');
+      arcLabel.setAttribute('font-size', '10');
+      gnomonGroup.appendChild(arcLabel);
+
+      // Pole label
+      const poleLabelPos = polarToScreen(0, R + 16);
+      const poleLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      poleLabel.textContent = lat >= 0 ? 'N' : 'S';
+      poleLabel.setAttribute('x', poleLabelPos.x);
+      poleLabel.setAttribute('y', poleLabelPos.y);
+      poleLabel.setAttribute('text-anchor', 'middle');
+      poleLabel.setAttribute('dominant-baseline', 'middle');
+      poleLabel.setAttribute('fill', '#8c5e3c');
+      poleLabel.setAttribute('font-weight', '700');
+      poleLabel.setAttribute('font-size', '13');
+      faceGroup.appendChild(poleLabel);
+
+      // Shadow for current time
+      const t = parseFloat(timeSlider.value);
+      const shadowTheta = hourLineAngle(lat, t);
+      const shadowOuter = polarToScreen(shadowTheta, R - 4);
+      const shadowInner = polarToScreen(shadowTheta, 10);
+      const shadowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      shadowLine.setAttribute('x1', shadowInner.x);
+      shadowLine.setAttribute('y1', shadowInner.y);
+      shadowLine.setAttribute('x2', shadowOuter.x);
+      shadowLine.setAttribute('y2', shadowOuter.y);
+      shadowLine.setAttribute('stroke', '#3d2b1f');
+      shadowLine.setAttribute('stroke-width', '4');
+      shadowLine.setAttribute('stroke-linecap', 'round');
+      shadowLine.setAttribute('opacity', '0.55');
+      shadowLine.setAttribute('filter', 'url(#shadowBlur)');
+      shadowGroup.appendChild(shadowLine);
+
+      // Readouts
+      timeReadout.textContent = fmtTime(t) + ' LAT';
+      dateReadout.textContent = dateInput.value;
+      hemisphereInput.value = lat >= 0 ? 'Northern' : 'Southern';
+      liveLine.innerHTML = `Local apparent time <b>${fmtTime(t)}</b>. Latitude <b>${latAbs.toFixed(1)}° ${lat >= 0 ? 'N' : 'S'}</b>.`;
+
+      // Solar details for selected date
+      const dateVal = dateInput.value;
+      if (dateVal) {
+        const [y, m, d] = dateVal.split('-').map(Number);
+        const jd = dateToJulian(y, m, d);
+        const sun = sunPosition(jd);
+        const sign = sun.eqTimeMin >= 0 ? '+' : '-';
+        solarLine.innerHTML = `Equation of time: <b>${sign}${Math.abs(sun.eqTimeMin).toFixed(1)} min</b> (sundial ${sun.eqTimeMin >= 0 ? 'fast' : 'slow'}). Solar declination: <b>${sun.declinationDeg.toFixed(1)}°</b>.`;
+      }
+
+      // Angle table
+      if (showAngles.checked) {
+        anglesBox.style.display = 'block';
+        anglesBox.innerHTML = angles.map(a => {
+          const ampm = a.h < 12 ? 'am' : (a.h === 12 ? 'noon' : 'pm');
+          const label = a.h === 12 ? '12' : (a.h < 12 ? `${a.h}:00` : `${a.h - 12}:00`);
+          const deg = toDeg(a.theta);
+          return `<div>${label} ${ampm}: ${deg >= 0 ? '+' : ''}${deg.toFixed(1)}°</div>`;
+        }).join('');
+      } else {
+        anglesBox.style.display = 'none';
+      }
+    }
+
+    function dateToJulian(y, m, d) {
+      const a = Math.floor((14 - m) / 12);
+      const yy = y + 4800 - a;
+      const mm = m + 12 * a - 3;
+      const jdn = d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+      return jdn - 0.5; // noon UT for the date
+    }
+
+    function animate() {
+      if (animateBox.checked) {
+        let t = parseFloat(timeSlider.value) + 0.015;
+        if (t > 20) t = 4;
+        timeSlider.value = t;
+        draw();
+      }
+      requestAnimationFrame(animate);
+    }
+
+    // Presets
+    document.querySelectorAll('.preset-grid button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lat = parseFloat(btn.dataset.lat);
+        latSlider.value = lat;
+        latNumber.value = lat.toFixed(1);
+        locationInput.value = btn.dataset.name;
+        draw();
+      });
+    });
+
+    // Sync lat inputs
+    latSlider.addEventListener('input', () => { latNumber.value = latSlider.value; draw(); });
+    latNumber.addEventListener('input', () => { latSlider.value = latNumber.value; draw(); });
+    timeSlider.addEventListener('input', draw);
+    dateInput.addEventListener('input', draw);
+    showAngles.addEventListener('change', draw);
+
+    // Now button: set date and time from device clock, corrected to local apparent time
+    document.getElementById('btnNow').addEventListener('click', () => {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      dateInput.value = `${y}-${m}-${d}`;
+      const jd = dateToJulian(y, now.getMonth() + 1, now.getDate());
+      const sun = sunPosition(jd);
+      const localClock = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+      const tzOffset = -now.getTimezoneOffset() / 60;
+      const utc = localClock - tzOffset;
+      const lat = parseFloat(latSlider.value);
+      const meanSolar = utc; // at longitude 0; if user hasn't entered a longitude, default 0
+      const latTime = meanSolar + sun.eqTimeMin / 60;
+      let t = ((latTime - 4 + 24) % 16) + 4;
+      t = Math.max(4, Math.min(20, t));
+      timeSlider.value = t;
+      draw();
+    });
+
+    document.getElementById('btnPrint').addEventListener('click', () => window.print());
+    document.getElementById('btnSvg').addEventListener('click', () => {
+      const svgData = new XMLSerializer().serializeToString(dial);
+      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sundial-${latSlider.value}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    setDateToToday();
+    draw();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

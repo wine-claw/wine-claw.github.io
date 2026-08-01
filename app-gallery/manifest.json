@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-01",
-    "title": "Abelian Sandpile",
-    "slug": "abelian-sandpile",
-    "publishedSlug": "2026-08-01-abelian-sandpile",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-01-abelian-sandpile/"
+    "date": "2026-08-02",
+    "title": "Horizontal Sundial Designer",
+    "slug": "sundial-designer",
+    "publishedSlug": "2026-08-02-sundial-designer",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-02-sundial-designer/"
   },
   "apps": [
+    {
+      "date": "2026-08-02",
+      "title": "Horizontal Sundial Designer",
+      "slug": "sundial-designer",
+      "publishedSlug": "2026-08-02-sundial-designer",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-02-sundial-designer/",
+      "description": "Design a printable horizontal sundial for any latitude. Drag the time slider to watch the gnomon shadow sweep across the dial."
+    },
     {
       "date": "2026-08-01",
       "title": "Abelian Sandpile",
