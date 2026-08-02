@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-02",
-    "title": "Horizontal Sundial Designer",
-    "slug": "sundial-designer",
-    "publishedSlug": "2026-08-02-sundial-designer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-02-sundial-designer/"
+    "date": "2026-08-03",
+    "title": "Tree-Ring Detective",
+    "slug": "tree-ring-detective",
+    "publishedSlug": "2026-08-03-tree-ring-detective",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-03-tree-ring-detective/"
   },
   "apps": [
+    {
+      "date": "2026-08-03",
+      "title": "Tree-Ring Detective",
+      "slug": "tree-ring-detective",
+      "publishedSlug": "2026-08-03-tree-ring-detective",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-03-tree-ring-detective/",
+      "description": "Drag a mystery tree-core sample over a master chronology and align the ring-width pattern to date the sample."
+    },
     {
       "date": "2026-08-02",
       "title": "Horizontal Sundial Designer",
