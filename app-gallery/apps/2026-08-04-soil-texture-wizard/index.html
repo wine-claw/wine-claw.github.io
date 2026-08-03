@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Soil Texture Wizard</title>
+  <style>
+    :root {
+      --sand: #d4a373;
+      --silt: #bc8f57;
+      --clay: #7f5539;
+      --loam: #9c6644;
+      --bg: #fdf6e9;
+      --ink: #3e2723;
+      --muted: #6d5d52;
+      --accent: #5d9b58;
+      --danger: #c75b39;
+      --panel: #fffdf8;
+      --shadow: 0 10px 30px rgba(62, 39, 35, 0.12);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at 50% 0, #fffdf8 0%, var(--bg) 60%, #f3e4cd 100%);
+      color: var(--ink);
+      line-height: 1.45;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .banner {
+      width: 100%;
+      max-width: 720px;
+      background: #fff8e6;
+      border: 1px solid #e6d5b5;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.85rem;
+      color: #5c4a36;
+      margin-bottom: 14px;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; letter-spacing: -0.02em; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-bottom: 18px; max-width: 720px; width: 100%; }
+    .app {
+      width: 100%;
+      max-width: 720px;
+      display: grid;
+      gap: 18px;
+    }
+    .card {
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .card h2 { margin: 0 0 12px; font-size: 1.15rem; color: var(--ink); }
+    .flow { display: flex; flex-direction: column; gap: 12px; }
+    .step { display: none; animation: fadeIn 0.28s ease; }
+    .step.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .question { font-size: 1.05rem; margin-bottom: 12px; font-weight: 600; }
+    .choices { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 540px) { .choices { grid-template-columns: 1fr 1fr; } }
+    .choice {
+      border: 2px solid #e6d5b5;
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+      text-align: left;
+    }
+    .choice:hover, .choice:focus { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(93, 155, 88, 0.12); outline: none; }
+    .choice strong { display: block; margin-bottom: 4px; color: var(--ink); }
+    .choice small { display: block; color: var(--muted); font-size: 0.82rem; line-height: 1.35; }
+    .toolbar { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.12s ease, transform 0.08s ease;
+    }
+    button:active { transform: scale(0.97); }
+    .primary { background: var(--accent); color: #fff; }
+    .primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ghost { background: #f0e6d6; color: var(--ink); }
+    .result { display: none; }
+    .result.active { display: block; }
+    .texture-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--clay);
+      margin-bottom: 6px;
+    }
+    .soil-bar {
+      height: 18px;
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+      background: #eadbc8;
+      margin: 12px 0 8px;
+    }
+    .soil-bar span { height: 100%; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; }
+    .legend b { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+    .note {
+      background: #f7f0e3;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.88rem;
+      color: #4a3b32;
+      margin-top: 12px;
+    }
+    .path { font-size: 0.8rem; color: var(--muted); margin-top: 10px; }
+    .triangle-wrap { position: relative; width: 100%; max-width: 320px; margin: 10px auto 0; }
+    .triangle-wrap canvas { width: 100%; height: auto; }
+    .hidden { display: none; }
+    footer { margin-top: 18px; font-size: 0.78rem; color: var(--muted); text-align: center; max-width: 720px; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ <strong>Experimental AI mini-app</strong> — Untested, not professionally validated. For curiosity only; do not rely on it for agronomic or land-management decisions.
+  </div>
+
+  <h1>🌱 Soil Texture Wizard</h1>
+  <p class="subtitle">Walk through the classic USDA texture-by-feel flowchart in your browser. Answer simple field-test questions and discover what kind of soil you are probably holding.</p>
+
+  <div class="app">
+    <div class="card flow" id="wizardCard">
+      <div class="step active" id="step0">
+        <h2>Start here</h2>
+        <p class="question">Take a small lump of soil about the size of a walnut. Add water drop by drop and knead until it feels like moist putty — neither muddy nor crumbly.</p>
+        <div class="choices">
+          <button class="choice" onclick="answer('start','yes')">
+            <strong>OK, it holds together</strong>
+            <small>The sample is plastic and mouldable. Continue the texture test.</small>
+          </button>
+          <button class="choice" onclick="answer('start','no')">
+            <strong>It won't hold a ball</strong>
+            <small>It falls apart even when wet — too sandy or too dry.</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="step" id="step1">
+        <h2>Step 1: ball test</h2>
+        <p class="question">Press the moist soil into a ball. Does it hold its shape?</p>
+        <div class="choices">
+          <button class="choice" onclick="answer('ball','yes')">
+            <strong>Yes, a firm ball</strong>
+            <small>Enough clay and silt to bind the soil together.</small>
+          </button>
+          <button class="choice" onclick="answer('ball','no')">
+            <strong>No, it crumbles</strong>
+            <small>The sample is dominated by sand-sized particles.</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="step" id="step2">
+        <h2>Step 2: ribbon test</h2>
+        <p class="question">Try to press a flat ribbon of soil between your thumb and forefinger. Does it form a ribbon?</p>
+        <div class="choices">
+          <button class="choice" onclick="answer('ribbon','yes')">
+            <strong>Yes, a ribbon forms</strong>
+            <small>Clay content is high enough to smear into a thin strip.</small>
+          </button>
+          <button class="choice" onclick="answer('ribbon','no')">
+            <strong>No ribbon, or barely any</strong>
+            <small>The soil lacks enough clay to make a ribbon.</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="step" id="step3">
+        <h2>Step 3: ribbon length</h2>
+        <p class="question">How long a ribbon can you make before it breaks?</p>
+        <div class="choices">
+          <button class="choice" onclick="answer('length','short')">
+            <strong>Less than 2.5 cm</strong>
+            <small>A short ribbon points to loam or sandy clay loam territory.</small>
+          </button>
+          <button class="choice" onclick="answer('length','medium')">
+            <strong>2.5 cm to about 5 cm</strong>
+            <small>Moderate plasticity — clay loam or silty clay loam range.</small>
+          </button>
+          <button class="choice" onclick="answer('length','long')">
+            <strong>More than 5 cm</strong>
+            <small>Very long, flexible ribbon = high clay content.</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="step" id="step4">
+        <h2>Step 4: grittiness</h2>
+        <p class="question">Rub the moist sample between your fingers. Does it feel gritty?</p>
+        <div class="choices">
+          <button class="choice" onclick="answer('grit','yes')">
+            <strong>Yes, sand grains scratch</strong>
+            <small>Abundant sand-sized particles.</small>
+          </button>
+          <button class="choice" onclick="answer('grit','no')">
+            <strong>No, it feels smooth or soapy</strong>
+            <small>Mostly silt and clay; little coarse sand.</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="step" id="step5">
+        <h2>Step 5: sheen / polish</h2>
+        <p class="question">Does the rubbed surface become shiny or slightly polished?</p>
+        <div class="choices">
+          <button class="choice" onclick="answer('sheen','yes')">
+            <strong>Yes, a slight sheen</strong>
+            <small>Typical of silt- or clay-rich samples.</small>
+          </button>
+          <button class="choice" onclick="answer('sheen','no')">
+            <strong>No, dull or silky</strong>
+            <small>More sand and/or lower clay.</small>
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar" id="toolbar">
+        <button class="ghost" onclick="resetWizard()">↺ Start over</button>
+        <button class="ghost" onclick="showTriangle()">🔺 See USDA triangle</button>
+      </div>
+    </div>
+
+    <div class="card result" id="resultCard">
+      <div class="texture-name" id="textureName">—</div>
+      <p id="textureDesc"></p>
+      <div class="soil-bar" id="soilBar"></div>
+      <div class="legend" id="legend"></div>
+      <div class="triangle-wrap">
+        <canvas id="triCanvas" width="320" height="277"></canvas>
+      </div>
+      <div class="note" id="fieldNote"></div>
+      <div class="path" id="pathText"></div>
+      <div class="toolbar">
+        <button class="primary" onclick="resetWizard()">Try another sample</button>
+        <button class="ghost" onclick="togglePercentages()">Show / hide percentages</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built by OpenClaw as a 2am mini-app · No account or network required · Everything runs in your browser.
+  </footer>
+
+  <script>
+    const answers = {};
+
+    const outcomes = {
+      sand: {
+        name: 'Sand',
+        sand: 90, silt: 5, clay: 5,
+        desc: 'Single grains visible; feels gritty; will not hold together when moist. Water drains fast; nutrients leach readily.',
+        note: 'Try adding organic matter to improve water retention. Often found on dunes, beach ridges, or coarse alluvium.'
+      },
+      loamySand: {
+        name: 'Loamy Sand',
+        sand: 80, silt: 10, clay: 10,
+        desc: 'Mostly sand with just enough silt and clay to form a weak ball. Gritty and quick-draining.',
+        note: 'Easy to work but drought-prone. Irrigate little and often; organic matter helps.'
+      },
+      sandyLoam: {
+        name: 'Sandy Loam',
+        sand: 60, silt: 25, clay: 15,
+        desc: 'A ball forms but the soil is still gritty. Many garden vegetables and some vines do well here.',
+        note: 'Good drainage and reasonable workability. Watch fertiliser and water management.'
+      },
+      loam: {
+        name: 'Loam',
+        sand: 40, silt: 40, clay: 20,
+        desc: 'A balanced mix: holds a ball and forms a short ribbon, but not sticky. Often considered the ideal garden texture.',
+        note: 'Versatile for crops and lawns. Typically drains well yet retains moisture and nutrients.'
+      },
+      siltLoam: {
+        name: 'Silt Loam',
+        sand: 20, silt: 60, clay: 20,
+        desc: 'Smooth, silky feel; may hold a ball but lacks a long ribbon. Fertile and easy to cultivate when dry.',
+        note: 'High silt can crust after rain and become slick or compact when wet. Avoid working it saturated.'
+      },
+      siltyClayLoam: {
+        name: 'Silty Clay Loam',
+        sand: 10, silt: 55, clay: 35,
+        desc: 'Smooth with some grit; forms a moderate ribbon. Sticky when wet and can become hard when dry.',
+        note: 'Fertile but timing of fieldwork matters: avoid tillage when plastic.'
+      },
+      clayLoam: {
+        name: 'Clay Loam',
+        sand: 30, silt: 35, clay: 35,
+        desc: 'A longer ribbon, some grit, and noticeable plasticity. Holds water and nutrients but drains slowly.',
+        note: 'Plan traffic carefully; wet clay loam compacts badly. Great for water retention once improved.'
+      },
+      sandyClayLoam: {
+        name: 'Sandy Clay Loam',
+        sand: 55, silt: 15, clay: 30,
+        desc: 'Gritty but clearly plastic; forms a ribbon. Sand lightens the clay but it still holds water strongly.',
+        note: 'Drainage better than clay loam, but still prone to compaction if worked wet.'
+      },
+      sandyClay: {
+        name: 'Sandy Clay',
+        sand: 50, silt: 10, clay: 40,
+        desc: 'Gritty and very plastic; a long, strong ribbon. Forms hard clods when dry.',
+        note: 'Hard to manage when wet or very dry; aim for the narrow moisture window for tillage.'
+      },
+      siltyClay: {
+        name: 'Silty Clay',
+        sand: 10, silt: 40, clay: 50,
+        desc: 'Smooth, very plastic, long ribbon, sticky. Strong water and nutrient retention.',
+        note: 'Very fertile but poorly drained. Watch waterlogging and structural damage.'
+      },
+      clay: {
+        name: 'Clay',
+        sand: 25, silt: 25, clay: 50,
+        desc: 'A long flexible ribbon, sticky, polished, and heavy. Holds the most water but swells and cracks.',
+        note: 'High nutrient capacity but needs careful management of drainage, aeration, and traffic.'
+      }
+    };
+
+    function showStep(id) {
+      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+    }
+
+    function answer(key, value) {
+      answers[key] = value;
+
+      if (key === 'start') {
+        if (value === 'no') return finish('sand');
+        return showStep('step1');
+      }
+      if (key === 'ball') {
+        if (value === 'no') return finish('loamySand');
+        return showStep('step2');
+      }
+      if (key === 'ribbon') {
+        if (value === 'no') return showStep('step4');
+        return showStep('step3');
+      }
+      if (key === 'length') {
+        return showStep('step4');
+      }
+      if (key === 'grit') {
+        if (answers.ribbon === 'no') {
+          return value === 'yes' ? finish('sandyLoam') : finish('siltLoam');
+        }
+        if (answers.length === 'short') {
+          return value === 'yes' ? finish('sandyClayLoam') : showStep('step5');
+        }
+        if (answers.length === 'medium') {
+          if (value === 'yes') return finish('sandyClayLoam');
+          return showStep('step5');
+        }
+        if (answers.length === 'long') {
+          if (value === 'yes') return finish('sandyClay');
+          return showStep('step5');
+        }
+      }
+      if (key === 'sheen') {
+        if (answers.length === 'short') {
+          return value === 'yes' ? finish('siltyClayLoam') : finish('clayLoam');
+        }
+        if (answers.length === 'medium') {
+          return value === 'yes' ? finish('siltyClayLoam') : finish('clayLoam');
+        }
+        if (answers.length === 'long') {
+          return value === 'yes' ? finish('siltyClay') : finish('clay');
+        }
+      }
+      showStep('step0');
+    }
+
+    function finish(key) {
+      const o = outcomes[key];
+      document.getElementById('textureName').textContent = o.name;
+      document.getElementById('textureDesc').textContent = o.desc;
+      document.getElementById('soilBar').innerHTML =
+        `<span style="width:${o.sand}%;background:var(--sand)"></span>` +
+        `<span style="width:${o.silt}%;background:var(--silt)"></span>` +
+        `<span style="width:${o.clay}%;background:var(--clay)"></span>`;
+      document.getElementById('legend').innerHTML =
+        `<span><b style="background:var(--sand)"></b>Sand ${o.sand}%</span>` +
+        `<span><b style="background:var(--silt)"></b>Silt ${o.silt}%</span>` +
+        `<span><b style="background:var(--clay)"></b>Clay ${o.clay}%</span>`;
+      document.getElementById('fieldNote').textContent = o.note;
+      document.getElementById('pathText').textContent = 'Path: ' + Object.entries(answers).map(([k,v]) => `${k}=${v}`).join(', ');
+
+      document.getElementById('wizardCard').classList.add('hidden');
+      const rc = document.getElementById('resultCard');
+      rc.classList.add('active');
+      drawTriangle(o.sand, o.silt, o.clay);
+    }
+
+    function resetWizard() {
+      Object.keys(answers).forEach(k => delete answers[k]);
+      showStep('step0');
+      document.getElementById('resultCard').classList.remove('active');
+      document.getElementById('wizardCard').classList.remove('hidden');
+    }
+
+    function showTriangle() {
+      document.getElementById('wizardCard').classList.add('hidden');
+      const rc = document.getElementById('resultCard');
+      rc.classList.add('active');
+      document.getElementById('textureName').textContent = 'USDA Soil Texture Triangle';
+      document.getElementById('textureDesc').textContent = 'Explore typical ranges: run the wizard to classify a real sample, or use the triangle as a reference.';
+      document.getElementById('soilBar').innerHTML = '';
+      document.getElementById('legend').innerHTML =
+        `<span><b style="background:var(--sand)"></b>Sand</span>` +
+        `<span><b style="background:var(--silt)"></b>Silt</span>` +
+        `<span><b style="background:var(--clay)"></b>Clay</span>`;
+      document.getElementById('fieldNote').textContent = 'The triangle shows how sand, silt and clay percentages map to the 12 USDA textural classes. Your wizard result plots a representative point.';
+      document.getElementById('pathText').textContent = '';
+      drawTriangle(null, null, null);
+    }
+
+    let showPercent = false;
+    function togglePercentages() {
+      showPercent = !showPercent;
+      const title = document.getElementById('textureName').textContent;
+      const match = Object.keys(outcomes).find(k => outcomes[k].name === title);
+      const o = match ? outcomes[match] : null;
+      drawTriangle(o ? o.sand : null, o ? o.silt : null, o ? o.clay : null);
+    }
+
+    function pointFromPct(sandP, siltP, clayP) {
+      const pad = 24, w = 320, h = 277;
+      const A = { x: w/2, y: pad };
+      const B = { x: pad, y: h - pad };
+      const C = { x: w - pad, y: h - pad };
+      return {
+        x: B.x + (C.x - B.x) * (siltP / 100) + (A.x - B.x) * (sandP / 100),
+        y: B.y + (C.y - B.y) * (siltP / 100) + (A.y - B.y) * (sandP / 100)
+      };
+    }
+
+    function drawTriangle(sand, silt, clay) {
+      const c = document.getElementById('triCanvas');
+      const ctx = c.getContext('2d');
+      const w = c.width, h = c.height;
+      const pad = 24;
+      ctx.clearRect(0, 0, w, h);
+
+      const A = { x: w/2, y: pad };
+      const B = { x: pad, y: h - pad };
+      const C = { x: w - pad, y: h - pad };
+
+      ctx.strokeStyle = '#7f5539';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.lineTo(C.x, C.y); ctx.closePath();
+      ctx.stroke();
+
+      for (let p = 10; p <= 90; p += 10) {
+        let pt1 = pointFromPct(p, 0, 100 - p);
+        let pt2 = pointFromPct(0, p, 100 - p);
+        ctx.strokeStyle = 'rgba(127,85,57,0.12)';
+        ctx.beginPath(); ctx.moveTo(pt1.x, pt1.y); ctx.lineTo(pt2.x, pt2.y); ctx.stroke();
+
+        pt1 = pointFromPct(100 - p, 0, p);
+        pt2 = pointFromPct(100 - p, p, 0);
+        ctx.beginPath(); ctx.moveTo(pt1.x, pt1.y); ctx.lineTo(pt2.x, pt2.y); ctx.stroke();
+
+        pt1 = pointFromPct(p, 100 - p, 0);
+        pt2 = pointFromPct(0, 100 - p, p);
+        ctx.beginPath(); ctx.moveTo(pt1.x, pt1.y); ctx.lineTo(pt2.x, pt2.y); ctx.stroke();
+      }
+
+      ctx.fillStyle = '#5a4a40';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Sand 100%', A.x, A.y - 8);
+      ctx.textAlign = 'right';
+      ctx.fillText('Clay 100%', B.x - 4, B.y + 14);
+      ctx.textAlign = 'left';
+      ctx.fillText('Silt 100%', C.x + 4, C.y + 14);
+
+      const classes = [
+        { name: 'Sand', s: 90, i: 5, c: 5 },
+        { name: 'Loamy Sand', s: 80, i: 10, c: 10 },
+        { name: 'Sandy Loam', s: 65, i: 23, c: 12 },
+        { name: 'Loam', s: 38, i: 42, c: 20 },
+        { name: 'Silt Loam', s: 18, i: 65, c: 17 },
+        { name: 'Sandy Clay Loam', s: 62, i: 14, c: 24 },
+        { name: 'Clay Loam', s: 32, i: 36, c: 32 },
+        { name: 'Silty Clay Loam', s: 10, i: 56, c: 34 },
+        { name: 'Sandy Clay', s: 54, i: 8, c: 38 },
+        { name: 'Silty Clay', s: 8, i: 44, c: 48 },
+        { name: 'Clay', s: 28, i: 22, c: 50 }
+      ];
+
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#6d5d52';
+      classes.forEach(cls => {
+        const p = pointFromPct(cls.s, cls.i, cls.c);
+        ctx.fillText(showPercent ? `${cls.s}-${cls.i}-${cls.c}` : cls.name, p.x, p.y + 3);
+      });
+
+      if (sand != null) {
+        const p = pointFromPct(sand, silt, clay);
+        ctx.fillStyle = '#c75b39';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+  </script>
+</body>
+</html>

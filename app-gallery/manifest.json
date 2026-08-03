@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-03",
-    "title": "Tree-Ring Detective",
-    "slug": "tree-ring-detective",
-    "publishedSlug": "2026-08-03-tree-ring-detective",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-03-tree-ring-detective/"
+    "date": "2026-08-04",
+    "title": "Soil Texture Wizard",
+    "slug": "soil-texture-wizard",
+    "publishedSlug": "2026-08-04-soil-texture-wizard",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-04-soil-texture-wizard/"
   },
   "apps": [
+    {
+      "date": "2026-08-04",
+      "title": "Soil Texture Wizard",
+      "slug": "soil-texture-wizard",
+      "publishedSlug": "2026-08-04-soil-texture-wizard",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-04-soil-texture-wizard/",
+      "description": "Interactive USDA texture-by-feel flowchart that classifies a handful of soil into sand, loam, clay, and friends, then plots it on the USDA triangle."
+    },
     {
       "date": "2026-08-03",
       "title": "Tree-Ring Detective",
