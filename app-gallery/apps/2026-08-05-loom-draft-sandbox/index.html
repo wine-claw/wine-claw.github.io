@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Loom Draft Sandbox</title>
+  <style>
+    :root {
+      --bg: #f6f1e9;
+      --panel: #fffefb;
+      --ink: #2e241e;
+      --muted: #7a6a5d;
+      --warp: #c94a4a;
+      --weft: #f2f0e9;
+      --weft-stroke: #4a4a4a;
+      --accent: #5d8c66;
+      --warn: #d9a441;
+      --shadow: 0 10px 30px rgba(46, 36, 30, 0.12);
+      --radius: 18px;
+      --grid: #e6ded3;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at 50% 0, #fffefb 0%, var(--bg) 60%, #ebe3d6 100%);
+      color: var(--ink);
+      line-height: 1.45;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .banner {
+      width: 100%;
+      max-width: 860px;
+      background: #fff5d6;
+      border: 1px solid #e6d5a8;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      color: #5c4a2e;
+      margin-bottom: 12px;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.55rem; letter-spacing: -0.02em; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-bottom: 14px; max-width: 860px; width: 100%; }
+    .app { width: 100%; max-width: 860px; display: grid; gap: 14px; }
+    .card {
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .card h2 { margin: 0 0 12px; font-size: 1.15rem; color: var(--ink); }
+    .controls { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 620px) {
+      .controls { grid-template-columns: 1fr 1fr; }
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+    .field select, .field input[type="number"] {
+      padding: 8px 10px; border-radius: 10px; border: 1.5px solid #ddd5c9;
+      background: #fff; font-size: 0.95rem; color: var(--ink);
+    }
+    .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    button {
+      border: none; border-radius: 999px; padding: 8px 14px; font-size: 0.85rem;
+      font-weight: 600; cursor: pointer; transition: filter 0.12s ease, transform 0.08s ease;
+      background: #efe8dc; color: var(--ink);
+    }
+    button:active { transform: scale(0.97); }
+    button.primary { background: var(--accent); color: #fff; }
+    button.warn { background: var(--warn); color: #2e241e; }
+    .hint { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+    .draft-wrap {
+      display: grid;
+      gap: 14px;
+    }
+    @media (min-width: 720px) {
+      .draft-wrap { grid-template-columns: 1fr 1fr; }
+    }
+    .grid-card { position: relative; }
+    .grid-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; color: var(--muted); }
+    .grid-scroll {
+      overflow: auto;
+      border: 1.5px solid var(--grid);
+      border-radius: 14px;
+      background: #fbf9f5;
+      max-height: 420px;
+    }
+    .grid-table {
+      display: grid;
+      gap: 2px;
+      padding: 10px;
+    }
+    .cell {
+      width: 28px; height: 28px; border-radius: 4px; cursor: pointer;
+      border: 1.5px solid var(--grid);
+      background: #fff;
+      transition: background 0.12s ease, transform 0.08s ease;
+    }
+    .cell:active { transform: scale(0.92); }
+    .cell.on { background: var(--warp); border-color: #a33a3a; }
+    .cell.weft-on { background: var(--weft-stroke); border-color: #2a2a2a; }
+    .cell.lift { background: #9bc9a3; border-color: var(--accent); }
+    .preview-cell { width: 14px; height: 14px; border-radius: 2px; }
+    .preview-cell.warp { background: var(--warp); }
+    .preview-cell.weft { background: var(--weft); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
+    .fabric-table {
+      display: grid;
+      gap: 1px;
+      padding: 10px;
+      background: #f0ece4;
+    }
+    .fabric-scroll {
+      overflow: auto;
+      border: 1.5px solid var(--grid);
+      border-radius: 14px;
+      background: #fbf9f5;
+      max-height: 420px;
+    }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
+    .legend b { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; }
+    footer { margin-top: 16px; font-size: 0.75rem; color: var(--muted); text-align: center; max-width: 860px; }
+    .hidden { display: none !important; }
+    .summary {
+      background: #f3efe7;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.85rem;
+      color: #3e3229;
+    }
+    .summary span { display: inline-block; margin-right: 14px; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ <strong>Experimental AI mini-app</strong> — Untested, not professionally validated. For curiosity and learning only; do not rely on it for actual loom setup or textile production.
+  </div>
+
+  <h1>🧵 Loom Draft Sandbox</h1>
+  <p class="subtitle">Design a multi-shaft weaving draft: set the threading, tie-up, and treadling, then watch the fabric preview build itself.</p>
+
+  <div class="app">
+    <div class="card controls">
+      <div class="field">
+        <label for="preset">Preset draft</label>
+        <select id="preset">
+          <option value="plain">Plain weave (1/1)</option>
+          <option value="twill2">2/2 twill</option>
+          <option value="twill3">3/1 twill</option>
+          <option value="basket">Basket / hopsack</option>
+          <option value="herringbone">Herringbone</option>
+          <option value="satin5">5-shaft satin</option>
+          <option value="random">Lucky dip</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Loom setup</label>
+        <div class="buttons">
+          <button id="btnShafts4" class="primary">4 shafts</button>
+          <button id="btnShafts8">8 shafts</button>
+          <button id="btnShafts12">12 shafts</button>
+          <button id="btnTreadles4">4 treadles</button>
+          <button id="btnTreadles6">6 treadles</button>
+          <button id="btnTreadles8">8 treadles</button>
+        </div>
+        <p class="hint">Current: <span id="shaftCount">4</span> shafts, <span id="treadleCount">4</span> treadles, <span id="warpCount">16</span> warp threads.</p>
+      </div>
+      <div class="field">
+        <label for="warpInput">Warp threads</label>
+        <input id="warpInput" type="number" min="8" max="64" value="16">
+      </div>
+      <div class="field">
+        <label>Actions</label>
+        <div class="buttons">
+          <button id="btnClear" class="warn">Clear draft</button>
+          <button id="btnRandom">Randomise</button>
+          <button id="btnInvert">Invert tie-up</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card draft-wrap">
+      <div class="grid-card">
+        <div class="grid-title">Threading (warp ends → shafts)</div>
+        <div class="grid-scroll">
+          <div id="threadingGrid" class="grid-table"></div>
+        </div>
+        <p class="hint">Tap a cell to move that warp end to a different shaft.</p>
+      </div>
+      <div class="grid-card">
+        <div class="grid-title">Tie-up (treadles → shafts)</div>
+        <div class="grid-scroll">
+          <div id="tieupGrid" class="grid-table"></div>
+        </div>
+        <p class="hint">Tap to toggle which shaft each treadle lifts.</p>
+      </div>
+      <div class="grid-card">
+        <div class="grid-title">Treadling (weft picks → treadles)</div>
+        <div class="grid-scroll">
+          <div id="treadlingGrid" class="grid-table"></div>
+        </div>
+        <p class="hint">Tap a cell to change which treadle is used for that pick.</p>
+      </div>
+      <div class="grid-card">
+        <div class="grid-title">Fabric preview</div>
+        <div class="fabric-scroll">
+          <div id="fabricGrid" class="fabric-table"></div>
+        </div>
+        <div class="legend">
+          <span><b style="background:var(--warp)"></b>Warp showing</span>
+          <span><b style="background:var(--weft);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08)"></b>Weft showing</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card summary">
+      <span>Shafts: <strong id="sumShafts">4</strong></span>
+      <span>Treadles: <strong id="sumTreadles">4</strong></span>
+      <span>Warp ends: <strong id="sumWarp">16</strong></span>
+      <span>Picks: <strong id="sumPicks">16</strong></span>
+      <span>Lifts per pick (avg): <strong id="sumLifts">—</strong></span>
+    </div>
+  </div>
+
+  <footer>Built by OpenClaw at 2am · No cookies, no backend · Pure browser sandbox</footer>
+
+  <script>
+    (function() {
+      const state = {
+        shafts: 4,
+        treadles: 4,
+        warpEnds: 16,
+        picks: 16,
+        threading: [], // length warpEnds; value 0..shafts-1
+        tieup: [],      // [treadle][shaft] boolean
+        treadling: []   // length picks; value 0..treadles-1
+      };
+
+      function new2d(rows, cols, fill) {
+        return Array.from({length: rows}, () => Array.from({length: cols}, () => fill));
+      }
+
+      function resizeState() {
+        const oldThreading = state.threading.slice();
+        const oldTieup = state.tieup.map(r => r.slice());
+        const oldTreadling = state.treadling.slice();
+
+        state.threading = Array.from({length: state.warpEnds}, (_, i) =>
+          i < oldThreading.length ? oldThreading[i] % state.shafts : i % state.shafts
+        );
+        state.tieup = new2d(state.treadles, state.shafts, false);
+        for (let t = 0; t < Math.min(state.treadles, oldTieup.length); t++) {
+          for (let s = 0; s < Math.min(state.shafts, (oldTieup[t] || []).length); s++) {
+            state.tieup[t][s] = !!oldTieup[t][s];
+          }
+        }
+        state.treadling = Array.from({length: state.picks}, (_, i) =>
+          i < oldTreadling.length ? oldTreadling[i] % state.treadles : i % state.treadles
+        );
+      }
+
+      function loadPreset(name) {
+        const s = state.shafts;
+        const t = state.treadles;
+        if (name === 'plain') {
+          // 1/1 plain weave
+          state.threading = Array.from({length: state.warpEnds}, (_, i) => i % s);
+          state.tieup = new2d(t, s, false);
+          for (let shaft = 0; shaft < s; shaft++) {
+            state.tieup[shaft % t][shaft] = true;
+          }
+          state.treadling = Array.from({length: state.picks}, (_, i) => i % t);
+        } else if (name === 'twill2') {
+          // 2/2 twill
+          state.threading = Array.from({length: state.warpEnds}, (_, i) => i % s);
+          state.tieup = new2d(t, s, false);
+          for (let tr = 0; tr < t; tr++) {
+            for (let sh = 0; sh < s; sh++) {
+              state.tieup[tr][sh] = ((sh + tr) % s) < 2;
+            }
+          }
+          state.treadling = Array.from({length: state.picks}, (_, i) => i % t);
+        } else if (name === 'twill3') {
+          // 3/1 twill
+          state.threading = Array.from({length: state.warpEnds}, (_, i) => i % s);
+          state.tieup = new2d(t, s, false);
+          for (let tr = 0; tr < t; tr++) {
+            for (let sh = 0; sh < s; sh++) {
+              state.tieup[tr][sh] = ((sh + tr) % s) < 3;
+            }
+          }
+          state.treadling = Array.from({length: state.picks}, (_, i) => i % t);
+        } else if (name === 'basket') {
+          // Basket / hopsack: pairs of shafts lifted
+          state.threading = Array.from({length: state.warpEnds}, (_, i) => i % s);
+          state.tieup = new2d(t, s, false);
+          for (let tr = 0; tr < t; tr++) {
+            state.tieup[tr][tr % s] = true;
+            state.tieup[tr][(tr + 1) % s] = true;
+          }
+          state.treadling = Array.from({length: state.picks}, (_, i) => {
+            const row = Math.floor(i / 2) % t;
+            return row;
+          });
+        } else if (name === 'herringbone') {
+          state.threading = Array.from({length: state.warpEnds}, (_, i) => i % s);
+          state.tieup = new2d(t, s, false);
+          for (let tr = 0; tr < t; tr++) {
+            for (let sh = 0; sh < s; sh++) {
+              state.tieup[tr][sh] = ((sh + tr) % s) < 2;
+            }
+          }
+          // Herringbone treadling reverses direction
+          const cycle = t;
+          state.treadling = Array.from({length: state.picks}, (_, i) => {
+            const block = Math.floor(i / cycle);
+            const pos = i % cycle;
+            return block % 2 === 0 ? pos : (cycle - 1 - pos);
+          });
+        } else if (name === 'satin5') {
+          // 5-shaft satin; gracefully degrades on fewer shafts
+          state.threading = Array.from({length: state.warpEnds}, (_, i) => i % Math.max(2, s));
+          state.tieup = new2d(t, s, false);
+          if (s >= 5) {
+            const step = 2; // 5-shaft satin step
+            for (let tr = 0; tr < t; tr++) {
+              state.tieup[tr][(tr * step) % s] = true;
+            }
+          } else {
+            for (let tr = 0; tr < t; tr++) {
+              state.tieup[tr][tr % s] = true;
+            }
+          }
+          state.treadling = Array.from({length: state.picks}, (_, i) => i % t);
+        } else if (name === 'random') {
+          state.threading = Array.from({length: state.warpEnds}, () => Math.floor(Math.random() * s));
+          state.tieup = new2d(t, s, false);
+          for (let tr = 0; tr < t; tr++) {
+            for (let sh = 0; sh < s; sh++) {
+              state.tieup[tr][sh] = Math.random() < 0.35;
+            }
+          }
+          state.treadling = Array.from({length: state.picks}, () => Math.floor(Math.random() * t));
+        }
+      }
+
+      function computeFabric() {
+        const grid = [];
+        for (let pick = 0; pick < state.picks; pick++) {
+          const row = [];
+          const treadle = state.treadling[pick] || 0;
+          const lifted = (state.tieup[treadle] || []).slice();
+          for (let end = 0; end < state.warpEnds; end++) {
+            const shaft = state.threading[end] || 0;
+            const isWarpUp = !!lifted[shaft];
+            row.push(isWarpUp ? 'warp' : 'weft');
+          }
+          grid.push(row);
+        }
+        return grid;
+      }
+
+      function setGrid(gridEl, rows, cols, onClass, getter, setter) {
+        gridEl.style.gridTemplateColumns = `repeat(${cols}, 28px)`;
+        gridEl.innerHTML = '';
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            if (getter(r, c)) cell.classList.add(onClass);
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+            cell.title = `R${r + 1} C${c + 1}`;
+            cell.addEventListener('click', () => {
+              setter(r, c);
+              render();
+            });
+            gridEl.appendChild(cell);
+          }
+        }
+      }
+
+      function setFabricGrid(gridEl, fabric) {
+        const cols = state.warpEnds;
+        gridEl.style.gridTemplateColumns = `repeat(${cols}, 14px)`;
+        gridEl.innerHTML = '';
+        for (let r = 0; r < fabric.length; r++) {
+          for (let c = 0; c < cols; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'preview-cell ' + (fabric[r][c] === 'warp' ? 'warp' : 'weft');
+            gridEl.appendChild(cell);
+          }
+        }
+      }
+
+      function render() {
+        const threadingEl = document.getElementById('threadingGrid');
+        setGrid(
+          threadingEl,
+          state.warpEnds,
+          state.shafts,
+          'on',
+          (r, c) => state.threading[r] === c,
+          (r, c) => { state.threading[r] = c; }
+        );
+
+        const tieupEl = document.getElementById('tieupGrid');
+        setGrid(
+          tieupEl,
+          state.treadles,
+          state.shafts,
+          'lift',
+          (r, c) => state.tieup[r][c],
+          (r, c) => { state.tieup[r][c] = !state.tieup[r][c]; }
+        );
+
+        const treadlingEl = document.getElementById('treadlingGrid');
+        setGrid(
+          treadlingEl,
+          state.picks,
+          state.treadles,
+          'weft-on',
+          (r, c) => state.treadling[r] === c,
+          (r, c) => { state.treadling[r] = c; }
+        );
+
+        const fabric = computeFabric();
+        setFabricGrid(document.getElementById('fabricGrid'), fabric);
+
+        document.getElementById('shaftCount').textContent = state.shafts;
+        document.getElementById('treadleCount').textContent = state.treadles;
+        document.getElementById('warpCount').textContent = state.warpEnds;
+        document.getElementById('sumShafts').textContent = state.shafts;
+        document.getElementById('sumTreadles').textContent = state.treadles;
+        document.getElementById('sumWarp').textContent = state.warpEnds;
+        document.getElementById('sumPicks').textContent = state.picks;
+
+        let lifts = 0;
+        for (let p = 0; p < state.picks; p++) {
+          const treadle = state.treadling[p] || 0;
+          lifts += (state.tieup[treadle] || []).filter(Boolean).length;
+        }
+        document.getElementById('sumLifts').textContent = state.picks ? (lifts / state.picks).toFixed(1) : '0';
+      }
+
+      function init() {
+        resizeState();
+        loadPreset('plain');
+        render();
+
+        document.getElementById('preset').addEventListener('change', e => {
+          loadPreset(e.target.value);
+          render();
+        });
+
+        const shaftButtons = {
+          btnShafts4: 4,
+          btnShafts8: 8,
+          btnShafts12: 12
+        };
+        Object.entries(shaftButtons).forEach(([id, n]) => {
+          document.getElementById(id).addEventListener('click', () => {
+            state.shafts = n;
+            resizeState();
+            loadPreset(document.getElementById('preset').value);
+            render();
+            updateActiveShaftButtons();
+          });
+        });
+
+        function updateActiveShaftButtons() {
+          Object.keys(shaftButtons).forEach(id => document.getElementById(id).classList.remove('primary'));
+          const activeId = Object.entries(shaftButtons).find(([, n]) => n === state.shafts)[0];
+          document.getElementById(activeId).classList.add('primary');
+        }
+
+        const treadleButtons = {
+          btnTreadles4: 4,
+          btnTreadles6: 6,
+          btnTreadles8: 8
+        };
+        Object.entries(treadleButtons).forEach(([id, n]) => {
+          document.getElementById(id).addEventListener('click', () => {
+            state.treadles = n;
+            resizeState();
+            loadPreset(document.getElementById('preset').value);
+            render();
+            updateActiveTreadleButtons();
+          });
+        });
+
+        function updateActiveTreadleButtons() {
+          Object.keys(treadleButtons).forEach(id => document.getElementById(id).classList.remove('primary'));
+          const activeId = Object.entries(treadleButtons).find(([, n]) => n === state.treadles)[0];
+          document.getElementById(activeId).classList.add('primary');
+        }
+
+        document.getElementById('warpInput').addEventListener('change', e => {
+          let n = parseInt(e.target.value, 10);
+          if (isNaN(n)) n = 16;
+          n = Math.max(8, Math.min(64, n));
+          e.target.value = n;
+          state.warpEnds = n;
+          resizeState();
+          loadPreset(document.getElementById('preset').value);
+          render();
+        });
+
+        document.getElementById('btnClear').addEventListener('click', () => {
+          state.threading = Array.from({length: state.warpEnds}, () => 0);
+          state.tieup = new2d(state.treadles, state.shafts, false);
+          state.treadling = Array.from({length: state.picks}, () => 0);
+          render();
+        });
+
+        document.getElementById('btnRandom').addEventListener('click', () => {
+          loadPreset('random');
+          document.getElementById('preset').value = 'random';
+          render();
+        });
+
+        document.getElementById('btnInvert').addEventListener('click', () => {
+          for (let t = 0; t < state.treadles; t++) {
+            for (let s = 0; s < state.shafts; s++) {
+              state.tieup[t][s] = !state.tieup[t][s];
+            }
+          }
+          render();
+        });
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
