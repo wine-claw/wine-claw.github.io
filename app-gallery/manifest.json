@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-05",
-    "title": "Loom Draft Sandbox",
-    "slug": "loom-draft-sandbox",
-    "publishedSlug": "2026-08-05-loom-draft-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-05-loom-draft-sandbox/"
+    "date": "2026-08-06",
+    "title": "Sourdough Starter Pet",
+    "slug": "sourdough-starter-pet",
+    "publishedSlug": "2026-08-06-sourdough-starter-pet",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-06-sourdough-starter-pet/"
   },
   "apps": [
+    {
+      "date": "2026-08-06",
+      "title": "Sourdough Starter Pet",
+      "slug": "sourdough-starter-pet",
+      "publishedSlug": "2026-08-06-sourdough-starter-pet",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-06-sourdough-starter-pet/",
+      "description": "Interactive jar-bound sourdough starter culture: feed, stir and watch yeast, LAB, pH, gas and aroma evolve."
+    },
     {
       "date": "2026-08-05",
       "title": "Loom Draft Sandbox",

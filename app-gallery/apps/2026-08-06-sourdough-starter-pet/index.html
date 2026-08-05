@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Sourdough Starter Pet</title>
+  <style>
+    :root {
+      --bg: #f8f2e8;
+      --panel: #ffffff;
+      --ink: #3a3229;
+      --muted: #7a6f63;
+      --accent: #d97b36;
+      --accent-2: #6fa668;
+      --danger: #c44d4d;
+      --jar: rgba(200, 220, 230, 0.28);
+      --jar-rim: rgba(160, 180, 190, 0.45);
+      --dough: #f3e6c9;
+      --hooch: #c8b896;
+      --shadow: 0 8px 28px rgba(58, 50, 41, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .banner {
+      background: #fff7e0;
+      color: #7a5c1a;
+      padding: 10px 16px;
+      font-size: 13px;
+      text-align: center;
+      border-bottom: 1px solid #f0e0b8;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 22px 18px 36px;
+    }
+    header { text-align: center; margin-bottom: 18px; }
+    h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.3px; }
+    header p { margin: 0; color: var(--muted); font-size: 14px; }
+    .app {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 18px;
+    }
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 1fr; }
+    }
+    .jar-card, .panel {
+      background: var(--panel);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .jar-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 520px;
+    }
+    canvas#jar { width: 100%; height: auto; max-width: 420px; margin: 8px 0; }
+    .readiness {
+      width: 100%;
+      max-width: 380px;
+      margin-top: 6px;
+    }
+    .readiness-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+    .score {
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .status-pill {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eee7db;
+      color: var(--muted);
+    }
+    .meter {
+      height: 10px;
+      background: #efe8dc;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .meter > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
+    .panel h2 { margin: 0 0 14px; font-size: 18px; }
+    .control {
+      margin-bottom: 16px;
+    }
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .control label span { color: var(--muted); font-weight: 500; }
+    input[type="range"] { width: 100%; }
+    select, button {
+      font: inherit;
+      color: inherit;
+    }
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd6cc;
+      border-radius: 10px;
+      background: #faf8f4;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.06s ease, box-shadow 0.15s ease;
+    }
+    button:active { transform: translateY(1px); }
+    .primary { background: var(--accent); color: #fff; }
+    .primary:hover { box-shadow: 0 4px 14px rgba(217, 123, 54, 0.35); }
+    .secondary { background: #ebe4d9; color: var(--ink); }
+    .secondary:hover { background: #e4dacf; }
+    .feed-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .readout-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .readout {
+      background: #faf8f4;
+      border: 1px solid #ede6db;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .readout .num { font-size: 20px; font-weight: 800; display: block; }
+    .readout .lab { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .notes {
+      margin-top: 14px;
+      padding: 12px;
+      background: #f7f3ed;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    .notes strong { color: var(--accent); }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    footer {
+      text-align: center;
+      margin-top: 26px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app — not validated for real baking decisions.
+  </div>
+  <div class="wrap">
+    <header>
+      <h1>🍞 Sourdough Starter Pet</h1>
+      <p>Feed, stir and observe a living starter culture. Science-ish toy, not a kitchen timer.</p>
+    </header>
+
+    <div class="app">
+      <div class="jar-card">
+        <canvas id="jar" width="420" height="460"></canvas>
+        <div class="readiness">
+          <div class="readiness-top">
+            <div>
+              <div class="score" id="score">0%</div>
+              <div id="verdict" class="status-pill">Just fed</div>
+            </div>
+            <div style="text-align:right; font-size:12px; color:var(--muted);">
+              <div>Peak in ~<span id="peak">—</span>h</div>
+              <div id="aroma">Aroma: floury</div>
+            </div>
+          </div>
+          <div class="meter"><i id="meter"></i></div>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:#d6b56a"></i> Yeast</span>
+          <span><i class="dot" style="background:#8bbd63"></i> LAB</span>
+          <span><i class="dot" style="background:#a4b8c4"></i> CO₂</span>
+          <span><i class="dot" style="background:#bfa886"></i> Hooch</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Culture controls</h2>
+
+        <div class="control">
+          <label>Temperature <span id="tempVal">24 °C</span></label>
+          <input id="temp" type="range" min="10" max="38" step="1" value="24">
+        </div>
+
+        <div class="control">
+          <label>Hydration <span id="hydVal">100%</span></label>
+          <input id="hydration" type="range" min="60" max="140" step="5" value="100">
+        </div>
+
+        <div class="control">
+          <label>Time speed <span id="speedVal">1 h/s</span></label>
+          <input id="speed" type="range" min="0" max="6" step="1" value="3">
+        </div>
+
+        <div class="control">
+          <label>Flour</label>
+          <select id="flour">
+            <option value="white">White flour (mild)</option>
+            <option value="wholewheat">Whole wheat (nutty)</option>
+            <option value="rye">Rye (tangy, fast)</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="feedBtn">Feed</button>
+          <button class="secondary" id="stirBtn">Stir</button>
+        </div>
+        <div class="actions" style="margin-top:10px;">
+          <button class="secondary" id="discardFeedBtn">Discard &amp; feed</button>
+          <button class="secondary" id="resetBtn">New culture</button>
+        </div>
+
+        <div class="readout-grid">
+          <div class="readout"><span class="num" id="age">0 h</span><span class="lab">Since feed</span></div>
+          <div class="readout"><span class="num" id="phVal">5.5</span><span class="lab">pH</span></div>
+          <div class="readout"><span class="num" id="yeast">10%</span><span class="lab">Yeast vigour</span></div>
+          <div class="readout"><span class="num" id="lab">10%</span><span class="lab">LAB vigour</span></div>
+        </div>
+
+        <div class="notes" id="notes">
+          Your starter is freshly fed and quiet. Turn up the speed to watch it wake up.
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Built overnight by OpenClaw · <a href="https://wine-claw.github.io/app-gallery/">App gallery</a>
+    </footer>
+  </div>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('jar');
+      const ctx = canvas.getContext('2d');
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cssW = canvas.clientWidth || 420;
+      const cssH = canvas.clientHeight || 460;
+      canvas.width = cssW * dpr;
+      canvas.height = cssH * dpr;
+      ctx.scale(dpr, dpr);
+
+      // Simulation state
+      let state = {
+        yeast: 0.08,
+        lab: 0.06,
+        food: 0.75,
+        acid: 0.10,
+        gas: 0.0,
+        hooch: 0.0,
+        age: 0,
+        lastFeedAge: 0,
+        stirredAt: -999,
+        temp: 24,
+        hydration: 1.0,
+        flour: 'white',
+        running: true
+      };
+
+      const bubbles = [];
+      const flourProfiles = {
+        white: { yeastFood: 1.0, labFood: 0.9, color: '#f3e6c9', fast: 1.0, aroma: 'mild' },
+        wholewheat: { yeastFood: 0.95, labFood: 1.15, color: '#eaddb7', fast: 1.08, aroma: 'nutty' },
+        rye: { yeastFood: 0.88, labFood: 1.25, color: '#decf9e', fast: 1.18, aroma: 'tangy' }
+      };
+
+      function tempFactor(temp, opt) {
+        const optC = opt;
+        const span = 14;
+        const stress = temp > 36 ? Math.max(0, 1 - (temp - 36) / 6) : 1;
+        return Math.max(0, Math.exp(-Math.pow(temp - optC, 2) / (2 * span * span))) * stress;
+      }
+
+      function pH() {
+        return 6.2 - state.acid * 2.8;
+      }
+
+      function totalMass() {
+        return 1 + state.food + state.gas * 0.3;
+      }
+
+      function foodPerMass() {
+        return state.food / Math.max(0.1, totalMass());
+      }
+
+      function addBubbles(n) {
+        for (let i = 0; i < n; i++) {
+          bubbles.push({
+            x: 0.15 + Math.random() * 0.7,
+            y: 0.1 + Math.random() * 0.6,
+            r: 0.005 + Math.random() * 0.012,
+            vy: 0.0005 + Math.random() * 0.001,
+            vx: (Math.random() - 0.5) * 0.0004,
+            life: 1.0
+          });
+        }
+      }
+
+      function step(dtHours) {
+        const profile = flourProfiles[state.flour];
+        const T = state.temp;
+        const yeastRate = tempFactor(T, 27) * profile.fast * Math.min(1, state.food * 4) * (1 - state.acid * 0.35);
+        const labRate = tempFactor(T, 31) * profile.fast * Math.min(1, state.food * 4) * (1 - state.acid * 0.25);
+
+        const foodUseY = state.yeast * yeastRate * 0.18 * dtHours;
+        const foodUseL = state.lab * labRate * 0.14 * dtHours;
+        const foodUsed = Math.min(state.food, foodUseY + foodUseL);
+
+        const yeastGrowth = state.yeast * yeastRate * 0.55 * dtHours * (1 - state.yeast) - state.yeast * 0.02 * dtHours;
+        const labGrowth = state.lab * labRate * 0.50 * dtHours * (1 - state.lab) - state.lab * 0.015 * dtHours;
+
+        state.yeast = Math.max(0.001, Math.min(1, state.yeast + yeastGrowth));
+        state.lab = Math.max(0.001, Math.min(1, state.lab + labGrowth));
+        state.food = Math.max(0, state.food - foodUsed);
+
+        const co2 = state.yeast * yeastRate * 0.22 * dtHours * (0.6 + 0.4 * state.hydration);
+        state.gas = Math.min(1, state.gas + co2);
+        if (Math.random() < co2 * 8) addBubbles(1);
+
+        const acidY = state.yeast * yeastRate * 0.018 * dtHours;
+        const acidL = state.lab * labRate * 0.055 * dtHours;
+        state.acid = Math.min(1, state.acid + acidY + acidL - state.acid * 0.008 * dtHours);
+
+        // Hooch forms when food is low and starter is mature
+        if (state.food < 0.15 && state.age > 4) {
+          state.hooch = Math.min(1, state.hooch + 0.03 * dtHours);
+        } else if (state.hooch > 0 && state.age - state.lastFeedAge > 1) {
+          state.hooch = Math.max(0, state.hooch - 0.04 * dtHours);
+        }
+
+        // Gas slowly escapes; faster with high hydration
+        const retention = 0.75 + 0.2 * (1 - Math.min(1, state.hydration));
+        state.gas = Math.max(0, state.gas - state.gas * 0.035 * dtHours * (1 - retention));
+
+        state.age += dtHours;
+
+        // Bubble physics
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+          const b = bubbles[i];
+          b.y -= b.vy * dtHours * 40;
+          b.x += b.vx * dtHours * 40;
+          b.r += 0.001 * dtHours;
+          b.life -= 0.04 * dtHours;
+          if (b.y < 0.08 || b.life <= 0 || b.r > 0.04) {
+            bubbles.splice(i, 1);
+          }
+        }
+      }
+
+      function feed(discardHalf) {
+        const ratio = discardHalf ? 0.5 : 1.0;
+        state.yeast *= ratio;
+        state.lab *= ratio;
+        state.acid *= ratio;
+        state.gas *= ratio;
+        state.hooch *= ratio;
+        state.food = Math.min(1, state.food * ratio + 0.75);
+        state.age = 0;
+        state.lastFeedAge = 0;
+        state.stirredAt = -999;
+        addBubbles(6);
+      }
+
+      function stir() {
+        state.hooch = Math.max(0, state.hooch - 0.6);
+        state.gas = Math.max(0, state.gas - 0.25);
+        state.food = Math.min(1, state.food + 0.05);
+        state.yeast = Math.min(1, state.yeast * 1.05);
+        state.stirredAt = state.age;
+        addBubbles(10);
+      }
+
+      function reset() {
+        state.yeast = 0.08;
+        state.lab = 0.06;
+        state.food = 0.75;
+        state.acid = 0.10;
+        state.gas = 0.0;
+        state.hooch = 0.0;
+        state.age = 0;
+        state.lastFeedAge = 0;
+        bubbles.length = 0;
+        addBubbles(4);
+      }
+
+      function readiness() {
+        const profile = flourProfiles[state.flour];
+        const ph = pH();
+        if (state.yeast < 0.05 || state.lab < 0.05) return 0;
+        const peakFactor = 1 - Math.abs(state.yeast - 0.72) / 0.72;
+        const acidFactor = ph < 4.2 ? 0.6 : (ph < 5.0 ? 1.0 : 0.7);
+        const foodFactor = state.food > 0.12 ? 1 : 0.4;
+        const ageFactor = state.age > 2 && state.age < 14 ? 1 : (state.age < 2 ? 0.3 : 0.5);
+        return Math.round(Math.max(0, Math.min(100, peakFactor * acidFactor * foodFactor * ageFactor * 100)));
+      }
+
+      function predictedPeak() {
+        let s = { ...state };
+        for (let h = 0; h < 48; h += 0.25) {
+          const profile = flourProfiles[s.flour];
+          const T = s.temp;
+          const yeastRate = tempFactor(T, 27) * profile.fast * Math.min(1, s.food * 4) * (1 - s.acid * 0.35);
+          const foodUseY = s.yeast * yeastRate * 0.18 * 0.25;
+          const foodUseL = s.lab * tempFactor(T, 31) * profile.fast * Math.min(1, s.food * 4) * (1 - s.acid * 0.25) * 0.14 * 0.25;
+          const foodUsed = Math.min(s.food, foodUseY + foodUseL);
+          const yeastGrowth = s.yeast * yeastRate * 0.55 * 0.25 * (1 - s.yeast) - s.yeast * 0.02 * 0.25;
+          s.yeast = Math.max(0.001, Math.min(1, s.yeast + yeastGrowth));
+          s.food = Math.max(0, s.food - foodUsed);
+          if (s.yeast > 0.72) return Math.round(h * 10) / 10;
+        }
+        return null;
+      }
+
+      function aromaLabel() {
+        const ph = pH();
+        if (state.age < 1.5) return 'floury';
+        if (state.hooch > 0.35 || ph > 5.2) return 'alcohol / hungry';
+        if (ph < 3.75) return 'sharp vinegar';
+        if (ph < 4.3) return 'tangy & sour';
+        if (state.yeast > 0.55) return 'yeasty & fruity';
+        return flourProfiles[state.flour].aroma;
+      }
+
+      function statusText() {
+        const r = readiness();
+        if (r >= 80) return 'Bake-ready!';
+        if (r >= 55) return 'Rising nicely';
+        if (state.hooch > 0.25) return 'Hungry — feed soon';
+        if (state.age < 2) return 'Just fed';
+        if (state.yeast < 0.12) return 'Slow / cold';
+        return 'Active';
+      }
+
+      function note() {
+        if (state.hooch > 0.3) return 'A dark liquid layer (hooch) means your starter is hungry. Stir it in or feed it.';
+        if (pH() < 3.9) return 'Very acidic — great tang, but yeast is slowing down. Feed to refresh.';
+        if (state.temp < 16) return 'The culture is chilly; fermentation will be slow. Move it somewhere warmer.';
+        if (state.temp > 34) return 'Hot! Yeast will tire quickly and acidity will spike.';
+        if (readiness() >= 80) return 'The culture is lively, acidic enough, and at a good peak. Time to bake (in real life, also use your nose).';
+        if (readiness() >= 55) return 'Smells active and is gaining strength. Watch for the dome to peak.';
+        return 'Keep watching. Yeast and LAB compete for food and gradually acidify the mix.';
+      }
+
+      function hexToRgb(hex) {
+        const m = hex.match(/#(..)(..)(..)/);
+        return m ? [parseInt(m[1],16), parseInt(m[2],16), parseInt(m[3],16)] : [240,220,180];
+      }
+
+      function blendColor(base, overlay, a) {
+        const [r1,g1,b1] = hexToRgb(base);
+        const [r2,g2,b2] = hexToRgb(overlay);
+        return `rgb(${Math.round(r1+(r2-r1)*a)}, ${Math.round(g1+(g2-g1)*a)}, ${Math.round(b1+(b2-b1)*a)})`;
+      }
+
+      function drawJar() {
+        const w = cssW, h = cssH;
+        ctx.clearRect(0, 0, w, h);
+
+        const jarL = w * 0.22, jarR = w * 0.78, jarB = h * 0.78, jarT = h * 0.12;
+        const jarW = jarR - jarL, jarH = jarB - jarT;
+        const cx = (jarL + jarR) / 2;
+
+        // Background shelf
+        ctx.fillStyle = '#f0e9de';
+        ctx.beginPath();
+        ctx.ellipse(cx, jarB + 16, jarW * 0.75, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glass jar body
+        const grad = ctx.createLinearGradient(jarL, jarT, jarR, jarT);
+        grad.addColorStop(0, 'rgba(200,215,225,0.25)');
+        grad.addColorStop(0.15, 'rgba(230,240,245,0.12)');
+        grad.addColorStop(0.5, 'rgba(230,240,245,0.08)');
+        grad.addColorStop(0.85, 'rgba(230,240,245,0.12)');
+        grad.addColorStop(1, 'rgba(200,215,225,0.25)');
+        ctx.fillStyle = grad;
+        ctx.strokeStyle = 'rgba(140,155,165,0.45)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(jarL, jarT + 16);
+        ctx.lineTo(jarL, jarB - 22);
+        ctx.quadraticCurveTo(jarL, jarB, jarL + 22, jarB);
+        ctx.lineTo(jarR - 22, jarB);
+        ctx.quadraticCurveTo(jarR, jarB, jarR, jarB - 22);
+        ctx.lineTo(jarR, jarT + 16);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Rim
+        ctx.fillStyle = 'rgba(210,220,228,0.45)';
+        ctx.strokeStyle = 'rgba(140,155,165,0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(cx, jarT + 16, jarW / 2 + 4, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(cx, jarT + 12, jarW / 2 + 2, 10, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Starter fill
+        const fillBottom = jarB - 10;
+        const fillTop = jarT + 42;
+        const fillH = fillBottom - fillTop;
+        const gasLift = Math.min(40, state.gas * 55 * (0.7 + 0.3 * state.hydration));
+        const hoochH = state.hooch * 38;
+        const starterTop = fillTop - gasLift;
+
+        const baseColor = flourProfiles[state.flour].color;
+        const acidTint = blendColor(baseColor, '#e8d2a2', state.acid * 0.45);
+        const fillColor = blendColor(acidTint, '#d6c89a', state.hooch * 0.3);
+
+        // Main starter body
+        ctx.fillStyle = fillColor;
+        ctx.beginPath();
+        ctx.moveTo(jarL + 8, fillBottom);
+        ctx.lineTo(jarL + 8, starterTop);
+        ctx.quadraticCurveTo(jarL + 8, starterTop - 12, jarL + 28, starterTop - 14);
+        ctx.lineTo(jarR - 28, starterTop - 14);
+        ctx.quadraticCurveTo(jarR - 8, starterTop - 12, jarR - 8, starterTop);
+        ctx.lineTo(jarR - 8, fillBottom);
+        ctx.closePath();
+        ctx.fill();
+
+        // Hooch layer
+        if (hoochH > 1) {
+          ctx.fillStyle = 'rgba(160, 140, 110, 0.55)';
+          ctx.beginPath();
+          ctx.ellipse(cx, starterTop + hoochH / 2, (jarW - 16) / 2, hoochH / 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Foamy head
+        if (gasLift > 2) {
+          ctx.fillStyle = 'rgba(255, 252, 245, 0.82)';
+          ctx.beginPath();
+          const foamY = starterTop;
+          ctx.ellipse(cx, foamY, (jarW - 16) / 2, gasLift * 0.55, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(230, 220, 200, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(cx, foamY, (jarW - 16) / 2 - 4, gasLift * 0.45, 0, 0, Math.PI);
+          ctx.stroke();
+        }
+
+        // Bubbles
+        ctx.strokeStyle = 'rgba(90, 110, 120, 0.35)';
+        ctx.lineWidth = 1.2;
+        for (const b of bubbles) {
+          const bx = jarL + 8 + b.x * (jarW - 16);
+          const by = fillBottom - b.y * fillH;
+          const br = b.r * jarW;
+          ctx.beginPath();
+          ctx.arc(bx, by, br, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Microbe sparkles (yeast = gold, LAB = green)
+        const sparkleN = Math.floor((state.yeast + state.lab) * 120);
+        ctx.fillStyle = 'rgba(210, 175, 70, 0.55)';
+        for (let i = 0; i < sparkleN; i++) {
+          const sx = jarL + 12 + ((i * 73) % (jarW - 24));
+          const sy = fillTop + 12 + ((i * 37) % (fillBottom - fillTop - 24));
+          if (i % 3 === 0) ctx.fillStyle = 'rgba(120, 170, 80, 0.45)';
+          else ctx.fillStyle = 'rgba(210, 175, 70, 0.55)';
+          ctx.fillRect(sx, sy, 2, 2);
+        }
+
+        // Highlights
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(jarL + 12, jarT + 38);
+        ctx.lineTo(jarL + 12, jarB - 26);
+        ctx.stroke();
+      }
+
+      // UI bindings
+      const tempIn = document.getElementById('temp');
+      const hydIn = document.getElementById('hydration');
+      const speedIn = document.getElementById('speed');
+      const flourIn = document.getElementById('flour');
+      const feedBtn = document.getElementById('feedBtn');
+      const stirBtn = document.getElementById('stirBtn');
+      const discardFeedBtn = document.getElementById('discardFeedBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const speedVals = [0, 0.25, 0.5, 1, 2, 4, 8];
+      const speedLabels = ['paused', '0.25 h/s', '0.5 h/s', '1 h/s', '2 h/s', '4 h/s', '8 h/s'];
+
+      function updateUI() {
+        document.getElementById('tempVal').textContent = state.temp + ' °C';
+        document.getElementById('hydVal').textContent = state.hydration * 100 + '%';
+        document.getElementById('speedVal').textContent = speedLabels[speedIn.value];
+        document.getElementById('age').textContent = Math.round(state.age * 10) / 10 + ' h';
+        document.getElementById('phVal').textContent = pH().toFixed(2);
+        document.getElementById('yeast').textContent = Math.round(state.yeast * 100) + '%';
+        document.getElementById('lab').textContent = Math.round(state.lab * 100) + '%';
+        const r = readiness();
+        document.getElementById('score').textContent = r + '%';
+        document.getElementById('meter').style.width = r + '%';
+        document.getElementById('verdict').textContent = statusText();
+        const peak = predictedPeak();
+        document.getElementById('peak').textContent = peak !== null ? peak : '—';
+        document.getElementById('aroma').textContent = 'Aroma: ' + aromaLabel();
+        document.getElementById('notes').textContent = note();
+      }
+
+      tempIn.addEventListener('input', () => state.temp = parseInt(tempIn.value, 10));
+      hydIn.addEventListener('input', () => state.hydration = parseInt(hydIn.value, 10) / 100);
+      speedIn.addEventListener('input', updateUI);
+      flourIn.addEventListener('change', () => state.flour = flourIn.value);
+      feedBtn.addEventListener('click', () => { feed(false); updateUI(); });
+      stirBtn.addEventListener('click', () => { stir(); updateUI(); });
+      discardFeedBtn.addEventListener('click', () => { feed(true); updateUI(); });
+      resetBtn.addEventListener('click', () => { reset(); updateUI(); });
+
+      let lastT = performance.now();
+      function loop(now) {
+        const elapsed = (now - lastT) / 1000;
+        lastT = now;
+        const speed = speedVals[speedIn.value];
+        if (speed > 0) {
+          step(Math.min(1.0, elapsed) * speed);
+          updateUI();
+        }
+        drawJar();
+        requestAnimationFrame(loop);
+      }
+
+      reset();
+      updateUI();
+      requestAnimationFrame(loop);
+
+      // Handle resize
+      window.addEventListener('resize', () => {
+        const nw = canvas.clientWidth || 420;
+        const nh = canvas.clientHeight || 460;
+        if (nw !== cssW || nh !== cssH) {
+          canvas.width = nw * dpr;
+          canvas.height = nh * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
