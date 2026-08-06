@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pneumatic Post Network</title>
+  <style>
+    :root {
+      --bg: #1c1b22;
+      --panel: #272631;
+      --ink: #f2f0eb;
+      --muted: #a39e95;
+      --accent: #e05a33;
+      --accent-2: #4fb6c3;
+      --accent-3: #9ea6ff;
+      --good: #63c96c;
+      --warn: #f3c146;
+      --line: rgba(242, 240, 235, 0.14);
+      --shadow: 0 10px 34px rgba(0,0,0,0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .banner {
+      background: #332a1f;
+      color: #e8c798;
+      padding: 10px 16px;
+      font-size: 13px;
+      text-align: center;
+      border-bottom: 1px solid rgba(232,199,152,.18);
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 28px; }
+    header { margin-bottom: 16px; }
+    h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.3px; }
+    header p { margin: 0; color: var(--muted); font-size: 14px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .stage {
+      background: var(--panel);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .map-hud {
+      position: absolute;
+      top: 12px; left: 12px; right: 12px;
+      display: flex; gap: 10px; flex-wrap: wrap; pointer-events: none;
+      justify-content: space-between;
+    }
+    .hud-chip {
+      background: rgba(28,27,34,.78);
+      border: 1px solid rgba(242,240,235,.12);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      pointer-events: auto;
+      backdrop-filter: blur(4px);
+    }
+    .hud-chip b { color: var(--accent-2); }
+    canvas#map {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 4 / 3;
+      background: radial-gradient(circle at 50% 50%, #302f3a 0%, #1f1e27 100%);
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .controls {
+      display: flex; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+    button, .btn {
+      background: #383640;
+      color: var(--ink);
+      border: 1px solid rgba(242,240,235,.16);
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform .06s, background .15s;
+    }
+    button:hover, .btn:hover { background: #45434f; }
+    button:active { transform: translateY(1px); }
+    button.primary { background: var(--accent); border-color: transparent; color: #fff; }
+    button.primary:hover { background: #f06e49; }
+    button.active { background: var(--accent-3); color: #18171d; border-color: transparent; }
+    .sidebar {
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .card {
+      background: var(--panel);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .card h3 { margin: 0 0 10px; font-size: 15px; color: var(--accent-2); }
+    .stat-row { display: flex; justify-content: space-between; font-size: 13px; margin: 6px 0; }
+    .stat-row span:first-child { color: var(--muted); }
+    .legend {
+      display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted);
+    }
+    .legend i {
+      width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 4px;
+    }
+    .help { font-size: 13px; color: var(--muted); margin-top: 8px; }
+    .help kbd {
+      background: rgba(242,240,235,.12); border-radius: 5px; padding: 1px 5px; font-family: inherit;
+    }
+    .log {
+      max-height: 180px; overflow-y: auto; font-size: 12px; color: var(--muted); line-height: 1.4;
+      border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px;
+    }
+    .log div { margin-bottom: 4px; }
+    .toast {
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(39,38,49,.95); color: var(--ink); border: 1px solid var(--line);
+      border-radius: 999px; padding: 10px 18px; font-size: 13px;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+      z-index: 50;
+    }
+    .toast.show { opacity: 1; }
+    .preset-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for decisions.
+  </div>
+  <div class="wrap">
+    <header>
+      <h1>Pneumatic Post Network</h1>
+      <p>Design and run a 19th-century underground pneumatic mail system. Add stations, lay tubes, dispatch capsules, and keep the mail moving.</p>
+    </header>
+    <div class="layout">
+      <div class="stage">
+        <div class="map-hud">
+          <div class="hud-chip">Stations: <b id="stat-stations">0</b></div>
+          <div class="hud-chip">Tubes: <b id="stat-tubes">0</b></div>
+          <div class="hud-chip">Capsules: <b id="stat-capsules">0</b></div>
+          <div class="hud-chip">Delivered: <b id="stat-delivered">0</b></div>
+        </div>
+        <canvas id="map" width="800" height="600"></canvas>
+        <div class="controls">
+          <button id="btn-station" class="active" title="Click on the map to place a station">Station</button>
+          <button id="btn-tube" title="Click two stations to connect them">Tube</button>
+          <button id="btn-dispatch" title="Click a station to send a capsule to another">Dispatch</button>
+          <button id="btn-delete" title="Click a station or tube to remove it">Delete</button>
+          <button id="btn-clear">Clear all</button>
+          <button id="btn-preset" class="primary">Load Paris 1866 demo</button>
+        </div>
+      </div>
+      <div class="sidebar">
+        <div class="card">
+          <h3>Network stats</h3>
+          <div class="stat-row"><span>Total tube length</span><b id="stat-length">0 m</b></div>
+          <div class="stat-row"><span>Average delivery time</span><b id="stat-time">—</b></div>
+          <div class="stat-row"><span>Pressure pumps</span><b id="stat-pumps">0</b></div>
+          <div class="stat-row"><span>Network uptime</span><b id="stat-uptime">0 s</b></div>
+          <div class="legend" style="margin-top:10px">
+            <span><i style="background:#e05a33"></i>Station</span>
+            <span><i style="background:#4fb6c3"></i>Capsule</span>
+            <span><i style="background:#9ea6ff"></i>Tube</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>How to operate</h3>
+          <div class="help">
+            <p>1. <kbd>Station</kbd> mode: click the map to add a post office.</p>
+            <p>2. <kbd>Tube</kbd> mode: click two stations to lay a line.</p>
+            <p>3. <kbd>Dispatch</kbd> mode: click origin, then destination.</p>
+            <p>Capsules travel at ~8–12 m/s (real systems hit 10 m/s). Pumps keep pressure behind each capsule.</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Log</h3>
+          <div class="log" id="log"><div>Welcome to the Pneumatic Post Network.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const canvas = document.getElementById('map');
+    const ctx = canvas.getContext('2d');
+    const logEl = document.getElementById('log');
+    const toastEl = document.getElementById('toast');
+
+    // Coordinates are in virtual 800x600 space; canvas scales via CSS.
+    let stations = [];
+    let tubes = [];
+    let capsules = [];
+    let delivered = 0;
+    let startTime = Date.now();
+    let mode = 'station';
+    let selectedStation = null;
+    let hoveredStation = null;
+    let nextId = 1;
+
+    const modeButtons = {
+      station: document.getElementById('btn-station'),
+      tube: document.getElementById('btn-tube'),
+      dispatch: document.getElementById('btn-dispatch'),
+      delete: document.getElementById('btn-delete')
+    };
+
+    function setMode(m) {
+      mode = m;
+      selectedStation = null;
+      Object.values(modeButtons).forEach(b => b.classList.remove('active'));
+      modeButtons[m].classList.add('active');
+      canvas.style.cursor = m === 'station' ? 'crosshair' : 'pointer';
+    }
+
+    Object.keys(modeButtons).forEach(k => {
+      modeButtons[k].addEventListener('click', () => setMode(k));
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      stations = []; tubes = []; capsules = []; delivered = 0; nextId = 1;
+      log('Cleared the network.');
+    });
+
+    document.getElementById('btn-preset').addEventListener('click', loadPreset);
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(() => toastEl.classList.remove('show'), 1800);
+    }
+
+    function log(msg) {
+      const div = document.createElement('div');
+      div.textContent = msg;
+      logEl.prepend(div);
+      while (logEl.children.length > 40) logEl.lastChild.remove();
+    }
+
+    function dist(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function getPoint(e) {
+      const r = canvas.getBoundingClientRect();
+      const x = (e.clientX - r.left) * (canvas.width / r.width);
+      const y = (e.clientY - r.top) * (canvas.height / r.height);
+      return { x, y };
+    }
+
+    function stationAt(p) {
+      for (const s of stations) {
+        if (dist(s, p) < 22) return s;
+      }
+      return null;
+    }
+
+    function tubeAt(p) {
+      for (const t of tubes) {
+        const a = stations.find(s => s.id === t.from);
+        const b = stations.find(s => s.id === t.to);
+        if (!a || !b) continue;
+        const d = pointToSegment(p, a, b);
+        if (d < 12) return t;
+      }
+      return null;
+    }
+
+    function pointToSegment(p, a, b) {
+      const len2 = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+      if (len2 === 0) return dist(p, a);
+      let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / len2;
+      t = Math.max(0, Math.min(1, t));
+      return dist(p, { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) });
+    }
+
+    function addStation(p) {
+      const s = { id: nextId++, x: p.x, y: p.y, label: 'Station ' + String.fromCharCode(64 + nextId - 1), pressure: 0 };
+      if (stations.length >= 26) s.label = 'Post ' + stations.length;
+      stations.push(s);
+      log('Opened ' + s.label + '.');
+      return s;
+    }
+
+    function addTube(a, b) {
+      if (a.id === b.id) return;
+      const exists = tubes.find(t => (t.from === a.id && t.to === b.id) || (t.from === b.id && t.to === a.id));
+      if (exists) { showToast('Those stations are already connected.'); return; }
+      tubes.push({ from: a.id, to: b.id, length: dist(a, b), broken: false });
+      log('Laid tube from ' + a.label + ' to ' + b.label + '.');
+    }
+
+    function dispatchCapsule(origin, dest) {
+      if (origin.id === dest.id) return;
+      const path = findPath(origin.id, dest.id);
+      if (!path || path.length < 2) { showToast('No route found.'); return; }
+      const t = tubes.find(tu => (tu.from === path[0] && tu.to === path[1]) || (tu.from === path[1] && tu.to === path[0]));
+      const s0 = stations.find(s => s.id === path[0]);
+      capsules.push({
+        id: nextId++,
+        path,
+        segment: 0,
+        progress: 0,
+        speed: 9 + Math.random() * 3, // virtual m/s
+        launched: Date.now()
+      });
+      log('Capsule dispatched from ' + s0.label + ' toward ' + dest.label + '.');
+    }
+
+    function findPath(startId, endId) {
+      const adj = new Map();
+      stations.forEach(s => adj.set(s.id, []));
+      tubes.forEach(t => {
+        adj.get(t.from).push(t.to);
+        adj.get(t.to).push(t.from);
+      });
+      const q = [[startId]];
+      const seen = new Set([startId]);
+      while (q.length) {
+        const p = q.shift();
+        const last = p[p.length - 1];
+        if (last === endId) return p;
+        for (const n of adj.get(last) || []) {
+          if (!seen.has(n)) {
+            seen.add(n);
+            q.push([...p, n]);
+          }
+        }
+      }
+      return null;
+    }
+
+    function removeStation(s) {
+      tubes = tubes.filter(t => t.from !== s.id && t.to !== s.id);
+      capsules = capsules.filter(c => !c.path.includes(s.id));
+      stations = stations.filter(x => x.id !== s.id);
+      log('Closed ' + s.label + '.');
+    }
+
+    function removeTube(t) {
+      capsules = capsules.filter(c => {
+        const a = c.path[c.segment];
+        const b = c.path[c.segment + 1];
+        return !((t.from === a && t.to === b) || (t.from === b && t.to === a));
+      });
+      tubes = tubes.filter(x => x !== t);
+      log('Removed a tube.');
+    }
+
+    canvas.addEventListener('pointermove', e => {
+      const p = getPoint(e);
+      hoveredStation = stationAt(p);
+      canvas.style.cursor = hoveredStation ? 'pointer' : (mode === 'station' ? 'crosshair' : 'default');
+    });
+
+    canvas.addEventListener('pointerleave', () => { hoveredStation = null; });
+
+    canvas.addEventListener('pointerdown', e => {
+      const p = getPoint(e);
+      if (mode === 'station') {
+        if (!stationAt(p)) addStation(p);
+        return;
+      }
+      const s = stationAt(p);
+      if (mode === 'tube') {
+        if (!s) { selectedStation = null; return; }
+        if (!selectedStation) { selectedStation = s; showToast('Selected ' + s.label + ' — click another to connect.'); }
+        else { addTube(selectedStation, s); selectedStation = null; }
+        return;
+      }
+      if (mode === 'dispatch') {
+        if (!s) { selectedStation = null; return; }
+        if (!selectedStation) { selectedStation = s; showToast('Origin: ' + s.label + ' — click destination.'); }
+        else { dispatchCapsule(selectedStation, s); selectedStation = null; }
+        return;
+      }
+      if (mode === 'delete') {
+        if (s) removeStation(s);
+        else {
+          const t = tubeAt(p);
+          if (t) removeTube(t);
+        }
+      }
+    });
+
+    function loadPreset() {
+      stations = []; tubes = []; capsules = []; delivered = 0; nextId = 1;
+      const names = ['Bourse','Louvre','Gare de l\'Est','Montmartre','Odéon','Notre-Dame','Gobelins','Invalides'];
+      const coords = [
+        {x:400,y:340},{x:330,y:280},{x:520,y:220},{x:360,y:160},
+        {x:280,y:370},{x:420,y:410},{x:560,y:390},{x:280,y:260}
+      ];
+      for (let i = 0; i < names.length; i++) {
+        stations.push({ id: nextId++, x: coords[i].x, y: coords[i].y, label: names[i], pressure: 0 });
+      }
+      const pairs = [[0,1],[0,5],[1,7],[1,2],[2,6],[3,7],[4,7],[4,5],[5,6]];
+      for (const [i,j] of pairs) {
+        const a = stations[i], b = stations[j];
+        tubes.push({ from: a.id, to: b.id, length: dist(a,b), broken: false });
+      }
+      log('Loaded 1866 Paris pneumatic post demo.');
+    }
+
+    function update(dt) {
+      for (const c of capsules) {
+        const a = stations.find(s => s.id === c.path[c.segment]);
+        const b = stations.find(s => s.id === c.path[c.segment + 1]);
+        if (!a || !b) continue;
+        const segLen = dist(a, b);
+        const t = tubes.find(tu => (tu.from === a.id && tu.to === b.id) || (tu.from === b.id && tu.to === a.id));
+        const speed = t ? c.speed * (1 - 0.12 * (t.length / 300)) : c.speed;
+        c.progress += (speed * dt) / Math.max(segLen, 30);
+        if (c.progress >= 1) {
+          c.segment++;
+          c.progress = 0;
+          if (c.segment >= c.path.length - 1) {
+            delivered++;
+            const dest = stations.find(s => s.id === c.path[c.path.length - 1]);
+            log('Capsule arrived at ' + (dest ? dest.label : 'unknown') + '.');
+            c.done = true;
+          }
+        }
+      }
+      capsules = capsules.filter(c => !c.done);
+    }
+
+    function draw() {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      // Subtle city grid
+      ctx.strokeStyle = 'rgba(242,240,235,0.06)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= W; x += 80) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+      for (let y = 0; y <= H; y += 80) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+      // Draw tubes
+      for (const t of tubes) {
+        const a = stations.find(s => s.id === t.from);
+        const b = stations.find(s => s.id === t.to);
+        if (!a || !b) continue;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = t.broken ? 'rgba(224,90,51,0.55)' : 'rgba(158,166,255,0.55)';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(28,27,34,0.7)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // Draw capsules
+      for (const c of capsules) {
+        const a = stations.find(s => s.id === c.path[c.segment]);
+        const b = stations.find(s => s.id === c.path[c.segment + 1]);
+        if (!a || !b) continue;
+        const x = a.x + c.progress * (b.x - a.x);
+        const y = a.y + c.progress * (b.y - a.y);
+        const ang = Math.atan2(b.y - a.y, b.x - a.x);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ang);
+        ctx.fillStyle = '#4fb6c3';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 14, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.beginPath();
+        ctx.ellipse(4, -2, 5, 2.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Draw stations
+      for (const s of stations) {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 16, 0, Math.PI * 2);
+        ctx.fillStyle = s === selectedStation ? '#9ea6ff' : '#e05a33';
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#1c1b22';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = '#1c1b22';
+        ctx.fill();
+
+        ctx.fillStyle = '#f2f0eb';
+        ctx.font = '12px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(s.label, s.x, s.y - 22);
+
+        if (s === hoveredStation) {
+          ctx.strokeStyle = 'rgba(242,240,235,0.6)';
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 24, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      // Selection line preview
+      if (selectedStation && hoveredStation && selectedStation !== hoveredStation) {
+        ctx.beginPath();
+        ctx.moveTo(selectedStation.x, selectedStation.y);
+        ctx.lineTo(hoveredStation.x, hoveredStation.y);
+        ctx.setLineDash([6, 6]);
+        ctx.strokeStyle = 'rgba(158,166,255,0.6)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('stat-stations').textContent = stations.length;
+      document.getElementById('stat-tubes').textContent = tubes.length;
+      document.getElementById('stat-capsules').textContent = capsules.length;
+      document.getElementById('stat-delivered').textContent = delivered;
+      const totalLen = tubes.reduce((sum, t) => sum + t.length, 0);
+      document.getElementById('stat-length').textContent = Math.round(totalLen * 2) + ' m';
+      document.getElementById('stat-pumps').textContent = Math.max(1, Math.round(tubes.length / 3));
+      document.getElementById('stat-uptime').textContent = Math.round((Date.now() - startTime) / 1000) + ' s';
+      const avg = capsules.length + delivered > 0 ? (Math.round((delivered * 18 + capsules.reduce((a,c)=>a+(c.progress||0)*10,0)) / Math.max(1, capsules.length + delivered) * 10) / 10) : null;
+      document.getElementById('stat-time').textContent = avg ? avg + ' s' : '—';
+    }
+
+    let last = performance.now();
+    function loop(now) {
+      const dt = Math.min((now - last) / 1000, 0.1);
+      last = now;
+      update(dt);
+      draw();
+      updateStats();
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    // Initial preset so the user sees it working immediately
+    loadPreset();
+  </script>
+</body>
+</html>

@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-06",
-    "title": "Sourdough Starter Pet",
-    "slug": "sourdough-starter-pet",
-    "publishedSlug": "2026-08-06-sourdough-starter-pet",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-06-sourdough-starter-pet/"
+    "date": "2026-08-07",
+    "title": "Pneumatic Post Network",
+    "slug": "pneumatic-post-network",
+    "publishedSlug": "2026-08-07-pneumatic-post-network",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-07-pneumatic-post-network/"
   },
   "apps": [
+    {
+      "date": "2026-08-07",
+      "title": "Pneumatic Post Network",
+      "slug": "pneumatic-post-network",
+      "publishedSlug": "2026-08-07-pneumatic-post-network",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-07-pneumatic-post-network/",
+      "description": "Design and run a 19th-century underground pneumatic mail system."
+    },
     {
       "date": "2026-08-06",
       "title": "Sourdough Starter Pet",
