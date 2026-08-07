@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Pinhole Camera Lab</title>
+<style>
+:root{
+  --bg:#0f1116;
+  --panel:#171a21;
+  --text:#e6e8ef;
+  --muted:#9aa2b3;
+  --accent:#f7c548;
+  --accent2:#5fd4b7;
+  --line:#2b3140;
+  --warn:#ff6b6b;
+}
+* { box-sizing:border-box; }
+html,body{
+  margin:0; height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  overflow:hidden;
+}
+.banner{
+  background:#2a1a1a;
+  color:#ffd7d7;
+  border-bottom:1px solid #3f2828;
+  padding:.55rem .9rem;
+  font-size:.8rem;
+  line-height:1.35;
+}
+.wrap{
+  display:grid;
+  grid-template-columns: 360px 1fr;
+  height:calc(100% - 46px);
+}
+.sidebar{
+  background:var(--panel);
+  border-right:1px solid var(--line);
+  padding:1rem;
+  overflow-y:auto;
+  display:flex; flex-direction:column; gap:1.1rem;
+}
+.sidebar h1{
+  margin:0;
+  font-size:1.25rem;
+  letter-spacing:-.02em;
+}
+.sidebar p.sub{
+  margin:-.5rem 0 0;
+  color:var(--muted);
+  font-size:.85rem;
+  line-height:1.35;
+}
+.group{
+  display:flex; flex-direction:column; gap:.55rem;
+}
+.group label{
+  font-size:.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;
+}
+.row{
+  display:flex; gap:.6rem; align-items:center;
+}
+.row input[type=number], .row select{
+  background:#0f131b;
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:.35rem;
+  padding:.35rem .5rem;
+  font-size:.9rem;
+  width:6rem;
+}
+.row select{ width:5.5rem; }
+.row span.unit{ color:var(--muted); font-size:.85rem; }
+.sliderwrap{
+  display:flex; align-items:center; gap:.5rem;
+}
+.sliderwrap input[type=range]{
+  flex:1;
+  accent-color:var(--accent);
+}
+.readout{
+  min-width:4.2rem; text-align:right;
+  font-variant-numeric: tabular-nums;
+  color:var(--accent);
+  font-size:.9rem;
+}
+.metrics{
+  display:grid; grid-template-columns: 1fr 1fr; gap:.6rem;
+}
+.metric{
+  background:#0f131b;
+  border:1px solid var(--line);
+  border-radius:.4rem;
+  padding:.55rem;
+}
+.metric .value{
+  font-size:1.05rem; color:var(--text); font-variant-numeric:tabular-nums;
+}
+.metric .label{
+  font-size:.7rem; color:var(--muted); margin-top:.15rem;
+}
+.btn{
+  background:#232936;
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:.4rem;
+  padding:.55rem .8rem;
+  cursor:pointer;
+  font-size:.85rem;
+  transition:background .15s, border-color .15s;
+}
+.btn:hover{ background:#2c3342; border-color:#3d465a; }
+.btn.active{ background:var(--accent); color:#1a1200; border-color:var(--accent); font-weight:600; }
+.hint{
+  font-size:.8rem; color:var(--muted); line-height:1.35;
+  border-top:1px solid var(--line);
+  padding-top:.8rem;
+}
+.stage{
+  position:relative;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  background:#0a0b0e;
+}
+#scene{ max-width:100%; max-height:100%; }
+.overlay{
+  position:absolute; bottom:.9rem; left:.9rem;
+  background:rgba(15,17,22,.85);
+  border:1px solid var(--line);
+  border-radius:.4rem;
+  padding:.5rem .7rem;
+  font-size:.8rem; color:var(--muted);
+  pointer-events:none;
+}
+@media (max-width:800px){
+  .wrap{ grid-template-columns: 1fr; grid-template-rows: auto 1fr; height:calc(100% - 46px); }
+  .sidebar{ max-height:40vh; }
+  .stage{ min-height:50vh; }
+}
+</style>
+</head>
+<body>
+<div class="banner">
+  ⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for any decisions.
+</div>
+<div class="wrap">
+  <div class="sidebar">
+    <div>
+      <h1>Pinhole Camera Lab</h1>
+      <p class="sub">Design a camera obscura: pick focal length and pinhole, then see geometry, f-number and an animated ray diagram.</p>
+    </div>
+    <div class="group">
+      <label>Focal length</label>
+      <div class="sliderwrap">
+        <input id="focalRange" type="range" min="10" max="300" step="1" value="100" />
+        <div class="readout"><span id="focalReadout">100</span> mm</div>
+      </div>
+    </div>
+    <div class="group">
+      <label>Pinhole diameter</label>
+      <div class="sliderwrap">
+        <input id="holeRange" type="range" min="0.05" max="1.5" step="0.01" value="0.35" />
+        <div class="readout"><span id="holeReadout">0.35</span> mm</div>
+      </div>
+      <div class="row">
+        <button class="btn" id="optBtn">Set optimal</button>
+      </div>
+    </div>
+    <div class="group">
+      <label>Subject distance</label>
+      <div class="sliderwrap">
+        <input id="subjRange" type="range" min="200" max="5000" step="50" value="1500" />
+        <div class="readout"><span id="subjReadout">1.5</span> m</div>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric">
+        <div class="value" id="fnum">f/286</div>
+        <div class="label">f-number</div>
+      </div>
+      <div class="metric">
+        <div class="value" id="optimal">0.30</div>
+        <div class="label">Optimal hole (mm)</div>
+      </div>
+      <div class="metric">
+        <div class="value" id="spot">4.8</div>
+        <div class="label">Sun spot (mm)</div>
+      </div>
+      <div class="metric">
+        <div class="value" id="imageH">1.9</div>
+        <div class="label">Image height (mm)</div>
+      </div>
+    </div>
+    <div class="group">
+      <label>Display</label>
+      <div class="row">
+        <button class="btn active" id="modeGeometry">Geometry</button>
+        <button class="btn" id="modeRays">Ray fan</button>
+        <button class="btn" id="modeImage">Image disk</button>
+      </div>
+    </div>
+    <div class="hint">
+      Optimal diameter ≈ √(0.00007 mm × focal length) × 2, balancing geometric blur with diffraction. A smaller hole gets sharper until diffraction takes over; a larger hole just makes a fuzzier sun.
+    </div>
+  </div>
+  <div class="stage">
+    <canvas id="scene"></canvas>
+    <div class="overlay">Drag sliders to explore the trade-off.</div>
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('scene');
+const ctx = canvas.getContext('2d');
+const $ = id => document.getElementById(id);
+let mode = 'geometry';
+
+const focalRange = $('focalRange');
+const focalReadout = $('focalReadout');
+const holeRange = $('holeRange');
+const holeReadout = $('holeReadout');
+const subjRange = $('subjRange');
+const subjReadout = $('subjReadout');
+const optBtn = $('optBtn');
+
+function resize(){
+  const stage = canvas.parentElement;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.floor(stage.clientWidth * dpr);
+  canvas.height = Math.floor(stage.clientHeight * dpr);
+  canvas.style.width = stage.clientWidth + 'px';
+  canvas.style.height = stage.clientHeight + 'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}
+
+function val(){
+  return {
+    f: +focalRange.value,
+    d: +holeRange.value,
+    s: +subjRange.value
+  };
+}
+
+function optimalHole(f){
+  return Math.sqrt(0.00007 * f) * 2;
+}
+
+function updateReadouts(){
+  const {f,d,s} = val();
+  focalReadout.textContent = f;
+  holeReadout.textContent = d.toFixed(2);
+  subjReadout.textContent = (s/1000).toFixed(2) + '';
+  const fnum = f / d;
+  $('fnum').textContent = 'f/' + Math.round(fnum).toLocaleString();
+  $('optimal').textContent = optimalHole(f).toFixed(2);
+  const spot = d * (s + f) / s;
+  $('spot').textContent = spot.toFixed(2);
+  const subjH = 500; // a 0.5 m tall subject
+  const imgH = subjH * f / (s - f);
+  $('imageH').textContent = imgH.toFixed(1);
+}
+
+function drawGeometry(){
+  const {f,d,s} = val();
+  const W = canvas.width / (window.devicePixelRatio||1);
+  const H = canvas.height / (window.devicePixelRatio||1);
+  const cx = W * 0.5;
+  const cy = H * 0.5;
+  const maxF = 300;
+  const margin = Math.min(W,H) * 0.12;
+  const scale = (Math.min(W,H) - margin*2) / (maxF + 100);
+
+  ctx.clearRect(0,0,W,H);
+
+  // camera box
+  const boxW = f * scale;
+  const boxH = Math.min(H*0.5, 260);
+  const boxX = cx - boxW*0.5;
+  const boxY = cy - boxH*0.5;
+
+  // screen/film
+  ctx.fillStyle = '#1a1f29';
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+  ctx.strokeStyle = '#3d465a';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+  // pinhole plate
+  const holePx = Math.max(2, d * scale * 0.3);
+  ctx.fillStyle = '#2b3140';
+  ctx.fillRect(boxX + boxW - 6, boxY, 6, boxH);
+  ctx.fillStyle = '#0a0b0e';
+  ctx.fillRect(boxX + boxW - 3, cy - holePx*0.5, 6, holePx);
+
+  // light rays from subject to pinhole
+  const subjDistPx = s * scale * 0.12;
+  const subjX = boxX + boxW + subjDistPx;
+  const subjTopY = cy - boxH*0.35;
+  const subjBotY = cy + boxH*0.35;
+
+  // subject arrow
+  ctx.strokeStyle = '#5fd4b7';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(subjX, subjBotY);
+  ctx.lineTo(subjX, subjTopY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(subjX-6, subjTopY+8); ctx.lineTo(subjX, subjTopY); ctx.lineTo(subjX+6, subjTopY+8);
+  ctx.stroke();
+
+  // rays
+  ctx.strokeStyle = 'rgba(247,197,72,.55)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(subjX, subjTopY); ctx.lineTo(boxX + boxW, cy);
+  ctx.moveTo(subjX, subjBotY); ctx.lineTo(boxX + boxW, cy);
+  ctx.stroke();
+
+  // projected inverted image on screen
+  const imgTopY = cy + boxH*0.25;
+  const imgBotY = cy - boxH*0.25;
+  ctx.strokeStyle = 'rgba(247,197,72,.85)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(boxX, imgTopY); ctx.lineTo(boxX, imgBotY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(boxX-6, imgBotY-8); ctx.lineTo(boxX, imgBotY); ctx.lineTo(boxX+6, imgBotY-8);
+  ctx.stroke();
+
+  // labels
+  ctx.fillStyle = '#9aa2b3';
+  ctx.font = '12px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Subject', subjX, subjBotY + 22);
+  ctx.fillText('Pinhole', boxX + boxW, boxY + boxH + 24);
+  ctx.fillText('Film / sensor', boxX, boxY + boxH + 24);
+
+  // focal length dimension
+  ctx.strokeStyle = '#6b7a99';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(boxX, boxY + boxH + 4);
+  ctx.lineTo(boxX, boxY + boxH + 14);
+  ctx.lineTo(boxX + boxW, boxY + boxH + 14);
+  ctx.lineTo(boxX + boxW, boxY + boxH + 4);
+  ctx.stroke();
+  ctx.fillStyle = '#6b7a99';
+  ctx.fillText(`f = ${f} mm`, boxX + boxW*0.5, boxY + boxH + 28);
+}
+
+function drawRays(){
+  const {f,d,s} = val();
+  const W = canvas.width / (window.devicePixelRatio||1);
+  const H = canvas.height / (window.devicePixelRatio||1);
+  ctx.clearRect(0,0,W,H);
+  const cx = W * 0.5;
+  const cy = H * 0.5;
+  const scale = Math.min(W,H) / 420;
+
+  const filmX = cx - f*scale*0.5;
+  const holeX = cx + f*scale*0.5;
+  const filmH = 160;
+  const subjX = holeX + s*scale*0.035;
+
+  // film plane
+  ctx.fillStyle = '#1a1f29';
+  ctx.fillRect(filmX - 8, cy - filmH*0.5, 8, filmH);
+  ctx.strokeStyle = '#3d465a';
+  ctx.strokeRect(filmX - 8, cy - filmH*0.5, 8, filmH);
+
+  // pinhole
+  const holePx = Math.max(3, d * scale * 0.4);
+  ctx.fillStyle = '#2b3140';
+  ctx.fillRect(holeX - 4, cy - 60, 8, 120);
+  ctx.fillStyle = '#0a0b0e';
+  ctx.fillRect(holeX - 2, cy - holePx*0.5, 4, holePx);
+
+  // fan of rays from top of subject through pinhole
+  const subjTop = cy - 70;
+  const subjBot = cy + 70;
+  const topAperture = cy - holePx*0.5;
+  const botAperture = cy + holePx*0.5;
+
+  for(let i=0;i<=8;i++){
+    const yPin = topAperture + (botAperture-topAperture)*(i/8);
+    const yFilm = subjTop + (yPin - topAperture) * (filmX - subjX)/(holeX - subjX);
+    ctx.strokeStyle = `rgba(247,197,72,${0.25 + 0.5*Math.abs(i-4)/4})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(subjX, subjTop);
+    ctx.lineTo(holeX, yPin);
+    ctx.lineTo(filmX, yFilm);
+    ctx.stroke();
+  }
+  for(let i=0;i<=8;i++){
+    const yPin = topAperture + (botAperture-topAperture)*(i/8);
+    const yFilm = subjBot + (yPin - botAperture) * (filmX - subjX)/(holeX - subjX);
+    ctx.strokeStyle = `rgba(95,212,183,${0.25 + 0.5*Math.abs(i-4)/4})`;
+    ctx.beginPath();
+    ctx.moveTo(subjX, subjBot);
+    ctx.lineTo(holeX, yPin);
+    ctx.lineTo(filmX, yFilm);
+    ctx.stroke();
+  }
+
+  // blur circle on film
+  const blurR = Math.max(2, d * scale * 0.35);
+  ctx.strokeStyle = '#ff6b6b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(filmX, cy, blurR*0.5, blurR, 0, 0, Math.PI*2);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,107,107,.12)';
+  ctx.fill();
+
+  ctx.fillStyle = '#9aa2b3';
+  ctx.font = '13px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Subject point', subjX, cy + 95);
+  ctx.fillText('Pinhole aperture', holeX, cy + 95);
+  ctx.fillText('Film blur circle', filmX, cy + 95);
+}
+
+function drawImage(){
+  const {f,d,s} = val();
+  const W = canvas.width / (window.devicePixelRatio||1);
+  const H = canvas.height / (window.devicePixelRatio||1);
+  ctx.clearRect(0,0,W,H);
+  const cx = W*0.5;
+  const cy = H*0.5;
+
+  // disk of confusion for an out-of-focus / finite aperture image
+  const diskR = Math.min(140, Math.max(20, d * 18));
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, diskR);
+  grad.addColorStop(0, '#f7c548');
+  grad.addColorStop(0.35, 'rgba(247,197,72,.55)');
+  grad.addColorStop(0.65, 'rgba(247,197,72,.18)');
+  grad.addColorStop(1, 'rgba(247,197,72,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, diskR, 0, Math.PI*2);
+  ctx.fill();
+
+  // diffraction rings (Airy-ish)
+  const airy = Math.min(160, Math.max(10, (1.22 * 0.00055 * f / d) * 1200));
+  ctx.strokeStyle = 'rgba(95,212,183,.45)';
+  ctx.lineWidth = 1;
+  for(let r of [airy*0.8, airy*1.5, airy*2.2]){
+    if(r > diskR*1.4) break;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = '#e6e8ef';
+  ctx.font = '15px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Image of a point source', cx, cy - diskR - 18);
+  ctx.fillStyle = '#9aa2b3';
+  ctx.font = '12px system-ui';
+  ctx.fillText('Geometric blur + diffraction rings', cx, cy + diskR + 22);
+}
+
+function draw(){
+  if(mode === 'geometry') drawGeometry();
+  else if(mode === 'rays') drawRays();
+  else drawImage();
+}
+
+[focalRange, holeRange, subjRange].forEach(el => {
+  el.addEventListener('input', () => { updateReadouts(); draw(); });
+});
+
+optBtn.addEventListener('click', () => {
+  const f = +focalRange.value;
+  const opt = optimalHole(f);
+  holeRange.value = Math.min(+holeRange.max, Math.max(+holeRange.min, opt));
+  updateReadouts(); draw();
+});
+
+['modeGeometry','modeRays','modeImage'].forEach((id, idx) => {
+  const modes = ['geometry','rays','image'];
+  $(id).addEventListener('click', () => {
+    mode = modes[idx];
+    ['modeGeometry','modeRays','modeImage'].forEach(b => $(b).classList.remove('active'));
+    $(id).classList.add('active');
+    draw();
+  });
+});
+
+window.addEventListener('resize', resize);
+
+resize();
+updateReadouts();
+</script>
+</body>
+</html>

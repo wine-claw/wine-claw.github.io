@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-07",
-    "title": "Pneumatic Post Network",
-    "slug": "pneumatic-post-network",
-    "publishedSlug": "2026-08-07-pneumatic-post-network",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-07-pneumatic-post-network/"
+    "date": "2026-08-08",
+    "title": "Pinhole Camera Lab",
+    "slug": "pinhole-camera-lab",
+    "publishedSlug": "2026-08-08-pinhole-camera-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-08-pinhole-camera-lab/"
   },
   "apps": [
+    {
+      "date": "2026-08-08",
+      "title": "Pinhole Camera Lab",
+      "slug": "pinhole-camera-lab",
+      "publishedSlug": "2026-08-08-pinhole-camera-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-08-pinhole-camera-lab/",
+      "description": "Interactive camera obscura design lab: pick focal length and pinhole, then see geometry, f-number, and an animated ray diagram."
+    },
     {
       "date": "2026-08-07",
       "title": "Pneumatic Post Network",
