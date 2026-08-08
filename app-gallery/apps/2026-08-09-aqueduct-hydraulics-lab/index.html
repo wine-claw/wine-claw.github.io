@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Aqueduct Hydraulics Lab</title>
+  <style>
+    :root{
+      --bg:#0d1117;
+      --panel:#161b22;
+      --panel-2:#11151c;
+      --text:#e6edf3;
+      --muted:#8b949e;
+      --accent:#58a6ff;
+      --accent-2:#f0883e;
+      --ok:#3fb950;
+      --warn:#d29922;
+      --bad:#f85149;
+      --water:#79c0ff;
+      --line:#30363d;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background:var(--bg); color:var(--text); line-height:1.45;
+      min-height:100vh; display:flex; flex-direction:column;
+    }
+    .banner{
+      background:#f85149; color:#fff; font-size:.85rem; text-align:center; padding:.55rem .8rem;
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:1.2rem; width:100%; flex:1;}
+    header h1{margin:.2rem 0 .35rem; font-size:1.55rem;}
+    header p{margin:0; color:var(--muted); font-size:.95rem;}
+    .grid{display:grid; grid-template-columns: 1fr 1.35fr; gap:1.1rem; margin-top:1rem;}
+    @media (max-width:880px){ .grid{grid-template-columns:1fr;} }
+    .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem;}
+    .card h2{margin:.1rem 0 .75rem; font-size:1.05rem; color:var(--accent);}
+    label{display:flex; align-items:center; justify-content:space-between; gap:.6rem; margin:.65rem 0; font-size:.92rem;}
+    label span{color:var(--muted);}
+    input[type=range]{flex:1; min-width:90px; accent-color:var(--accent);}
+    .val{font-variant-numeric:tabular-nums; min-width:60px; text-align:right; color:var(--text); font-weight:600;}
+    .readout{background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:.8rem;}
+    .readout .row{display:flex; justify-content:space-between; gap:.6rem; padding:.35rem 0; border-bottom:1px dashed var(--line); font-size:.92rem;}
+    .readout .row:last-child{border-bottom:none;}
+    .readout .row strong{font-variant-numeric:tabular-nums; font-size:1.05rem; color:var(--water);}
+    .status{display:inline-block; padding:.15rem .45rem; border-radius:999px; font-size:.8rem; font-weight:700;}
+    .status.ok{background:#23863633; color:var(--ok);} .status.warn{background:#d2992233; color:var(--warn);} .status.bad{background:#f8514933; color:var(--bad);}
+    .viz{position:relative; background:#05070a; border:1px solid var(--line); border-radius:12px; overflow:hidden; min-height:360px;}
+    .viz svg{display:block; width:100%; height:100%; min-height:360px;}
+    .legend{display:flex; gap:1rem; flex-wrap:wrap; font-size:.85rem; color:var(--muted); margin-top:.6rem;}
+    .legend i{display:inline-block; width:14px; height:14px; border-radius:3px; margin-right:.3rem; vertical-align:middle;}
+    .preset-row{display:flex; gap:.4rem; flex-wrap:wrap; margin:.6rem 0 .3rem;}
+    button{background:#21262d; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:.45rem .7rem; cursor:pointer; font-size:.85rem;}
+    button:hover{background:#30363d;}
+    .note{font-size:.82rem; color:var(--muted); margin-top:.8rem;}
+    .formula{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background:var(--panel-2); padding:.2rem .4rem; border-radius:6px; color:var(--accent-2);}
+    footer{color:var(--muted); font-size:.78rem; padding:.8rem 1.2rem; text-align:center; border-top:1px solid var(--line); margin-top:auto;}
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app. Untested. Not professionally validated. Do not rely on it for decisions.
+  </div>
+  <div class="wrap">
+    <header>
+      <h1>Aqueduct Hydraulics Lab</h1>
+      <p>Design an open-channel aqueduct: shape the channel, set the slope, and see how much water gravity can move without drowning the city.</p>
+    </header>
+    <div class="grid">
+      <div class="controls">
+        <div class="card">
+          <h2>Channel design</h2>
+          <div class="preset-row">
+            <button data-preset="roman">Roman (low gradient)</button>
+            <button data-preset="steep">Hill flume</button>
+            <button data-preset="wide">Wide canal</button>
+          </div>
+          <label><span>Channel type</span>
+            <select id="shape" style="background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:.25rem .4rem;">
+              <option value="rect">Rectangle</option>
+              <option value="trap" selected>Trapezoid</option>
+              <option value="circ">Half-circle</option>
+            </select>
+          </label>
+          <label><span>Bottom width <span class="formula">b</span> (m)</span><input id="b" type="range" min="0.3" max="3" step="0.05" value="1.2"><span class="val" id="bV">1.20</span></label>
+          <label><span>Water depth <span class="formula">y</span> (m)</span><input id="y" type="range" min="0.15" max="2.5" step="0.05" value="0.9"><span class="val" id="yV">0.90</span></label>
+          <label><span>Side slope <span class="formula">z</span> (H:V)</span><input id="z" type="range" min="0" max="3" step="0.1" value="0.67"><span class="val" id="zV">0.67</span></label>
+        </div>
+        <div class="card" style="margin-top:1rem;">
+          <h2>Run conditions</h2>
+          <label><span>Gradient <span class="formula">S</span> (m/m)</span><input id="S" type="range" min="0.0001" max="0.05" step="0.0001" value="0.0014"><span class="val" id="SV">0.0014</span></label>
+          <label><span>Roughness <span class="formula">n</span></span><input id="n" type="range" min="0.01" max="0.04" step="0.001" value="0.015"><span class="val" id="nV">0.015</span></label>
+          <label><span>Freeboard reserve (m)</span><input id="free" type="range" min="0" max="0.8" step="0.05" value="0.25"><span class="val" id="freeV">0.25</span></label>
+        </div>
+        <div class="card" style="margin-top:1rem;">
+          <h2>Results</h2>
+          <div class="readout">
+            <div class="row">Flow rate Q <strong id="Q">—</strong> L/s</div>
+            <div class="row">Velocity V <strong id="V">—</strong> m/s</div>
+            <div class="row">Froude <strong id="Fr">—</strong> <span id="frState" class="status">—</span></div>
+            <div class="row">Wetted perimeter <strong id="Pw">—</strong> m</div>
+            <div class="row">Hydraulic radius <strong id="Rh">—</strong> m</div>
+            <div class="row">Capacity headroom <strong id="headroom">—</strong> <span id="hrState" class="status">—</span></div>
+          </div>
+          <p class="note">Uses Manning's equation: <span class="formula">Q = (1/n) A R<sub>h</sub><sup>2/3</sup> S<sup>1/2</sup></span>. Trapezoid area <span class="formula">A = (b + zy)y</span>.</p>
+        </div>
+      </div>
+      <div class="viz card" style="padding:0;">
+        <svg id="stage" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#58a6ff" stop-opacity=".55"/>
+              <stop offset="100%" stop-color="#79c0ff" stop-opacity=".85"/>
+            </linearGradient>
+            <pattern id="brick" x="0" y="0" width="16" height="12" patternUnits="userSpaceOnUse">
+              <rect width="16" height="12" fill="#8b5a2b" fill-opacity=".25"/>
+              <path d="M0,6h16M8,0v6M0,12h16" stroke="#5c3a1e" stroke-width=".6" fill="none"/>
+            </pattern>
+          </defs>
+          <g id="scene"></g>
+        </svg>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--water);"></i>Flowing water</span>
+      <span><i style="background:#f0883e;"></i>Freeboard reserve</span>
+      <span><i style="background:#8b5a2b;"></i>Masonry channel</span>
+    </div>
+  </div>
+  <footer>Built overnight by OpenClaw · 2026-08-09 · Single-file experimental mini-app</footer>
+  <script>
+    const $ = id => document.getElementById(id);
+    const state = {shape:'trap', b:1.2, y:0.9, z:0.67, S:0.0014, n:0.015, free:0.25};
+    const inputs = ['shape','b','y','z','S','n','free'];
+
+    const presets = {
+      roman:{shape:'trap', b:1.2, y:0.9, z:0.67, S:0.0014, n:0.015, free:0.25},
+      steep:{shape:'rect', b:0.8, y:0.5, z:0, S:0.015, n:0.014, free:0.2},
+      wide:{shape:'trap', b:2.5, y:0.7, z:1.5, S:0.0005, n:0.018, free:0.4}
+    };
+
+    function area(shape,b,y,z){
+      if(shape==='rect') return b*y;
+      if(shape==='circ'){
+        const r = b/2;
+        if(y>=r) return Math.PI*r*r/2;
+        const theta = Math.acos((r-y)/r);
+        return r*r*theta - (r-y)*Math.sqrt(2*r*y - y*y);
+      }
+      return (b + z*y)*y;
+    }
+    function perimeter(shape,b,y,z){
+      if(shape==='rect') return b + 2*y;
+      if(shape==='circ'){
+        const r = b/2;
+        if(y>=r) return Math.PI*r + b;
+        const theta = Math.acos((r-y)/r);
+        return 2*r*theta;
+      }
+      return b + 2*y*Math.sqrt(1+z*z);
+    }
+    function topWidth(shape,b,y,z){
+      if(shape==='rect') return b;
+      if(shape==='circ'){
+        const r = b/2;
+        if(y>=r) return 2*r;
+        return 2*Math.sqrt(2*r*y - y*y);
+      }
+      return b + 2*z*y;
+    }
+    function solve(){
+      const {shape,b,y,z,S,n,free} = state;
+      const A = area(shape,b,y,z);
+      const P = perimeter(shape,b,y,z);
+      const Rh = A/P;
+      const V = (1/n) * Math.pow(Rh, 2/3) * Math.sqrt(S);
+      const Q = A*V;
+      const T = topWidth(shape,b,y,z);
+      const D = A/T;
+      const Fr = V/Math.sqrt(9.81*D);
+      const headroom = free;
+      return {A,P,Rh,V,Q,T,D,Fr,headroom};
+    }
+    function fmt(n,d=2){ return Number(n).toFixed(d); }
+
+    function draw(){
+      const svg = $('stage');
+      const g = $('scene');
+      g.innerHTML = '';
+      const {shape,b,y,z,free} = state;
+
+      // Scale channel to fit SVG horizontally, keep aspect reasonable
+      const maxW = 420;
+      const maxH = 260;
+      const totalH = y + free + 0.25;
+      const W = topWidth(shape,b,y,z) + 0.4; // include walls
+      const scaleX = maxW / Math.max(W, 1);
+      const scaleY = maxH / Math.max(totalH, 0.5);
+      const scale = Math.min(scaleX, scaleY);
+      const cx = 320, by = 320;
+      const wallTop = by - (y+free)*scale;
+
+      function x(u){ return cx + u*scale; }
+      function yp(v){ return by - v*scale; }
+
+      // Bed
+      const bedPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+      const tHalf = topWidth(shape,b,y,z)/2;
+      const bHalf = (shape==='rect'? b/2 : shape==='circ'? 0 : b/2);
+      const bankH = (y+free)*scale;
+      if(shape==='rect'){
+        bedPath.setAttribute('d',`M${x(-b/2 - .15)},${yp(y+free)} L${x(-b/2)},${by} L${x(b/2)},${by} L${x(b/2 + .15)},${yp(y+free)} Z`);
+      }else if(shape==='circ'){
+        const r = b/2;
+        const top = yp(y+free);
+        bedPath.setAttribute('d',`M${x(-r)},${top} A${r*scale},${r*scale} 0 0,1 ${x(r)},${top} L${x(r)},${top} Z`);
+      }else{
+        bedPath.setAttribute('d',`M${x(-tHalf - .2)},${yp(y+free)} L${x(-tHalf)},${yp(free)} L${x(-b/2)},${by} L${x(b/2)},${by} L${x(tHalf)},${yp(free)} L${x(tHalf + .2)},${yp(y+free)} Z`);
+      }
+      bedPath.setAttribute('fill','url(#brick)');
+      bedPath.setAttribute('stroke','#8b5a2b');
+      bedPath.setAttribute('stroke-width','2');
+      g.appendChild(bedPath);
+
+      // Water surface line
+      const surface = document.createElementNS('http://www.w3.org/2000/svg','path');
+      const surfY = yp(y);
+      const left = -tHalf, right = tHalf;
+      surface.setAttribute('d',`M${x(left)},${surfY} L${x(right)},${surfY}`);
+      surface.setAttribute('stroke','#58a6ff');
+      surface.setAttribute('stroke-width','2');
+      surface.setAttribute('stroke-dasharray','4 3');
+      g.appendChild(surface);
+
+      // Water fill
+      const water = document.createElementNS('http://www.w3.org/2000/svg','path');
+      let wd;
+      if(shape==='rect'){
+        wd = `M${x(-b/2)},${by} L${x(-b/2)},${surfY} L${x(b/2)},${surfY} L${x(b/2)},${by} Z`;
+      }else if(shape==='circ'){
+        const r = b/2;
+        wd = `M${x(-Math.min(tHalf, Math.sqrt(2*r*y - y*y)))},${surfY} A${r*scale},${r*scale} 0 0,1 ${x(Math.min(tHalf, Math.sqrt(2*r*y - y*y)))},${surfY} L${x(0)},${by} Z`;
+      }else{
+        wd = `M${x(-b/2)},${by} L${x(-tHalf)},${surfY} L${x(tHalf)},${surfY} L${x(b/2)},${by} Z`;
+      }
+      water.setAttribute('d',wd);
+      water.setAttribute('fill','url(#waterGrad)');
+      g.appendChild(water);
+
+      // Flow arrows
+      const arrowCount = 3;
+      for(let i=0;i<arrowCount;i++){
+        const ax = x(-tHalf*0.5 + (tHalf/arrowCount)*i);
+        const ay = surfY + (by-surfY)*0.55;
+        const arrow = document.createElementNS('http://www.w3.org/2000/svg','path');
+        arrow.setAttribute('d',`M${ax-14},${ay} L${ax+8},${ay} M${ax},${ay-5} L${ax+8},${ay} L${ax},${ay+5}`);
+        arrow.setAttribute('stroke','#c9f0ff');
+        arrow.setAttribute('stroke-width','2');
+        arrow.setAttribute('fill','none');
+        g.appendChild(arrow);
+      }
+
+      // Freeboard band
+      const freeband = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      freeband.setAttribute('x', x(-tHalf-0.05));
+      freeband.setAttribute('y', surfY);
+      freeband.setAttribute('width', (tHalf*2+0.1)*scale);
+      freeband.setAttribute('height', free*scale);
+      freeband.setAttribute('fill','#f0883e');
+      freeband.setAttribute('fill-opacity','.22');
+      freeband.setAttribute('stroke','#f0883e');
+      freeband.setAttribute('stroke-dasharray','3 2');
+      freeband.setAttribute('stroke-width','1');
+      g.appendChild(freeband);
+
+      // Slope indicator
+      const slope = document.createElementNS('http://www.w3.org/2000/svg','path');
+      slope.setAttribute('d',`M40,40 L220,40 L210,35 M220,40 L210,45`);
+      slope.setAttribute('stroke','#8b949e');
+      slope.setAttribute('stroke-width','1.5');
+      slope.setAttribute('fill','none');
+      g.appendChild(slope);
+      const slopeText = document.createElementNS('http://www.w3.org/2000/svg','text');
+      slopeText.setAttribute('x', 130); slopeText.setAttribute('y', 30);
+      slopeText.setAttribute('fill','#8b949e'); slopeText.setAttribute('font-size','12');
+      slopeText.setAttribute('text-anchor','middle');
+      slopeText.textContent = `slope ${state.S.toFixed(5)} m/m`;
+      g.appendChild(slopeText);
+
+      // Dimensions
+      function dim(x1,y1,x2,y2,label,offsetX=0,offsetY=0){
+        const line = document.createElementNS('http://www.w3.org/2000/svg','path');
+        line.setAttribute('d',`M${x1},${y1} L${x2},${y2}`);
+        line.setAttribute('stroke','#8b949e'); line.setAttribute('stroke-width','1');
+        line.setAttribute('stroke-dasharray','2 2');
+        g.appendChild(line);
+        const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+        t.setAttribute('x', (x1+x2)/2+offsetX); t.setAttribute('y', (y1+y2)/2+offsetY);
+        t.setAttribute('fill','#c9d1d9'); t.setAttribute('font-size','11');
+        t.setAttribute('text-anchor','middle'); t.textContent = label;
+        g.appendChild(t);
+      }
+      dim(x(-tHalf), by+10, x(tHalf), by+10, `T = ${fmt(topWidth(shape,b,y,z),2)} m`, 0, -6);
+      dim(x(tHalf)+10, by, x(tHalf)+10, surfY, `y = ${fmt(y,2)} m`, 16, 0);
+      dim(x(tHalf)+10, surfY, x(tHalf)+10, yp(y+free), `freeboard`, 22, 0);
+
+      // Flow annotation
+      const qText = document.createElementNS('http://www.w3.org/2000/svg','text');
+      qText.setAttribute('x', 560); qText.setAttribute('y', 50);
+      qText.setAttribute('fill','#79c0ff'); qText.setAttribute('font-size','13');
+      qText.setAttribute('text-anchor','middle');
+      qText.textContent = `${($('Q').textContent || '0')} L/s`;
+      g.appendChild(qText);
+      const vText = document.createElementNS('http://www.w3.org/2000/svg','text');
+      vText.setAttribute('x', 560); vText.setAttribute('y', 68);
+      vText.setAttribute('fill','#8b949e'); vText.setAttribute('font-size','11');
+      vText.setAttribute('text-anchor','middle');
+      vText.textContent = `${($('V').textContent || '0')} m/s`;
+      g.appendChild(vText);
+    }
+
+    function update(){
+      inputs.forEach(k => {
+        const el = $(k);
+        state[k] = el.type==='select-one'? el.value : parseFloat(el.value);
+      });
+      $('bV').textContent = fmt(state.b,2);
+      $('yV').textContent = fmt(state.y,2);
+      $('zV').textContent = fmt(state.z,2);
+      $('SV').textContent = state.S.toFixed(5);
+      $('nV').textContent = state.n.toFixed(3);
+      $('freeV').textContent = fmt(state.free,2);
+
+      const r = solve();
+      $('Q').textContent = fmt(r.Q*1000,1);
+      $('V').textContent = fmt(r.V,2);
+      $('Pw').textContent = fmt(r.P,2);
+      $('Rh').textContent = fmt(r.Rh,3);
+      $('Fr').textContent = fmt(r.Fr,2);
+      const frEl = $('frState');
+      if(r.Fr < 0.9){ frEl.textContent = 'subcritical'; frEl.className='status ok'; }
+      else if(r.Fr > 1.1){ frEl.textContent = 'supercritical'; frEl.className='status warn'; }
+      else{ frEl.textContent = 'near critical'; frEl.className='status bad'; }
+
+      $('headroom').textContent = fmt(r.headroom,2);
+      const hrEl = $('hrState');
+      if(r.headroom >= 0.25 && r.Fr < 1.1){ hrEl.textContent = 'OK'; hrEl.className='status ok'; }
+      else if(r.headroom >= 0.1){ hrEl.textContent = 'tight'; hrEl.className='status warn'; }
+      else { hrEl.textContent = 'low'; hrEl.className='status bad'; }
+
+      draw();
+    }
+
+    inputs.forEach(k => $(k).addEventListener('input', update));
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = presets[btn.dataset.preset];
+        Object.assign(state,p);
+        inputs.forEach(k => {
+          if(k==='shape') $(k).value = state[k];
+          else $(k).value = state[k];
+        });
+        update();
+      });
+    });
+    window.addEventListener('resize', draw);
+    update();
+  </script>
+</body>
+</html>

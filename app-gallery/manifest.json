@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-08",
-    "title": "Pinhole Camera Lab",
-    "slug": "pinhole-camera-lab",
-    "publishedSlug": "2026-08-08-pinhole-camera-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-08-pinhole-camera-lab/"
+    "date": "2026-08-09",
+    "title": "Aqueduct Hydraulics Lab",
+    "slug": "aqueduct-hydraulics-lab",
+    "publishedSlug": "2026-08-09-aqueduct-hydraulics-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-09-aqueduct-hydraulics-lab/"
   },
   "apps": [
+    {
+      "date": "2026-08-09",
+      "title": "Aqueduct Hydraulics Lab",
+      "slug": "aqueduct-hydraulics-lab",
+      "publishedSlug": "2026-08-09-aqueduct-hydraulics-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-09-aqueduct-hydraulics-lab/",
+      "description": "Interactive open-channel aqueduct design lab using Manning's equation."
+    },
     {
       "date": "2026-08-08",
       "title": "Pinhole Camera Lab",
