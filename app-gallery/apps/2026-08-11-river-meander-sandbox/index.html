@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow">
+  <title>River Meander Sandbox</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-2: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-2: #4ade80;
+      --danger: #f87171;
+      --sand: #d4b483;
+      --water: #0ea5e9;
+      --lake: #64748b;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .ai-banner {
+      background: #451a1a;
+      color: #fecaca;
+      font-size: 12px;
+      padding: 8px 12px;
+      text-align: center;
+      line-height: 1.4;
+      border-bottom: 1px solid #7f1d1d;
+    }
+
+    header {
+      padding: 12px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--panel-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+      color: var(--accent);
+      letter-spacing: -0.3px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .top-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    button:hover { background: #475569; }
+    button:active { transform: translateY(1px); }
+    button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+    button.primary:hover { background: #7dd3fc; }
+    button.danger { background: var(--danger); color: #450a0a; border-color: var(--danger); }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+      cursor: crosshair;
+    }
+
+    canvas { display: block; width: 100%; height: 100%; }
+
+    .overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--panel-2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .overlay b { color: var(--text); font-weight: 600; }
+
+    .controls {
+      background: var(--panel);
+      border-top: 1px solid var(--panel-2);
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px 16px;
+      max-height: 35vh;
+      overflow-y: auto;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control label {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .control input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .control .value {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .presets {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding-top: 4px;
+      border-top: 1px solid var(--panel-2);
+    }
+
+    .presets span { font-size: 12px; color: var(--muted); }
+
+    .hint {
+      grid-column: 1 / -1;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 16px; }
+      button { padding: 7px 10px; font-size: 12px; }
+      .controls { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ai-banner">
+    ⚠️ Experimental OpenClaw AI mini-app — untested, not scientifically validated, for curiosity only. Do not rely on it for decisions.
+  </div>
+
+  <header>
+    <div>
+      <h1>River Meander Sandbox</h1>
+      <div class="subtitle">Draw a river. Watch curves grow, banks migrate, oxbow lakes form.</div>
+    </div>
+    <div class="top-controls">
+      <button id="btn-play" class="primary">▶ Run</button>
+      <button id="btn-pause">⏸ Pause</button>
+      <button id="btn-reset">↺ New River</button>
+      <button id="btn-clear">✕ Clear Drawing</button>
+      <button id="btn-oxbow" class="danger">✂ Force Cutoff</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="canvas-wrap">
+      <canvas id="river"></canvas>
+      <div class="overlay">
+        <div><b>Year:</b> <span id="year">0</span></div>
+        <div><b>Length:</b> <span id="length">0</span> km</div>
+        <div><b>Cutoffs:</b> <span id="cutoffs">0</span></div>
+        <div><b>Oxbows:</b> <span id="oxbows">0</span></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <label>Erosion rate <span class="value" id="val-erosion">1.0</span></label>
+        <input type="range" id="erosion" min="0" max="3" step="0.1" value="1.0">
+      </div>
+      <div class="control">
+        <label>Bank cohesion <span class="value" id="val-cohesion">0.5</span></label>
+        <input type="range" id="cohesion" min="0" max="1" step="0.05" value="0.5">
+      </div>
+      <div class="control">
+        <label>Flow speed <span class="value" id="val-flow">1.0</span></label>
+        <input type="range" id="flow" min="0.2" max="2" step="0.1" value="1.0">
+      </div>
+      <div class="control">
+        <label>Random wiggle <span class="value" id="val-noise">0.2</span></label>
+        <input type="range" id="noise" min="0" max="1" step="0.05" value="0.2">
+      </div>
+      <div class="control">
+        <label>Simulation speed <span class="value" id="val-speed">1.0</span></label>
+        <input type="range" id="speed" min="0" max="5" step="0.5" value="1.0">
+      </div>
+      <div class="control">
+        <label>Channel width <span class="value" id="val-width">14</span></label>
+        <input type="range" id="width" min="4" max="40" step="1" value="14">
+      </div>
+
+      <div class="presets">
+        <span>Start shape:</span>
+        <button id="preset-straight">Straight</button>
+        <button id="preset-sine">Gentle wave</button>
+        <button id="preset-curve">Big bend</button>
+        <button id="preset-draw">Draw your own</button>
+      </div>
+
+      <div class="hint">
+        <b>How it works:</b> Water erodes the outside of each bend and deposits sediment on the inside. When two bend necks nearly touch, the river shortcuts and leaves an oxbow lake behind. The model is a toy — real rivers are far more complex.
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('river');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const wrap = document.getElementById('canvas-wrap');
+
+    // UI refs
+    const ui = {
+      year: document.getElementById('year'),
+      length: document.getElementById('length'),
+      cutoffs: document.getElementById('cutoffs'),
+      oxbows: document.getElementById('oxbows'),
+      erosion: document.getElementById('erosion'),
+      cohesion: document.getElementById('cohesion'),
+      flow: document.getElementById('flow'),
+      noise: document.getElementById('noise'),
+      speed: document.getElementById('speed'),
+      width: document.getElementById('width'),
+      play: document.getElementById('btn-play'),
+      pause: document.getElementById('btn-pause'),
+      reset: document.getElementById('btn-reset'),
+      clear: document.getElementById('btn-clear'),
+      oxbow: document.getElementById('btn-oxbow'),
+    };
+
+    const valLabels = {
+      erosion: document.getElementById('val-erosion'),
+      cohesion: document.getElementById('val-cohesion'),
+      flow: document.getElementById('val-flow'),
+      noise: document.getElementById('val-noise'),
+      speed: document.getElementById('val-speed'),
+      width: document.getElementById('val-width'),
+    };
+
+    // State
+    let points = [];
+    let oxbows = [];
+    let isRunning = false;
+    let isDrawing = false;
+    let drawMode = false;
+    let year = 0;
+    let cutoffCount = 0;
+    let lastFrame = 0;
+    let animationId = null;
+
+    const config = {
+      erosion: 1.0,
+      cohesion: 0.5,
+      flow: 1.0,
+      noise: 0.2,
+      speed: 1.0,
+      channelWidth: 14,
+      simDt: 0.05,
+      resampleMin: 8,
+      resampleMax: 18,
+      cutoffThreshold: 16,
+    };
+
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      render();
+    }
+
+    function readSliders() {
+      config.erosion = parseFloat(ui.erosion.value);
+      config.cohesion = parseFloat(ui.cohesion.value);
+      config.flow = parseFloat(ui.flow.value);
+      config.noise = parseFloat(ui.noise.value);
+      config.speed = parseFloat(ui.speed.value);
+      config.channelWidth = parseInt(ui.width.value, 10);
+
+      valLabels.erosion.textContent = config.erosion.toFixed(1);
+      valLabels.cohesion.textContent = config.cohesion.toFixed(2);
+      valLabels.flow.textContent = config.flow.toFixed(1);
+      valLabels.noise.textContent = config.noise.toFixed(2);
+      valLabels.speed.textContent = config.speed.toFixed(1);
+      valLabels.width.textContent = config.channelWidth;
+    }
+
+    Object.values(ui).forEach(el => {
+      if (el && el.tagName === 'INPUT') el.addEventListener('input', readSliders);
+    });
+
+    function makeStraight() {
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      const cy = h * 0.55;
+      points = [];
+      for (let x = 30; x <= w - 30; x += 25) {
+        points.push({ x, y: cy + (Math.random() - 0.5) * 6 });
+      }
+      oxbows = [];
+      year = 0;
+      cutoffCount = 0;
+      updateStats();
+      render();
+    }
+
+    function makeSine() {
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      const cy = h * 0.55;
+      const amp = Math.min(h * 0.18, 90);
+      points = [];
+      for (let x = 30; x <= w - 30; x += 22) {
+        const t = (x - 30) / (w - 60);
+        const y = cy + amp * Math.sin(t * Math.PI * 3);
+        points.push({ x, y });
+      }
+      oxbows = [];
+      year = 0;
+      cutoffCount = 0;
+      updateStats();
+      render();
+    }
+
+    function makeCurve() {
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      const cy = h * 0.55;
+      const r = Math.min(w, h) * 0.35;
+      points = [];
+      for (let a = Math.PI * 0.15; a <= Math.PI * 0.85; a += 0.08) {
+        points.push({
+          x: w * 0.5 - r * Math.cos(a),
+          y: cy + r * Math.sin(a) * 0.6
+        });
+      }
+      oxbows = [];
+      year = 0;
+      cutoffCount = 0;
+      updateStats();
+      render();
+    }
+
+    function startDrawMode() {
+      drawMode = true;
+      points = [];
+      oxbows = [];
+      year = 0;
+      cutoffCount = 0;
+      updateStats();
+      render();
+    }
+
+    function addPoint(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      if (points.length === 0) {
+        points.push({ x, y });
+        return;
+      }
+      const last = points[points.length - 1];
+      const d = Math.hypot(x - last.x, y - last.y);
+      if (d > 12) {
+        // interpolate if gap is large
+        const steps = Math.floor(d / 12);
+        for (let i = 1; i <= steps; i++) {
+          const t = i / (steps + 1);
+          points.push({ x: last.x + (x - last.x) * t, y: last.y + (y - last.y) * t });
+        }
+        points.push({ x, y });
+      }
+    }
+
+    function smoothCurve(pts) {
+      if (pts.length < 3) return pts.map(p => ({ x: p.x, y: p.y }));
+      const out = [];
+      for (let i = 0; i < pts.length; i++) {
+        const prev = pts[Math.max(0, i - 1)];
+        const curr = pts[i];
+        const next = pts[Math.min(pts.length - 1, i + 1)];
+        out.push({
+          x: (prev.x + 2 * curr.x + next.x) / 4,
+          y: (prev.y + 2 * curr.y + next.y) / 4,
+        });
+      }
+      return out;
+    }
+
+    function resample(pts) {
+      if (pts.length < 2) return pts;
+      const total = pts.reduce((sum, p, i) => i === 0 ? 0 : sum + Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y), 0);
+      const target = Math.max(config.resampleMin, Math.min(config.resampleMax, total / 60));
+      const out = [pts[0]];
+      let accum = 0;
+      for (let i = 1; i < pts.length; i++) {
+        const dx = pts[i].x - pts[i - 1].x;
+        const dy = pts[i].y - pts[i - 1].y;
+        const d = Math.hypot(dx, dy);
+        while (accum + d > target) {
+          const t = (target - accum) / d;
+          out.push({ x: pts[i - 1].x + dx * t, y: pts[i - 1].y + dy * t });
+          accum = 0;
+        }
+        accum += d;
+      }
+      out.push(pts[pts.length - 1]);
+      return out;
+    }
+
+    function normalVector(p, prev, next) {
+      const dx = next.x - prev.x;
+      const dy = next.y - prev.y;
+      const len = Math.hypot(dx, dy) || 1;
+      return { x: -dy / len, y: dx / len };
+    }
+
+    function computeCurvatures(pts) {
+      const curv = [];
+      for (let i = 0; i < pts.length; i++) {
+        if (i === 0 || i === pts.length - 1) { curv.push(0); continue; }
+        const p = pts[i];
+        const a = pts[i - 1];
+        const b = pts[i + 1];
+        const v1 = { x: a.x - p.x, y: a.y - p.y };
+        const v2 = { x: b.x - p.x, y: b.y - p.y };
+        const cross = v1.x * v2.y - v1.y * v2.x;
+        const l1 = Math.hypot(v1.x, v1.y) || 1;
+        const l2 = Math.hypot(v2.x, v2.y) || 1;
+        // signed curvature approx
+        curv.push((2 * cross) / (l1 * l2 * (l1 + l2)));
+      }
+      return curv;
+    }
+
+    function migrate() {
+      if (points.length < 5) return;
+      const curv = computeCurvatures(points);
+      const migrated = [];
+
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        if (i === 0 || i === points.length - 1) {
+          migrated.push({ x: p.x, y: p.y });
+          continue;
+        }
+        const prev = points[i - 1];
+        const next = points[i + 1];
+        const n = normalVector(p, prev, next);
+        const c = curv[i];
+        // magnitude: curvature-driven erosion, reduced by cohesion
+        const mag = config.erosion * config.flow * Math.abs(c) * (1 - config.cohesion * 0.6);
+        // direction: erosion on outer bank (sign of curvature)
+        const dir = Math.sign(c) || (Math.random() < 0.5 ? 1 : -1);
+        const noiseAmp = config.noise * 0.5;
+        const dx = n.x * dir * mag + (Math.random() - 0.5) * noiseAmp;
+        const dy = n.y * dir * mag + (Math.random() - 0.5) * noiseAmp;
+        migrated.push({ x: p.x + dx, y: p.y + dy });
+      }
+
+      points = smoothCurve(migrated);
+      points = resample(points);
+    }
+
+    function findCutoff() {
+      // Find pairs of indices whose segments are close but far apart along the curve
+      const n = points.length;
+      if (n < 20) return null;
+      for (let i = 2; i < n - 4; i++) {
+        for (let j = i + 8; j < n - 2; j++) {
+          const d = Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y);
+          if (d < config.cutoffThreshold) {
+            return { i, j };
+          }
+        }
+      }
+      return null;
+    }
+
+    function performCutoff(pair) {
+      const { i, j } = pair;
+      // The loop between i and j becomes an oxbow
+      const loop = points.slice(i, j + 1).map(p => ({ x: p.x, y: p.y }));
+      // Build shortcut from i to j as a short straight segment
+      const a = points[i];
+      const b = points[j];
+      const shortcut = [
+        { x: a.x, y: a.y },
+        { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+        { x: b.x, y: b.y }
+      ];
+      oxbows.push(loop);
+      points = points.slice(0, i + 1).concat(shortcut).concat(points.slice(j));
+      cutoffCount++;
+    }
+
+    function tryCutoff() {
+      const pair = findCutoff();
+      if (pair) performCutoff(pair);
+    }
+
+    function forceCutoff() {
+      // Force the most extreme bend pair
+      const n = points.length;
+      if (n < 20) return;
+      let best = null;
+      let bestD = Infinity;
+      for (let i = 2; i < n - 4; i++) {
+        for (let j = i + 8; j < n - 2; j++) {
+          const d = Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y);
+          if (d < bestD) {
+            bestD = d;
+            best = { i, j };
+          }
+        }
+      }
+      if (best) performCutoff(best);
+      render();
+    }
+
+    function channelPolyline(pts, width, closed = false) {
+      if (pts.length < 2) return [];
+      const left = [];
+      const right = [];
+      for (let i = 0; i < pts.length; i++) {
+        const prev = pts[Math.max(0, i - 1)];
+        const next = pts[Math.min(pts.length - 1, i + 1)];
+        const dx = next.x - prev.x;
+        const dy = next.y - prev.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len * width * 0.5;
+        const ny = dx / len * width * 0.5;
+        left.push({ x: pts[i].x + nx, y: pts[i].y + ny });
+        right.push({ x: pts[i].x - nx, y: pts[i].y - ny });
+      }
+      const poly = left.concat(right.reverse());
+      if (closed) poly.push(poly[0]);
+      return poly;
+    }
+
+    function drawPoly(poly, color, fill = true) {
+      if (poly.length < 3) return;
+      ctx.beginPath();
+      ctx.moveTo(poly[0].x, poly[0].y);
+      for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i].x, poly[i].y);
+      ctx.closePath();
+      if (fill) {
+        ctx.fillStyle = color;
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    function drawCenterline(pts, color = 'rgba(255,255,255,0.25)') {
+      if (pts.length < 2) return;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    function render() {
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      ctx.fillStyle = '#0b1220';
+      ctx.fillRect(0, 0, w, h);
+
+      // Floodplain texture
+      ctx.fillStyle = '#1a253a';
+      for (let y = 0; y < h; y += 80) {
+        ctx.fillRect(0, y, w, 1);
+      }
+
+      // Oxbow lakes
+      oxbows.forEach((ox, idx) => {
+        const poly = channelPolyline(ox, config.channelWidth * 1.2, true);
+        drawPoly(poly, idx % 2 === 0 ? '#334155' : '#3d4f66', true);
+        drawCenterline(ox, 'rgba(148, 163, 184, 0.3)');
+      });
+
+      // Active river
+      const poly = channelPolyline(points, config.channelWidth, true);
+      drawPoly(poly, '#0c4a6e', true);
+      drawPoly(poly, '#0ea5e9', false);
+      drawCenterline(points, 'rgba(56, 189, 248, 0.5)');
+
+      // Flow arrows on bends
+      if (points.length > 4) {
+        ctx.fillStyle = 'rgba(186, 230, 253, 0.55)';
+        for (let i = 2; i < points.length - 2; i += 6) {
+          const p = points[i];
+          const prev = points[i - 1];
+          const next = points[i + 1];
+          const dx = next.x - prev.x;
+          const dy = next.y - prev.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const ux = dx / len;
+          const uy = dy / len;
+          const size = 5;
+          ctx.beginPath();
+          ctx.moveTo(p.x - ux * size + uy * size, p.y - uy * size - ux * size);
+          ctx.lineTo(p.x + ux * size, p.y + uy * size);
+          ctx.lineTo(p.x - ux * size - uy * size, p.y - uy * size + ux * size);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      // Drawing hint
+      if (drawMode && points.length < 3) {
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Drag anywhere to draw a river channel', w / 2, h / 2);
+      }
+    }
+
+    function updateStats() {
+      ui.year.textContent = year.toFixed(1);
+      const total = points.reduce((sum, p, i) => i === 0 ? 0 : sum + Math.hypot(p.x - points[i - 1].x, p.y - points[i - 1].y), 0);
+      ui.length.textContent = (total / 100).toFixed(1);
+      ui.cutoffs.textContent = cutoffCount;
+      ui.oxbows.textContent = oxbows.length;
+    }
+
+    function step(dt) {
+      if (!isRunning || points.length < 5) return;
+      const steps = Math.max(1, Math.round(config.speed));
+      for (let s = 0; s < steps; s++) {
+        migrate();
+        tryCutoff();
+      }
+      year += dt * config.speed * 0.5;
+      updateStats();
+    }
+
+    function loop(ts) {
+      const dt = Math.min((ts - lastFrame) / 1000, 0.1) || 0;
+      lastFrame = ts;
+      if (isRunning) {
+        step(dt);
+        render();
+      }
+      animationId = requestAnimationFrame(loop);
+    }
+
+    // Controls
+    ui.play.addEventListener('click', () => {
+      if (points.length < 5 && !drawMode) makeStraight();
+      isRunning = true;
+      drawMode = false;
+    });
+    ui.pause.addEventListener('click', () => { isRunning = false; });
+    ui.reset.addEventListener('click', () => { isRunning = false; makeStraight(); });
+    ui.clear.addEventListener('click', () => { isRunning = false; startDrawMode(); });
+    ui.oxbow.addEventListener('click', () => { isRunning = false; forceCutoff(); });
+
+    document.getElementById('preset-straight').addEventListener('click', () => { isRunning = false; drawMode = false; makeStraight(); });
+    document.getElementById('preset-sine').addEventListener('click', () => { isRunning = false; drawMode = false; makeSine(); });
+    document.getElementById('preset-curve').addEventListener('click', () => { isRunning = false; drawMode = false; makeCurve(); });
+    document.getElementById('preset-draw').addEventListener('click', () => { isRunning = false; startDrawMode(); });
+
+    // Pointer drawing
+    wrap.addEventListener('pointerdown', e => {
+      if (!drawMode) return;
+      isDrawing = true;
+      points = [];
+      addPoint(e.clientX, e.clientY);
+      render();
+    });
+    wrap.addEventListener('pointermove', e => {
+      if (!drawMode || !isDrawing) return;
+      addPoint(e.clientX, e.clientY);
+      render();
+    });
+    wrap.addEventListener('pointerup', () => {
+      if (!drawMode || !isDrawing) return;
+      isDrawing = false;
+      points = resample(smoothCurve(points));
+      render();
+    });
+
+    window.addEventListener('resize', () => { resize(); render(); });
+
+    // Init
+    readSliders();
+    resize();
+    makeSine();
+    lastFrame = performance.now();
+    animationId = requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
