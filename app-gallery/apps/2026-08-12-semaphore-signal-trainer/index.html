@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Semaphore Signal Trainer</title>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --panel: #161a2d;
+      --panel-2: #1d2238;
+      --text: #e7e9f0;
+      --muted: #8b92aa;
+      --accent: #ff6b4a;
+      --accent-2: #3adfd0;
+      --ok: #4ade80;
+      --bad: #f87171;
+      --warn: #facc15;
+      --flag-red: #e63946;
+      --flag-yellow: #ffbe0b;
+      --track: #2a3050;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .banner {
+      background: #2a1b1b;
+      border-bottom: 1px solid #4a2b2b;
+      color: #ffdad5;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      line-height: 1.35;
+      text-align: center;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 14px 0 18px;
+    }
+    .tab {
+      background: var(--panel-2);
+      border: 1px solid #2e3454;
+      color: var(--text);
+      padding: 9px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .stage {
+      background: var(--panel);
+      border-radius: 18px;
+      border: 1px solid #252b46;
+      padding: 14px;
+      min-height: 420px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .mode-title { font-weight: 700; font-size: 1.05rem; }
+    .scoreboard {
+      display: flex;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .scoreboard span strong { color: var(--text); }
+    .signal-area {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      aspect-ratio: 1 / 1;
+      user-select: none;
+    }
+    .signal-area svg { width: 100%; height: 100%; display: block; }
+    .body { fill: #b0b8d8; }
+    .head { fill: #cfd4e8; }
+    .arm { stroke: #b0b8d8; stroke-width: 14; stroke-linecap: round; }
+    .flag {
+      cursor: grab;
+      touch-action: none;
+    }
+    .flag:active { cursor: grabbing; }
+    .flag-shape { stroke: #fff; stroke-width: 2; }
+    .flag-label {
+      font-size: 14px;
+      fill: #fff;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+    }
+    .angle-ring { fill: none; stroke: var(--track); stroke-width: 2; }
+    .tick { stroke: var(--track); stroke-width: 2; }
+    .tick-label { fill: var(--muted); font-size: 11px; text-anchor: middle; dominant-baseline: middle; }
+    .ghost-arm { stroke: var(--accent-2); stroke-width: 6; stroke-linecap: round; opacity: 0.35; }
+    .ghost-flag { opacity: 0.35; }
+    .panel {
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .card {
+      background: var(--panel-2);
+      border: 1px solid #2e3454;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .card h3 { margin: 0 0 10px; font-size: 1rem; color: var(--accent-2); }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    button {
+      background: #2d3355;
+      border: 1px solid #3c4366;
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button:hover { background: #353c60; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    button.primary:hover { background: #ff5631; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .keypad { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .key {
+      background: #2d3355;
+      border: 1px solid #3c4366;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px 4px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .key:hover { background: #353c60; }
+    .result {
+      margin-top: 10px;
+      min-height: 26px;
+      font-weight: 700;
+    }
+    .result.ok { color: var(--ok); }
+    .result.bad { color: var(--bad); }
+    .result.warn { color: var(--warn); }
+    .current-letter {
+      font-size: 5rem;
+      text-align: center;
+      font-weight: 800;
+      line-height: 1;
+      margin: 6px 0;
+    }
+    .timer-bar {
+      height: 6px;
+      background: var(--track);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .timer-fill { height: 100%; background: var(--accent); width: 100%; transition: width 1s linear; }
+    .compact-hint {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+      gap: 4px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      max-height: 120px;
+      overflow-y: auto;
+      border-top: 1px solid #2e3454;
+      padding-top: 8px;
+    }
+    .compact-hint div { text-align: center; }
+    .compact-hint .hl { color: var(--accent-2); font-weight: 700; }
+    .angle-readout { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.85rem; }
+    @media (max-width: 540px) {
+      .keypad { grid-template-columns: repeat(5, 1fr); }
+      .panel { grid-template-columns: 1fr; }
+      .current-letter { font-size: 3.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app. Untested and not professionally validated. Do not rely on it for real signalling or safety-critical decisions.
+  </div>
+  <div class="wrap">
+    <header>
+      <h1>Semaphore Signal Trainer</h1>
+      <p class="subtitle">Learn the classic ICS flag alphabet by posing arms, decoding letters, and racing the clock.</p>
+    </header>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-mode="free">Free play</button>
+      <button class="tab" data-mode="encode">Encode challenge</button>
+      <button class="tab" data-mode="decode">Decode challenge</button>
+      <button class="tab" data-mode="timed">60s drill</button>
+    </div>
+    <div class="stage">
+      <div class="topbar">
+        <div class="mode-title" id="modeTitle">Free play</div>
+        <div class="scoreboard" id="scoreboard" style="display:none;">
+          <span>Score: <strong id="score">0</strong></span>
+          <span>Accuracy: <strong id="accuracy">—</strong></span>
+          <span id="timerWrap">Time: <strong id="timer">60</strong>s</span>
+        </div>
+      </div>
+      <div class="signal-area" id="signalArea">
+        <svg viewBox="0 0 400 400" id="svg">
+          <circle cx="200" cy="200" r="170" class="angle-ring" />
+          <g id="ticks"></g>
+          <g id="ghosts"></g>
+          <ellipse cx="200" cy="220" rx="42" ry="68" class="body" />
+          <circle cx="200" cy="140" r="34" class="head" />
+          <g id="leftArmGroup" transform="translate(170,180)">
+            <line x1="0" y1="0" x2="0" y2="-130" class="arm" />
+            <g id="leftFlag" class="flag" transform="translate(0,-130)">
+              <path d="M0,0 L28,-14 L28,14 Z" class="flag-shape" fill="var(--flag-red)" />
+              <path d="M0,0 L-28,-14 L-28,14 Z" class="flag-shape" fill="var(--flag-yellow)" />
+              <text y="-34" class="flag-label">L</text>
+            </g>
+          </g>
+          <g id="rightArmGroup" transform="translate(230,180)">
+            <line x1="0" y1="0" x2="0" y2="-130" class="arm" />
+            <g id="rightFlag" class="flag" transform="translate(0,-130)">
+              <path d="M0,0 L28,-14 L28,14 Z" class="flag-shape" fill="var(--flag-yellow)" />
+              <path d="M0,0 L-28,-14 L-28,14 Z" class="flag-shape" fill="var(--flag-red)" />
+              <text y="-34" class="flag-label">R</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="panel">
+        <div class="card">
+          <h3 id="prompt">Current signal</h3>
+          <div class="current-letter" id="currentLetter">—</div>
+          <div class="controls" id="freeControls">
+            <button id="resetPose">Reset</button>
+            <button id="randomPose">Random letter</button>
+            <button id="showHint">Show all letters</button>
+          </div>
+          <div class="controls" id="challengeControls" style="display:none;">
+            <button class="primary" id="submitPose">Submit</button>
+            <button id="skipChallenge">Skip</button>
+            <button id="newChallenge">New letter</button>
+          </div>
+          <div class="controls" id="decodeControls" style="display:none;">
+            <button id="newDecode">New signal</button>
+          </div>
+          <div class="controls" id="timedControls" style="display:none;">
+            <button class="primary" id="startTimed">Start drill</button>
+          </div>
+          <div class="result" id="result"></div>
+          <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+        </div>
+        <div class="card">
+          <h3>How it works</h3>
+          <p style="margin:0 0 10px;color:var(--muted);font-size:0.9rem;line-height:1.4;">
+            Drag a flag to set an arm angle. Each letter is a unique pair of angles. In the standard ICS alphabet, arms point to eight clock-face sectors: up, down, out, high, and low — with some letters using both flags on the same side of the body.
+          </p>
+          <div class="angle-readout">Left: <span id="leftAngle">0°</span> · Right: <span id="rightAngle">0°</span></div>
+        </div>
+        <div class="card" id="keypadCard" style="display:none;">
+          <h3>Letter keypad</h3>
+          <div class="keypad" id="keypad"></div>
+        </div>
+      </div>
+      <div class="card" id="hintCard" style="margin-top:12px;display:none;">
+        <h3>Semaphore alphabet reference</h3>
+        <div class="compact-hint" id="compactHint"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ICS Semaphore alphabet: 8 main angles in 45° steps, measured clockwise from up (0°)
+    // Angles: 0 up, 45 up-right, 90 right, 135 down-right, 180 down,
+    // 225 down-left, 270 left, 315 up-left.
+    // REST is a special pose used for space/numeric shift.
+    const ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
+    const REST = { l: 225, r: 135 }; // both flags down-out (common rest)
+
+    // Canonical alphabet mapping (letter -> {l, r} in degrees)
+    const ALPHABET = {
+      A: { l: 270, r: 0 },   // LH left, RH up
+      B: { l: 270, r: 45 },  // LH left, RH up-right
+      C: { l: 270, r: 90 },  // LH left, RH right
+      D: { l: 270, r: 135 }, // LH left, RH down-right
+      E: { l: 270, r: 180 }, // LH left, RH down
+      F: { l: 270, r: 225 }, // LH left, RH down-left
+      G: { l: 270, r: 315 }, // LH left, RH up-left
+      H: { l: 315, r: 0 },   // LH up-left, RH up
+      I: { l: 315, r: 45 },  // LH up-left, RH up-right
+      J: { l: 180, r: 45 },  // LH down, RH up-right (numeric/alphabetic)
+      K: { l: 315, r: 90 },  // LH up-left, RH right
+      L: { l: 315, r: 135 }, // LH up-left, RH down-right
+      M: { l: 315, r: 180 }, // LH up-left, RH down
+      N: { l: 315, r: 225 }, // LH up-left, RH down-left
+      O: { l: 0, r: 90 },    // LH up, RH right
+      P: { l: 0, r: 135 },   // LH up, RH down-right
+      Q: { l: 0, r: 180 },   // LH up, RH down
+      R: { l: 0, r: 225 },   // LH up, RH down-left
+      S: { l: 0, r: 315 },   // LH up, RH up-left
+      T: { l: 45, r: 90 },   // LH up-right, RH right
+      U: { l: 45, r: 135 },  // LH up-right, RH down-right
+      V: { l: 90, r: 180 },  // LH right, RH down (same as numeric J visually? keep canonical)
+      W: { l: 90, r: 225 },  // LH right, RH down-left
+      X: { l: 90, r: 270 },  // LH right, RH left
+      Y: { l: 45, r: 180 },  // LH up-right, RH down
+      Z: { l: 90, r: 315 },  // LH right, RH up-left
+      '#': { l: 135, r: 225 }, // numeric shift (uncommon)
+    };
+
+    // Reverse lookup string for easy matching
+    const keyOf = (l, r) => `${normalize(l)}:${normalize(r)}`;
+    const LOOKUP = new Map();
+    Object.entries(ALPHABET).forEach(([ch, pose]) => {
+      LOOKUP.set(keyOf(pose.l, pose.r), ch);
+      LOOKUP.set(keyOf(pose.r, pose.l), ch); // mirror acceptable for some letters? keep for robustness but only some are symmetric
+    });
+    // Strict canonical map for scoring
+    const CANONICAL = new Map();
+    Object.entries(ALPHABET).forEach(([ch, pose]) => {
+      CANONICAL.set(keyOf(pose.l, pose.r), ch);
+    });
+
+    const LETTERS = Object.keys(ALPHABET).filter(c => c !== '#');
+
+    function normalize(angle) {
+      let a = ((angle % 360) + 360) % 360;
+      // Snap to nearest canonical angle
+      const snap = ANGLES.reduce((best, v) => Math.abs(v - a) < Math.abs(best - a) ? v : best, 0);
+      return snap;
+    }
+
+    const state = {
+      l: 270,
+      r: 0,
+      mode: 'free',
+      target: null,        // for encode challenge
+      score: 0,
+      attempts: 0,
+      correct: 0,
+      timeLeft: 60,
+      timerId: null,
+      dragging: null,
+    };
+
+    const svg = document.getElementById('svg');
+    const leftGroup = document.getElementById('leftArmGroup');
+    const rightGroup = document.getElementById('rightArmGroup');
+    const leftFlag = document.getElementById('leftFlag');
+    const rightFlag = document.getElementById('rightFlag');
+    const ticksG = document.getElementById('ticks');
+    const ghostsG = document.getElementById('ghosts');
+    const leftAngleEl = document.getElementById('leftAngle');
+    const rightAngleEl = document.getElementById('rightAngle');
+    const currentLetterEl = document.getElementById('currentLetter');
+    const resultEl = document.getElementById('result');
+    const modeTitle = document.getElementById('modeTitle');
+    const scoreboard = document.getElementById('scoreboard');
+    const timerFill = document.getElementById('timerFill');
+    const keypad = document.getElementById('keypad');
+    const keypadCard = document.getElementById('keypadCard');
+    const hintCard = document.getElementById('hintCard');
+
+    // Draw tick marks
+    ANGLES.forEach((a) => {
+      const rad = (a - 90) * Math.PI / 180;
+      const x1 = 200 + 155 * Math.cos(rad);
+      const y1 = 200 + 155 * Math.sin(rad);
+      const x2 = 200 + 170 * Math.cos(rad);
+      const y2 = 200 + 170 * Math.sin(rad);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1);
+      line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+      line.setAttribute('class', 'tick');
+      ticksG.appendChild(line);
+      const lx = 200 + 150 * Math.cos(rad);
+      const ly = 200 + 150 * Math.sin(rad);
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', lx);
+      text.setAttribute('y', ly);
+      text.setAttribute('class', 'tick-label');
+      text.textContent = String(Math.round(a / 45));
+      ticksG.appendChild(text);
+    });
+
+    // Build keypad
+    LETTERS.forEach(ch => {
+      const b = document.createElement('button');
+      b.className = 'key';
+      b.textContent = ch;
+      b.addEventListener('click', () => decodeGuess(ch));
+      keypad.appendChild(b);
+    });
+
+    function render() {
+      leftGroup.setAttribute('transform', `translate(170,180) rotate(${state.l})`);
+      rightGroup.setAttribute('transform', `translate(230,180) rotate(${state.r})`);
+      leftFlag.setAttribute('transform', `translate(0,-130)`);
+      rightFlag.setAttribute('transform', `translate(0,-130)`);
+      leftAngleEl.textContent = `${state.l}°`;
+      rightAngleEl.textContent = `${state.r}°`;
+      currentLetterEl.textContent = currentChar();
+      renderGhosts();
+    }
+
+    function renderGhosts() {
+      ghostsG.innerHTML = '';
+      if (!state.target) return;
+      const targetPose = ALPHABET[state.target];
+      if (!targetPose) return;
+      drawGhost(170, 180, targetPose.l, 'left');
+      drawGhost(230, 180, targetPose.r, 'right');
+    }
+
+    function drawGhost(cx, cy, angle, side) {
+      const rad = (angle - 90) * Math.PI / 180;
+      const x2 = cx + 130 * Math.cos(rad);
+      const y2 = cy + 130 * Math.sin(rad);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', cx);
+      line.setAttribute('y1', cy);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+      line.setAttribute('class', 'ghost-arm');
+      ghostsG.appendChild(line);
+      const flagG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      flagG.setAttribute('transform', `translate(${x2},${y2}) rotate(${angle})`);
+      flagG.setAttribute('class', 'ghost-flag');
+      const p1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p1.setAttribute('d', 'M0,0 L28,-14 L28,14 Z');
+      p1.setAttribute('fill', 'var(--flag-red)');
+      flagG.appendChild(p1);
+      const p2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p2.setAttribute('d', 'M0,0 L-28,-14 L-28,14 Z');
+      p2.setAttribute('fill', 'var(--flag-yellow)');
+      flagG.appendChild(p2);
+      ghostsG.appendChild(flagG);
+    }
+
+    function currentChar() {
+      const k = keyOf(state.l, state.r);
+      return CANONICAL.get(k) || '?';
+    }
+
+    function poseMatches(targetCh) {
+      const pose = ALPHABET[targetCh];
+      if (!pose) return false;
+      return state.l === pose.l && state.r === pose.r;
+    }
+
+    function setPose(l, r, animate = false) {
+      state.l = normalize(l);
+      state.r = normalize(r);
+      render();
+    }
+
+    function angleFromEvent(flag, ev) {
+      const pt = svg.createSVGPoint();
+      const touch = ev.touches && ev.touches[0];
+      pt.x = touch ? touch.clientX : ev.clientX;
+      pt.y = touch ? touch.clientY : ev.clientY;
+      const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+      let cx = flag === 'left' ? 170 : 230;
+      let cy = 180;
+      let dx = loc.x - cx;
+      let dy = loc.y - cy;
+      let a = Math.atan2(dy, dx) * 180 / Math.PI;
+      a = (a + 90 + 360) % 360;
+      return normalize(a);
+    }
+
+    function startDrag(flag, ev) {
+      ev.preventDefault();
+      state.dragging = flag;
+      updateFromDrag(flag, ev);
+    }
+
+    function onMove(ev) {
+      if (!state.dragging) return;
+      ev.preventDefault();
+      updateFromDrag(state.dragging, ev);
+    }
+
+    function endDrag() {
+      state.dragging = null;
+    }
+
+    function updateFromDrag(flag, ev) {
+      const a = angleFromEvent(flag, ev);
+      if (flag === 'left') state.l = a;
+      else state.r = a;
+      render();
+      if (state.mode === 'decode') {
+        // Live feedback only if correct
+        if (currentChar() !== '?') currentLetterEl.textContent = currentChar();
+      }
+    }
+
+    leftFlag.addEventListener('mousedown', e => startDrag('left', e));
+    leftFlag.addEventListener('touchstart', e => startDrag('left', e), { passive: false });
+    rightFlag.addEventListener('mousedown', e => startDrag('right', e));
+    rightFlag.addEventListener('touchstart', e => startDrag('right', e), { passive: false });
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('touchend', endDrag);
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    });
+
+    function setMode(mode) {
+      state.mode = mode;
+      state.target = null;
+      stopTimer();
+      document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+      document.getElementById('freeControls').style.display = mode === 'free' ? '' : 'none';
+      document.getElementById('challengeControls').style.display = mode === 'encode' ? '' : 'none';
+      document.getElementById('decodeControls').style.display = mode === 'decode' ? '' : 'none';
+      document.getElementById('timedControls').style.display = mode === 'timed' ? '' : 'none';
+      keypadCard.style.display = mode === 'decode' || mode === 'timed' ? '' : 'none';
+      scoreboard.style.display = mode === 'timed' ? '' : 'none';
+      hintCard.style.display = 'none';
+      resultEl.textContent = '';
+      resultEl.className = 'result';
+      timerFill.style.width = '100%';
+      timerFill.style.background = 'var(--accent)';
+
+      if (mode === 'free') {
+        modeTitle.textContent = 'Free play';
+        document.getElementById('prompt').textContent = 'Current signal';
+        setPose(270, 0);
+      } else if (mode === 'encode') {
+        modeTitle.textContent = 'Encode challenge';
+        document.getElementById('prompt').textContent = 'Signal this letter with your flags';
+        nextEncode();
+      } else if (mode === 'decode') {
+        modeTitle.textContent = 'Decode challenge';
+        document.getElementById('prompt').textContent = 'What letter is shown?';
+        nextDecode();
+      } else if (mode === 'timed') {
+        modeTitle.textContent = '60-second drill';
+        document.getElementById('prompt').textContent = 'Hit Start, then encode or decode as fast as you can';
+        document.getElementById('timedControls').style.display = '';
+        keypadCard.style.display = 'none';
+        setPose(270, 0);
+        state.score = 0;
+        state.attempts = 0;
+        state.correct = 0;
+        updateScoreboard();
+      }
+      render();
+    }
+
+    function nextEncode() {
+      state.target = randomLetter();
+      currentLetterEl.textContent = state.target;
+      resultEl.textContent = '';
+      resultEl.className = 'result';
+      render();
+    }
+
+    function nextDecode() {
+      state.target = randomLetter();
+      const pose = ALPHABET[state.target];
+      setPose(pose.l, pose.r);
+      currentLetterEl.textContent = '?';
+      resultEl.textContent = '';
+      resultEl.className = 'result';
+    }
+
+    function randomLetter() {
+      return LETTERS[Math.floor(Math.random() * LETTERS.length)];
+    }
+
+    document.getElementById('resetPose').addEventListener('click', () => setPose(270, 0));
+    document.getElementById('randomPose').addEventListener('click', () => {
+      const ch = randomLetter();
+      const pose = ALPHABET[ch];
+      setPose(pose.l, pose.r);
+    });
+    document.getElementById('showHint').addEventListener('click', () => {
+      hintCard.style.display = hintCard.style.display === 'none' ? '' : 'none';
+      buildHint();
+    });
+    document.getElementById('submitPose').addEventListener('click', checkEncode);
+    document.getElementById('skipChallenge').addEventListener('click', () => {
+      resultEl.textContent = `It was ${state.target}`;
+      resultEl.className = 'result warn';
+      nextEncode();
+    });
+    document.getElementById('newChallenge').addEventListener('click', nextEncode);
+    document.getElementById('newDecode').addEventListener('click', nextDecode);
+    document.getElementById('startTimed').addEventListener('click', startTimed);
+
+    function checkEncode() {
+      state.attempts++;
+      if (poseMatches(state.target)) {
+        state.correct++;
+        resultEl.textContent = 'Correct!';
+        resultEl.className = 'result ok';
+        setTimeout(nextEncode, 700);
+      } else {
+        resultEl.textContent = 'Not quite — keep adjusting the arms';
+        resultEl.className = 'result bad';
+      }
+      updateScoreboard();
+    }
+
+    function decodeGuess(ch) {
+      if (state.mode !== 'decode' && state.mode !== 'timed') return;
+      state.attempts++;
+      if (state.target === ch) {
+        state.correct++;
+        resultEl.textContent = 'Correct!';
+        resultEl.className = 'result ok';
+        if (state.mode === 'timed') {
+          state.score += 10 + Math.max(0, state.timeLeft - 30);
+          updateScoreboard();
+          setTimeout(nextTimedRound, 600);
+        } else {
+          updateScoreboard();
+          setTimeout(nextDecode, 700);
+        }
+      } else {
+        resultEl.textContent = `Not ${ch}. Try again.`;
+        resultEl.className = 'result bad';
+        updateScoreboard();
+      }
+    }
+
+    function startTimed() {
+      state.score = 0;
+      state.attempts = 0;
+      state.correct = 0;
+      state.timeLeft = 60;
+      document.getElementById('timedControls').style.display = 'none';
+      scoreboard.style.display = '';
+      keypadCard.style.display = '';
+      updateScoreboard();
+      nextTimedRound();
+      state.timerId = setInterval(() => {
+        state.timeLeft--;
+        updateScoreboard();
+        if (state.timeLeft <= 0) endTimed();
+      }, 1000);
+    }
+
+    function endTimed() {
+      stopTimer();
+      timerFill.style.width = '0%';
+      timerFill.style.background = 'var(--bad)';
+      document.getElementById('timedControls').style.display = '';
+      keypadCard.style.display = 'none';
+      resultEl.textContent = `Drill over! Score: ${state.score} · ${state.correct}/${state.attempts} correct`;
+      resultEl.className = 'result ok';
+    }
+
+    function stopTimer() {
+      if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
+    }
+
+    function nextTimedRound() {
+      // randomly encode or decode
+      const isEncode = Math.random() < 0.5;
+      state.target = randomLetter();
+      if (isEncode) {
+        state.mode = 'encode';
+        modeTitle.textContent = 'Timed drill · Encode';
+        document.getElementById('prompt').textContent = 'Signal this letter';
+        currentLetterEl.textContent = state.target;
+        document.getElementById('challengeControls').style.display = '';
+        document.getElementById('timedControls').style.display = 'none';
+        document.getElementById('decodeControls').style.display = 'none';
+        document.getElementById('freeControls').style.display = 'none';
+        keypadCard.style.display = 'none';
+        setPose(270, 0);
+      } else {
+        state.mode = 'decode';
+        modeTitle.textContent = 'Timed drill · Decode';
+        document.getElementById('prompt').textContent = 'What letter is shown?';
+        const pose = ALPHABET[state.target];
+        setPose(pose.l, pose.r);
+        currentLetterEl.textContent = '?';
+        document.getElementById('challengeControls').style.display = 'none';
+        document.getElementById('timedControls').style.display = 'none';
+        document.getElementById('decodeControls').style.display = 'none';
+        document.getElementById('freeControls').style.display = 'none';
+        keypadCard.style.display = '';
+      }
+      resultEl.textContent = '';
+      resultEl.className = 'result';
+    }
+
+    // In timed mode, submit pose proceeds if encode round
+    const oldSubmit = document.getElementById('submitPose');
+    oldSubmit.onclick = () => {
+      if (state.mode === 'encode') {
+        state.attempts++;
+        if (poseMatches(state.target)) {
+          state.correct++;
+          state.score += 10 + Math.max(0, state.timeLeft - 30);
+          resultEl.textContent = 'Correct!';
+          resultEl.className = 'result ok';
+          updateScoreboard();
+          setTimeout(nextTimedRound, 600);
+        } else {
+          resultEl.textContent = 'Not quite — keep adjusting';
+          resultEl.className = 'result bad';
+          updateScoreboard();
+        }
+      }
+    };
+
+    function updateScoreboard() {
+      document.getElementById('score').textContent = state.score;
+      const acc = state.attempts ? Math.round(state.correct / state.attempts * 100) : 0;
+      document.getElementById('accuracy').textContent = `${acc}%`;
+      document.getElementById('timer').textContent = state.timeLeft;
+      if (state.mode === 'timed') {
+        const pct = Math.max(0, state.timeLeft / 60 * 100);
+        timerFill.style.width = `${pct}%`;
+        if (state.timeLeft <= 10) timerFill.style.background = 'var(--bad)';
+        else if (state.timeLeft <= 30) timerFill.style.background = 'var(--warn)';
+        else timerFill.style.background = 'var(--ok)';
+      }
+    }
+
+    function buildHint() {
+      const container = document.getElementById('compactHint');
+      if (container.children.length) return;
+      LETTERS.forEach(ch => {
+        const pose = ALPHABET[ch];
+        const div = document.createElement('div');
+        div.innerHTML = `<span class="hl">${ch}</span><br>L${pose.l}° R${pose.r}°`;
+        container.appendChild(div);
+      });
+    }
+
+    // Keyboard shortcuts: arrow keys nudge arms in free/encode modes
+    window.addEventListener('keydown', (e) => {
+      if (state.mode !== 'free' && state.mode !== 'encode') return;
+      const step = 45;
+      if (e.key === 'ArrowLeft') { state.l = normalize(state.l - step); render(); }
+      if (e.key === 'ArrowRight') { state.l = normalize(state.l + step); render(); }
+      if (e.key === 'ArrowUp') { state.r = normalize(state.r - step); render(); }
+      if (e.key === 'ArrowDown') { state.r = normalize(state.r + step); render(); }
+    });
+
+    setMode('free');
+  </script>
+</body>
+</html>
