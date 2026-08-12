@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-12",
-    "title": "Semaphore Signal Trainer",
-    "slug": "semaphore-signal-trainer",
-    "publishedSlug": "2026-08-12-semaphore-signal-trainer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-12-semaphore-signal-trainer/"
+    "date": "2026-08-13",
+    "title": "Celestial Sextant Trainer",
+    "slug": "celestial-sextant-trainer",
+    "publishedSlug": "2026-08-13-celestial-sextant-trainer",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-13-celestial-sextant-trainer/"
   },
   "apps": [
+    {
+      "date": "2026-08-13",
+      "title": "Celestial Sextant Trainer",
+      "slug": "celestial-sextant-trainer",
+      "publishedSlug": "2026-08-13-celestial-sextant-trainer",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-13-celestial-sextant-trainer/",
+      "description": "Practice a classic noon celestial sight with a virtual sextant, apply dip, refraction, and index corrections, then reduce it to latitude."
+    },
     {
       "date": "2026-08-12",
       "title": "Semaphore Signal Trainer",

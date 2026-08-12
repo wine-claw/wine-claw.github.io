@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Celestial Sextant Trainer</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #131a2e;
+      --panel-2: #1c2542;
+      --text: #e6edff;
+      --muted: #9fb1d6;
+      --accent: #f7c76c;
+      --accent-2: #7dd3fc;
+      --ok: #6ee7b7;
+      --warn: #fca5a5;
+      --border: #2a3b63;
+      --sea: #0d1b2a;
+      --sky-top: #050814;
+      --sky-mid: #152047;
+      --sky-low: #2d3b6e;
+      --sun: #ffe4a1;
+      --sun-core: #fff7e6;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    .banner {
+      background: #2a1b1b;
+      border-bottom: 1px solid #4a2a2a;
+      color: #f5d0d0;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 0.8rem 0 0.4rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    @media (min-width: 820px) {
+      .app { grid-template-columns: 1.25fr 0.75fr; }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.85rem;
+    }
+
+    .scene-card { padding: 0; overflow: hidden; position: relative; }
+
+    .scene-labels {
+      position: absolute;
+      top: 0.6rem;
+      left: 0.7rem;
+      right: 0.7rem;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      font-size: 0.75rem;
+      color: var(--muted);
+      z-index: 5;
+    }
+
+    #scene {
+      display: block;
+      width: 100%;
+      height: 340px;
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-low) 100%);
+      touch-action: none;
+      cursor: ns-resize;
+    }
+
+    @media (min-width: 820px) {
+      #scene { height: 420px; }
+    }
+
+    .sextant-overlay {
+      position: absolute;
+      bottom: 0.6rem;
+      right: 0.7rem;
+      background: rgba(11, 16, 32, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.5rem 0.65rem;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.82rem;
+      color: var(--text);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .sextant-overlay .value { color: var(--accent); font-weight: 700; }
+
+    .controls h2 {
+      margin: 0 0 0.7rem;
+      font-size: 1.05rem;
+      color: var(--accent-2);
+    }
+
+    .field {
+      margin-bottom: 0.85rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .field input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .field-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .field-row input[type="number"] {
+      width: 80px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .field select {
+      width: 100%;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.4rem 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0.8rem 0;
+    }
+
+    button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.55rem 0.85rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.05s ease, background 0.15s ease;
+    }
+
+    button:hover { background: #23305a; }
+    button:active { transform: translateY(1px); }
+
+    button.primary {
+      background: var(--accent);
+      color: #1a1200;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    button.primary:hover { background: #ffe49a; }
+
+    .readout {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem;
+      font-size: 0.85rem;
+      margin-top: 0.6rem;
+    }
+
+    .readout .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.2rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .readout .row:last-child { border-bottom: none; }
+    .readout .num { font-variant-numeric: tabular-nums; color: var(--accent); }
+
+    .result-box {
+      margin-top: 0.7rem;
+      padding: 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.15);
+    }
+
+    .result-box.good { border-color: rgba(110, 231, 183, 0.5); background: rgba(110, 231, 183, 0.08); }
+    .result-box.warn { border-color: rgba(252, 165, 165, 0.5); background: rgba(252, 165, 165, 0.08); }
+
+    .result-title {
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+
+    .help {
+      margin-top: 0.85rem;
+      padding: 0.75rem;
+      background: rgba(0,0,0,0.15);
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .help ul { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+    .help li { margin-bottom: 0.2rem; }
+
+    footer {
+      text-align: center;
+      padding: 1rem 0 1.5rem;
+      font-size: 0.75rem;
+      color: #5c6b8a;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .mode-tabs button {
+      flex: 1;
+      font-size: 0.8rem;
+      padding: 0.45rem 0.3rem;
+    }
+
+    .mode-tabs button.active {
+      background: var(--accent-2);
+      color: #0b1020;
+      border-color: var(--accent-2);
+      font-weight: 700;
+    }
+
+    .hidden { display: none; }
+
+    .challenge-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+
+    .score-pill {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.78rem;
+      color: var(--text);
+    }
+
+    .ai-note {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #7a8bb0;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for navigation or decisions.
+  </div>
+
+  <div class="wrap">
+    <header>
+      <h1>🌟 Celestial Sextant Trainer</h1>
+      <p>Practice taking a noon sight with a virtual sextant, then reduce it to a latitude line.</p>
+    </header>
+
+    <main class="app">
+      <section class="card scene-card">
+        <div class="scene-labels">
+          <span>Drag up/down to swing the sextant arm</span>
+          <span id="zenith-label">Zenith distance: —</span>
+        </div>
+        <canvas id="scene"></canvas>
+        <div class="sextant-overlay">
+          Sextant reads <span class="value" id="sextant-readout">0° 00.0′</span>
+        </div>
+      </section>
+
+      <section class="card controls">
+        <div class="mode-tabs">
+          <button id="mode-free" class="active">Free Play</button>
+          <button id="mode-challenge">Challenge</button>
+        </div>
+
+        <div id="free-panel">
+          <div class="field">
+            <label for="lat-slider">Observer latitude (°N)</label>
+            <div class="field-row">
+              <input id="lat-slider" type="range" min="0" max="70" step="0.1" value="35" />
+              <input id="lat-num" type="number" min="0" max="70" step="0.1" value="35" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="eye-slider">Eye height above sea (m)</label>
+            <div class="field-row">
+              <input id="eye-slider" type="range" min="1" max="25" step="0.5" value="4" />
+              <input id="eye-num" type="number" min="1" max="25" step="0.5" value="4" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="decl-slider">Sun declination today (°)</label>
+            <div class="field-row">
+              <input id="decl-slider" type="range" min="-23.45" max="23.45" step="0.01" value="14.5" />
+              <input id="decl-num" type="number" min="-23.45" max="23.45" step="0.01" value="14.5" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="index-slider">Index error (′, positive off the arc)</label>
+            <div class="field-row">
+              <input id="index-slider" type="range" min="-5" max="5" step="0.1" value="0" />
+              <input id="index-num" type="number" min="-5" max="5" step="0.1" value="0" />
+            </div>
+          </div>
+
+          <div class="buttons">
+            <button id="btn-calc" class="primary">Reduce sight → latitude</button>
+            <button id="btn-reset-free">Reset arm</button>
+          </div>
+
+          <div class="readout">
+            <div class="row"><span>Sextant altitude Hs</span><span class="num" id="hs-out">—</span></div>
+            <div class="row"><span>Dip correction</span><span class="num" id="dip-out">—</span></div>
+            <div class="row"><span>Refraction correction</span><span class="num" id="ref-out">—</span></div>
+            <div class="row"><span>Observed altitude Ho</span><span class="num" id="ho-out">—</span></div>
+            <div class="row"><span>Zenith distance</span><span class="num" id="zd-out">—</span></div>
+          </div>
+
+          <div id="free-result" class="result-box hidden">
+            <div class="result-title">Reduced latitude</div>
+            <div id="free-result-text">—</div>
+          </div>
+        </div>
+
+        <div id="challenge-panel" class="hidden">
+          <div class="challenge-bar">
+            <span id="challenge-target">Target: find the noon altitude</span>
+            <span class="score-pill" id="score">Score: 0 / 0</span>
+          </div>
+
+          <div class="readout">
+            <div class="row"><span>Observer latitude</span><span class="num" id="chal-lat">??° N</span></div>
+            <div class="row"><span>Eye height</span><span class="num" id="chal-eye">? m</span></div>
+            <div class="row"><span>Sun declination</span><span class="num" id="chal-decl">??°</span></div>
+            <div class="row"><span>Index error</span><span class="num" id="chal-idx">0.0′</span></div>
+          </div>
+
+          <div class="buttons">
+            <button id="btn-check" class="primary">Check my sight</button>
+            <button id="btn-new">New challenge</button>
+          </div>
+
+          <div id="chal-result" class="result-box hidden">
+            <div class="result-title" id="chal-title">Result</div>
+            <div id="chal-text">—</div>
+          </div>
+        </div>
+
+        <div class="help">
+          <strong>How to use</strong>
+          <ul>
+            <li>Drag the sky (or use the slider) to bring the sun’s lower limb down to the horizon.</li>
+            <li>The sextant reads the angle between the two images.</li>
+            <li>Press <strong>Reduce sight</strong> to apply dip, refraction, and index error, then compute latitude from the zenith distance.</li>
+            <li>In Challenge mode the hidden latitude is revealed only after you check your measurement.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <p class="ai-note">Built overnight by OpenClaw · Not for real navigation</p>
+  </div>
+
+  <footer>
+    Celestial Sextant Trainer · 2026-08-13
+  </footer>
+
+  <script>
+    // Constants & helpers
+    const D2R = Math.PI / 180;
+    const R2D = 180 / Math.PI;
+    const canvas = document.getElementById('scene');
+    const ctx = canvas.getContext('2d');
+
+    function degToDms(val) {
+      const a = Math.abs(val);
+      const d = Math.floor(a);
+      const m = (a - d) * 60;
+      const sign = val < 0 ? '-' : '';
+      return `${sign}${d}° ${m.toFixed(1)}′`;
+    }
+
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+    // State
+    let state = {
+      mode: 'free',
+      latitude: 35,
+      eyeHeight: 4,
+      declination: 14.5,
+      indexErrorArcmin: 0, // positive = off the arc (subtract from Hs)
+      sextantAngle: 45,      // degrees from horizon to lower limb as seen in sextant
+      chal: null,
+      score: { correct: 0, total: 0 }
+    };
+
+    // Geometry derived from inputs
+    function trueAltitude() {
+      // At local apparent noon, altitude of sun centre = 90 - |lat - decl|
+      // (both positive north). We simulate lower limb, so add semidiameter ~ 0.27°.
+      const sd = 0.265;
+      const lat = state.latitude;
+      const dec = state.declination;
+      const centreAlt = 90 - Math.abs(lat - dec);
+      const lowerLimbAlt = centreAlt + sd;
+      return lowerLimbAlt;
+    }
+
+    function correctedAltitude() {
+      // Hs -> Ha -> Ho. Hs is sextant reading. Index error off the arc: subtract IE.
+      const Hs = state.sextantAngle;
+      const IE = state.indexErrorArcmin / 60; // degrees; sign convention: positive off arc -> Ho = Hs - IE
+      // Actually off-the-arc means the sextant reads too high, so subtract IE.
+      const Ha = Hs - IE;
+      // Dip (') ~ 1.76 * sqrt(eyeHeight(m))
+      const dipArcmin = 1.76 * Math.sqrt(state.eyeHeight);
+      const dipDeg = dipArcmin / 60;
+      // Refraction: approximate for altitudes above ~5°: R(') ~ 0.97 / tan(alt in radians)
+      // Use Ha for apparent altitude before refraction; refraction is subtractive.
+      const refArcmin = Ha > 2 ? 0.97 / Math.tan(Ha * D2R) : 5;
+      const refDeg = refArcmin / 60;
+      const Ho = Ha - dipDeg - refDeg;
+      return { Hs, Ha, Ho, dipArcmin, refArcmin };
+    }
+
+    function derivedLatitude() {
+      const { Ho } = correctedAltitude();
+      const zd = 90 - Ho;
+      const lat = 90 - zd - state.declination; // decl same sign convention
+      // This works because lat = zd + decl when sun north of observer; but if decl > lat, sun is to north.
+      // General formula: lat = 90 - Ho + decl  (for north lat, north decl)
+      // Actually Ho = 90 - lat + decl => lat = 90 - Ho + decl.
+      return { lat: 90 - Ho + state.declination, zd };
+    }
+
+    // Canvas drawing
+    let width, height;
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      width = canvas.width;
+      height = canvas.height;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      width /= dpr;
+      height /= dpr;
+      draw();
+    }
+
+    function yForAltitude(alt) {
+      // alt 0 at horizon line ~ 72% down; alt 90 at top padding
+      const horizonY = height * 0.72;
+      const zenithY = height * 0.12;
+      return horizonY - (alt / 90) * (horizonY - zenithY);
+    }
+
+    function draw() {
+      // Background sky
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, '#050814');
+      grad.addColorStop(0.55, '#152047');
+      grad.addColorStop(1, '#2d3b6e');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      // Stars
+      ctx.save();
+      ctx.globalAlpha = 0.75;
+      for (let i = 0; i < 70; i++) {
+        const sx = ((i * 137.5) % width);
+        const sy = ((i * 73.3) % (height * 0.65));
+        const r = 0.6 + (i % 3) * 0.4;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // Sea
+      const horizonY = yForAltitude(0);
+      ctx.fillStyle = '#0d1b2a';
+      ctx.fillRect(0, horizonY, width, height - horizonY);
+      ctx.strokeStyle = 'rgba(125, 211, 252, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, horizonY);
+      ctx.lineTo(width, horizonY);
+      ctx.stroke();
+
+      // Sun position
+      const sunAlt = trueAltitude();
+      const sunY = yForAltitude(sunAlt);
+      const sunX = width * 0.55;
+
+      // Sun glow
+      const glow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 55);
+      glow.addColorStop(0, 'rgba(255, 228, 161, 0.55)');
+      glow.addColorStop(0.6, 'rgba(255, 180, 80, 0.18)');
+      glow.addColorStop(1, 'rgba(255, 180, 80, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, 55, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sun disc
+      ctx.fillStyle = '#fff7e6';
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffe4a1';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Reflected sun on water
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = '#ffe4a1';
+      const reflW = 40;
+      for (let i = 0; i < 6; i++) {
+        const y = horizonY + 8 + i * 10;
+        const w = reflW * (1 - i / 8);
+        ctx.fillRect(sunX - w / 2, y, w, 3);
+      }
+      ctx.restore();
+
+      // Telescope / sextant view framing lines
+      ctx.strokeStyle = 'rgba(230, 237, 255, 0.18)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, Math.min(width, height) * 0.46, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Crosshair at centre (horizon reference)
+      ctx.strokeStyle = 'rgba(230, 237, 255, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(width / 2 - 14, height / 2);
+      ctx.lineTo(width / 2 + 14, height / 2);
+      ctx.moveTo(width / 2, height / 2 - 14);
+      ctx.lineTo(width / 2, height / 2 + 14);
+      ctx.stroke();
+
+      // Horizon line seen through sextant mirror
+      const measuredY = yForAltitude(state.sextantAngle);
+      ctx.strokeStyle = 'rgba(110, 231, 183, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(width * 0.15, measuredY);
+      ctx.lineTo(width * 0.85, measuredY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Label the measured horizon line
+      ctx.fillStyle = '#6ee7b7';
+      ctx.font = '12px sans-serif';
+      ctx.fillText(`measured horizon ${state.sextantAngle.toFixed(1)}°`, width * 0.62, measuredY - 6);
+
+      // Observer / ship hint
+      ctx.fillStyle = 'rgba(230, 237, 255, 0.55)';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('Observer at sea', width * 0.04, height - 12);
+
+      updateReadouts();
+    }
+
+    function updateReadouts() {
+      document.getElementById('sextant-readout').textContent = degToDms(state.sextantAngle);
+      const zdLabel = Math.max(0, 90 - state.sextantAngle).toFixed(1);
+      document.getElementById('zenith-label').textContent = `Zenith distance: ${zdLabel}°`;
+    }
+
+    function updateUIFromState() {
+      document.getElementById('lat-slider').value = state.latitude;
+      document.getElementById('lat-num').value = state.latitude;
+      document.getElementById('eye-slider').value = state.eyeHeight;
+      document.getElementById('eye-num').value = state.eyeHeight;
+      document.getElementById('decl-slider').value = state.declination;
+      document.getElementById('decl-num').value = state.declination;
+      document.getElementById('index-slider').value = state.indexErrorArcmin;
+      document.getElementById('index-num').value = state.indexErrorArcmin;
+      draw();
+    }
+
+    // Input bindings
+    function bindSliderPair(sliderId, numId, key) {
+      const s = document.getElementById(sliderId);
+      const n = document.getElementById(numId);
+      s.addEventListener('input', () => { state[key] = parseFloat(s.value); n.value = s.value; draw(); });
+      n.addEventListener('input', () => { state[key] = parseFloat(n.value); s.value = n.value; draw(); });
+    }
+
+    bindSliderPair('lat-slider', 'lat-num', 'latitude');
+    bindSliderPair('eye-slider', 'eye-num', 'eyeHeight');
+    bindSliderPair('decl-slider', 'decl-num', 'declination');
+    bindSliderPair('index-slider', 'index-num', 'indexErrorArcmin');
+
+    // Canvas drag
+    let dragging = false;
+    let lastY = 0;
+
+    function setAngleFromPointer(clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const y = clientY - rect.top;
+      const horizonY = rect.height * 0.72;
+      const zenithY = rect.height * 0.12;
+      const alt = clamp(((horizonY - y) / (horizonY - zenithY)) * 90, 0, 89);
+      state.sextantAngle = alt;
+      draw();
+    }
+
+    canvas.addEventListener('pointerdown', (e) => { dragging = true; canvas.setPointerCapture(e.pointerId); setAngleFromPointer(e.clientY); });
+    canvas.addEventListener('pointermove', (e) => { if (dragging) setAngleFromPointer(e.clientY); });
+    canvas.addEventListener('pointerup', (e) => { dragging = false; canvas.releasePointerCapture(e.pointerId); });
+    canvas.addEventListener('pointerleave', () => { dragging = false; });
+
+    // Touch fallback
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); setAngleFromPointer(e.touches[0].clientY); }, { passive: false });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); setAngleFromPointer(e.touches[0].clientY); }, { passive: false });
+
+    // Free-play reduce
+    document.getElementById('btn-calc').addEventListener('click', () => {
+      const { Hs, Ha, Ho, dipArcmin, refArcmin } = correctedAltitude();
+      const { lat, zd } = derivedLatitude();
+      document.getElementById('hs-out').textContent = degToDms(Hs);
+      document.getElementById('dip-out').textContent = `-${dipArcmin.toFixed(1)}′`;
+      document.getElementById('ref-out').textContent = `-${refArcmin.toFixed(1)}′`;
+      document.getElementById('ho-out').textContent = degToDms(Ho);
+      document.getElementById('zd-out').textContent = `${zd.toFixed(1)}°`;
+
+      const res = document.getElementById('free-result');
+      res.classList.remove('hidden', 'good', 'warn');
+      const diff = lat - state.latitude;
+      if (Math.abs(diff) < 0.2) {
+        res.classList.add('good');
+        res.querySelector('.result-title').textContent = '✅ Latitude matches!';
+        res.querySelector('#free-result-text').textContent = `Reduced latitude ${lat.toFixed(2)}°N matches the observer latitude you set (${state.latitude.toFixed(2)}°N).`;
+      } else {
+        res.classList.add('warn');
+        res.querySelector('.result-title').textContent = '⚠️ Sextant not quite on the sun';
+        res.querySelector('#free-result-text').textContent = `Reduced latitude is ${lat.toFixed(2)}°N; observer is set to ${state.latitude.toFixed(2)}°N. Adjust the sextant arm until Ho matches the true noon altitude.`;
+      }
+    });
+
+    document.getElementById('btn-reset-free').addEventListener('click', () => {
+      state.sextantAngle = 45;
+      document.getElementById('free-result').classList.add('hidden');
+      draw();
+    });
+
+    // Mode switching
+    function setMode(mode) {
+      state.mode = mode;
+      document.getElementById('mode-free').classList.toggle('active', mode === 'free');
+      document.getElementById('mode-challenge').classList.toggle('active', mode === 'challenge');
+      document.getElementById('free-panel').classList.toggle('hidden', mode !== 'free');
+      document.getElementById('challenge-panel').classList.toggle('hidden', mode !== 'challenge');
+      if (mode === 'challenge' && !state.chal) newChallenge();
+      draw();
+    }
+
+    document.getElementById('mode-free').addEventListener('click', () => setMode('free'));
+    document.getElementById('mode-challenge').addEventListener('click', () => setMode('challenge'));
+
+    // Challenge logic
+    function newChallenge() {
+      const lat = +(Math.random() * 60 + 5).toFixed(2); // 5–65°N
+      const eye = Math.round(2 + Math.random() * 18); // 2–20 m
+      const decl = +((Math.random() * 46.9 - 23.45).toFixed(2)); // ±23.45°
+      const idx = +(Math.random() * 4 - 2).toFixed(1); // ±2′
+      state.chal = { lat, eye, decl, idx, attempted: false };
+      state.latitude = lat;
+      state.eyeHeight = eye;
+      state.declination = decl;
+      state.indexErrorArcmin = idx;
+      state.sextantAngle = 45;
+      document.getElementById('chal-lat').textContent = '??° N';
+      document.getElementById('chal-eye').textContent = `${eye} m`;
+      document.getElementById('chal-decl').textContent = `${decl > 0 ? '+' : ''}${decl.toFixed(2)}°`;
+      document.getElementById('chal-idx').textContent = `${idx > 0 ? '+' : ''}${idx.toFixed(1)}′`;
+      document.getElementById('chal-result').classList.add('hidden');
+      document.getElementById('challenge-target').textContent = 'Target: match the noon sun to the horizon';
+      document.getElementById('score').textContent = `Score: ${state.score.correct} / ${state.score.total}`;
+      updateUIFromState();
+    }
+
+    document.getElementById('btn-new').addEventListener('click', newChallenge);
+
+    document.getElementById('btn-check').addEventListener('click', () => {
+      if (!state.chal) return;
+      const { Ho } = correctedAltitude();
+      const { lat } = derivedLatitude();
+      const target = state.chal.lat;
+      const error = lat - target;
+      const absErr = Math.abs(error);
+      state.score.total += 1;
+      const box = document.getElementById('chal-result');
+      box.classList.remove('hidden', 'good', 'warn');
+      document.getElementById('chal-lat').textContent = `${target.toFixed(2)}° N`;
+      if (absErr < 0.2) {
+        state.score.correct += 1;
+        box.classList.add('good');
+        document.getElementById('chal-title').textContent = '✅ Excellent sight!';
+        document.getElementById('chal-text').textContent = `Your reduced latitude is ${lat.toFixed(2)}°N — within 0.2° of the hidden location.`;
+      } else if (absErr < 1) {
+        box.classList.add('warn');
+        document.getElementById('chal-title').textContent = '👍 Close';
+        document.getElementById('chal-text').textContent = `Reduced ${lat.toFixed(2)}°N vs hidden ${target.toFixed(2)}°N (error ${error.toFixed(2)}°). Tweak the sextant arm.`;
+      } else {
+        box.classList.add('warn');
+        document.getElementById('chal-title').textContent = '❌ Too far off';
+        document.getElementById('chal-text').textContent = `Reduced ${lat.toFixed(2)}°N vs hidden ${target.toFixed(2)}°N (error ${error.toFixed(2)}°). Drag until the sun sits on the horizon.`;
+      }
+      document.getElementById('score').textContent = `Score: ${state.score.correct} / ${state.score.total}`;
+      state.chal.attempted = true;
+    });
+
+    // Init
+    window.addEventListener('resize', resize);
+    resize();
+    updateUIFromState();
+  </script>
+</body>
+</html>
