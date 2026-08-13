@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-13",
-    "title": "Celestial Sextant Trainer",
-    "slug": "celestial-sextant-trainer",
-    "publishedSlug": "2026-08-13-celestial-sextant-trainer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-13-celestial-sextant-trainer/"
+    "date": "2026-08-14",
+    "title": "Fourier Epicycle Sketcher",
+    "slug": "fourier-epicycle-sketcher",
+    "publishedSlug": "2026-08-14-fourier-epicycle-sketcher",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-14-fourier-epicycle-sketcher/"
   },
   "apps": [
+    {
+      "date": "2026-08-14",
+      "title": "Fourier Epicycle Sketcher",
+      "slug": "fourier-epicycle-sketcher",
+      "publishedSlug": "2026-08-14-fourier-epicycle-sketcher",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-14-fourier-epicycle-sketcher/",
+      "description": "Draw a squiggle and watch the discrete Fourier transform rebuild it as a chain of spinning circles."
+    },
     {
       "date": "2026-08-13",
       "title": "Celestial Sextant Trainer",

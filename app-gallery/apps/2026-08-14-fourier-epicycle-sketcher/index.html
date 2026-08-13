@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Fourier Epicycle Sketcher</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #181a20;
+      --panel-2: #20242c;
+      --text: #e7eaf2;
+      --muted: #9aa3b2;
+      --accent: #00e5ff;
+      --accent-2: #ff4ecd;
+      --danger: #ff5a5a;
+      --ok: #2fe08a;
+      --border: #2a2f3a;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
+    .app { display: flex; flex-direction: column; height: 100vh; }
+    .warning { background: #2a1b10; color: #f5c542; font-size: 12px; padding: 8px 14px; text-align: center; border-bottom: 1px solid #3d2c16; }
+    .main { display: grid; grid-template-columns: 1fr 320px; flex: 1; min-height: 0; }
+    @media (max-width: 800px) {
+      .main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+    }
+    .stage { position: relative; min-height: 0; display: flex; align-items: center; justify-content: center; }
+    canvas { width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+    .overlay { position: absolute; bottom: 12px; left: 12px; background: rgba(15,17,21,0.85); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--muted); pointer-events: none; }
+    .overlay b { color: var(--text); }
+    .panel { background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; padding: 16px; overflow-y: auto; }
+    @media (max-width: 800px) {
+      .panel { border-left: none; border-top: 1px solid var(--border); max-height: 45vh; }
+    }
+    h1 { font-size: 18px; margin: 0; letter-spacing: 0.3px; }
+    h1 span { color: var(--accent); }
+    .subtitle { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .group { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    label { font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; }
+    label output { color: var(--text); font-weight: 600; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    button { border: none; border-radius: 8px; padding: 10px 12px; font-size: 13px; cursor: pointer; background: var(--panel); color: var(--text); border: 1px solid var(--border); transition: background .15s; }
+    button:hover { background: #2a2f3a; }
+    button.primary { background: var(--accent); color: #00131a; border-color: var(--accent); font-weight: 700; }
+    button.primary:hover { filter: brightness(1.08); }
+    button.danger { color: var(--danger); border-color: #3d2525; }
+    .btn-active { outline: 2px solid var(--accent); }
+    .hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .hint code { background: rgba(255,255,255,0.07); padding: 2px 5px; border-radius: 5px; color: var(--text); }
+    .shapes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .shapes button { padding: 8px; font-size: 12px; }
+    .math { font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; }
+    .toggle-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+    input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="warning">
+      Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for any decisions.
+    </div>
+    <div class="main">
+      <div class="stage" id="stage">
+        <canvas id="c"></canvas>
+        <div class="overlay" id="overlay">
+          <b>Draw</b> any closed-ish curve. The DFT turns it into spinning circles.<br>
+          Points: <b id="ptCount">0</b> &middot; Circles: <b id="circCount">0</b>
+        </div>
+      </div>
+      <aside class="panel">
+        <div>
+          <h1>Fourier <span>Epicycle</span> Sketcher</h1>
+          <div class="subtitle">Draw a squiggle, watch rotating circles rebuild it.</div>
+        </div>
+
+        <div class="group">
+          <div class="row">
+            <button id="btnDraw" class="primary btn-active" title="Draw a custom path">Draw</button>
+            <button id="btnTrace" title="Watch the arm retrace">Trace</button>
+            <button id="btnPause">Pause</button>
+          </div>
+          <div class="hint">
+            <b>Draw mode:</b> drag on the canvas. <b>Trace mode:</b> the epicycle arm redraws your sketch.
+          </div>
+          <div class="row">
+            <button id="btnClear" class="danger">Clear</button>
+            <button id="btnCircle">Close loop</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <label>Circles <output id="outCircles">100</output></label>
+          <input type="range" id="rangeCircles" min="1" max="300" value="100" step="1">
+          <label>Speed <output id="outSpeed">1.0×</output></label>
+          <input type="range" id="rangeSpeed" min="0" max="3" value="1" step="0.1">
+          <div class="toggle-row">
+            <input type="checkbox" id="chkShowPath" checked>
+            <label for="chkShowPath" style="margin:0; justify-content:flex-start; gap:8px;">Show traced path</label>
+          </div>
+          <div class="toggle-row">
+            <input type="checkbox" id="chkShowCircles" checked>
+            <label for="chkShowCircles" style="margin:0; justify-content:flex-start; gap:8px;">Show epicycles</label>
+          </div>
+        </div>
+
+        <div class="group">
+          <label>Presets</label>
+          <div class="shapes">
+            <button data-shape="circle">Circle</button>
+            <button data-shape="square">Square</button>
+            <button data-shape="star">Star</button>
+            <button data-shape="heart">Heart</button>
+            <button data-shape="wine">Glass</button>
+            <button data-shape="leaf">Leaf</button>
+            <button data-shape="wave">Wave</button>
+            <button data-shape="random">Random</button>
+          </div>
+        </div>
+
+        <div class="group math">
+          <div>Complex DFT: <code>c<sub>k</sub> = Σ x[n] e<sup>−i2πkn/N</sup></code></div>
+          <div class="hint">The k-th coefficient sets an arm's length (|c<sub>k</sub>|) and starting angle (arg c<sub>k</sub>). Arms spin at frequency k, and their tips sum to the original curve.</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const stage = document.getElementById('stage');
+    const overlayPt = document.getElementById('ptCount');
+    const overlayCirc = document.getElementById('circCount');
+    const rangeCircles = document.getElementById('rangeCircles');
+    const outCircles = document.getElementById('outCircles');
+    const rangeSpeed = document.getElementById('rangeSpeed');
+    const outSpeed = document.getElementById('outSpeed');
+    const btnDraw = document.getElementById('btnDraw');
+    const btnTrace = document.getElementById('btnTrace');
+    const btnPause = document.getElementById('btnPause');
+    const btnClear = document.getElementById('btnClear');
+    const btnCircle = document.getElementById('btnCircle');
+    const chkPath = document.getElementById('chkShowPath');
+    const chkCircles = document.getElementById('chkShowCircles');
+
+    let width = 0, height = 0, cx = 0, cy = 0, scale = 1;
+    let points = []; // complex values as {x,y}
+    let coeffs = []; // {freq, amp, phase, re, im}
+    let pathTrace = [];
+    let drawing = false;
+    let mode = 'draw'; // 'draw' | 'trace'
+    let paused = false;
+    let t = 0;
+    let lastTime = performance.now();
+    let circleLimit = 100;
+    let speed = 1;
+
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = stage.clientWidth;
+      height = stage.clientHeight;
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cx = width / 2;
+      cy = height / 2;
+      scale = Math.min(width, height) / 520;
+      render();
+    }
+
+    function toWorld(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: (clientX - rect.left - cx) / scale, y: (clientY - rect.top - cy) / scale };
+    }
+
+    function dist2(a, b) { const dx = a.x - b.x, dy = a.y - b.y; return dx * dx + dy * dy; }
+
+    function buildPreset(kind) {
+      const pts = [];
+      const n = 240;
+      if (kind === 'circle') {
+        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; pts.push({ x: Math.cos(a) * 90, y: Math.sin(a) * 90 }); }
+      } else if (kind === 'square') {
+        for (let i = 0; i < n; i++) {
+          const a = i / n * Math.PI * 2;
+          const c = Math.cos(a), s = Math.sin(a);
+          const size = 90 / Math.max(Math.abs(c), Math.abs(s));
+          pts.push({ x: c * size, y: s * size });
+        }
+      } else if (kind === 'star') {
+        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; const r = (i % 2 === 0 ? 110 : 50); pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r }); }
+      } else if (kind === 'heart') {
+        for (let i = 0; i < n; i++) {
+          const th = i / n * Math.PI * 2;
+          pts.push({ x: 16 * Math.pow(Math.sin(th), 3) * 6 - 10, y: -(13 * Math.cos(th) - 5 * Math.cos(2 * th) - 2 * Math.cos(3 * th) - Math.cos(4 * th)) * 6 + 30 });
+        }
+      } else if (kind === 'wine') {
+        for (let i = 0; i < n; i++) {
+          const th = i / n * Math.PI * 2;
+          let x = Math.sin(th) * (35 + 18 * Math.cos(th));
+          let y = -Math.cos(th) * 90;
+          if (Math.abs(th - Math.PI) < 0.35) { y += 12; }
+          pts.push({ x: x * 1.1, y: y * 1.1 + 20 });
+        }
+      } else if (kind === 'leaf') {
+        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; const r = 80 * (1 + 0.3 * Math.cos(3 * a)); pts.push({ x: r * Math.cos(a) * (1 + 0.05 * a), y: r * Math.sin(a) }); }
+      } else if (kind === 'wave') {
+        for (let i = 0; i < n; i++) { const x = (i / n - 0.5) * 260; pts.push({ x, y: Math.sin(i / n * Math.PI * 4) * 50 - 10 * Math.sin(i / n * Math.PI * 8) }); }
+        for (let i = 0; i < n; i++) { const x = (0.5 - i / n) * 260; pts.push({ x, y: 40 }); }
+      } else if (kind === 'random') {
+        let a = 0, r = 80, x = 0, y = 0;
+        for (let i = 0; i < n; i++) {
+          a += 0.15 + Math.random() * 0.2;
+          r = 60 + Math.random() * 50;
+          pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+        }
+      }
+      setPoints(pts);
+    }
+
+    function setPoints(pts) {
+      points = pts.slice();
+      computeDFT();
+      pathTrace = [];
+      t = 0;
+      updateOverlay();
+      if (mode === 'draw' && points.length) { mode = 'trace'; setModeUI(); }
+      render();
+    }
+
+    function computeDFT() {
+      const N = points.length;
+      if (N < 2) { coeffs = []; return; }
+      const out = [];
+      // frequencies centered around 0 for symmetric, stable animation
+      for (let k = -Math.floor(N / 2); k <= Math.floor((N - 1) / 2); k++) {
+        let re = 0, im = 0;
+        for (let n = 0; n < N; n++) {
+          const phi = -(2 * Math.PI * k * n) / N;
+          const cos = Math.cos(phi), sin = Math.sin(phi);
+          re += points[n].x * cos - points[n].y * sin;
+          im += points[n].x * sin + points[n].y * cos;
+        }
+        re /= N; im /= N;
+        out.push({ freq: k, re, im, amp: Math.hypot(re, im), phase: Math.atan2(im, re) });
+      }
+      // sort by descending amplitude so largest arms are drawn first / dominate visual
+      out.sort((a, b) => b.amp - a.amp);
+      coeffs = out;
+    }
+
+    function epicycleValue(time, limit) {
+      let x = 0, y = 0;
+      const use = Math.min(limit, coeffs.length);
+      for (let i = 0; i < use; i++) {
+        const c = coeffs[i];
+        const angle = 2 * Math.PI * c.freq * time + c.phase;
+        x += c.amp * Math.cos(angle);
+        y += c.amp * Math.sin(angle);
+      }
+      return { x, y };
+    }
+
+    function drawEpicycles(time, limit) {
+      let x = cx, y = cy;
+      const use = Math.min(limit, coeffs.length);
+      ctx.lineWidth = 1;
+      for (let i = 0; i < use; i++) {
+        const c = coeffs[i];
+        const r = c.amp * scale;
+        if (r < 0.5) continue;
+        ctx.beginPath();
+        ctx.strokeStyle = i % 2 === 0 ? 'rgba(0,229,255,0.25)' : 'rgba(255,78,205,0.22)';
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.stroke();
+        const angle = 2 * Math.PI * c.freq * time + c.phase;
+        const nx = x + r * Math.cos(angle);
+        const ny = y + r * Math.sin(angle);
+        ctx.beginPath();
+        ctx.strokeStyle = i % 2 === 0 ? 'rgba(0,229,255,0.45)' : 'rgba(255,78,205,0.45)';
+        ctx.moveTo(x, y);
+        ctx.lineTo(nx, ny);
+        ctx.stroke();
+        x = nx; y = ny;
+      }
+      return { x, y };
+    }
+
+    function render() {
+      ctx.fillStyle = '#0f1115';
+      ctx.fillRect(0, 0, width, height);
+
+      // subtle grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      const step = 50 * scale;
+      ctx.beginPath();
+      for (let x = cx % step; x < width; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+      for (let y = cy % step; y < height; y += step) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+      ctx.stroke();
+
+      if (mode === 'draw' && points.length) {
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = 2;
+        ctx.moveTo(cx + points[0].x * scale, cy + points[0].y * scale);
+        for (let i = 1; i < points.length; i++) ctx.lineTo(cx + points[i].x * scale, cy + points[i].y * scale);
+        ctx.stroke();
+      }
+
+      if (coeffs.length) {
+        if (chkCircles.checked) {
+          const tip = drawEpicycles(t, circleLimit);
+          ctx.beginPath();
+          ctx.fillStyle = '#00e5ff';
+          ctx.arc(tip.x, tip.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          const v = epicycleValue(t, circleLimit);
+          ctx.beginPath();
+          ctx.fillStyle = '#00e5ff';
+          ctx.arc(cx + v.x * scale, cy + v.y * scale, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (chkPath.checked && pathTrace.length) {
+          ctx.beginPath();
+          ctx.strokeStyle = '#ff4ecd';
+          ctx.lineWidth = 2.5;
+          ctx.moveTo(cx + pathTrace[0].x * scale, cy + pathTrace[0].y * scale);
+          for (let i = 1; i < pathTrace.length; i++) ctx.lineTo(cx + pathTrace[i].x * scale, cy + pathTrace[i].y * scale);
+          ctx.stroke();
+        }
+      }
+    }
+
+    function update(dt) {
+      if (paused || mode === 'draw' || !coeffs.length) return;
+      const period = 1;
+      t += (dt / 1000) * speed / period;
+      t = t % 1;
+      const v = epicycleValue(t, circleLimit);
+      pathTrace.push(v);
+      // keep trace finite and smoothly loop-matched
+      const N = points.length || 240;
+      if (pathTrace.length > N * 2) pathTrace.shift();
+      render();
+    }
+
+    function loop(now) {
+      const dt = now - lastTime;
+      lastTime = now;
+      update(dt);
+      requestAnimationFrame(loop);
+    }
+
+    function updateOverlay() {
+      overlayPt.textContent = points.length;
+      overlayCirc.textContent = Math.min(circleLimit, coeffs.length);
+    }
+
+    function setModeUI() {
+      if (mode === 'draw') { btnDraw.classList.add('btn-active'); btnTrace.classList.remove('btn-active'); }
+      else { btnTrace.classList.add('btn-active'); btnDraw.classList.remove('btn-active'); }
+    }
+
+    // Events
+    canvas.addEventListener('pointerdown', e => {
+      if (mode !== 'draw') { mode = 'draw'; setModeUI(); }
+      drawing = true;
+      points = [];
+      pathTrace = [];
+      const p = toWorld(e.clientX, e.clientY);
+      points.push(p);
+      render();
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (!drawing) return;
+      e.preventDefault();
+      const p = toWorld(e.clientX, e.clientY);
+      if (!points.length || dist2(p, points[points.length - 1]) > 16) {
+        points.push(p);
+        render();
+      }
+    });
+    function endDraw() {
+      if (!drawing) return;
+      drawing = false;
+      if (points.length < 3) { points = []; render(); return; }
+      // resample evenly for stable DFT
+      const total = points.length;
+      const target = Math.min(360, Math.max(60, Math.round(total / 2)));
+      const resampled = [];
+      let cum = 0; const seg = [];
+      for (let i = 1; i < total; i++) seg.push(Math.sqrt(dist2(points[i - 1], points[i])));
+      seg.forEach(d => cum += d);
+      if (cum < 1) cum = 1;
+      let walked = 0, idx = 1;
+      for (let i = 0; i < target; i++) {
+        const want = (i / target) * cum;
+        while (idx < total && walked + seg[idx - 1] < want) { walked += seg[idx - 1]; idx++; }
+        const prev = points[idx - 1] || points[0];
+        const cur = points[idx] || points[total - 1];
+        const segLen = seg[idx - 1] || 1;
+        const frac = segLen ? (want - walked) / segLen : 0;
+        resampled.push({ x: prev.x + (cur.x - prev.x) * frac, y: prev.y + (cur.y - prev.y) * frac });
+      }
+      setPoints(resampled);
+      mode = 'trace';
+      setModeUI();
+    }
+    canvas.addEventListener('pointerup', endDraw);
+    canvas.addEventListener('pointerleave', endDraw);
+
+    btnDraw.addEventListener('click', () => { mode = 'draw'; setModeUI(); points = []; pathTrace = []; coeffs = []; t = 0; updateOverlay(); render(); });
+    btnTrace.addEventListener('click', () => { mode = 'trace'; setModeUI(); pathTrace = []; t = 0; render(); });
+    btnPause.addEventListener('click', () => { paused = !paused; btnPause.textContent = paused ? 'Resume' : 'Pause'; });
+    btnClear.addEventListener('click', () => { points = []; coeffs = []; pathTrace = []; t = 0; mode = 'draw'; setModeUI(); updateOverlay(); render(); });
+    btnCircle.addEventListener('click', () => {
+      if (points.length < 3) return;
+      // close loop by blending last to first
+      const closed = points.slice();
+      const blend = 12;
+      for (let i = 0; i < blend; i++) {
+        const a = i / blend;
+        closed.push({ x: points[points.length - 1].x * (1 - a) + points[0].x * a, y: points[points.length - 1].y * (1 - a) + points[0].y * a });
+      }
+      setPoints(closed);
+    });
+
+    rangeCircles.addEventListener('input', () => { circleLimit = +rangeCircles.value; outCircles.textContent = circleLimit; updateOverlay(); render(); });
+    rangeSpeed.addEventListener('input', () => { speed = +rangeSpeed.value; outSpeed.textContent = speed.toFixed(1) + '×'; });
+    chkPath.addEventListener('change', render);
+    chkCircles.addEventListener('change', render);
+
+    document.querySelectorAll('[data-shape]').forEach(b => b.addEventListener('click', () => buildPreset(b.dataset.shape)));
+
+    window.addEventListener('resize', resize);
+    resize();
+    buildPreset('wine');
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
