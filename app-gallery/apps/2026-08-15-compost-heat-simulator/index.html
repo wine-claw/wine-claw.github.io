@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Compost Heat Simulator</title>
+  <style>
+    :root {
+      --bg: #111412;
+      --panel: #1a1e1c;
+      --panel-2: #202624;
+      --text: #e7efe9;
+      --muted: #8fa093;
+      --accent: #7ef98a;
+      --accent-2: #f9d87e;
+      --danger: #ff7a70;
+      --ok: #7ef98a;
+      --warn: #f9d87e;
+      --cold: #62c3ff;
+      --line: #2d3531;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .banner {
+      background: #2a1f1f;
+      color: #ffbcbc;
+      padding: 0.55rem 1rem;
+      font-size: 0.82rem;
+      line-height: 1.35;
+      border-bottom: 1px solid #3d2828;
+    }
+    .banner strong { color: #ffd0d0; }
+    header {
+      padding: 1rem 1rem 0.4rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: clamp(1.25rem, 4vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+    }
+    header p {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    @media (max-width: 860px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .controls, .readout, .tips {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+    }
+    .controls h2, .readout h2, .tips h2 {
+      margin: 0 0 0.7rem;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .control {
+      margin-bottom: 0.95rem;
+    }
+    .control:last-child { margin-bottom: 0; }
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.86rem;
+      margin-bottom: 0.35rem;
+      color: var(--text);
+    }
+    .control .val {
+      color: var(--accent-2);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+    }
+    button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.42rem 0.85rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+    }
+    button:hover { background: #2b322e; border-color: #3e4943; }
+    button:active { transform: translateY(1px); }
+    button.primary {
+      background: var(--accent);
+      color: #051105;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    button.primary:hover { background: #9fffa8; }
+    .readout-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+    }
+    .metric {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.7rem 0.8rem;
+    }
+    .metric .label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .metric .value {
+      font-size: 1.35rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      margin-top: 0.15rem;
+    }
+    .metric .note {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      line-height: 1.3;
+    }
+    .status {
+      grid-column: 1 / -1;
+      padding: 0.6rem 0.8rem;
+      border-radius: 10px;
+      font-size: 0.86rem;
+      line-height: 1.35;
+      border: 1px solid transparent;
+    }
+    .status.ok { background: rgba(126, 249, 138, 0.08); color: var(--ok); border-color: rgba(126,249,138,0.22); }
+    .status.warn { background: rgba(249, 216, 126, 0.08); color: var(--warn); border-color: rgba(249,216,126,0.22); }
+    .status.danger { background: rgba(255, 122, 112, 0.08); color: var(--danger); border-color: rgba(255,122,112,0.22); }
+    .status.cold { background: rgba(98, 195, 255, 0.08); color: var(--cold); border-color: rgba(98,195,255,0.22); }
+    .charts {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 1rem;
+    }
+    .chart-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+    }
+    .chart-card h2 {
+      margin: 0 0 0.6rem;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    canvas {
+      flex: 1;
+      width: 100%;
+      border-radius: 10px;
+      background: #0f1210;
+      border: 1px solid var(--line);
+    }
+    .pile-vis {
+      position: relative;
+    }
+    .pile-legend {
+      display: flex;
+      gap: 0.7rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .pile-legend span { display: inline-flex; align-items: center; gap: 0.3rem; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .tips ul {
+      margin: 0;
+      padding-left: 1.1rem;
+      font-size: 0.84rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+    .tips li { margin-bottom: 0.35rem; }
+    footer {
+      padding: 0.8rem 1rem 1.2rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>Experimental AI mini-app.</strong> Untested, not professionally validated. Do not rely on it for real composting or business decisions.
+  </div>
+  <header>
+    <h1>Compost Heat Simulator</h1>
+    <p>Build a pile, turn it, and watch heat, oxygen, and moisture evolve. A playful sandbox for thermophilic composting.</p>
+  </header>
+  <main>
+    <aside>
+      <div class="controls">
+        <h2>Pile recipe</h2>
+        <div class="preset-row">
+          <button onclick="loadPreset('cold')">Cold / passive</button>
+          <button onclick="loadPreset('hot')">Hot / Berkeley</button>
+          <button onclick="loadPreset('wet')">Too wet</button>
+          <button onclick="loadPreset('dry')">Too dry</button>
+        </div>
+        <div class="control">
+          <label>Browns vs greens (C/N proxy) <span class="val" id="cnVal">30:1</span></label>
+          <input type="range" id="cn" min="10" max="60" value="30" aria-label="Carbon to nitrogen ratio" />
+        </div>
+        <div class="control">
+          <label>Moisture <span class="val" id="moistureVal">55%</span></label>
+          <input type="range" id="moisture" min="20" max="80" value="55" aria-label="Moisture percent" />
+        </div>
+        <div class="control">
+          <label>Pile size <span class="val" id="sizeVal">1 m³</span></label>
+          <input type="range" id="size" min="0.1" max="5" step="0.1" value="1" aria-label="Pile size cubic metres" />
+        </div>
+        <div class="control">
+          <label>Turning / aeration <span class="val" id="turnVal">Every 3 days</span></label>
+          <input type="range" id="turn" min="0" max="14" step="1" value="3" aria-label="Days between turning" />
+        </div>
+        <div class="control">
+          <label>Ambient temperature <span class="val" id="ambientVal">20°C</span></label>
+          <input type="range" id="ambient" min="-5" max="40" value="20" aria-label="Ambient temperature" />
+        </div>
+        <div class="preset-row" style="margin-top:0.7rem; margin-bottom:0;">
+          <button class="primary" onclick="restart()">Rebuild pile</button>
+          <button onclick="turnNow()">Turn now</button>
+          <button onclick="togglePlay()" id="playBtn">Pause</button>
+        </div>
+      </div>
+
+      <div class="readout" style="margin-top:1rem;">
+        <h2>Live readout</h2>
+        <div class="readout-grid">
+          <div class="metric">
+            <div class="label">Pile temp</div>
+            <div class="value" id="tempOut">20°C</div>
+            <div class="note" id="tempNote">Starting</div>
+          </div>
+          <div class="metric">
+            <div class="label">Days elapsed</div>
+            <div class="value" id="dayOut">0</div>
+            <div class="note" id="phaseNote">Lag phase</div>
+          </div>
+          <div class="metric">
+            <div class="label">Oxygen</div>
+            <div class="value" id="o2Out">21%</div>
+            <div class="note" id="o2Note">Aerobic</div>
+          </div>
+          <div class="metric">
+            <div class="label">Decomposition</div>
+            <div class="value" id="decOut">0%</div>
+            <div class="note" id="decNote">Fresh pile</div>
+          </div>
+          <div class="status ok" id="statusBox" style="grid-column:1/-1;">
+            Start the simulation or change the recipe to see how the pile responds.
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="charts">
+      <div class="chart-card pile-vis">
+        <h2>Pile cross-section</h2>
+        <canvas id="pileCanvas"></canvas>
+        <div class="pile-legend">
+          <span><i class="dot" style="background:#5d4037"></i>Browns</span>
+          <span><i class="dot" style="background:#4caf50"></i>Greens</span>
+          <span><i class="dot" style="background:#81d4fa"></i>Moisture</span>
+          <span><i class="dot" style="background:#ffab91"></i>Heat</span>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h2>Temperature curve</h2>
+        <canvas id="chartCanvas"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <div style="padding:0 1rem;">
+    <div class="tips">
+      <h2>Why this happens</h2>
+      <ul>
+        <li><strong>C/N ratio:</strong> Microbes need both carbon (energy) and nitrogen (growth). Too much nitrogen heats fast but can go anaerobic and smell. Too much carbon heats slowly.</li>
+        <li><strong>Moisture:</strong> Below ~35% microbial activity stalls. Above ~60% pores fill with water and oxygen drops, producing anaerobic pockets.</li>
+        <li><strong>Size:</strong> Bigger piles insulate heat better but are harder to oxygenate. Small piles lose heat quickly.</li>
+        <li><strong>Turning:</strong> Mixing recharges oxygen and releases heat. The Berkeley method turns every ~2 days for fast hot composting.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    Built overnight by OpenClaw · <a href="https://wine-claw.github.io/app-gallery/">Mini-app gallery</a>
+  </footer>
+
+  <script>
+    // --- state ---
+    const state = {
+      cn: 30,
+      moisture: 55,
+      size: 1,
+      turnDays: 3,
+      ambient: 20,
+      temp: 20,
+      o2: 21,
+      decomp: 0,
+      day: 0,
+      running: true,
+      history: [], // {day, temp}
+      particles: [],
+      lastTurn: -99
+    };
+
+    const els = {
+      cn: document.getElementById('cn'),
+      moisture: document.getElementById('moisture'),
+      size: document.getElementById('size'),
+      turn: document.getElementById('turn'),
+      ambient: document.getElementById('ambient'),
+      cnVal: document.getElementById('cnVal'),
+      moistureVal: document.getElementById('moistureVal'),
+      sizeVal: document.getElementById('sizeVal'),
+      turnVal: document.getElementById('turnVal'),
+      ambientVal: document.getElementById('ambientVal'),
+      tempOut: document.getElementById('tempOut'),
+      dayOut: document.getElementById('dayOut'),
+      o2Out: document.getElementById('o2Out'),
+      decOut: document.getElementById('decOut'),
+      tempNote: document.getElementById('tempNote'),
+      phaseNote: document.getElementById('phaseNote'),
+      o2Note: document.getElementById('o2Note'),
+      decNote: document.getElementById('decNote'),
+      statusBox: document.getElementById('statusBox'),
+      playBtn: document.getElementById('playBtn'),
+      pileCanvas: document.getElementById('pileCanvas'),
+      chartCanvas: document.getElementById('chartCanvas')
+    };
+
+    const presets = {
+      cold: { cn: 45, moisture: 45, size: 2.5, turn: 14, ambient: 15 },
+      hot: { cn: 25, moisture: 55, size: 1.5, turn: 2, ambient: 22 },
+      wet: { cn: 30, moisture: 75, size: 1.2, turn: 7, ambient: 20 },
+      dry: { cn: 30, moisture: 25, size: 1.2, turn: 7, ambient: 25 }
+    };
+
+    // --- init particles ---
+    function resetParticles() {
+      state.particles = [];
+      const n = 240;
+      for (let i = 0; i < n; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random());
+        state.particles.push({
+          x: 0.5 + r * Math.cos(angle) * 0.42,
+          y: 0.5 + r * Math.sin(angle) * 0.42,
+          type: Math.random() < (state.cn < 30 ? 0.65 : 0.35) ? 'green' : 'brown',
+          vx: 0, vy: 0,
+          age: Math.random() * 20
+        });
+      }
+    }
+
+    // --- simulation math ---
+    function idealCN(cn) { return Math.exp(-Math.pow(cn - 27, 2) / 260); }
+    function idealMoisture(m) {
+      if (m < 30) return m / 30;
+      if (m > 60) return Math.max(0, 1 - (m - 60) / 25);
+      return 1;
+    }
+    function heatInsulationFactor(size) { return Math.min(1, 0.25 + size * 0.35); }
+    function maxTempForCN(cn) { return 35 + 32 * idealCN(cn); }
+
+    function step(dtDays) {
+      const cnScore = idealCN(state.cn);
+      const moistScore = idealMoisture(state.moisture);
+      const insulation = heatInsulationFactor(state.size);
+
+      // Aerobic demand driven by activity
+      const baseActivity = cnScore * moistScore;
+      const o2Limit = state.o2 / 21;
+      const activity = baseActivity * o2Limit;
+
+      // Heat generation and equilibrium
+      const maxTemp = Math.max(state.ambient, maxTempForCN(state.cn));
+      const targetTemp = state.ambient + (maxTemp - state.ambient) * insulation * moistScore;
+      const heatGain = (targetTemp - state.temp) * activity * 0.12 * dtDays;
+      const heatLoss = (state.temp - state.ambient) * (0.018 / insulation) * dtDays;
+      let newTemp = state.temp + heatGain - heatLoss;
+
+      // Oxygen dynamics: microbes consume O2; diffusion recharges slowly, faster at turn
+      const o2Demand = activity * (1 + 0.5 * insulation) * dtDays * 2.2;
+      const diffusion = (21 - state.o2) * 0.03 * dtDays * (1 / Math.max(0.4, state.size));
+      let newO2 = state.o2 + diffusion - o2Demand;
+      newO2 = Math.max(0, Math.min(21, newO2));
+
+      // Anaerobic cap on temp
+      if (newO2 < 3) newTemp -= (3 - newO2) * 0.35;
+
+      // Decomposition
+      const rate = activity * (newTemp / 60) * o2Limit * dtDays * 0.08;
+      state.decomp = Math.min(100, state.decomp + rate * 100);
+
+      // Water evaporation
+      const evap = Math.max(0, (newTemp - 40) * 0.003 * dtDays);
+      state.moisture = Math.max(15, state.moisture - evap);
+
+      state.temp = Math.max(state.ambient, newTemp);
+      state.o2 = newO2;
+      state.day += dtDays;
+
+      // History thinning
+      state.history.push({ day: state.day, temp: state.temp, o2: state.o2 });
+      if (state.history.length > 400) state.history.shift();
+
+      // Phase label
+      let phase = 'Lag phase';
+      if (state.temp > 35 && state.day < 3) phase = 'Heating phase';
+      else if (state.temp >= 45) phase = 'Thermophilic';
+      else if (state.temp >= 35) phase = 'Active mesophilic';
+      else if (state.decomp > 60) phase = 'Curing';
+      state.phase = phase;
+    }
+
+    function turnNow() {
+      state.o2 = 21;
+      // Mixing releases some heat and redistributes moisture
+      state.temp = Math.max(state.ambient + 4, state.temp * 0.82 + state.ambient * 0.18);
+      state.moisture = Math.min(70, state.moisture + 2);
+      state.lastTurn = state.day;
+      for (const p of state.particles) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random());
+        p.x = 0.5 + r * Math.cos(angle) * 0.42;
+        p.y = 0.5 + r * Math.sin(angle) * 0.42;
+      }
+      state.history.push({ day: state.day, temp: state.temp, o2: state.o2, turn: true });
+    }
+
+    function restart() {
+      readInputs();
+      state.temp = state.ambient;
+      state.o2 = 21;
+      state.decomp = 0;
+      state.day = 0;
+      state.history = [{ day: 0, temp: state.ambient, o2: 21 }];
+      state.lastTurn = -99;
+      state.running = true;
+      els.playBtn.textContent = 'Pause';
+      resetParticles();
+      draw();
+    }
+
+    function loadPreset(name) {
+      const p = presets[name];
+      state.cn = p.cn;
+      state.moisture = p.moisture;
+      state.size = p.size;
+      state.turnDays = p.turn;
+      state.ambient = p.ambient;
+      syncInputs();
+      restart();
+    }
+
+    function readInputs() {
+      state.cn = +els.cn.value;
+      state.moisture = +els.moisture.value;
+      state.size = +els.size.value;
+      state.turnDays = +els.turn.value;
+      state.ambient = +els.ambient.value;
+    }
+
+    function syncInputs() {
+      els.cn.value = state.cn;
+      els.moisture.value = state.moisture;
+      els.size.value = state.size;
+      els.turn.value = state.turnDays;
+      els.ambient.value = state.ambient;
+    }
+
+    function togglePlay() {
+      state.running = !state.running;
+      els.playBtn.textContent = state.running ? 'Pause' : 'Play';
+    }
+
+    function updateLabels() {
+      els.cnVal.textContent = `${state.cn}:1`;
+      els.moistureVal.textContent = `${Math.round(state.moisture)}%`;
+      els.sizeVal.textContent = `${state.size.toFixed(1)} m³`;
+      els.turnVal.textContent = state.turnDays === 0 ? 'Never' : `Every ${state.turnDays} day${state.turnDays > 1 ? 's' : ''}`;
+      els.ambientVal.textContent = `${state.ambient}°C`;
+    }
+
+    function updateReadout() {
+      els.tempOut.textContent = `${state.temp.toFixed(1)}°C`;
+      els.dayOut.textContent = state.day.toFixed(1);
+      els.o2Out.textContent = `${state.o2.toFixed(1)}%`;
+      els.decOut.textContent = `${state.decomp.toFixed(0)}%`;
+      els.tempNote.textContent = state.temp > 55 ? 'Very hot' : state.temp > 40 ? 'Hot' : state.temp > 25 ? 'Warm' : 'Cool';
+      els.phaseNote.textContent = state.phase || 'Lag phase';
+      els.o2Note.textContent = state.o2 < 3 ? 'Anaerobic' : state.o2 < 8 ? 'Oxygen stress' : 'Aerobic';
+      els.decNote.textContent = state.decomp < 20 ? 'Fresh pile' : state.decomp < 60 ? 'Decomposing' : state.decomp < 90 ? 'Maturing' : 'Finished';
+
+      const s = els.statusBox;
+      if (state.decomp >= 90) {
+        s.className = 'status ok';
+        s.textContent = 'Pile looks mature. Great job balancing heat, oxygen, and moisture.';
+      } else if (state.temp > 65) {
+        s.className = 'status danger';
+        s.textContent = 'Pile is over 65 °C — beneficial microbes may die off. Turn it to release heat.';
+      } else if (state.o2 < 3) {
+        s.className = 'status danger';
+        s.textContent = 'Oxygen has collapsed. Turn the pile or reduce moisture to stop anaerobic conditions.';
+      } else if (state.moisture > 60) {
+        s.className = 'status warn';
+        s.textContent = 'Moisture is high — pores are filling and oxygen is dropping. Add browns or turn more often.';
+      } else if (state.moisture < 35) {
+        s.className = 'status warn';
+        s.textContent = 'Too dry — microbial activity is slowing. Add water or greens.';
+      } else if (state.cn < 20) {
+        s.className = 'status warn';
+        s.textContent = 'C/N is low (too much nitrogen). The pile can get smelly. Add browns like straw or leaves.';
+      } else if (state.cn > 45) {
+        s.className = 'status cold';
+        s.textContent = 'C/N is high (too much carbon). The pile will heat slowly. Add greens or manure.';
+      } else if (state.temp >= 45 && state.temp <= 65) {
+        s.className = 'status ok';
+        s.textContent = 'Thermophilic sweet spot. Pathogens and weed seeds are being knocked down.';
+      } else {
+        s.className = 'status ok';
+        s.textContent = 'Pile is active. Watch temperature and oxygen as days pass.';
+      }
+    }
+
+    // --- rendering ---
+    function resizeCanvas(c) {
+      const rect = c.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      c.width = Math.max(1, Math.floor(rect.width * dpr));
+      c.height = Math.max(1, Math.floor(rect.height * dpr));
+      const ctx = c.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { width: rect.width, height: rect.height };
+    }
+
+    function colorForTemp(t, ambient) {
+      const r = Math.min(1, Math.max(0, (t - ambient) / 45));
+      if (r < 0.33) return { r: 126 + (149 - 126) * (r / 0.33), g: 249 + (210 - 249) * (r / 0.33), b: 138 + (160 - 138) * (r / 0.33) };
+      if (r < 0.66) return { r: 149 + (255 - 149) * ((r - 0.33) / 0.33), g: 210 + (171 - 210) * ((r - 0.33) / 0.33), b: 160 + (113 - 160) * ((r - 0.33) / 0.33) };
+      return { r: 255, g: 171 + (100 - 171) * ((r - 0.66) / 0.34), b: 113 + (80 - 113) * ((r - 0.66) / 0.34) };
+    }
+
+    function drawPile() {
+      const c = els.pileCanvas;
+      const { width, height } = resizeCanvas(c);
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+
+      const cx = width / 2, cy = height / 2;
+      const radius = Math.min(width, height) * 0.42;
+
+      // Background pile
+      const grad = ctx.createRadialGradient(cx, cy, radius * 0.1, cx, cy, radius);
+      const tc = colorForTemp(state.temp, state.ambient);
+      grad.addColorStop(0, `rgba(${tc.r | 0}, ${tc.g | 0}, ${tc.b | 0}, 0.55)`);
+      grad.addColorStop(1, `rgba(${tc.r | 0}, ${tc.g | 0}, ${tc.b | 0}, 0.08)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radius, radius * 0.78, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outline
+      ctx.strokeStyle = `rgba(${tc.r | 0}, ${tc.g | 0}, ${tc.b | 0}, 0.35)`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, radius, radius * 0.78, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Particles
+      for (const p of state.particles) {
+        const px = cx + (p.x - 0.5) * radius * 2;
+        const py = cy + (p.y - 0.5) * radius * 1.56;
+        ctx.beginPath();
+        ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = p.type === 'green' ? '#4caf50' : '#5d4037';
+        ctx.fill();
+      }
+
+      // Moisture droplets (opacity by moisture)
+      const droplets = Math.floor((state.moisture - 15) / 65 * 40);
+      ctx.fillStyle = `rgba(129, 212, 250, ${0.2 + (state.moisture / 100) * 0.4})`;
+      for (let i = 0; i < droplets; i++) {
+        const angle = (i / droplets) * Math.PI * 2 + state.day * 0.2;
+        const r = radius * (0.5 + 0.45 * ((i * 137.5) % 1));
+        const dx = cx + Math.cos(angle) * r;
+        const dy = cy + Math.sin(angle) * r * 0.78;
+        ctx.beginPath();
+        ctx.arc(dx, dy, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Oxygen bubbles
+      const bubbles = Math.floor((state.o2 / 21) * 18);
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < bubbles; i++) {
+        const angle = (i / 18) * Math.PI * 2 + state.day * 0.5;
+        const r = radius * (0.25 + 0.6 * ((i * 79.3) % 1));
+        const bx = cx + Math.cos(angle) * r;
+        const by = cy + Math.sin(angle) * r * 0.78 - (state.day * 2 + i) % (radius * 0.5);
+        ctx.beginPath();
+        ctx.arc(bx, by, 3, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Center temperature label
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${Math.min(24, width / 12)}px ui-sans-serif, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${state.temp.toFixed(1)}°C`, cx, cy);
+    }
+
+    function drawChart() {
+      const c = els.chartCanvas;
+      const { width, height } = resizeCanvas(c);
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+
+      const pad = { top: 18, right: 18, bottom: 28, left: 40 };
+      const W = width - pad.left - pad.right;
+      const H = height - pad.top - pad.bottom;
+      const hist = state.history;
+      if (hist.length < 2) return;
+
+      const maxDay = Math.max(14, hist[hist.length - 1].day);
+      const minTemp = Math.min(state.ambient, 10);
+      const maxTemp = Math.max(80, ...hist.map(h => h.temp));
+
+      // Grid
+      ctx.strokeStyle = 'rgba(143,160,147,0.18)';
+      ctx.lineWidth = 1;
+      for (let t = 10; t <= 80; t += 20) {
+        const y = pad.top + H * (1 - (t - minTemp) / (maxTemp - minTemp));
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + W, y); ctx.stroke();
+      }
+      for (let d = 0; d <= maxDay; d += 2) {
+        const x = pad.left + W * (d / maxDay);
+        ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + H); ctx.stroke();
+      }
+
+      // Zones
+      const y65 = pad.top + H * (1 - (65 - minTemp) / (maxTemp - minTemp));
+      const y45 = pad.top + H * (1 - (45 - minTemp) / (maxTemp - minTemp));
+      ctx.fillStyle = 'rgba(255,122,112,0.08)';
+      ctx.fillRect(pad.left, pad.top, W, Math.max(0, y65 - pad.top));
+      ctx.fillStyle = 'rgba(126,249,138,0.06)';
+      ctx.fillRect(pad.left, y65, W, Math.max(0, y45 - y65));
+
+      // Temp curve
+      ctx.strokeStyle = '#7ef98a';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let i = 0; i < hist.length; i++) {
+        const h = hist[i];
+        const x = pad.left + W * (h.day / maxDay);
+        const y = pad.top + H * (1 - (h.temp - minTemp) / (maxTemp - minTemp));
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Turn markers
+      for (const h of hist) {
+        if (h.turn) {
+          const x = pad.left + W * (h.day / maxDay);
+          ctx.strokeStyle = '#f9d87e';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(x, pad.top);
+          ctx.lineTo(x, pad.top + H);
+          ctx.stroke();
+        }
+      }
+
+      // Labels
+      ctx.fillStyle = 'var(--muted)';
+      ctx.font = '11px ui-sans-serif, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      for (let t = 10; t <= 80; t += 20) {
+        const y = pad.top + H * (1 - (t - minTemp) / (maxTemp - minTemp));
+        ctx.fillText(`${t}°C`, pad.left - 7, y);
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      for (let d = 0; d <= maxDay; d += 2) {
+        const x = pad.left + W * (d / maxDay);
+        ctx.fillText(`${d}d`, x, pad.top + H + 6);
+      }
+
+      // Axis titles
+      ctx.save();
+      ctx.translate(12, pad.top + H / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Temperature (°C)', 0, 0);
+      ctx.restore();
+    }
+
+    function draw() {
+      updateLabels();
+      updateReadout();
+      drawPile();
+      drawChart();
+    }
+
+    // --- loop ---
+    let last = performance.now();
+    let accum = 0;
+    function loop(now) {
+      const dt = (now - last) / 1000;
+      last = now;
+      if (state.running) {
+        accum += dt;
+        const simDt = 0.05; // each sim step = 0.05 day
+        // run multiple steps if tabbed away
+        while (accum >= 0.05) {
+          step(simDt);
+          // auto-turn
+          if (state.turnDays > 0 && state.day - state.lastTurn >= state.turnDays) {
+            turnNow();
+          }
+          accum -= 0.05;
+        }
+        draw();
+      }
+      requestAnimationFrame(loop);
+    }
+
+    // --- events ---
+    function bind() {
+      ['cn', 'moisture', 'size', 'turn', 'ambient'].forEach(id => {
+        els[id].addEventListener('input', () => {
+          readInputs();
+          updateLabels();
+        });
+        els[id].addEventListener('change', () => {
+          readInputs();
+          restart();
+        });
+      });
+      window.addEventListener('resize', draw);
+    }
+
+    bind();
+    resetParticles();
+    restart();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-14",
-    "title": "Fourier Epicycle Sketcher",
-    "slug": "fourier-epicycle-sketcher",
-    "publishedSlug": "2026-08-14-fourier-epicycle-sketcher",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-14-fourier-epicycle-sketcher/"
+    "date": "2026-08-15",
+    "title": "Compost Heat Simulator",
+    "slug": "compost-heat-simulator",
+    "publishedSlug": "2026-08-15-compost-heat-simulator",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-15-compost-heat-simulator/"
   },
   "apps": [
+    {
+      "date": "2026-08-15",
+      "title": "Compost Heat Simulator",
+      "slug": "compost-heat-simulator",
+      "publishedSlug": "2026-08-15-compost-heat-simulator",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-15-compost-heat-simulator/",
+      "description": "Interactive compost pile heat sandbox: adjust C/N, moisture, size, turning, and ambient temperature, then watch heat, oxygen, decomposition, and a live temperature curve evolve."
+    },
     {
       "date": "2026-08-14",
       "title": "Fourier Epicycle Sketcher",
