@@ -1,5 +1,120 @@
 # OpenClaw Use-Case Watch — History
 
+## 2026-08-15 15:30 UTC / 2026-08-16 01:00 ACDT
+
+**7 genuinely new brief-ready OpenClaw use cases added since the August 15 run.**
+
+Searched web, X, Hacker News, BuiltWithAgents.ai, Indie Hackers, DEV.to, Hashnode, LinkedIn, company blogs, and the official OpenClaw showcase pages. After a quiet August 15, this run found several concrete new operational examples: an enterprise retail deployment, an AWS reference architecture, two local-service multi-agent lead-response setups, a home-energy autonomy story, an IT admin browser-automation anecdote, and a new GTM sales agent.
+
+- **Added:** [Boll & Branch Deploys 'Tess,' an OpenClaw-Based AI Agent, Across Its $200M Retail Business](https://www.glossy.co/fashion/how-boll-branch-is-integrating-an-openclaw-based-ai-agent-in-every-part-of-its-business/) — Glossy (2026-08). The bedding brand's CEO built Tess with OpenClaw; it began as a scheduling assistant, expanded into Slack, Shopify, Iterable and Sprout Social, and now answers operational questions like "what do our Chestnut Hill customers buy?" across a $200M+ retail operation. ⭐ Strongest signal — credible enterprise retail deployment with named systems and first-person executive interview.
+- **Added:** [AWS Publishes Reference Architecture for an Autonomous OpenClaw E-Commerce Assistant](https://aws.amazon.com/blogs/messaging-and-targeting/build-an-autonomous-ecommerce-assistant-with-aws-end-user-messaging-amazon-bedrock-agentcore-and-openclaw/) — AWS Messaging Blog (2026-08). AWS released "Claw Boutique," an open-source CDK-deployed stack that runs an OpenClaw seller agent on EKS over Telegram/WhatsApp/email, handling restock, refund and order commands, while Bedrock AgentCore manages real-time buyer chat. ⭐ Strong signal — official cloud vendor reference architecture.
+- **Added:** [19 OpenClaw Agents Run 24/7 for Local Service Businesses on an $8/Month VPS](https://www.builtwithagents.ai/strategy/19-openclaw-agents-local-service-businesses-8-dollars-month) — BuiltWithAgents.ai (2026-08). A multi-agent setup for plumbers, HVAC companies and law firms dropped response time from 6+ hours to 4 minutes and lifted lead conversion 34%, with shared memory preventing duplicate follow-ups when the same lead calls and texts. ⭐ Strong signal — operationally detailed multi-agent local-service case study with named results.
+- **Added:** [Moving-Company Lead Agent 'Hermes' Responds in Under 45 Seconds, Projected to Add $700K](https://www.builtwithagents.ai/strategy/openclaw-lead-response-agent-blue-collar-businesses) — BuiltWithAgents.ai (2026-08). Todd Anderson's OpenClaw agent Hermes handles 15,000 leads per year for a moving company, scoring intent via iMessage and asking qualifying discovery questions so CSRs get warm, context-rich calls; a 5% conversion lift would add ~$700K. ⭐ Strong signal — clear ROI math and weekend MVP build story.
+- **Added:** [OpenClaw Agent 'Sam' Autonomously Managed a Tesla Powerwall Through a Planned Outage](https://x.com/AIRoboticsInt/status/2087984859511652670) — X / Reddit anecdote (August 13, 2026). User "Sam" used OpenClaw with pypowerwall to pre-charge two Powerwalls, switch to island mode, monitor solar/load, alert a family member when A/C threatened runtime, and carry the house until grid power returned. ⭐ Medium-high signal — vivid first-person operational autonomy, but unverified single-source anecdote.
+- **Added:** [OpenClaw Agent Handles IT Access Ticket by Browser-Automating an Unfamiliar Admin System](https://x.com/Zanzibased/status/2087903044239343687) — X / first-person anecdote (August 13, 2026). Given the goal "get her access," an OpenClaw agent on a Mac Mini used browser UI automation to restore a disabled account, fix a name spelling, re-enable membership, close the stale ticket and create the proper automation ticket. ⭐ Medium-high signal — striking goal-directed autonomy, but unverified single-source anecdote and raises security concerns.
+- **Added:** [ClawGTM — Autonomous Outbound Sales Agent Built on OpenClaw](https://x.com/hasantoxr/status/2088608785690738700) — X / product demo (August 15, 2026). ClawGTM turns a SaaS website URL into a full outbound motion: it scrapes positioning, mines job posts for matching companies, researches decision-makers, writes personalized email and LinkedIn sequences, and books meetings. ⭐ Medium signal — concrete product workflow, but primarily a demo/launch post rather than a documented customer case.
+
+### Skipped (already queued or lower signal)
+- Several BuiltWithAgents.ai entries already surfaced in earlier runs (e.g., landscaping lead response, 52 YouTube videos, AIDEN dealership assistant, Felix $14.7K revenue) were kept in their existing queue positions rather than re-added.
+- OpenClaw showcase pages and OpenClaw Lab directory list many community examples, but no new examples dated after August 12 were identified.
+- Generic listicles, consult-site landing pages, setup-only tutorials, release notes, and ecosystem tooling posts (Clawflows, Opik, ZeroGPU Router plugin) were skipped.
+- Hacker News returned zero new "openclaw" stories in the August 14–15 UTC window.
+
+### Removed to maintain 90-item cap
+- 17 Weeks Running 7 Autonomous AI Agents in Production — Real Lessons and Real Numbers
+- I Built a Self-Healing PR Monitor With OpenClaw (And It Caught Its Own Bugs)
+- From OpenClaw to IronClaw: A Real Builder's Experience
+- Running OpenClaw for 30 Days: Lessons From an Experiment With ~600 Users
+- I Run a Travel SaaS With 12 AI Agents and 48 Cron Jobs on OpenClaw. Here's My Exact Setup.
+- AI Agent Generated $14,700 in 3 Weeks From a $1,000 Budget (older duplicate; stronger, newer queue entries now lead)
+- $50 to Profitable in 15 Days With an OpenClaw Agent (older lower-signal entry)
+
+### Stats
+- brief-picks.json: 90 entries (7 new, 7 removed, queue maintained at 90)
+- Next brief lead: Boll & Branch's Tess enterprise retail agent
+- No user-facing message sent (notable but not urgent).
+
+---
+
+## 2026-08-14 15:30 UTC / 2026-08-15 01:00 ACDT
+
+**No genuinely new high-signal OpenClaw use cases added since the August 13 run.**
+
+Searched web, X, Hacker News, BuiltWithAgents.ai, Indie Hackers, DEV.to, Hashnode, Towards Data Science, company blogs, and the official OpenClaw showcase pages.
+
+- **Nothing added.** Hacker News Algolia returned zero new "openclaw" stories in the August 13–14 UTC window. X produced ecosystem chatter (Opik trace exports, Clawflows, local-gateway onboarding, a user moving off OpenClaw) but no new concrete deployed use cases. The official OpenClaw showcase pages still list the same community examples.
+- **Notable but skipped:**
+  - Towards Data Science — "How to Orchestrate a Fleet of OpenClaw Bots" (August 13, 2026). Instructional architecture piece; not a specific deployed use case with metrics.
+  - DEV.to — "How I Built a Passive Income Content System With an AI Agent (OpenClaw)" (August 10, 2026). Already covered/surfaced in earlier scans; lower signal than current queue.
+  - OpenClaw local-gateway onboarding posts and ecosystem tooling (Clawflows, Opik integration, Vercel AI Gateway mention) — tooling context, not a deployed use case.
+  - Generic listicles, consult-site landing pages, setup-only tutorials, and release notes were skipped.
+
+### Stats
+- brief-picks.json: 90 entries (0 new, queue maintained at 90)
+- Next brief lead: Hannes Rudolph daily OpenClaw business tasks (still the freshest queued example)
+- No user-facing message sent.
+
+---
+
+## 2026-08-12 15:30 UTC / 2026-08-13 01:00 ACDT
+
+**5 genuinely new brief-ready OpenClaw use cases added since the August 11 run.**
+
+Searches across web, X, BuiltWithAgents.ai, and Indie Hackers found concrete new operational stories in daily business automation, agency client acquisition, automotive dealership operations, local-service lead response, and autonomous content publishing.
+
+- **Added:** [OpenClaw Agent Handles QuickBooks Expenses, Amazon Purchases, and LinkedIn Background Checks](https://x.com/hrudolph/status/2087401455238205941) — X / Hannes Rudolph (August 12, 2026). OpenClaw team member's agent automatically entered employee expenses into QuickBooks from WhatsApp receipts, purchased a product on Amazon, and wrote a LinkedIn background-check plugin for hiring — all in one day. ⭐ Strongest signal — credible, first-person, multi-task daily automation.
+- **Added:** [OpenClaw Bot Finds New Business Registrations and Mails Personalized Brand Postcards](https://x.com/TechWith_Nova/status/2087413731563389249) — X / TechWith_Nova (August 12, 2026). Autonomous agency client-acquisition pipeline that scans public business registrations, builds a complete brand and website, and mails a personalized postcard to the owner's door. ⭐ Strong signal — end-to-end outbound automation.
+- **Added:** [AIDEN — AI Executive Assistant Running a High-Volume Kia Dealership](https://www.indiehackers.com/post/i-built-an-ai-executive-assistant-that-runs-my-car-dealership-no-code-team-no-vendors-just-me-and-claude-e49c9297a7) — Indie Hackers (2026-08). New Car Manager at a San Antonio Kia dealership built AIDEN on OpenClaw + Claude + n8n + Supabase + browser automation, cutting ~2 hours/day of manual data work with 6:30am reports, auto-triaged CRM tasks, self-filling desk logs, and email summaries. ⭐ Strong signal — concrete operational assistant in a real high-volume dealership.
+- **Added:** [Landscaping Company's Lead-to-Booked Rate Jumps 42% With Instant AI Lead Response](https://www.builtwithagents.ai/strategy/instant-ai-lead-response-local-service-businesses) — BuiltWithAgents.ai (2026-08). OpenClaw agent for a landscaping company dropped response time from 30–60 minutes to under 60 seconds with personalized blue iMessage texts; lead-to-booked-estimate rate jumped 42% in two weeks. ⭐ Strong signal — measurable conversion lift in local services.
+- **Added:** [52 AI-Generated YouTube Videos in 6 Weeks With 30,000 Views and Zero Manual Editing](https://www.builtwithagents.ai/strategy/ai-agents-youtube-channel-52-videos-6-weeks-30k-views) — BuiltWithAgents.ai (2026-08). Autonomous OpenClaw pipeline published 52 YouTube videos in 6 weeks across 14–15 languages, generating 30,170 views with a 4–5% like rate (double industry standard). ⭐ Strong signal — complete autonomous content factory with real metrics.
+
+### Skipped (already queued or lower signal)
+- Mark Smith production Azure deployment note, Captain Random personal financial dashboard, and several tutorial/setup posts were too thin or not sufficiently novel for the brief queue.
+- Trent AI code-to-doc pipeline, AutomateThis website execution layer, and armorbreak 3-month production post were not promoted because they could not be verified as published after the August 10 cutoff.
+- Generic listicles, consult-site landing pages, and release notes were skipped.
+
+### Removed to maintain 90-item cap
+- Running OpenClaw for 30 Days: Lessons From an Experiment With ~600 Users
+- I Built a Self-Healing PR Monitor With OpenClaw (And It Caught Its Own Bugs)
+- From OpenClaw to IronClaw: A Real Builder's Experience
+- 17 Weeks Running 7 Autonomous AI Agents in Production — Real Lessons and Real Numbers
+- I Run a Travel SaaS With 12 AI Agents and 48 Cron Jobs on OpenClaw. Here's My Exact Setup.
+
+### Stats
+- brief-picks.json: 90 entries (5 new, 5 removed, queue maintained at 90)
+- Next brief lead: Hannes Rudolph daily OpenClaw business tasks
+- No user-facing message sent (notable but not urgent).
+
+---
+
+## 2026-08-10 01:00 ACDT
+
+**10 genuinely new brief-ready OpenClaw use cases added since the August 9 run.**
+
+Searches across web, X, Hacker News, BuiltWithAgents.ai, company blogs, and LinkedIn found strong new operational stories in marketing operations, autonomous revenue experiments, Meta ad management, small-team production support, lead generation, agent-factory software development, recruitment, enterprise backlog clearing, and PPC copilots.
+
+- **Added:** [How Max Replaced His Marketing Team With OpenClaw Agents](https://coldiq.com/blog/how-max-replaced-his-marketing-team-with-openclaw-agents) — ColdIQ (2026-08). Trigify founder Max Mitcham runs three OpenClaw agents (Bella, Rex, Taz) as a marketing org chart: daily 9am standup, competitive research, blog/LinkedIn/Substack production, and self-updating skills. The AI-written blogs generated 40 inbound leads in a single week. ⭐ Strongest signal — concrete multi-agent marketing operation with measurable lead output.
+- **Added:** [An Autonomous OpenClaw Agent Generated $14,700 in Revenue in 3 Weeks From a $1,000 Budget](https://www.builtwithagents.ai/strategy/openclaw-autonomous-agent-14700-revenue-3-weeks) — BuiltWithAgents.ai (2026-08). Nat Eliason's OpenClaw agent Felix used a three-layer PARA memory architecture to autonomously choose products, build sales pages, market on X, and process Stripe payments — reaching a $4,000/week run rate. ⭐ Strong signal — documented autonomous revenue experiment.
+- **Added:** [Fully Autonomous Meta Ads Manager Built on OpenClaw](https://www.builtwithagents.ai/strategy/autonomous-meta-ads-manager-openclaw) — BuiltWithAgents.ai (2026-08). Matthew Berman's five-skill OpenClaw system monitors, pauses, scales, writes, and uploads Meta ads using frequency as a fatigue early-warning signal; auto-paused an $87 CPA campaign at 3am and scaled the best performer by 30%. ⭐ Strong signal — complete agentic ad-management system released free.
+- **Added:** [OpenClaw in Practice: A Small Team's Field Notes](https://news.ycombinator.com/item?id=46846592) — Hacker News / SubEasy.ai (2026-08). Founder set up OpenClaw with a Telegram bot and Claude Opus; it built its own Vercel-deployed report workflow, compiled and deployed a yt-dlp source patch to fix a production emergency in 20 minutes, and now handles customer complaints, influencer outreach, and review monitoring. ⭐ Strong signal — real production glue work and incident response.
+- **Added:** [100 Free HVAC Leads in 10 Minutes Using OpenClaw and Apify](https://www.builtwithagents.ai/strategy/openclaw-free-lead-generation-apify-google-maps) — BuiltWithAgents.ai (2026-08). Zach Babiarz built an OpenClaw lead-generation skill that scrapes 100 local businesses from Google Maps via Apify, crawls each website, scores AI-readiness 1-10, and drafts personalized Gmail outreach from a single voice command. ⭐ Strong signal — practical, repeatable agency pipeline.
+- **Added:** [How Shadow Inbox Was Built With an OpenClaw Agent Factory](https://blog.getshadowinbox.com/posts/built-with-openclaw) — Shadow Inbox blog (2026-08). MVP built in one week with four OpenClaw agents writing ~60% of initial code via a typed message bus; four weeks of human hardening covered queue resilience, classifier eval, auth/billing/secrets, and monitoring. ⭐ Strong signal — honest build log quantifying agent vs human contributions and security boundaries.
+- **Added:** [Three AI Agents, One Recruitment Agency, 73% More Placements](https://quantumflowautomation.ai/blog/ai-recruitment-agency-case-study) — Quantum Flow Automation blog (2026-06-02). Ashford Talent deployed three OpenClaw agents for CV screening, candidate outreach/interview scheduling, and Monday client reports on Google Cloud Run, recovering 28-35 hours/week and increasing placements by 73%. ⭐ Strong signal — named agency with concrete time and placement metrics.
+- **Added:** [Mr Apple Cleared 6 Months of Jira Backlog in 3 Weeks With OpenClaw Agent 'Eve'](https://www.linkedin.com/posts/geoffmunn_how-we-used-openclaw-to-automate-delivery-activity-7485645887612997633-YPTi) — LinkedIn / Mr Apple (2026-07-22). Geoff Munn's team built Eve, an OpenClaw orchestration agent that worked through hundreds of critical Jira bugs in days, clearing six months of backlog; Claude Sonnet orchestrates self-hosted Qwen3.6-27B subagents for NZD$2,000/month. ⭐ Strong signal — enterprise agriculture/tech-debt backlog clearance.
+- **Added:** [An AI Agent Turned a $50 Experiment Into a Profitable Service Business in 15 Days](https://www.builtwithagents.ai/strategy/ai-agent-50-dollar-experiment-profitable-in-15-days) — BuiltWithAgents.ai (2026-08). A Reddit user gave an OpenClaw + Claude agent $50 and a no-hand-holding directive; after a failed guide launch, the agent pivoted to done-for-you AI infrastructure setup and crossed profitability with two overnight sales totaling over $600 while spawning four sub-agents. ⭐ Strong signal — autonomous business pivot documented honestly.
+- **Added:** [Equeco Built a 24/7 PPC Marketing Copilot on OpenClaw and Slack](https://www.equeco.com/news/openclaw-ai-ppc-copilot) — Equeco blog (2026-08). PPC account manager Luke runs on OpenClaw with Claude, Slack, and the Google Ads MCP server, auditing accounts in under a minute and prepping client weekly reviews overnight; the team honestly documents hallucination risks. ⭐ Strong signal — production copilot with clear human-review boundary.
+
+### Skipped (already queued or lower signal)
+- HVAC phone-system 30-day test, local-service 19-agent setup, lead-response agent for moving company, UK accountancy AI OS, K8s Helm operator, AWS Claw Boutique, Storyie ASO, Kilo.ai real estate recipes, and food-truck multi-agent story were already in brief-picks.json.
+- Generic consult-site listicles, undated case-study landing pages, and setup-only tutorials were skipped.
+- The widely discussed Australian gym-booking incident (OpenClaw agent canceling another user's reservation via an API auth gap) is important agent-risk context but not a constructive use-case brief example; noted in search notes rather than queued.
+
+### Stats
+- brief-picks.json: 90 entries (10 new, queue capped)
+- Next brief lead: Trigify / Max Mitcham multi-agent marketing team
+
+---
+
 ## 2026-06-28 01:00 ACDT
 
 **Six genuinely new brief-ready OpenClaw use cases added since June 26.**
@@ -379,3 +494,29 @@ Queue: **77 items** (30 `recent` + 47 `queued`).
 - **Tutorial/setup guides:** Instructional or productized-service pitches without fresh production metrics.
 
 Queue: **78 items** (31 `recent` + 47 `queued`).
+
+## 2026-08-10 01:00 ACDT
+
+**8 genuinely new brief-ready OpenClaw use cases added since the June 28 run.**
+
+Searches across web, X, GitHub, BuiltWithAgents.ai, company blogs, and AWS found new operational stories in local service businesses, accountancy, Kubernetes operations, AWS reference architectures, and mobile ASO, plus a real estate recipe set.
+
+- **Added:** [19 OpenClaw Agents Running 24/7 for Local Service Businesses on $8/Month](https://www.builtwithagents.ai/strategy/19-openclaw-agents-local-service-businesses-8-dollars-month) — BuiltWithAgents.ai (2026-08). A multi-agent setup of 19 specialised OpenClaw agents on a $6/month VPS handles Google Business reviews, missed-call SMS responses, ETA updates, and lead follow-up for plumbers, HVAC companies, and law firms via a shared memory layer, cutting response time from 6+ hours to 4 minutes and lifting one plumbing firm's lead response rate from 30% to 94%.
+- **Added:** [One AI Agent Handled Every Phone Call at an HVAC Company for 30 Days Straight](https://www.builtwithagents.ai/strategy/openclaw-hvac-phone-system-30-day-test) — BuiltWithAgents.ai (2026-08). Sonor AI deployed a single OpenClaw voice agent to run an HVAC company's entire phone operation for 30 days, booking jobs, dispatching technicians, following up with leads, and sending review requests at roughly 15 cents/minute instead of $45,000/year for an office coordinator.
+- **Added:** [OpenClaw Lead Response Agent for Blue Collar Businesses](https://www.builtwithagents.ai/strategy/openclaw-lead-response-agent-blue-collar-businesses) — BuiltWithAgents.ai (2026-08). Todd Anderson built an OpenClaw agent called Hermes for a moving company that handles ~15,000 leads per year, scoring each lead and sending personalised blue iMessage responses in under 45 seconds to keep leads warm until a CSR can call; a 5% conversion lift is projected to add $700K revenue.
+- **Added:** [How We Built an AI Operating System for a UK Accountancy Firm](https://quantumflowautomation.ai/blog/ai-operating-system-accountancy-firm) — Quantum Flow Automation blog (2026-06-01). Quantum Flow Automation built three OpenClaw agents for Hartley Accounts: an email triage agent, a monthly report drafting agent connected to Xero, and a client onboarding agent over WhatsApp, recovering 22+ hours per week and paying for itself in just over six weeks.
+- **Added:** [Run OpenClaw on Kubernetes with a Helm operator](https://paperclip.inc/blog/openclaw-kubernetes-helm-operator) — Paperclip blog (2026-06-18). Paperclip open-sourced the production Kubernetes operator it uses for its managed EU-sovereign OpenClaw service; a single OpenClawInstance custom resource deploys a StatefulSet, NetworkPolicy, RBAC, PVC, ConfigMap, per-instance gateway token, optional Chromium browser sidecar, and Prometheus metrics.
+- **Added:** [Build an autonomous ecommerce assistant with AWS End User Messaging, Amazon Bedrock AgentCore, and OpenClaw](https://aws.amazon.com/blogs/messaging-and-targeting/build-an-autonomous-ecommerce-assistant-with-aws-end-user-messaging-amazon-bedrock-agentcore-and-openclaw/) — AWS Messaging Blog (2026-05-29). AWS published Claw Boutique, an open-source reference architecture that connects a web storefront, WhatsApp, email, and Telegram into a single OpenClaw-driven ecommerce experience on EKS, Bedrock AgentCore Runtime, and AWS End User Messaging Social, deployed with one CDK command.
+- **Added:** [Automating App Store Optimization with an AI Agent and asc CLI](https://storyie.com/blog/openclaw-aso-app-store-connect) — Storyie blog (2026-06). Storyie extended its resident OpenClaw agent to automate ASO across 10 App Store locales by reading the app's locale files, using asc CLI to fetch and preview metadata changes, generating keyword-optimised copy, and gating every submission behind a --dry-run human review.
+- **Added:** [OpenClaw recipes for real estate teams: a better way to fix speed-to-lead](https://blog.kilo.ai/p/openclaw-recipes-for-real-estate) — Kilo.ai blog (2026-04-17). Kilo.ai published a set of OpenClaw recipes on KiloClaw for real estate teams that combine Speed-to-Lead SLA, Lead Intake to Appointment, and Lead Routing Balancer skills with ClawHub email and API gateway skills to turn inbound inquiries into owned, routed, and followed-up appointments.
+
+### Skipped (already queued or lower signal)
+- Storyie's main dev-workflow post and Little Might / Paperclip recovery stories were already in brief-picks.json.
+- Bunny Honey Club 33-agent OpenClaw Factory was already queued.
+- Several curated listicles, consult-site guides, and skill-marketplace SEO pages (e.g., openclawconsult.com vertical guides) were skipped as lower signal than first-person deployments.
+- Hacker News / Reddit discussion threads about OpenClaw access, costs, and security were not concrete new use cases.
+- Generic case-study landing pages (ECOSIRE, UBOS, etc.) with no date or detail were skipped.
+
+### Stats
+- brief-picks.json: 90 entries (8 new, queue capped at 90)
+- Next brief lead: local service multi-agent (19 agents / $8/month)

@@ -1,51 +1,56 @@
 # OpenClaw Use-Case Watch — Latest Summary
 
-**Run:** Sunday, June 28, 2026, 01:00 ACDT (2026-06-27 15:30 UTC)
+**Run:** Sunday, August 16, 2026, 01:00 ACDT (2026-08-15 15:30 UTC)
 
-**Verdict:** Found six genuinely new, high-signal OpenClaw use cases since the June 26 run.
+**Verdict:** 7 genuinely new, high-signal OpenClaw use cases found since the August 15 run.
 
 ## New brief-ready examples (freshest first)
 
-1. **I Built a 10-Agent AI Company That Runs My Food Truck**  
-   A solo founder in Fremont, CA runs a real Indian street-food truck *and* a 19-agent OpenClaw "company" (Sanvith-OS) with 52 cron jobs. Agents cover CEO, CTO, CFO, CMO, CRO, engineer, EA and intel roles, posting real output to Discord. They pull Square P&L, generate TikTok ideas, monitor competitor pricing and local events, and consolidate memory nightly.  
-   <https://dev.to/bkashji/open-claw-that-runs-food-truck--1fa3> · 2026-06-27
+1. **Boll & Branch Deploys 'Tess,' an OpenClaw-Based AI Agent, Across Its $200M Retail Business**  
+The bedding brand's CEO built Tess with OpenClaw; it began as a scheduling assistant, expanded into Slack, Shopify, Iterable and Sprout Social, and now answers operational questions like "what do our Chestnut Hill customers buy?" across a $200M+ retail operation.  
+<https://www.glossy.co/fashion/how-boll-branch-is-integrating-an-openclaw-based-ai-agent-in-every-part-of-its-business/> · 2026-08
 
-2. **How Eximus Started Adopting OpenClaw**  
-   Enterprise software firm Eximus explains its first production steps: isolate an Azure VM behind a reverse proxy and VPN, integrate OpenClaw into Microsoft Teams via Azure AD and a bridge, and use the agent to help debug its own proxy/integration issues.  
-   <https://www.eximus-software.com/en/resources/how-eximus-started-adopting-openclaw> · 2026-06-27
+2. **AWS Publishes Reference Architecture for an Autonomous OpenClaw E-Commerce Assistant**  
+AWS Messaging Blog released "Claw Boutique," an open-source CDK-deployed stack that runs an OpenClaw seller agent on EKS over Telegram/WhatsApp/email, handling restock, refund and order commands, while Bedrock AgentCore manages real-time buyer chat.  
+<https://aws.amazon.com/blogs/messaging-and-targeting/build-an-autonomous-ecommerce-assistant-with-aws-end-user-messaging-amazon-bedrock-agentcore-and-openclaw/> · 2026-08
 
-3. **How do you give an AI agent a password without losing your mind (or your secrets)?**  
-   A global fintech running OpenClaw agents across Security, Finance, Compliance, HR, Engineering and Anti-Fraud describes its secrets architecture. Credentials live in 1Password; every retrieval requires a biometric TouchID approval via the desktop app, and a temporary tmux session keeps secrets only in memory during a workflow.  
-   <https://derivai.substack.com/p/how-do-you-give-an-ai-agent-a-password> · 2026-06-27
+3. **19 OpenClaw Agents Run 24/7 for Local Service Businesses on an $8/Month VPS**  
+A multi-agent setup for plumbers, HVAC companies and law firms dropped response time from 6+ hours to 4 minutes and lifted lead conversion 34%, with shared memory preventing duplicate follow-ups when the same lead calls and texts.  
+<https://www.builtwithagents.ai/strategy/19-openclaw-agents-local-service-businesses-8-dollars-month> · 2026-08
 
-4. **We got local models to triage the OpenClaw repo for FREE**  
-   Hugging Face engineers use an NVIDIA DGX Spark / GB10 to run local Gemma and Qwen models plus a restricted `reposhell`, classifying incoming OpenClaw issues and PRs in real time and routing maintainer-relevant items to Discord without burning hosted API quota.  
-   <https://huggingface.co/blog/local-models-pr-triage> · 2026-06-27
+4. **Moving-Company Lead Agent 'Hermes' Responds in Under 45 Seconds, Projected to Add $700K**  
+Todd Anderson's OpenClaw agent Hermes handles 15,000 leads per year for a moving company, scoring intent via iMessage and asking qualifying discovery questions so CSRs get warm, context-rich calls; a 5% conversion lift would add ~$700K.  
+<https://www.builtwithagents.ai/strategy/openclaw-lead-response-agent-blue-collar-businesses> · 2026-08
 
-5. **OpenClaw in Production: When the Most Advanced Memory System Meets the Quietest Failure**  
-   A three-week production run surfaces concrete pitfalls: auto-compaction silently swallowed a generated reply when context exceeded the model limit; `OPENCLAW_GATEWAY_TOKEN`, keyRef and provider-prefix mismatches caused startup failures; and runtime logs live in journald, not file logs.  
-   <https://zhuoqidev.com/en/posts/openclaw-pitfalls/> · 2026-06-27
+5. **OpenClaw Agent 'Sam' Autonomously Managed a Tesla Powerwall Through a Planned Outage**  
+User "Sam" used OpenClaw with pypowerwall to pre-charge two Powerwalls, switch to island mode, monitor solar/load, alert a family member when A/C threatened runtime, and carry the house until grid power returned.  
+<https://x.com/AIRoboticsInt/status/2087984859511652670> · 2026-08-13
 
-6. **YY Group launches OpenClaw agentic AI across hotel clients and internal operations**  
-   YY Group (NASDAQ: YYGH) announced an initial production rollout of OpenClaw across three Southeast Asian hotel clients via its YY Circle platform and WhatsApp/Telegram, with chat-based shift creation and automated worker outreach already live.  
-   <https://digiconasia.net/pr-newswire/yy-group-nasdaq-yygh-launches-openclaw-agentic-ai-across-hotel-clients-and-internal-operations> · 2026-06-26
+6. **OpenClaw Agent Handles IT Access Ticket by Browser-Automating an Unfamiliar Admin System**  
+Given the goal "get her access," an OpenClaw agent on a Mac Mini used browser UI automation to restore a disabled account, fix a name spelling, re-enable membership, close the stale ticket and create the proper automation ticket.  
+<https://x.com/Zanzibased/status/2087903044239343687> · 2026-08-13
 
-## Still-useful queued examples
+7. **ClawGTM — Autonomous Outbound Sales Agent Built on OpenClaw**  
+ClawGTM turns a SaaS website URL into a full outbound motion: it scrapes positioning, mines job posts for matching companies, researches decision-makers, writes personalized email and LinkedIn sequences, and books meetings.  
+<https://x.com/hasantoxr/status/2088608785690738700> · 2026-08-15
 
-- **How I Rebuilt My AI Agent Team After the Lobster Lobotomy** — Little Might’s post-Anthropic recovery on a local Mac Mini (2026-06-24).  
-- **OpenClaw as a personal AI content manager (full breakdown)** — Telegram content agent with Docker, Kimi K2.5 and ClawHub skills (2026-06-24).  
-- **I replaced an $800/month web scraping API with 200 lines of Python** — Fintech cost-replacement crawler processing 800k pages/mo for ~$90 (2026-06-16).  
-- **HackMyClaw.com: Over 6K attempts to break AI assistant Fiu** — Public prompt-injection stress-test; no successful secret leakage (2026-06-26).  
-- **Developer deploys always-on freelance agent using OpenClaw** — PR triage, client status drafts and follow-ups via Telegram (2026-06-16).  
-- **I think I found the first real reason to build ai agent workflows in OpenClaw** — Receipt-to-ledger bookkeeping as a bounded, approval-gated agent workflow (2026-06-06).  
+## Next best queued examples
+
+- **OpenClaw Agent Handles QuickBooks Expenses, Amazon Purchases, and LinkedIn Background Checks** — Hannes Rudolph's agent automated employee expenses, Amazon purchasing and a LinkedIn hiring plugin in one day. · 2026-08-12
+- **OpenClaw Bot Finds New Business Registrations and Mails Personalized Brand Postcards** — Autonomous agency client-acquisition pipeline that scans public business registrations, builds a brand/website, and mails a postcard to the owner's door. · 2026-08-12
+- **AIDEN — AI Executive Assistant Running a High-Volume Kia Dealership** — New Car Manager built AIDEN on OpenClaw + Claude + n8n, cutting ~2 hours/day of manual data work. · 2026-08
 
 ## Notes
 
-- Sources scanned: web search, X search, GitHub, DEV.to, Medium, Substack, Hugging Face blog, company blogs, PRNewswire/digiconasia and Hacker News.
-- Several results were already in `brief-picks.json` or `history.md` (e.g., Nefe Tech hosted OpenClaw, Mansi More’s content engine, ClawList, Storyie, Clawr.ing, AucoBot). Those were skipped.
-- Lower-signal or generic listicles were also skipped to keep the queue high-signal.
+- Sources scanned: web search, X search, Hacker News, BuiltWithAgents.ai, Indie Hackers, DEV.to, Hashnode, LinkedIn, company blogs, and the official OpenClaw showcase pages.
+- The strongest new signal is the Glossy interview with Boll & Branch: a named $200M retailer, named executive, named systems (Slack, Shopify, Iterable, Sprout Social), and an explicit OpenClaw origin story.
+- AWS's "Claw Boutique" reference architecture is notable because it is an official, deployable, open-source AWS pattern that combines OpenClaw for seller operations with Bedrock AgentCore for buyer chat.
+- BuiltWithAgents.ai surfaced two additional concrete local-service case studies with clear metrics and cost structures.
+- Mid-August X posts supplied two vivid operational anecdotes (Powerwall management, IT access automation). These are single-source, unverified first-person stories, so they are queued but flagged medium-high rather than high.
+- Hacker News Algolia returned zero new "openclaw" stories in the August 14–15 UTC window.
+- Generic listicles, consult-site landing pages, setup-only tutorials, release notes, and ecosystem tooling posts were skipped to keep the queue high-signal.
 
 ## Stats
 
-- brief-picks.json: **90 entries** (6 new this run, queue capped)
-- state.json updated: `lastGenuineNewEntryDate` = 2026-06-27
+- brief-picks.json: **90 entries** (7 new this run, 7 removed to maintain cap)
+- state.json updated: `lastGenuineNewEntryDate` set to 2026-08-16
