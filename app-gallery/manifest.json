@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-15",
-    "title": "Compost Heat Simulator",
-    "slug": "compost-heat-simulator",
-    "publishedSlug": "2026-08-15-compost-heat-simulator",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-15-compost-heat-simulator/"
+    "date": "2026-08-17",
+    "title": "Firefly Sync Sandbox",
+    "slug": "firefly-sync-sandbox",
+    "publishedSlug": "2026-08-17-firefly-sync-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-17-firefly-sync-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-08-17",
+      "title": "Firefly Sync Sandbox",
+      "slug": "firefly-sync-sandbox",
+      "publishedSlug": "2026-08-17-firefly-sync-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-17-firefly-sync-sandbox/",
+      "description": "Pulse-coupled firefly synchronisation sandbox — tap to add fireflies, adjust coupling and range, and watch random flicker collapse into a pulsing rhythm."
+    },
     {
       "date": "2026-08-15",
       "title": "Compost Heat Simulator",

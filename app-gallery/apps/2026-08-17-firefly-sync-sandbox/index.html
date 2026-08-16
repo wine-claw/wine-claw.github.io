@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Firefly Sync Sandbox</title>
+  <style>
+    :root {
+      --bg: #0a0f16;
+      --panel: rgba(20, 30, 40, 0.92);
+      --text: #e6f3ff;
+      --muted: #8da0b3;
+      --accent: #c8ff3d;
+      --accent2: #6ee7ff;
+      --danger: #ff7e7e;
+      --warn: #ffd166;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      touch-action: none;
+    }
+    #canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      cursor: crosshair;
+    }
+    .ui-layer {
+      position: fixed;
+      z-index: 10;
+      pointer-events: none;
+      inset: 0;
+    }
+    .banner {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      background: linear-gradient(90deg, rgba(255,0,0,0.22), rgba(255,0,0,0.05));
+      border-bottom: 1px solid rgba(255,0,0,0.3);
+      color: #ffdede;
+      font-size: 12px;
+      padding: 8px 14px;
+      text-align: center;
+      pointer-events: auto;
+      line-height: 1.4;
+    }
+    .panel {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--panel);
+      border: 1px solid rgba(110, 231, 255, 0.18);
+      border-radius: 16px;
+      padding: 14px 16px 16px;
+      backdrop-filter: blur(10px);
+      pointer-events: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+    }
+    h1 {
+      margin: 0 0 10px 0;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .firefly-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .metrics {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      margin-bottom: 12px;
+      color: var(--muted);
+    }
+    .metrics b { color: var(--text); font-weight: 600; }
+    .metric-fill { color: var(--accent2); }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .control label {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .control span.val { color: var(--text); font-variant-numeric: tabular-nums; }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent2);
+    }
+    .buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button {
+      background: rgba(110, 231, 255, 0.12);
+      border: 1px solid rgba(110, 231, 255, 0.35);
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+    }
+    button:hover { background: rgba(110, 231, 255, 0.22); }
+    button:active { transform: translateY(1px); }
+    button.primary { background: rgba(200, 255, 61, 0.16); border-color: rgba(200, 255, 61, 0.45); color: #f3ffd6; }
+    button.primary:hover { background: rgba(200, 255, 61, 0.26); }
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.35;
+    }
+    .legend {
+      position: absolute;
+      top: 56px;
+      left: 12px;
+      background: var(--panel);
+      border: 1px solid rgba(110, 231, 255, 0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--muted);
+      pointer-events: auto;
+      backdrop-filter: blur(8px);
+      max-width: 220px;
+    }
+    .legend .row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+    .legend .glow { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .legend .dim { width: 8px; height: 8px; border-radius: 50%; background: rgba(141, 160, 179, 0.5); }
+    @media (max-width: 520px) {
+      h1 { font-size: 15px; }
+      .panel { padding: 12px 13px 14px; }
+      .metrics { gap: 10px; font-size: 12px; }
+      .controls { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .legend { top: 48px; left: 8px; right: 8px; max-width: none; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div class="ui-layer">
+    <div class="banner">
+      ⚠️ Experimental OpenClaw AI mini-app. Not professionally validated. For amusement and exploration only — do not rely on it for real decisions.
+    </div>
+
+    <div class="legend">
+      <div class="row"><div class="glow"></div> Flashing firefly</div>
+      <div class="row"><div class="dim"></div> Charging up</div>
+      <div class="row" style="margin-top:8px;color:var(--accent2)">Tap canvas to add a firefly</div>
+    </div>
+
+    <div class="panel">
+      <h1><span class="firefly-dot"></span> Firefly Sync Sandbox</h1>
+      <div class="metrics">
+        <div>Fireflies: <b id="nVal">80</b></div>
+        <div>Sync: <b id="syncVal" class="metric-fill">0%</b></div>
+        <div>Flashes/sec: <b id="flashVal">0</b></div>
+        <div>Mode: <b id="modeVal">Pulse-coupled</b></div>
+      </div>
+      <div class="controls">
+        <div class="control">
+          <label>Count <span class="val" id="countReadout">80</span></label>
+          <input id="count" type="range" min="10" max="250" value="80" />
+        </div>
+        <div class="control">
+          <label>Coupling <span class="val" id="couplingReadout">0.18</span></label>
+          <input id="coupling" type="range" min="0" max="0.6" step="0.01" value="0.18" />
+        </div>
+        <div class="control">
+          <label>Range <span class="val" id="rangeReadout">120px</span></label>
+          <input id="range" type="range" min="30" max="280" value="120" />
+        </div>
+        <div class="control">
+          <label>Speed <span class="val" id="speedReadout">1.0x</span></label>
+          <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1" />
+        </div>
+        <div class="control">
+          <label>Noise <span class="val" id="noiseReadout">8%</span></label>
+          <input id="noise" type="range" min="0" max="30" step="1" value="8" />
+        </div>
+        <div class="control">
+          <label>Topology <span class="val" id="topoReadout">Meadow</span></label>
+          <input id="topo" type="range" min="0" max="2" step="1" value="0" />
+        </div>
+      </div>
+      <div class="buttons">
+        <button id="reset" class="primary">Reset meadow</button>
+        <button id="scatter">Scatter random</button>
+        <button id="cluster">Cluster line</button>
+        <button id="pause">Pause</button>
+        <button id="presetSync">Preset: sync</button>
+        <button id="presetChaos">Preset: chaos</button>
+      </div>
+      <div class="hint">
+        Each firefly charges its internal clock. When it sees a neighbour flash, it jumps forward slightly. With enough coupling, disorder collapses into a single pulsing rhythm. Try clustering fireflies or raising coupling.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height, dpr;
+    let fireflies = [];
+    let running = true;
+    let lastTime = performance.now();
+    let flashCount = 0;
+    let flashAccumulator = 0;
+    let fpsFlashRate = 0;
+
+    const params = {
+      count: 80,
+      coupling: 0.18,
+      range: 120,
+      speed: 1.0,
+      noise: 0.08,
+      topology: 0, // 0 meadow, 1 line, 2 clusters
+    };
+
+    const ui = {
+      count: document.getElementById('count'),
+      coupling: document.getElementById('coupling'),
+      range: document.getElementById('range'),
+      speed: document.getElementById('speed'),
+      noise: document.getElementById('noise'),
+      topo: document.getElementById('topo'),
+      nVal: document.getElementById('nVal'),
+      syncVal: document.getElementById('syncVal'),
+      flashVal: document.getElementById('flashVal'),
+      modeVal: document.getElementById('modeVal'),
+      countReadout: document.getElementById('countReadout'),
+      couplingReadout: document.getElementById('couplingReadout'),
+      rangeReadout: document.getElementById('rangeReadout'),
+      speedReadout: document.getElementById('speedReadout'),
+      noiseReadout: document.getElementById('noiseReadout'),
+      topoReadout: document.getElementById('topoReadout'),
+    };
+
+    const topologyNames = ['Meadow', 'Line', 'Clusters'];
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Firefly {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.phase = Math.random();
+        this.baseFreq = 1.0 + (Math.random() - 0.5) * 0.15;
+        this.flash = 0; // current flash intensity 0..1
+        this.lastFlashTime = -1;
+        this.radius = 2.5 + Math.random() * 1.5;
+      }
+    }
+
+    function placeFireflies(topology, n) {
+      const padding = 60;
+      const flies = [];
+      if (topology === 1) {
+        // horizontal line across middle
+        const y = height / 2;
+        for (let i = 0; i < n; i++) {
+          const x = padding + (width - 2 * padding) * (i / Math.max(1, n - 1));
+          flies.push(new Firefly(x, y + (Math.random() - 0.5) * 40));
+        }
+      } else if (topology === 2) {
+        // three clusters
+        const clusters = 3;
+        for (let i = 0; i < n; i++) {
+          const c = i % clusters;
+          const cx = width * (0.2 + 0.3 * c);
+          const cy = height * (c % 2 === 0 ? 0.35 : 0.65);
+          const angle = Math.random() * Math.PI * 2;
+          const r = Math.random() * Math.min(width, height) * 0.12;
+          flies.push(new Firefly(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r));
+        }
+      } else {
+        for (let i = 0; i < n; i++) {
+          flies.push(new Firefly(
+            padding + Math.random() * (width - 2 * padding),
+            padding + Math.random() * (height - 2 * padding)
+          ));
+        }
+      }
+      return flies;
+    }
+
+    function reset() {
+      fireflies = placeFireflies(params.topology, params.count);
+      flashCount = 0;
+      flashAccumulator = 0;
+      fpsFlashRate = 0;
+    }
+
+    function updateReadouts() {
+      ui.countReadout.textContent = params.count;
+      ui.couplingReadout.textContent = params.coupling.toFixed(2);
+      ui.rangeReadout.textContent = params.range + 'px';
+      ui.speedReadout.textContent = params.speed.toFixed(1) + 'x';
+      ui.noiseReadout.textContent = Math.round(params.noise * 100) + '%';
+      ui.topoReadout.textContent = topologyNames[params.topology];
+      ui.nVal.textContent = fireflies.length;
+    }
+
+    function bindSlider(key, element, callback) {
+      element.addEventListener('input', () => {
+        let v = parseFloat(element.value);
+        if (key === 'count') v = Math.round(v);
+        params[key] = v;
+        if (callback) callback(v);
+        updateReadouts();
+      });
+    }
+
+    bindSlider('count', ui.count, (v) => {
+      const diff = v - fireflies.length;
+      if (diff > 0) {
+        const extra = placeFireflies(params.topology, diff);
+        fireflies.push(...extra);
+      } else if (diff < 0) {
+        fireflies.splice(0, -diff);
+      }
+    });
+    bindSlider('coupling', ui.coupling);
+    bindSlider('range', ui.range);
+    bindSlider('speed', ui.speed);
+    bindSlider('noise', ui.noise);
+    bindSlider('topology', ui.topo, () => reset());
+
+    document.getElementById('reset').addEventListener('click', reset);
+    document.getElementById('scatter').addEventListener('click', () => {
+      params.topology = 0;
+      ui.topo.value = 0;
+      reset();
+    });
+    document.getElementById('cluster').addEventListener('click', () => {
+      params.topology = 2;
+      ui.topo.value = 2;
+      reset();
+    });
+    document.getElementById('pause').addEventListener('click', (e) => {
+      running = !running;
+      e.target.textContent = running ? 'Pause' : 'Resume';
+    });
+    document.getElementById('presetSync').addEventListener('click', () => {
+      params.coupling = 0.45;
+      params.range = 180;
+      params.noise = 0.03;
+      params.speed = 1.0;
+      ui.coupling.value = 0.45;
+      ui.range.value = 180;
+      ui.noise.value = 3;
+      ui.speed.value = 1;
+      reset();
+    });
+    document.getElementById('presetChaos').addEventListener('click', () => {
+      params.coupling = 0.02;
+      params.range = 60;
+      params.noise = 0.20;
+      params.speed = 1.0;
+      ui.coupling.value = 0.02;
+      ui.range.value = 60;
+      ui.noise.value = 20;
+      ui.speed.value = 1;
+      reset();
+    });
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      if (fireflies.length < 250) {
+        fireflies.push(new Firefly(x, y));
+        params.count = fireflies.length;
+        ui.count.value = params.count;
+        updateReadouts();
+      }
+    });
+
+    function spatialGrid(flies) {
+      const cell = params.range;
+      const cols = Math.max(1, Math.ceil(width / cell));
+      const rows = Math.max(1, Math.ceil(height / cell));
+      const grid = new Array(cols * rows).fill(null).map(() => []);
+      for (let i = 0; i < flies.length; i++) {
+        const f = flies[i];
+        const c = Math.min(cols - 1, Math.max(0, Math.floor(f.x / cell)));
+        const r = Math.min(rows - 1, Math.max(0, Math.floor(f.y / cell)));
+        grid[r * cols + c].push(i);
+      }
+      return { grid, cols, rows };
+    }
+
+    function step(dt) {
+      const effectiveDt = dt * params.speed;
+      const r2 = params.range * params.range;
+      const { grid, cols, rows } = spatialGrid(fireflies);
+
+      // First pass: advance phase and detect flashes
+      for (let i = 0; i < fireflies.length; i++) {
+        const f = fireflies[i];
+        f.phase += (f.baseFreq * effectiveDt) / 1.4; // base period ~1.4s
+        if (f.phase >= 1) {
+          f.phase = 0;
+          f.flash = 1;
+          f.lastFlashTime = performance.now();
+          flashAccumulator++;
+        }
+      }
+
+      // Second pass: apply pulse coupling from neighbours that flashed this frame
+      // We approximate by checking if a neighbour just crossed threshold.
+      for (let i = 0; i < fireflies.length; i++) {
+        const f = fireflies[i];
+        const c = Math.min(cols - 1, Math.max(0, Math.floor(f.x / params.range)));
+        const r = Math.min(rows - 1, Math.max(0, Math.floor(f.y / params.range)));
+        let sawFlash = false;
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const cc = c + dx, rr = r + dy;
+            if (cc < 0 || cc >= cols || rr < 0 || rr >= rows) continue;
+            const cell = grid[rr * cols + cc];
+            for (let k = 0; k < cell.length; k++) {
+              const j = cell[k];
+              if (j === i) continue;
+              const g = fireflies[j];
+              const dxp = g.x - f.x, dyp = g.y - f.y;
+              if (dxp * dxp + dyp * dyp <= r2) {
+                if (g.flash >= 1) {
+                  sawFlash = true;
+                }
+              }
+            }
+          }
+        }
+        if (sawFlash) {
+          // Mirollo-Strogatz-style phase advance: jump forward by coupling * (1 - phase)
+          f.phase += params.coupling * (1 - f.phase);
+          if (f.phase >= 1) {
+            f.phase = 0;
+            f.flash = 1;
+            f.lastFlashTime = performance.now();
+            flashAccumulator++;
+          }
+        }
+      }
+
+      // Apply small frequency noise drift
+      for (let i = 0; i < fireflies.length; i++) {
+        const f = fireflies[i];
+        f.baseFreq += (Math.random() - 0.5) * params.noise * 0.002;
+        f.baseFreq = Math.max(0.6, Math.min(1.5, f.baseFreq));
+      }
+    }
+
+    function draw() {
+      // Fade background for trail effect
+      ctx.fillStyle = 'rgba(10, 15, 22, 0.35)';
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw connection web faintly
+      const r2 = params.range * params.range;
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < fireflies.length; i++) {
+        const f = fireflies[i];
+        if (f.flash <= 0) continue;
+        for (let j = i + 1; j < fireflies.length; j++) {
+          const g = fireflies[j];
+          const dx = g.x - f.x, dy = g.y - f.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 <= r2) {
+            const alpha = 0.06 * f.flash;
+            ctx.strokeStyle = `rgba(200, 255, 61, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(f.x, f.y);
+            ctx.lineTo(g.x, g.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw fireflies
+      for (let i = 0; i < fireflies.length; i++) {
+        const f = fireflies[i];
+        const dim = 0.18 + 0.15 * Math.sin(f.phase * Math.PI * 2); // gentle glow pulsing as it charges
+        const flash = Math.max(0, f.flash);
+        const intensity = dim + flash;
+        const radius = f.radius + flash * 8;
+        const glow = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, radius * 4);
+        glow.addColorStop(0, `rgba(200, 255, 61, ${Math.min(1, intensity)})`);
+        glow.addColorStop(0.4, `rgba(200, 255, 61, ${Math.min(0.55, intensity * 0.55)})`);
+        glow.addColorStop(1, 'rgba(200, 255, 61, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, radius * 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255, 255, 220, ${0.6 + flash * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        f.flash *= 0.85; // decay flash
+      }
+    }
+
+    function computeOrderParameter() {
+      if (fireflies.length === 0) return 0;
+      let sx = 0, sy = 0;
+      for (let i = 0; i < fireflies.length; i++) {
+        const theta = fireflies[i].phase * Math.PI * 2;
+        sx += Math.cos(theta);
+        sy += Math.sin(theta);
+      }
+      const r = Math.sqrt(sx * sx + sy * sy) / fireflies.length;
+      return r;
+    }
+
+    let frameCount = 0;
+    let lastReport = performance.now();
+    function loop(now) {
+      const dt = Math.min(0.05, (now - lastTime) / 1000);
+      lastTime = now;
+      if (running) {
+        step(dt);
+        draw();
+      }
+
+      // Update flash rate and sync every ~10 frames
+      frameCount++;
+      if (now - lastReport > 250) {
+        const order = computeOrderParameter();
+        const pct = Math.round(order * 100);
+        ui.syncVal.textContent = pct + '%';
+        ui.syncVal.style.color = pct > 70 ? 'var(--accent)' : (pct > 40 ? 'var(--warn)' : 'var(--danger)');
+        fpsFlashRate = flashAccumulator * 4; // per second (250ms sample)
+        flashAccumulator = 0;
+        ui.flashVal.textContent = fpsFlashRate.toFixed(0);
+        lastReport = now;
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    reset();
+    updateReadouts();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
