@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Morse Tap Trainer</title>
+  <style>
+    :root {
+      --bg: #0c0e12;
+      --panel: rgba(24, 28, 36, 0.95);
+      --text: #e9eef5;
+      --muted: #8d98a7;
+      --accent: #ffb84d;
+      --accent2: #4fd1ff;
+      --success: #6ee7a0;
+      --danger: #ff7e7e;
+      --key: #d96c1f;
+      --key-lit: #ff9f45;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow-x: hidden;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px 24px;
+    }
+    .banner {
+      width: 100%;
+      max-width: 760px;
+      background: linear-gradient(90deg, rgba(255,0,0,0.22), rgba(255,0,0,0.05));
+      border-bottom: 1px solid rgba(255,0,0,0.3);
+      color: #ffdede;
+      font-size: 12px;
+      padding: 8px 14px;
+      text-align: center;
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 18px 0 6px;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+      text-align: center;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    .app {
+      width: 100%;
+      max-width: 760px;
+      background: var(--panel);
+      border: 1px solid rgba(255, 184, 77, 0.18);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 12px 45px rgba(0,0,0,0.45);
+    }
+    .display {
+      background: #07080a;
+      border: 1px solid rgba(255, 184, 77, 0.22);
+      border-radius: 12px;
+      padding: 14px 16px;
+      min-height: 90px;
+      margin-bottom: 14px;
+    }
+    .decoded {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      min-height: 38px;
+      word-break: break-word;
+      line-height: 1.25;
+    }
+    .decoded .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 26px;
+      background: var(--accent);
+      animation: blink 1s steps(1) infinite;
+      vertical-align: bottom;
+      margin-left: 2px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .raw {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 18px;
+      color: var(--accent);
+      min-height: 24px;
+      margin-top: 6px;
+      letter-spacing: 2px;
+    }
+    .hint-line {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    .key-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 18px 0 12px;
+    }
+    .key {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, var(--key-lit), var(--key) 55%, #8a3b0a 95%);
+      border: 4px solid rgba(0,0,0,0.35);
+      box-shadow: 0 8px 0 #5e2607, 0 14px 28px rgba(0,0,0,0.55);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      position: relative;
+      transition: transform 0.05s, box-shadow 0.05s;
+    }
+    .key.active {
+      transform: translateY(6px);
+      box-shadow: 0 2px 0 #5e2607, 0 6px 12px rgba(0,0,0,0.55);
+      background: radial-gradient(circle at 35% 30%, #ffcc80, #ff9f45 55%, #b84e12 95%);
+    }
+    .key::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.18), rgba(255,255,255,0) 60%);
+      pointer-events: none;
+    }
+    .key-label {
+      position: absolute;
+      bottom: -26px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 18px 0 14px;
+    }
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .control label {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .control span.val { color: var(--text); font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    button {
+      background: rgba(255, 184, 77, 0.12);
+      border: 1px solid rgba(255, 184, 77, 0.4);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+    }
+    button:hover { background: rgba(255, 184, 77, 0.22); }
+    button:active { transform: translateY(1px); }
+    button.primary { background: rgba(79, 209, 255, 0.14); border-color: rgba(79, 209, 255, 0.45); }
+    button.primary:hover { background: rgba(79, 209, 255, 0.24); }
+    .mode-bar {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    .mode-btn {
+      background: transparent;
+      border: 1px solid rgba(141, 152, 167, 0.35);
+      color: var(--muted);
+    }
+    .mode-btn.active {
+      background: rgba(255, 184, 77, 0.16);
+      border-color: rgba(255, 184, 77, 0.55);
+      color: var(--text);
+    }
+    .drill {
+      background: #0a0c0f;
+      border: 1px solid rgba(79, 209, 255, 0.2);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+    .drill-target {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      color: var(--accent2);
+      letter-spacing: 4px;
+      margin-bottom: 10px;
+    }
+    .drill-result {
+      text-align: center;
+      font-size: 14px;
+      min-height: 22px;
+      margin-bottom: 10px;
+    }
+    .scoreboard {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .scoreboard b { color: var(--text); }
+    .reference {
+      margin-top: 16px;
+      border-top: 1px solid rgba(141, 152, 167, 0.2);
+      padding-top: 14px;
+    }
+    .reference h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .ref-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+      gap: 6px;
+    }
+    .ref-cell {
+      background: rgba(255,255,255,0.04);
+      border-radius: 6px;
+      padding: 5px 4px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .ref-cell .ch { font-weight: 700; color: var(--text); }
+    .ref-cell .code { font-family: monospace; color: var(--accent); letter-spacing: 1px; }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+      line-height: 1.4;
+    }
+    .tone-demo {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      margin-right: 6px;
+    }
+    .tone-demo.off { background: var(--danger); box-shadow: none; }
+    @media (max-width: 520px) {
+      h1 { font-size: 18px; }
+      .subtitle { font-size: 13px; }
+      .decoded { font-size: 22px; }
+      .raw { font-size: 15px; }
+      .key { width: 130px; height: 130px; }
+      .controls { grid-template-columns: 1fr 1fr; }
+      .ref-grid { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app. Not professionally validated. For amusement and exploration only — do not rely on it for real decisions.
+  </div>
+
+  <h1>⚡ Morse Tap Trainer</h1>
+  <div class="subtitle">Tap or hold the key. Short taps = dots, holds = dashes. Learn the rhythm, decode live, and copy random words.</div>
+
+  <div class="app">
+    <div class="mode-bar">
+      <button class="mode-btn active" data-mode="free">Free send</button>
+      <button class="mode-btn" data-mode="drill">Copy word</button>
+      <button class="mode-btn" data-mode="listen">Listen & read</button>
+    </div>
+
+    <div class="display">
+      <div class="decoded" id="decoded"><span class="cursor"></span></div>
+      <div class="raw" id="raw"></div>
+      <div class="hint-line" id="hint">Tap the key or press Space. Release briefly between elements, longer between letters, longest between words.</div>
+    </div>
+
+    <div class="key-wrap">
+      <div class="key" id="key" role="button" aria-label="Telegraph key">
+        <span class="key-label">Tap & hold</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <label>Character speed <span class="val" id="wpmReadout">15 WPM</span></label>
+        <input id="wpm" type="range" min="5" max="30" step="1" value="15" />
+      </div>
+      <div class="control">
+        <label>Effective speed <span class="val" id="effReadout">15 WPM</span></label>
+        <input id="effWpm" type="range" min="5" max="30" step="1" value="15" />
+      </div>
+      <div class="control">
+        <label>Tone pitch <span class="val" id="pitchReadout">600 Hz</span></label>
+        <input id="pitch" type="range" min="300" max="1000" step="10" value="600" />
+      </div>
+      <div class="control">
+        <label>Decoder strictness <span class="val" id="strictReadout">Normal</span></label>
+        <input id="strict" type="range" min="0" max="2" step="1" value="1" />
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button id="soundToggle"><span class="tone-demo" id="toneDot"></span>Sound</button>
+      <button id="resetText">Clear text</button>
+      <button id="resetRaw">Clear raw</button>
+      <button id="copyMorse" class="primary">Copy as Morse</button>
+    </div>
+
+    <div class="drill" id="drillPanel" style="display:none;">
+      <div class="drill-target" id="drillTarget">—</div>
+      <div class="drill-result" id="drillResult">Tap the target word in Morse</div>
+      <div class="scoreboard">
+        <div>Score: <b id="score">0</b></div>
+        <div>Streak: <b id="streak">0</b></div>
+        <div>Best: <b id="best">0</b></div>
+      </div>
+      <div class="buttons">
+        <button id="newWord" class="primary">New word</button>
+        <button id="replayWord">Replay word</button>
+        <button id="showHint">Hint</button>
+      </div>
+    </div>
+
+    <div class="reference">
+      <h3>Reference chart</h3>
+      <div class="ref-grid" id="refGrid"></div>
+    </div>
+
+    <div class="footer">
+      Timing uses the PARIS standard: dot = 1 unit, dash = 3 units, intra-character gap = 1 unit, inter-letter gap = 3 units, inter-word gap = 7 units. Farnsworth stretches the gaps between characters and words.
+    </div>
+  </div>
+
+  <script>
+    const MORSE = {
+      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+      'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+      'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+      'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+      'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--',
+      '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..',
+      '9': '----.', '0': '-----'
+    };
+    const WORDS = [
+      'PARIS', 'RADIO', 'WINE', 'CLAW', 'WAVES', 'DRILL', 'TAP', 'SHIP',
+      'CODE', 'MORSE', 'AUDIO', 'BEACON', 'LIGHT', 'TRAIN', 'HELLO', 'WORLD',
+      'GRAPE', 'CABLE', 'WIRE', 'SIGNAL', 'STORM', 'WATCH', 'NIGHT', 'CLOCK',
+      'SOUND', 'PULSE', 'TONE', 'KEYER', 'ANTENNA', 'BATTERY'
+    ];
+    const REVERSE = Object.fromEntries(Object.entries(MORSE).map(([k, v]) => [v, k]));
+
+    const ui = {
+      decoded: document.getElementById('decoded'),
+      raw: document.getElementById('raw'),
+      hint: document.getElementById('hint'),
+      key: document.getElementById('key'),
+      wpm: document.getElementById('wpm'),
+      effWpm: document.getElementById('effWpm'),
+      pitch: document.getElementById('pitch'),
+      strict: document.getElementById('strict'),
+      wpmReadout: document.getElementById('wpmReadout'),
+      effReadout: document.getElementById('effReadout'),
+      pitchReadout: document.getElementById('pitchReadout'),
+      strictReadout: document.getElementById('strictReadout'),
+      soundToggle: document.getElementById('soundToggle'),
+      toneDot: document.getElementById('toneDot'),
+      resetText: document.getElementById('resetText'),
+      resetRaw: document.getElementById('resetRaw'),
+      copyMorse: document.getElementById('copyMorse'),
+      modeBtns: document.querySelectorAll('.mode-btn'),
+      drillPanel: document.getElementById('drillPanel'),
+      drillTarget: document.getElementById('drillTarget'),
+      drillResult: document.getElementById('drillResult'),
+      score: document.getElementById('score'),
+      streak: document.getElementById('streak'),
+      best: document.getElementById('best'),
+      newWordBtn: document.getElementById('newWord'),
+      replayWordBtn: document.getElementById('replayWord'),
+      showHintBtn: document.getElementById('showHint'),
+      refGrid: document.getElementById('refGrid')
+    };
+
+    let mode = 'free';
+    let audioCtx = null;
+    let osc = null;
+    let gain = null;
+    let soundOn = true;
+    let downTime = 0;
+    let upTime = 0;
+    let isDown = false;
+    let currentChar = [];
+    let decodedText = '';
+    let rawText = '';
+    let lastEventTime = 0;
+    let timeouts = [];
+    let score = 0, streak = 0, best = 0;
+    let currentWord = '';
+    let drillInput = '';
+
+    function initAudio() {
+      if (audioCtx) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      audioCtx = new AudioContext();
+      gain = audioCtx.createGain();
+      gain.gain.value = 0;
+      gain.connect(audioCtx.destination);
+    }
+
+    function startTone() {
+      if (!soundOn) return;
+      initAudio();
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (osc) { try { osc.stop(); } catch(e){} }
+      osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = +ui.pitch.value;
+      osc.connect(gain);
+      osc.start();
+      gain.gain.cancelScheduledValues(audioCtx.currentTime);
+      gain.gain.setTargetAtTime(0.25, audioCtx.currentTime, 0.005);
+    }
+
+    function stopTone() {
+      if (!audioCtx || !gain) return;
+      gain.gain.cancelScheduledValues(audioCtx.currentTime);
+      gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.005);
+    }
+
+    function unitMs() { return 1200 / (+ui.wpm.value); }
+    function farnsworthMultiplier() {
+      const c = Math.max(5, +ui.wpm.value);
+      const f = Math.max(5, +ui.effWpm.value);
+      if (f >= c) return 1;
+      return Math.max(1, (c - f) / f + 1);
+    }
+    function gapMs(type) {
+      const u = unitMs();
+      const mult = farnsworthMultiplier();
+      if (type === 'element') return u;
+      if (type === 'letter') return u * 3 * mult;
+      return u * 7 * mult;
+    }
+
+    function buildRef() {
+      ui.refGrid.innerHTML = '';
+      for (const [ch, code] of Object.entries(MORSE)) {
+        const cell = document.createElement('div');
+        cell.className = 'ref-cell';
+        cell.innerHTML = `<div class="ch">${ch}</div><div class="code">${code}</div>`;
+        ui.refGrid.appendChild(cell);
+      }
+    }
+
+    function updateReadouts() {
+      ui.wpmReadout.textContent = ui.wpm.value + ' WPM';
+      ui.effReadout.textContent = ui.effWpm.value + ' WPM';
+      ui.pitchReadout.textContent = ui.pitch.value + ' Hz';
+      const labels = ['Lenient', 'Normal', 'Strict'];
+      ui.strictReadout.textContent = labels[+ui.strict.value] || 'Normal';
+    }
+
+    function setMode(m) {
+      mode = m;
+      ui.modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+      ui.drillPanel.style.display = m === 'drill' ? 'block' : 'none';
+      ui.hint.textContent = m === 'drill'
+        ? 'Tap out the target word. Release for ~3 units between letters, ~7 units between words.'
+        : m === 'listen'
+        ? 'The app sends a random word in Morse. Read it, then reveal the answer.'
+        : 'Tap the key or press Space. Release briefly between elements, longer between letters, longest between words.';
+      if (m === 'drill') newWord();
+    }
+
+    function appendDecoded(ch) {
+      if (mode === 'drill') {
+        drillInput += ch;
+        ui.decoded.innerHTML = escapeHtml(drillInput) + '<span class="cursor"></span>';
+        checkDrill();
+        return;
+      }
+      if (mode === 'listen') {
+        decodedText += ch;
+        ui.decoded.innerHTML = escapeHtml(decodedText) + '<span class="cursor"></span>';
+        return;
+      }
+      decodedText += ch;
+      ui.decoded.innerHTML = escapeHtml(decodedText) + '<span class="cursor"></span>';
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function decodeChar(elements) {
+      const code = elements.join('');
+      const exact = REVERSE[code];
+      if (exact) return exact;
+      if (+ui.strict.value === 0) {
+        let bestMatch = null, bestScore = -1;
+        for (const [k, v] of Object.entries(MORSE)) {
+          const scoreVal = similarity(v, code);
+          if (scoreVal > bestScore) { bestScore = scoreVal; bestMatch = k; }
+        }
+        if (bestScore >= 0.6) return bestMatch;
+      }
+      return '';
+    }
+
+    function similarity(a, b) {
+      if (a === b) return 1;
+      const longer = Math.max(a.length, b.length);
+      if (longer === 0) return 1;
+      const dist = levenshtein(a, b);
+      return (longer - dist) / longer;
+    }
+
+    function levenshtein(a, b) {
+      const m = a.length, n = b.length;
+      if (m === 0) return n; if (n === 0) return m;
+      const prev = Array(n + 1).fill(0);
+      for (let j = 0; j <= n; j++) prev[j] = j;
+      for (let i = 1; i <= m; i++) {
+        let prevDiag = prev[0];
+        prev[0] = i;
+        for (let j = 1; j <= n; j++) {
+          const temp = prev[j];
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, prevDiag + cost);
+          prevDiag = temp;
+        }
+      }
+      return prev[n];
+    }
+
+    function flushChar() {
+      if (currentChar.length === 0) return;
+      const ch = decodeChar(currentChar);
+      appendDecoded(ch);
+      rawText += ' ';
+      ui.raw.textContent = rawText;
+      currentChar = [];
+    }
+
+    function flushWord() {
+      flushChar();
+      if (mode === 'free') {
+        decodedText += ' ';
+        rawText += ' / ';
+        ui.decoded.innerHTML = escapeHtml(decodedText) + '<span class="cursor"></span>';
+        ui.raw.textContent = rawText;
+      }
+    }
+
+    function clearTimeouts() {
+      timeouts.forEach(t => clearTimeout(t));
+      timeouts = [];
+    }
+
+    function scheduleFlush(elementDuration) {
+      clearTimeouts();
+      const letterGap = gapMs('letter');
+      const wordGap = gapMs('word');
+      const letterT = setTimeout(() => {
+        flushChar();
+      }, letterGap);
+      const wordT = setTimeout(() => {
+        flushChar();
+        flushWord();
+      }, wordGap);
+      timeouts.push(letterT, wordT);
+    }
+
+    function onDown(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (isDown) return;
+      isDown = true;
+      ui.key.classList.add('active');
+      downTime = performance.now();
+      clearTimeouts();
+      if (upTime && downTime - upTime > gapMs('word')) {
+        flushChar();
+        flushWord();
+      } else if (upTime && downTime - upTime > gapMs('letter')) {
+        flushChar();
+      }
+      startTone();
+      lastEventTime = downTime;
+    }
+
+    function onUp(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (!isDown) return;
+      isDown = false;
+      ui.key.classList.remove('active');
+      upTime = performance.now();
+      const dur = upTime - downTime;
+      const u = unitMs();
+      const element = dur < 2 * u ? '.' : '-';
+      currentChar.push(element);
+      rawText += element;
+      ui.raw.textContent = rawText;
+      stopTone();
+      scheduleFlush(dur);
+      lastEventTime = upTime;
+    }
+
+    function playToneFor(ms, freq) {
+      initAudio();
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.25, now + 0.01);
+      g.gain.setValueAtTime(0.25, now + ms / 1000 - 0.01);
+      g.gain.linearRampToValueAtTime(0, now + ms / 1000);
+      o.start(now);
+      o.stop(now + ms / 1000 + 0.02);
+    }
+
+    function playMorseWord(word) {
+      clearTimeouts();
+      currentChar = [];
+      let delay = 300;
+      const u = unitMs();
+      const gapLetter = gapMs('letter');
+      const gapWord = gapMs('word');
+      const freq = +ui.pitch.value;
+      for (let i = 0; i < word.length; i++) {
+        const ch = word[i].toUpperCase();
+        const code = MORSE[ch];
+        if (!code) continue;
+        for (let j = 0; j < code.length; j++) {
+          const symbol = code[j];
+          const dur = symbol === '-' ? u * 3 : u;
+          timeouts.push(setTimeout(() => playToneFor(dur, freq), delay));
+          delay += dur + u;
+        }
+        if (i < word.length - 1) delay += gapLetter;
+      }
+      timeouts.push(setTimeout(() => {
+        if (mode === 'listen') {
+          ui.drillResult.textContent = `That was: ${word}`;
+        }
+      }, delay + gapWord));
+    }
+
+    function newWord() {
+      currentWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+      drillInput = '';
+      ui.drillTarget.textContent = currentWord;
+      ui.drillResult.textContent = 'Tap the target word in Morse';
+      ui.decoded.innerHTML = '<span class="cursor"></span>';
+      ui.raw.textContent = '';
+      decodedText = '';
+      rawText = '';
+      currentChar = [];
+      if (mode === 'listen') {
+        ui.drillTarget.textContent = '● ● ●';
+        ui.drillResult.textContent = 'Listen...';
+        playMorseWord(currentWord);
+      }
+    }
+
+    function checkDrill() {
+      const target = currentWord;
+      const input = drillInput.replace(/ /g, '');
+      if (input.length >= target.length) {
+        if (input === target) {
+          ui.drillResult.innerHTML = '<span style="color:var(--success)">Correct!</span>';
+          score += 1 + Math.floor(streak / 3);
+          streak += 1;
+          best = Math.max(best, streak);
+        } else {
+          ui.drillResult.innerHTML = `<span style="color:var(--danger)">Nope — it was ${target}</span>`;
+          streak = 0;
+        }
+        updateScoreboard();
+        setTimeout(newWord, 1400);
+      }
+    }
+
+    function updateScoreboard() {
+      ui.score.textContent = score;
+      ui.streak.textContent = streak;
+      ui.best.textContent = best;
+    }
+
+    ui.key.addEventListener('pointerdown', onDown);
+    ui.key.addEventListener('pointerup', onUp);
+    ui.key.addEventListener('pointerleave', () => { if (isDown) onUp(); });
+    ui.key.addEventListener('pointercancel', () => { if (isDown) onUp(); });
+    ui.key.addEventListener('touchstart', onDown, { passive: false });
+    ui.key.addEventListener('touchend', onUp, { passive: false });
+    ui.key.addEventListener('mousedown', onDown);
+    ui.key.addEventListener('mouseup', onUp);
+    ui.key.addEventListener('mouseleave', () => { if (isDown) onUp(); });
+
+    window.addEventListener('keydown', e => {
+      if (e.repeat) return;
+      if (e.code === 'Space') { e.preventDefault(); onDown(); }
+    });
+    window.addEventListener('keyup', e => {
+      if (e.code === 'Space') { e.preventDefault(); onUp(); }
+    });
+
+    ui.wpm.addEventListener('input', updateReadouts);
+    ui.effWpm.addEventListener('input', updateReadouts);
+    ui.pitch.addEventListener('input', updateReadouts);
+    ui.strict.addEventListener('input', updateReadouts);
+
+    ui.soundToggle.addEventListener('click', () => {
+      soundOn = !soundOn;
+      ui.toneDot.classList.toggle('off', !soundOn);
+      if (!soundOn && isDown) stopTone();
+    });
+
+    ui.resetText.addEventListener('click', () => {
+      decodedText = '';
+      ui.decoded.innerHTML = '<span class="cursor"></span>';
+    });
+    ui.resetRaw.addEventListener('click', () => {
+      rawText = '';
+      currentChar = [];
+      ui.raw.textContent = '';
+    });
+    ui.copyMorse.addEventListener('click', () => {
+      const text = (rawText || '').trim();
+      if (!text) return;
+      navigator.clipboard.writeText(text).catch(() => {});
+      ui.copyMorse.textContent = 'Copied!';
+      setTimeout(() => ui.copyMorse.textContent = 'Copy as Morse', 1200);
+    });
+
+    ui.modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    });
+    ui.newWordBtn.addEventListener('click', newWord);
+    ui.replayWordBtn.addEventListener('click', () => playMorseWord(currentWord));
+    ui.showHintBtn.addEventListener('click', () => {
+      const code = currentWord.split('').map(c => MORSE[c] || '').join(' ');
+      ui.drillResult.textContent = `Hint: ${code}`;
+    });
+
+    buildRef();
+    updateReadouts();
+    updateScoreboard();
+  </script>
+</body>
+</html>

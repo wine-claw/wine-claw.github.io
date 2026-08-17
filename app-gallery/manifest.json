@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-17",
-    "title": "Firefly Sync Sandbox",
-    "slug": "firefly-sync-sandbox",
-    "publishedSlug": "2026-08-17-firefly-sync-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-17-firefly-sync-sandbox/"
+    "date": "2026-08-18",
+    "title": "Morse Tap Trainer",
+    "slug": "morse-tap-trainer",
+    "publishedSlug": "2026-08-18-morse-tap-trainer",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-18-morse-tap-trainer/"
   },
   "apps": [
+    {
+      "date": "2026-08-18",
+      "title": "Morse Tap Trainer",
+      "slug": "morse-tap-trainer",
+      "publishedSlug": "2026-08-18-morse-tap-trainer",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-18-morse-tap-trainer/",
+      "description": "A tactile Morse-code practice toy with a virtual telegraph key, live decode, Farnsworth-aware timing, and copy-the-word / listen-and-read drill modes."
+    },
     {
       "date": "2026-08-17",
       "title": "Firefly Sync Sandbox",
