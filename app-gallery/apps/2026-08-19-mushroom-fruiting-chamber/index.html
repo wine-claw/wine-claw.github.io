@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Mushroom Fruiting Chamber</title>
+  <style>
+    :root {
+      --bg: #0b0f0d;
+      --panel: rgba(22, 30, 26, 0.96);
+      --text: #e6f0ea;
+      --muted: #8ea396;
+      --accent: #7cf0a4;
+      --accent2: #f0d07c;
+      --warn: #ff9f68;
+      --danger: #ff7e7e;
+      --info: #7ccbff;
+      --good: #56d48e;
+      --ok: #c9d456;
+      --bad: #ff6b6b;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow-x: hidden;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 14px 26px;
+    }
+    .banner {
+      width: 100%;
+      max-width: 820px;
+      background: linear-gradient(90deg, rgba(255,0,0,0.22), rgba(255,0,0,0.05));
+      border-bottom: 1px solid rgba(255,0,0,0.3);
+      color: #ffe0e0;
+      font-size: 12px;
+      padding: 8px 14px;
+      text-align: center;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 16px 0 4px;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+      text-align: center;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .app {
+      width: 100%;
+      max-width: 820px;
+      background: var(--panel);
+      border: 1px solid rgba(124, 240, 164, 0.16);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 12px 45px rgba(0,0,0,0.45);
+    }
+    .species-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+      justify-content: center;
+    }
+    .species-btn {
+      background: rgba(124, 240, 164, 0.08);
+      border: 1px solid rgba(124, 240, 164, 0.25);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .species-btn:hover { background: rgba(124, 240, 164, 0.15); }
+    .species-btn.active {
+      background: rgba(124, 240, 164, 0.25);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .chamber-wrap {
+      background: linear-gradient(180deg, #0d1411 0%, #131b17 100%);
+      border: 1px solid rgba(124, 240, 164, 0.18);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+      position: relative;
+      min-height: 280px;
+    }
+    .chamber {
+      width: 100%;
+      height: 280px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #1a2520 0%, #0f1613 100%);
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+    }
+    .mist-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 100%, rgba(255,255,255,0.05) 0%, transparent 60%);
+      opacity: 0.4;
+      transition: opacity 0.5s ease;
+    }
+    .fan-ripples {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .fan-ripple {
+      position: absolute;
+      border: 1px solid rgba(124, 240, 164, 0.15);
+      border-radius: 50%;
+      animation: ripple 2.5s linear infinite;
+    }
+    @keyframes ripple {
+      0% { transform: scale(0.5); opacity: 0; }
+      30% { opacity: 0.35; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    .substrate {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 64%;
+      height: 44px;
+      background: linear-gradient(180deg, #6b4e32 0%, #4a3522 100%);
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .substrate::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 12px);
+      border-radius: 8px;
+    }
+    .mushroom {
+      position: absolute;
+      transform-origin: bottom center;
+      transition: transform 0.2s ease, opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .mushroom .stem {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      background: linear-gradient(90deg, #e8dfd0, #cdbba6);
+      border-radius: 3px;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+    .mushroom .cap {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 50% 50% 40% 40%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 50%);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .mushroom.leggy .stem {
+      width: 3px;
+      background: linear-gradient(90deg, #e0d6c4, #b8aa92);
+    }
+    .mushroom.leggy .cap {
+      border-radius: 60% 60% 30% 30%;
+    }
+    .mushroom.aborting {
+      filter: grayscale(0.6) brightness(0.7);
+      opacity: 0.6;
+    }
+    .chamber-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .readout-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .readout {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(124, 240, 164, 0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .readout .label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 4px;
+    }
+    .readout .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .readout .target {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .readout.good .value { color: var(--good); }
+    .readout.warn .value { color: var(--warn); }
+    .readout.bad .value { color: var(--bad); }
+    .status-card {
+      background: rgba(0,0,0,0.35);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(124, 240, 164, 0.12);
+    }
+    .status-title {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+    .status-main {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .status-main.good { color: var(--good); }
+    .status-main.warn { color: var(--warn); }
+    .status-main.bad { color: var(--bad); }
+    .status-detail {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .score-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .score-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--bad), var(--ok), var(--good));
+      transition: width 0.3s ease;
+    }
+    .controls {
+      display: grid;
+      gap: 12px;
+    }
+    .control {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(124, 240, 164, 0.1);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .control-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .control-value {
+      font-size: 13px;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .slider {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.12);
+      outline: none;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid var(--bg);
+      box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    }
+    .slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid var(--bg);
+      box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    }
+    .ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .preset-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .preset {
+      background: rgba(124, 240, 164, 0.08);
+      border: 1px solid rgba(124, 240, 164, 0.2);
+      color: var(--text);
+      padding: 7px 11px;
+      border-radius: 7px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .preset:hover { background: rgba(124, 240, 164, 0.15); }
+    .legend {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(124, 240, 164, 0.1);
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .legend b { color: var(--text); }
+    @media (min-width: 600px) {
+      .readout-grid { grid-template-columns: repeat(4, 1fr); }
+      .chamber { height: 320px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    ⚠️ Experimental OpenClaw AI mini-app — untested, not professionally validated. Do not rely on it for real cultivation decisions.
+  </div>
+
+  <h1>🍄 Mushroom Fruiting Chamber</h1>
+  <div class="subtitle">A climate sandbox for gourmet mushroom pinning and fruiting.</div>
+
+  <div class="app">
+    <div class="species-row" id="speciesRow"></div>
+
+    <div class="chamber-wrap">
+      <div class="chamber" id="chamber">
+        <div class="mist-layer" id="mist"></div>
+        <div class="fan-ripples" id="fanRipples"></div>
+        <div class="substrate" id="substrate"></div>
+      </div>
+      <div class="chamber-labels">
+        <span>Substrate block</span>
+        <span id="dayLabel">Day 0</span>
+      </div>
+    </div>
+
+    <div class="readout-grid">
+      <div class="readout" id="rTemp"><div class="label">Temperature</div><div class="value">18°C</div><div class="target"></div></div>
+      <div class="readout" id="rHum"><div class="label">Humidity</div><div class="value">90%</div><div class="target"></div></div>
+      <div class="readout" id="rCo2"><div class="label">CO₂</div><div class="value">600 ppm</div><div class="target"></div></div>
+      <div class="readout" id="rFae"><div class="label">Fresh Air</div><div class="value">6 /h</div><div class="target"></div></div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-title">Fruiting verdict</div>
+      <div class="status-main" id="statusMain">Steady</div>
+      <div class="status-detail" id="statusDetail">Set the dials and watch what happens.</div>
+      <div class="score-bar"><div class="score-fill" id="scoreFill" style="width: 50%"></div></div>
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <div class="control-header"><span class="control-name">Temperature</span><span class="control-value" id="vTemp">18°C</span></div>
+        <input type="range" class="slider" id="sTemp" min="5" max="30" step="0.5" value="18" />
+        <div class="ticks"><span>5°C</span><span>30°C</span></div>
+      </div>
+      <div class="control">
+        <div class="control-header"><span class="control-name">Relative Humidity</span><span class="control-value" id="vHum">90%</span></div>
+        <input type="range" class="slider" id="sHum" min="50" max="100" step="1" value="90" />
+        <div class="ticks"><span>50%</span><span>100%</span></div>
+      </div>
+      <div class="control">
+        <div class="control-header"><span class="control-name">CO₂ Level</span><span class="control-value" id="vCo2">600 ppm</span></div>
+        <input type="range" class="slider" id="sCo2" min="300" max="3000" step="50" value="600" />
+        <div class="ticks"><span>300 ppm</span><span>3000 ppm</span></div>
+      </div>
+      <div class="control">
+        <div class="control-header"><span class="control-name">Fresh Air Exchange</span><span class="control-value" id="vFae">6 /h</span></div>
+        <input type="range" class="slider" id="sFae" min="0" max="20" step="0.5" value="6" />
+        <div class="ticks"><span>0 /h</span><span>20 /h</span></div>
+      </div>
+      <div class="control">
+        <div class="control-header"><span class="control-name">Light (dim)</span><span class="control-value" id="vLight">4 h/day</span></div>
+        <input type="range" class="slider" id="sLight" min="0" max="16" step="0.5" value="4" />
+        <div class="ticks"><span>0 h</span><span>16 h</span></div>
+      </div>
+    </div>
+
+    <div class="preset-row">
+      <button class="preset" onclick="resetSim()">↺ Reset</button>
+      <button class="preset" onclick="setPreset('ideal')">✓ Ideal</button>
+      <button class="preset" onclick="setPreset('stagnant')">💤 Stagnant</button>
+      <button class="preset" onclick="setPreset('dry')">🌵 Too dry</button>
+      <button class="preset" onclick="setPreset('hot')">🔥 Too hot</button>
+    </div>
+
+    <div class="legend">
+      <b>How it works:</b> Each species has a preferred temperature, humidity, CO₂ ceiling, and fresh-air need. Pins form when conditions are good; high CO₂ or low humidity make stems stretch or abort. Adjust the dials, hit <b>Ideal</b>, or try a disaster preset. The block grows a fresh crop each reset.
+    </div>
+  </div>
+
+  <script>
+    const species = {
+      oyster: {
+        name: 'Pearl Oyster',
+        temp: [13, 21], tempIdeal: [15, 19], hum: [85, 95], humIdeal: [88, 92],
+        co2Max: 800, faeMin: 4, light: [2, 12],
+        cap: '#d8e6dd', gill: '#b8c9bd', stem: '#e8dfd0',
+        growRate: 1.0, pinCount: 14
+      },
+      lion: {
+        name: "Lion's Mane",
+        temp: [18, 24], tempIdeal: [20, 22], hum: [90, 95], humIdeal: [92, 94],
+        co2Max: 800, faeMin: 5, light: [4, 12],
+        cap: '#f4efe6', gill: '#f4efe6', stem: '#f0e8dc',
+        growRate: 0.85, pinCount: 10, isLion: true
+      },
+      shiitake: {
+        name: 'Shiitake',
+        temp: [10, 21], tempIdeal: [14, 18], hum: [80, 90], humIdeal: [83, 87],
+        co2Max: 1000, faeMin: 3, light: [2, 8],
+        cap: '#8b5a3c', gill: '#d9b8a0', stem: '#d9c8b8',
+        growRate: 0.75, pinCount: 9
+      },
+      king: {
+        name: 'King Oyster',
+        temp: [15, 18], tempIdeal: [15.5, 17], hum: [85, 90], humIdeal: [86, 88],
+        co2Max: 700, faeMin: 3, light: [4, 10],
+        cap: '#d4c9b8', gill: '#c0b5a6', stem: '#e8dfd0',
+        growRate: 0.9, pinCount: 8
+      },
+      enoki: {
+        name: 'Enoki',
+        temp: [8, 13], tempIdeal: [10, 12], hum: [80, 90], humIdeal: [85, 88],
+        co2Max: 2500, faeMin: 0.5, light: [0, 2],
+        cap: '#f2ebd8', gill: '#f2ebd8', stem: '#f2ebd8',
+        growRate: 1.1, pinCount: 22, tall: true
+      }
+    };
+
+    let current = 'oyster';
+    let state = { temp: 18, hum: 90, co2: 600, fae: 6, light: 4 };
+    let day = 0;
+    let mushrooms = [];
+    let lastT = performance.now();
+    let autoSpeed = 1;
+    let timer = null;
+
+    const els = {
+      speciesRow: document.getElementById('speciesRow'),
+      chamber: document.getElementById('chamber'),
+      substrate: document.getElementById('substrate'),
+      mist: document.getElementById('mist'),
+      fanRipples: document.getElementById('fanRipples'),
+      dayLabel: document.getElementById('dayLabel'),
+      statusMain: document.getElementById('statusMain'),
+      statusDetail: document.getElementById('statusDetail'),
+      scoreFill: document.getElementById('scoreFill'),
+      sTemp: document.getElementById('sTemp'),
+      sHum: document.getElementById('sHum'),
+      sCo2: document.getElementById('sCo2'),
+      sFae: document.getElementById('sFae'),
+      sLight: document.getElementById('sLight'),
+    };
+
+    function inRange(v, [lo, hi]) { return v >= lo && v <= hi; }
+    function rangeScore(v, [lo, hi], [idealLo, idealHi]) {
+      if (v >= idealLo && v <= idealHi) return 1;
+      if (v < lo || v > hi) return 0;
+      const mid = (idealLo + idealHi) / 2;
+      const dist = Math.abs(v - mid);
+      const maxDist = Math.max(idealLo - lo, hi - idealHi) || 1;
+      return Math.max(0, 1 - dist / maxDist);
+    }
+
+    function initSpecies() {
+      els.speciesRow.innerHTML = '';
+      for (const key of Object.keys(species)) {
+        const btn = document.createElement('button');
+        btn.className = 'species-btn' + (key === current ? ' active' : '');
+        btn.textContent = species[key].name;
+        btn.onclick = () => selectSpecies(key);
+        els.speciesRow.appendChild(btn);
+      }
+    }
+
+    function selectSpecies(key) {
+      current = key;
+      const sp = species[key];
+      state.temp = (sp.temp[0] + sp.temp[1]) / 2;
+      state.hum = (sp.hum[0] + sp.hum[1]) / 2;
+      state.co2 = 600;
+      state.fae = Math.max(sp.faeMin, 6);
+      state.light = (sp.light[0] + sp.light[1]) / 2;
+      updateInputs();
+      initSpecies();
+      resetMushrooms();
+      day = 0;
+    }
+
+    function updateInputs() {
+      els.sTemp.value = state.temp;
+      els.sHum.value = state.hum;
+      els.sCo2.value = state.co2;
+      els.sFae.value = state.fae;
+      els.sLight.value = state.light;
+      updateReadouts();
+    }
+
+    function updateReadouts() {
+      document.getElementById('vTemp').textContent = state.temp.toFixed(1) + '°C';
+      document.getElementById('vHum').textContent = state.hum.toFixed(0) + '%';
+      document.getElementById('vCo2').textContent = state.co2.toFixed(0) + ' ppm';
+      document.getElementById('vFae').textContent = state.fae.toFixed(1) + ' /h';
+      document.getElementById('vLight').textContent = state.light.toFixed(1) + ' h/day';
+
+      const sp = species[current];
+      setReadout('rTemp', state.temp, sp.temp, '°C');
+      setReadout('rHum', state.hum, sp.hum, '%');
+      setReadout('rCo2', state.co2, [300, sp.co2Max], ' ppm', true);
+      setReadout('rFae', state.fae, [sp.faeMin, 20], ' /h');
+    }
+
+    function setReadout(id, v, [lo, hi], unit, invert = false) {
+      const el = document.getElementById(id);
+      const valEl = el.querySelector('.value');
+      const targetEl = el.querySelector('.target');
+      valEl.textContent = v.toFixed(id === 'rCo2' || id === 'rFae' ? 0 : 1) + unit;
+      targetEl.textContent = `target ${lo}-${hi}${unit}`;
+      const ok = invert ? v <= hi : inRange(v, [lo, hi]);
+      el.classList.remove('good', 'warn', 'bad');
+      el.classList.add(ok ? 'good' : 'bad');
+    }
+
+    function resetMushrooms() {
+      mushrooms = [];
+      const existing = els.chamber.querySelectorAll('.mushroom');
+      existing.forEach(m => m.remove());
+    }
+
+    function spawnMushroom() {
+      const sp = species[current];
+      const blockRect = els.substrate.getBoundingClientRect();
+      const chamberRect = els.chamber.getBoundingClientRect();
+      const left = (blockRect.left - chamberRect.left) / chamberRect.width;
+      const width = blockRect.width / chamberRect.width;
+      const x = left + width * (0.15 + Math.random() * 0.7);
+      const m = document.createElement('div');
+      m.className = 'mushroom';
+      m.style.left = (x * 100) + '%';
+      m.style.bottom = '62px';
+      const stem = document.createElement('div');
+      stem.className = 'stem';
+      const cap = document.createElement('div');
+      cap.className = 'cap';
+      m.appendChild(stem);
+      m.appendChild(cap);
+      els.chamber.appendChild(m);
+      mushrooms.push({
+        el: m,
+        stemEl: stem,
+        capEl: cap,
+        x: x,
+        age: 0,
+        health: 0.4,
+        size: 0,
+        maxSize: 0.7 + Math.random() * 0.5,
+        aborted: false,
+        leggy: false
+      });
+    }
+
+    function setMushroomSize(m, s, sp) {
+      const baseH = sp.tall ? 90 : 55;
+      const baseW = sp.tall ? 14 : 36;
+      const h = baseH * s;
+      const w = baseW * (sp.isLion ? 1.4 : 1) * s;
+      m.stemEl.style.height = (h * (sp.isLion ? 0.15 : 0.55)) + 'px';
+      m.capEl.style.width = w + 'px';
+      m.capEl.style.height = (w * (sp.isLion ? 0.9 : 0.5)) + 'px';
+      m.capEl.style.bottom = (sp.isLion ? 0 : (h * 0.5)) + 'px';
+      m.capEl.style.backgroundColor = sp.cap;
+      m.capEl.style.backgroundImage = sp.isLion
+        ? 'radial-gradient(circle at 40% 30%, rgba(255,255,255,0.35), transparent 55%)'
+        : 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 50%)';
+      m.el.style.transform = `scale(${0.2 + s * 0.8})`;
+    }
+
+    function clampScore(scores) {
+      let s = 1;
+      for (const v of scores) s *= v;
+      return Math.pow(s, 0.25);
+    }
+
+    function computeScores() {
+      const sp = species[current];
+      const t = rangeScore(state.temp, sp.temp, sp.tempIdeal);
+      const h = rangeScore(state.hum, sp.hum, sp.humIdeal);
+      const co2Ok = state.co2 <= sp.co2Max ? 1 : Math.max(0, 1 - (state.co2 - sp.co2Max) / 1500);
+      const faeOk = state.fae >= sp.faeMin ? 1 : Math.max(0, state.fae / sp.faeMin);
+      const lightOk = rangeScore(state.light, sp.light, sp.light);
+      const overall = clampScore([t, h, co2Ok, faeOk, lightOk]);
+      return { t, h, co2Ok, faeOk, lightOk, overall };
+    }
+
+    function updateStatus() {
+      const sc = computeScores();
+      const sp = species[current];
+      document.getElementById('rCo2').classList.remove('good', 'warn', 'bad');
+      document.getElementById('rCo2').classList.add(state.co2 <= sp.co2Max ? 'good' : 'bad');
+      document.getElementById('rFae').classList.remove('good', 'warn', 'bad');
+      document.getElementById('rFae').classList.add(state.fae >= sp.faeMin ? 'good' : 'bad');
+
+      const pct = Math.round(sc.overall * 100);
+      els.scoreFill.style.width = pct + '%';
+      els.dayLabel.textContent = `Day ${day.toFixed(1)}`;
+
+      let main = 'Steady';
+      let detail = 'Set the dials and watch what happens.';
+      let cls = 'warn';
+
+      if (sc.overall >= 0.82) {
+        main = 'Happy chamber';
+        detail = 'Conditions look good for pinning and fruiting.';
+        cls = 'good';
+      } else if (sc.overall >= 0.55) {
+        main = 'OK but watch it';
+        cls = 'warn';
+        const issues = [];
+        if (sc.t < 0.8) issues.push('temperature');
+        if (sc.h < 0.8) issues.push('humidity');
+        if (sc.co2Ok < 0.8) issues.push('CO₂');
+        if (sc.faeOk < 0.8) issues.push('fresh air');
+        if (sc.lightOk < 0.8) issues.push('light');
+        detail = `Getting there — ${issues.join(', ')} could be closer to the target.`;
+      } else {
+        main = 'Stress zone';
+        cls = 'bad';
+        const issues = [];
+        if (state.temp < sp.temp[0]) issues.push('too cold');
+        if (state.temp > sp.temp[1]) issues.push('too hot');
+        if (state.hum < sp.hum[0]) issues.push('too dry');
+        if (state.hum > sp.hum[1]) issues.push('too wet');
+        if (state.co2 > sp.co2Max) issues.push('CO₂ too high');
+        if (state.fae < sp.faeMin) issues.push('needs more fresh air');
+        if (state.light < sp.light[0]) issues.push('too dark');
+        if (state.light > sp.light[1]) issues.push('too much light');
+        detail = issues.slice(0, 2).join(', ') + ' — pins may stretch or abort.';
+      }
+
+      els.statusMain.textContent = main;
+      els.statusMain.className = 'status-main ' + cls;
+      els.statusDetail.textContent = detail;
+    }
+
+    function step(dt) {
+      const sp = species[current];
+      const sc = computeScores();
+      day += dt * autoSpeed;
+
+      // Mist visual
+      els.mist.style.opacity = (state.hum - 50) / 50 * 0.45;
+
+      // Fan ripples
+      const rippleCount = Math.min(6, Math.ceil(state.fae / 2));
+      while (els.fanRipples.children.length < rippleCount) {
+        const r = document.createElement('div');
+        r.className = 'fan-ripple';
+        r.style.left = (10 + Math.random() * 80) + '%';
+        r.style.top = (10 + Math.random() * 80) + '%';
+        r.style.width = (30 + Math.random() * 40) + 'px';
+        r.style.height = r.style.width;
+        r.style.animationDelay = (Math.random() * 2) + 's';
+        els.fanRipples.appendChild(r);
+      }
+      while (els.fanRipples.children.length > rippleCount) {
+        els.fanRipples.lastChild.remove();
+      }
+
+      // Pinning chance when good conditions
+      if (mushrooms.length < sp.pinCount && sc.overall > 0.65 && Math.random() < 0.015 * sc.overall * sp.growRate) {
+        spawnMushroom();
+      }
+
+      // Mushroom growth
+      for (const m of mushrooms) {
+        if (m.aborted) continue;
+        m.age += dt * autoSpeed;
+
+        const co2Stress = state.co2 > sp.co2Max ? (state.co2 - sp.co2Max) / 1000 : 0;
+        const dryStress = state.hum < sp.hum[0] ? (sp.hum[0] - state.hum) / 30 : 0;
+        const heatStress = state.temp > sp.temp[1] ? (state.temp - sp.temp[1]) / 6 : 0;
+        const coldStress = state.temp < sp.temp[0] ? (sp.temp[0] - state.temp) / 6 : 0;
+        const totalStress = Math.min(1, co2Stress + dryStress + heatStress + coldStress);
+
+        // Leggy from CO2
+        m.leggy = co2Stress > 0.25 || (state.fae < sp.faeMin * 0.5 && state.co2 > sp.co2Max);
+
+        // Health
+        if (sc.overall > 0.7) {
+          m.health = Math.min(1, m.health + 0.03 * dt * autoSpeed);
+        } else {
+          m.health -= totalStress * 0.08 * dt * autoSpeed;
+        }
+
+        if (m.health <= 0 && m.size > 0.15) {
+          m.aborted = true;
+          m.el.classList.add('aborting');
+        }
+
+        if (!m.aborted) {
+          const growth = 0.12 * sc.overall * sp.growRate * dt * autoSpeed * (1 - totalStress * 0.7);
+          m.size = Math.min(m.maxSize, m.size + growth);
+        }
+
+        setMushroomSize(m, m.size, sp);
+        m.el.classList.toggle('leggy', m.leggy);
+      }
+
+      // Remove tiny dead pins
+      mushrooms = mushrooms.filter(m => {
+        if (m.aborted && m.size < 0.12) {
+          m.el.remove();
+          return false;
+        }
+        return true;
+      });
+
+      updateStatus();
+    }
+
+    function loop(now) {
+      const dt = Math.min(0.2, (now - lastT) / 1000);
+      lastT = now;
+      step(dt);
+      requestAnimationFrame(loop);
+    }
+
+    function bindSlider(id, key) {
+      const el = document.getElementById(id);
+      el.addEventListener('input', () => {
+        state[key] = parseFloat(el.value);
+        updateReadouts();
+      });
+    }
+
+    function resetSim() {
+      state = { temp: 18, hum: 90, co2: 600, fae: 6, light: 4 };
+      current = 'oyster';
+      selectSpecies('oyster');
+      resetMushrooms();
+      day = 0;
+    }
+
+    function setPreset(name) {
+      const sp = species[current];
+      if (name === 'ideal') {
+        state.temp = (sp.tempIdeal[0] + sp.tempIdeal[1]) / 2;
+        state.hum = (sp.humIdeal[0] + sp.humIdeal[1]) / 2;
+        state.co2 = 450;
+        state.fae = Math.max(sp.faeMin + 3, 8);
+        state.light = Math.min(sp.light[1], Math.max(sp.light[0], 6));
+      } else if (name === 'stagnant') {
+        state.temp = (sp.temp[0] + sp.temp[1]) / 2;
+        state.hum = 92;
+        state.co2 = 1800;
+        state.fae = 0.5;
+        state.light = 4;
+      } else if (name === 'dry') {
+        state.temp = (sp.temp[0] + sp.temp[1]) / 2 + 2;
+        state.hum = 55;
+        state.co2 = 600;
+        state.fae = 6;
+        state.light = 4;
+      } else if (name === 'hot') {
+        state.temp = 28;
+        state.hum = 85;
+        state.co2 = 600;
+        state.fae = 6;
+        state.light = 4;
+      }
+      updateInputs();
+    }
+
+    // Touch up/down buttons for mobile accessibility
+    function addStepButtons() {
+      // No extra buttons for now; sliders are sufficient and mobile-friendly.
+    }
+
+    initSpecies();
+    bindSlider('sTemp', 'temp');
+    bindSlider('sHum', 'hum');
+    bindSlider('sCo2', 'co2');
+    bindSlider('sFae', 'fae');
+    bindSlider('sLight', 'light');
+    updateInputs();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

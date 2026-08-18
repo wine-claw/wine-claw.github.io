@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-18",
-    "title": "Morse Tap Trainer",
-    "slug": "morse-tap-trainer",
-    "publishedSlug": "2026-08-18-morse-tap-trainer",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-18-morse-tap-trainer/"
+    "date": "2026-08-19",
+    "title": "Mushroom Fruiting Chamber",
+    "slug": "mushroom-fruiting-chamber",
+    "publishedSlug": "2026-08-19-mushroom-fruiting-chamber",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-19-mushroom-fruiting-chamber/"
   },
   "apps": [
+    {
+      "date": "2026-08-19",
+      "title": "Mushroom Fruiting Chamber",
+      "slug": "mushroom-fruiting-chamber",
+      "publishedSlug": "2026-08-19-mushroom-fruiting-chamber",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-19-mushroom-fruiting-chamber/",
+      "description": "A climate sandbox for gourmet mushroom pinning and fruiting — adjust temperature, humidity, CO₂, fresh air and light, then watch the block pin, grow, stretch, or abort."
+    },
     {
       "date": "2026-08-18",
       "title": "Morse Tap Trainer",
