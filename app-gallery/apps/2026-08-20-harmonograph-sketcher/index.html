@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Harmonograph Sketcher</title>
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --panel: #18181d;
+      --panel-2: #202029;
+      --text: #e8e6f0;
+      --muted: #9f9cb0;
+      --accent: #c77dff;
+      --accent-2: #7b2cbf;
+      --accent-3: #e0aaff;
+      --warn: #ff9e00;
+      --danger: #ff4d6d;
+      --good: #52b788;
+      --track: #2a2a35;
+      --knob: #c77dff;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+    #app {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      width: 100%; height: 100%;
+    }
+    @media (max-width: 860px) {
+      #app { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+      .stage { order: 1; }
+      .sidebar { order: 2; max-height: 42vh; overflow: auto; border-top: 1px solid #2a2a35; border-left: none; }
+    }
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid #2a2a35;
+      padding: 18px 16px 22px;
+      display: flex; flex-direction: column; gap: 14px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-2) var(--panel-2);
+    }
+    .stage {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 50% 50%, #1b1b22 0%, #0f0f12 72%);
+    }
+    h1 {
+      margin: 0 0 2px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--accent-3);
+    }
+    .subtitle {
+      margin: 0 0 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .warn {
+      background: #2b1d0f;
+      border: 1px solid #5c3d18;
+      color: #f0cc9a;
+      border-radius: 8px;
+      padding: 9px 11px;
+      font-size: 0.72rem;
+      line-height: 1.35;
+    }
+    .warn strong { color: var(--warn); }
+    .control-group {
+      background: var(--panel-2);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .control-group h2 {
+      margin: 0;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .preset-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    button, .chip {
+      border: 1px solid #3a3a4a;
+      background: #25252e;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+      user-select: none;
+    }
+    button:hover, .chip:hover { background: #323241; border-color: #585873; }
+    button:active { transform: translateY(1px); }
+    button.primary { background: var(--accent-2); border-color: var(--accent); color: #fff; }
+    button.primary:hover { background: #651d9e; }
+    button.danger { border-color: #7c2336; background: #3a1420; color: #ff8fa3; }
+    button.danger:hover { background: #54182b; }
+    .chip.active { background: var(--accent); color: #110414; border-color: var(--accent); font-weight: 700; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .actions button { flex: 1 1 auto; min-width: 76px; }
+    .slider {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+    }
+    .slider label {
+      grid-column: 1 / -1;
+      font-size: 0.76rem;
+      color: var(--muted);
+      display: flex; justify-content: space-between;
+    }
+    .slider label .val { color: var(--accent-3); font-variant-numeric: tabular-nums; }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px;
+      background: var(--track);
+      border-radius: 3px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      background: var(--knob);
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #1a0f1f;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 14px; height: 14px;
+      background: var(--knob);
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #1a0f1f;
+    }
+    .checkbox {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.78rem; color: var(--muted);
+    }
+    .canvas-wrap {
+      position: relative;
+      width: min(92vmin, 900px);
+      height: min(92vmin, 900px);
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px #2a2a35, 0 20px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(199,125,255,0.06);
+      background: #0b0b0e;
+      overflow: hidden;
+    }
+    canvas { display: block; width: 100%; height: 100%; border-radius: 50%; }
+    .overlay {
+      position: absolute;
+      top: 12px; left: 12px;
+      pointer-events: none;
+      font-size: 0.7rem;
+      color: var(--muted);
+      background: rgba(15,15,18,0.75);
+      padding: 5px 8px;
+      border-radius: 6px;
+      backdrop-filter: blur(2px);
+    }
+    .legend {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.35;
+      margin-top: 2px;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div>
+        <h1>Harmonograph Sketcher</h1>
+        <p class="subtitle">A virtual Victorian drawing machine: two damped pendulums guide a pen while a turntable spins the paper. Tweak frequencies, phases, damping and colour to draw curves of harmony.</p>
+      </div>
+      <div class="warn"><strong>AI mini-app:</strong> Experimental OpenClaw build for play only. Not validated; don't rely on it for decisions.</div>
+
+      <div class="control-group">
+        <h2>Presets</h2>
+        <div class="preset-row" id="presetRow">
+          <button class="chip" data-preset="rosette">Rosette</button>
+          <button class="chip" data-preset="lace">Lace</button>
+          <button class="chip" data-preset="galaxy">Galaxy</button>
+          <button class="chip" data-preset="ribbon">Ribbon</button>
+          <button class="chip" data-preset="chaos">Chaos</button>
+          <button class="chip" data-preset="spiro">Spiro</button>
+          <button class="chip" data-preset="random">Random</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h2>Pendulum A (pen motion X)</h2>
+        <div class="slider">
+          <label>Frequency <span class="val" id="val-f1">1.00</span></label>
+          <input id="f1" type="range" min="0.1" max="12" step="0.01" value="3" />
+        </div>
+        <div class="slider">
+          <label>Amplitude <span class="val" id="val-a1">160</span></label>
+          <input id="a1" type="range" min="0" max="260" step="1" value="160" />
+        </div>
+        <div class="slider">
+          <label>Phase <span class="val" id="val-p1">0°</span></label>
+          <input id="p1" type="range" min="0" max="360" step="1" value="0" />
+        </div>
+        <div class="slider">
+          <label>Damping <span class="val" id="val-d1">0.0030</span></label>
+          <input id="d1" type="range" min="0" max="0.03" step="0.0001" value="0.003" />
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h2>Pendulum B (pen motion Y)</h2>
+        <div class="slider">
+          <label>Frequency <span class="val" id="val-f2">2.97</span></label>
+          <input id="f2" type="range" min="0.1" max="12" step="0.01" value="2.97" />
+        </div>
+        <div class="slider">
+          <label>Amplitude <span class="val" id="val-a2">155</span></label>
+          <input id="a2" type="range" min="0" max="260" step="1" value="155" />
+        </div>
+        <div class="slider">
+          <label>Phase <span class="val" id="val-p2">90°</span></label>
+          <input id="p2" type="range" min="0" max="360" step="1" value="90" />
+        </div>
+        <div class="slider">
+          <label>Damping <span class="val" id="val-d2">0.0030</span></label>
+          <input id="d2" type="range" min="0" max="0.03" step="0.0001" value="0.003" />
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h2>Paper turntable</h2>
+        <div class="slider">
+          <label>Rotation frequency <span class="val" id="val-fr">0.20</span></label>
+          <input id="fr" type="range" min="-2" max="2" step="0.01" value="0.2" />
+        </div>
+        <div class="slider">
+          <label>Drawing speed <span class="val" id="val-speed">1.0x</span></label>
+          <input id="speed" type="range" min="0.1" max="4" step="0.1" value="1" />
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h2>Appearance</h2>
+        <div class="slider">
+          <label>Hue <span class="val" id="val-hue">280°</span></label>
+          <input id="hue" type="range" min="0" max="360" step="1" value="280" />
+        </div>
+        <div class="slider">
+          <label>Line width <span class="val" id="val-width">1.6</span></label>
+          <input id="width" type="range" min="0.2" max="6" step="0.1" value="1.6" />
+        </div>
+        <div class="slider">
+          <label>Trail fade <span class="val" id="val-fade">2%</span></label>
+          <input id="fade" type="range" min="0" max="30" step="1" value="2" />
+        </div>
+        <div class="checkbox">
+          <input id="rainbow" type="checkbox" />
+          <label for="rainbow">Rainbow flow</label>
+        </div>
+        <div class="checkbox">
+          <input id="glow" type="checkbox" checked />
+          <label for="glow">Neon glow</label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="pauseBtn" class="primary">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="clearBtn" class="danger">Clear</button>
+        <button id="saveBtn">Save PNG</button>
+      </div>
+
+      <p class="legend">Tip: press a preset, then gently nudge frequency or phase to explore neighbouring forms. The drawing restarts automatically when a parameter changes.</p>
+    </aside>
+
+    <main class="stage">
+      <div class="canvas-wrap">
+        <canvas id="draw" width="900" height="900"></canvas>
+        <div class="overlay">t = <span id="tVal">0.00</span></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function(){
+      'use strict';
+      const canvas = document.getElementById('draw');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const DPR = Math.min(window.devicePixelRatio || 1, 2);
+      const size = Math.floor(900 * DPR);
+      canvas.width = size; canvas.height = size;
+      const cx = size / 2, cy = size / 2;
+      const maxR = size * 0.46;
+
+      const state = {
+        f1: 3, a1: 160, p1: 0, d1: 0.003,
+        f2: 2.97, a2: 155, p2: 90, d2: 0.003,
+        fr: 0.2, speed: 1,
+        hue: 280, width: 1.6, fade: 2, rainbow: false, glow: true,
+        t: 0, running: true, pathStarted: false,
+        lastX: null, lastY: null
+      };
+
+      const presets = {
+        rosette:  { f1: 3.00, a1: 170, p1: 0,   d1: 0.004, f2: 2.97, a2: 170, p2: 90,  d2: 0.004, fr: 0.20, speed: 1, hue: 280, width: 1.8, fade: 3, rainbow: false, glow: true },
+        lace:     { f1: 5.00, a1: 180, p1: 45,  d1: 0.003, f2: 4.03, a2: 175, p2: 135, d2: 0.003, fr: 0.11, speed: 1, hue: 330, width: 1.2, fade: 2, rainbow: false, glow: true },
+        galaxy:   { f1: 6.10, a1: 190, p1: 20,  d1: 0.002, f2: 6.00, a2: 190, p2: 110, d2: 0.002, fr: 0.05, speed: 1, hue: 200, width: 1.4, fade: 1, rainbow: true,  glow: true },
+        ribbon:   { f1: 1.50, a1: 200, p1: 0,   d1: 0.006, f2: 1.51, a2: 200, p2: 90,  d2: 0.006, fr: 0.40, speed: 1, hue: 150, width: 2.2, fade: 4, rainbow: false, glow: true },
+        chaos:    { f1: 7.30, a1: 160, p1: 120, d1: 0.001, f2: 5.70, a2: 165, p2: 60,  d2: 0.001, fr: 0.35, speed: 1, hue: 45,  width: 1.0, fade: 1, rainbow: true,  glow: true },
+        spiro:    { f1: 8.00, a1: 150, p1: 0,   d1: 0.008, f2: 8.01, a2: 150, p2: 180, d2: 0.008, fr: 0.02, speed: 1, hue: 120, width: 1.6, fade: 3, rainbow: false, glow: true }
+      };
+
+      const ids = ['f1','a1','p1','d1','f2','a2','p2','d2','fr','speed','hue','width','fade'];
+      const el = {};
+      ids.forEach(id => el[id] = document.getElementById(id));
+      const valEl = {};
+      ids.forEach(id => valEl[id] = document.getElementById('val-'+id));
+
+      function readState() {
+        ids.forEach(id => {
+          const v = parseFloat(el[id].value);
+          state[id] = isNaN(v) ? 0 : v;
+        });
+        state.rainbow = document.getElementById('rainbow').checked;
+        state.glow = document.getElementById('glow').checked;
+      }
+
+      function writeState(patch) {
+        Object.keys(patch).forEach(k => {
+          if (el[k]) el[k].value = patch[k];
+          state[k] = patch[k];
+        });
+        if ('rainbow' in patch) document.getElementById('rainbow').checked = !!patch.rainbow;
+        if ('glow' in patch) document.getElementById('glow').checked = !!patch.glow;
+        updateLabels();
+      }
+
+      function updateLabels() {
+        valEl.f1.textContent = state.f1.toFixed(2);
+        valEl.a1.textContent = Math.round(state.a1);
+        valEl.p1.textContent = Math.round(state.p1) + '°';
+        valEl.d1.textContent = state.d1.toFixed(4);
+        valEl.f2.textContent = state.f2.toFixed(2);
+        valEl.a2.textContent = Math.round(state.a2);
+        valEl.p2.textContent = Math.round(state.p2) + '°';
+        valEl.d2.textContent = state.d2.toFixed(4);
+        valEl.fr.textContent = state.fr.toFixed(2);
+        valEl.speed.textContent = state.speed.toFixed(1) + 'x';
+        valEl.hue.textContent = Math.round(state.hue) + '°';
+        valEl.width.textContent = state.width.toFixed(1);
+        valEl.fade.textContent = Math.round(state.fade) + '%';
+        document.getElementById('tVal').textContent = state.t.toFixed(2);
+      }
+
+      function applyPreset(name) {
+        if (name === 'random') {
+          const keys = Object.keys(presets);
+          const base = keys[Math.floor(Math.random() * keys.length)];
+          const p = { ...presets[base] };
+          p.f1 += (Math.random() - 0.5) * 1.2;
+          p.f2 += (Math.random() - 0.5) * 1.2;
+          p.p1 = Math.floor(Math.random() * 360);
+          p.p2 = Math.floor(Math.random() * 360);
+          p.hue = Math.floor(Math.random() * 360);
+          p.rainbow = Math.random() > 0.5;
+          writeState(p);
+        } else {
+          writeState({ ...presets[name] });
+        }
+        document.querySelectorAll('#presetRow .chip').forEach(b => b.classList.toggle('active', b.dataset.preset === name));
+        restart();
+      }
+
+      function clearCanvas() {
+        ctx.fillStyle = '#0b0b0e';
+        ctx.fillRect(0, 0, size, size);
+        state.pathStarted = false;
+        state.lastX = null; state.lastY = null;
+      }
+
+      function restart() {
+        state.t = 0;
+        clearCanvas();
+      }
+
+      function computePos(t) {
+        const decay1 = Math.exp(-state.d1 * t);
+        const decay2 = Math.exp(-state.d2 * t);
+        const rad1 = (state.f1 * t + state.p1 * Math.PI / 180);
+        const rad2 = (state.f2 * t + state.p2 * Math.PI / 180);
+        const paperAngle = state.fr * t;
+        const cosP = Math.cos(paperAngle), sinP = Math.sin(paperAngle);
+        const penX = state.a1 * Math.sin(rad1) * decay1;
+        const penY = state.a2 * Math.sin(rad2) * decay2;
+        const x = penX * cosP - penY * sinP;
+        const y = penX * sinP + penY * cosP;
+        return { x: cx + x * DPR * (maxR / (260 * DPR)), y: cy + y * DPR * (maxR / (260 * DPR)) };
+      }
+
+      function drawFrame(dt) {
+        if (!state.running) return;
+        const step = dt * 0.06 * state.speed;
+        const sub = 8;
+        const dtSub = step / sub;
+        const fadeAlpha = state.fade / 100;
+        if (fadeAlpha > 0) {
+          ctx.fillStyle = `rgba(11,11,14,${fadeAlpha})`;
+          ctx.fillRect(0, 0, size, size);
+        }
+        let hue = state.hue;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const baseW = Math.max(0.2, state.width * DPR);
+        for (let i = 0; i < sub; i++) {
+          const t0 = state.t;
+          state.t += dtSub;
+          const p0 = computePos(t0);
+          const p1 = computePos(state.t);
+          const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+          if (dist > size * 0.35) { state.pathStarted = false; continue; }
+          if (state.rainbow) hue = (state.hue + (state.t * 18)) % 360;
+          const col = `hsl(${hue}, 90%, ${state.glow ? 68 : 58}%)`;
+          ctx.strokeStyle = col;
+          ctx.lineWidth = baseW;
+          if (state.glow) {
+            ctx.shadowColor = col;
+            ctx.shadowBlur = baseW * 5;
+          } else {
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+          }
+          ctx.beginPath();
+          if (state.pathStarted && state.lastX !== null) {
+            ctx.moveTo(state.lastX, state.lastY);
+            ctx.lineTo(p1.x, p1.y);
+          } else {
+            ctx.moveTo(p0.x, p0.y);
+            ctx.lineTo(p1.x, p1.y);
+            state.pathStarted = true;
+          }
+          ctx.stroke();
+          state.lastX = p1.x; state.lastY = p1.y;
+        }
+        updateLabels();
+      }
+
+      let last = performance.now();
+      function loop(now) {
+        const dt = now - last;
+        last = now;
+        drawFrame(Math.min(dt, 50));
+        requestAnimationFrame(loop);
+      }
+
+      ids.forEach(id => {
+        el[id].addEventListener('input', () => { readState(); updateLabels(); restart(); });
+      });
+      document.getElementById('rainbow').addEventListener('change', () => { readState(); restart(); });
+      document.getElementById('glow').addEventListener('change', () => { readState(); restart(); });
+
+      document.getElementById('presetRow').addEventListener('click', e => {
+        if (e.target.classList.contains('chip')) applyPreset(e.target.dataset.preset);
+      });
+
+      const pauseBtn = document.getElementById('pauseBtn');
+      pauseBtn.addEventListener('click', () => {
+        state.running = !state.running;
+        pauseBtn.textContent = state.running ? 'Pause' : 'Resume';
+        pauseBtn.classList.toggle('primary', state.running);
+      });
+      document.getElementById('resetBtn').addEventListener('click', restart);
+      document.getElementById('clearBtn').addEventListener('click', clearCanvas);
+      document.getElementById('saveBtn').addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = 'harmonograph-' + Date.now() + '.png';
+        a.click();
+      });
+
+      readState();
+      updateLabels();
+      clearCanvas();
+      applyPreset('rosette');
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

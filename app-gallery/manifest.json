@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-19",
-    "title": "Mushroom Fruiting Chamber",
-    "slug": "mushroom-fruiting-chamber",
-    "publishedSlug": "2026-08-19-mushroom-fruiting-chamber",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-19-mushroom-fruiting-chamber/"
+    "date": "2026-08-20",
+    "title": "Harmonograph Sketcher",
+    "slug": "harmonograph-sketcher",
+    "publishedSlug": "2026-08-20-harmonograph-sketcher",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-20-harmonograph-sketcher/"
   },
   "apps": [
+    {
+      "date": "2026-08-20",
+      "title": "Harmonograph Sketcher",
+      "slug": "harmonograph-sketcher",
+      "publishedSlug": "2026-08-20-harmonograph-sketcher",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-20-harmonograph-sketcher/",
+      "description": "A virtual Victorian harmonograph: tweak damped pendulums and a spinning turntable to draw rosettes, lace, ribbons and galaxy swirls."
+    },
     {
       "date": "2026-08-19",
       "title": "Mushroom Fruiting Chamber",
