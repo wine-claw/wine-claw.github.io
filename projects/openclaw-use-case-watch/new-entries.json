@@ -1,48 +1,215 @@
 [
   {
-    "title": "OpenClaw Dream Protocol nightly memory consolidation",
-    "summary": "Every night at 07:05 UTC an isolated OpenClaw session runs a REM-style memory cycle over ~700 recall entries, scoring recurrence, query uniqueness, and truth, and promotes only entries passing strict gates to long-term MEMORY.md; a typical run rejects ~737 entries and promotes 1.",
-    "url": "https://dev.to/mrclaw207/i-trained-my-openclaw-to-dream-heres-what-it-learned-overnight-2ed8",
-    "freshness": "2026-06-19",
-    "added": "2026-06-20T15:30:00Z",
-    "addedAt": "2026-06-21T01:00:00+09:30",
-    "source": "DEV Community",
+    "title": "Oracle + OpenClaw: Guardrailed Kubernetes Incident Assistant Drafts RCAs on OCI",
+    "summary": "Oracle's cloud blog published a production pattern where OpenClaw receives OKE alerts, runs a namespace-scoped read-only evidence collector with redaction/size limits, calls OCI Generative AI, and writes a draft RCA to Object Storage while notifying the on-call team.",
+    "url": "https://blogs.oracle.com/cloud-infrastructure/oke-incident-postmortem-autopilot-openclaw-genai",
+    "freshness": "2026-08-19",
+    "source": "Oracle Cloud Infrastructure blog",
     "tags": [
-      "memory",
-      "learning",
-      "cron",
-      "agent-design"
-    ]
+      "Kubernetes",
+      "OCI",
+      "OKE",
+      "incident-response",
+      "RCA",
+      "SRE",
+      "DevOps",
+      "Oracle Cloud"
+    ],
+    "added": "2026-08-20T15:30:00Z",
+    "addedAt": "2026-08-21T01:00:00+09:30"
   },
   {
-    "title": "OpenClaw self-repairing cron health monitor",
-    "summary": "An OpenClaw cron job monitors 18 other cron jobs; after an OpenClaw module rename broke the self-repair import path and the isolated runner began returning exit code 1, the agent fixed itself and sent a Telegram report before the owner noticed.",
-    "url": "https://dev.to/mrclaw207/my-openclaw-cron-broke-and-fixed-itself-before-i-noticed-3ibl",
-    "freshness": "2026-06-18",
-    "added": "2026-06-20T15:29:00Z",
-    "addedAt": "2026-06-21T01:00:00+09:30",
-    "source": "DEV Community",
+    "title": "Bunny Honey Club Runs 33 OpenClaw Agents in Production for Six Months Across Four Businesses",
+    "summary": "The operator built 'OpenClaw Factory,' a directed graph of 33 narrowly chartered Claude agents with persistent Postgres memory, recovering ~11 founder-hours per week per business at roughly $2.4K/month in Claude spend.",
+    "url": "https://blog.bunnyhoneyclub.com/posts/openclaw-factory-what-we-learned-running-33-autonomous-agents",
+    "freshness": "2026-08",
+    "source": "Bunny Honey Club blog",
     "tags": [
-      "cron",
-      "self-healing",
-      "operations",
-      "autonomous"
-    ]
+      "multi-agent",
+      "production",
+      "operator",
+      "Claude",
+      "Postgres memory",
+      "founder productivity",
+      "scale"
+    ],
+    "added": "2026-08-20T15:30:00Z",
+    "addedAt": "2026-08-21T01:00:00+09:30"
   },
   {
-    "title": "Always-on OpenClaw with on-demand GPU inference via JarvisLabs wake proxy",
-    "summary": "Park Chansung separates OpenClaw Gateway on a small CPU VM from vLLM on a GPU instance; a FastAPI wake proxy starts the GPU only for chat completions, pauses it after 15 minutes idle, and can also use JarvisLabs serverless deployments, keeping the assistant surface reachable while making GPU spend follow actual inference.",
-    "url": "https://huggingface.co/blog/chansung/openclaw-on-demand",
-    "freshness": "2026-06-18",
-    "added": "2026-06-20T15:28:00Z",
-    "addedAt": "2026-06-21T01:00:00+09:30",
-    "source": "Hugging Face Blog",
+    "title": "Kelviq Automates Merchant Business Vetting With an OpenClaw Agent on DigitalOcean",
+    "summary": "Kelviq's OpenClaw agent, triggered from Discord, scrapes a submitted business website, compares it against company policies, and returns an approval/rejection verdict with detailed reasoning and a confidence score.",
+    "url": "https://www.indiehackers.com/post/we-automated-our-business-vetting-with-openclaw-788b285744",
+    "freshness": "2026-08",
+    "source": "Indie Hackers",
     "tags": [
+      "business-vetting",
+      "merchant-onboarding",
+      "MoR",
+      "Discord",
+      "DigitalOcean",
+      "fintech",
+      "automation"
+    ],
+    "added": "2026-08-20T15:30:00Z",
+    "addedAt": "2026-08-21T01:00:00+09:30"
+  },
+  {
+    "title": "AWS Publishes Bounded Agent Payments Plugin for OpenClaw via Bedrock AgentCore",
+    "summary": "AWS released the aws-agents-pay plugin on ClawHub plus a guide showing how OpenClaw can settle HTTP 402/x402 payments within human-approved limits using Amazon Bedrock AgentCore Identity and Observability.",
+    "url": "https://aws.amazon.com/blogs/machine-learning/build-openclaw-agents-that-transact-with-amazon-bedrock-agentcore-payments/",
+    "freshness": "2026-08-17",
+    "source": "AWS Machine Learning Blog",
+    "tags": [
+      "AWS",
+      "payments",
+      "x402",
+      "Bedrock AgentCore",
+      "wallet",
+      "agent-economy",
+      "plugin"
+    ],
+    "added": "2026-08-20T15:30:00Z",
+    "addedAt": "2026-08-21T01:00:00+09:30"
+  },
+  {
+    "title": "19 OpenClaw Agents Running 24/7 for Local Service Businesses on $8/Month",
+    "summary": "A multi-agent setup of 19 specialised OpenClaw agents on a $6/month VPS handles Google Business reviews, missed-call SMS responses, ETA updates, and lead follow-up for plumbers, HVAC companies, and law firms via a shared memory layer, cutting response time from 6+ hours to 4 minutes and lifting one plumbing firm's lead response rate from 30% to 94%.",
+    "url": "https://www.builtwithagents.ai/strategy/19-openclaw-agents-local-service-businesses-8-dollars-month",
+    "freshness": "2026-08",
+    "source": "BuiltWithAgents.ai",
+    "tags": [
+      "local-service",
+      "multi-agent",
+      "lead-response",
+      "google-business",
+      "twilio",
+      "shared-memory",
+      "home-services"
+    ],
+    "added": "2026-08-09T15:30:00Z",
+    "addedAt": "2026-08-10T01:00:00+09:30"
+  },
+  {
+    "title": "One AI Agent Handled Every Phone Call at an HVAC Company for 30 Days Straight",
+    "summary": "Sonor AI deployed a single OpenClaw voice agent to run an HVAC company's entire phone operation for 30 days, booking jobs, dispatching technicians, following up with leads, and sending review requests at roughly 15 cents/minute instead of $45,000/year for an office coordinator.",
+    "url": "https://www.builtwithagents.ai/strategy/openclaw-hvac-phone-system-30-day-test",
+    "freshness": "2026-08",
+    "source": "BuiltWithAgents.ai",
+    "tags": [
+      "voice",
+      "hvac",
+      "phone-calls",
+      "scheduling",
+      "local-service",
+      "twilio",
+      "30-day-test"
+    ],
+    "added": "2026-08-09T15:30:00Z",
+    "addedAt": "2026-08-10T01:00:00+09:30"
+  },
+  {
+    "title": "OpenClaw Lead Response Agent for Blue Collar Businesses",
+    "summary": "Todd Anderson built an OpenClaw agent called Hermes for a moving company that handles ~15,000 leads per year, scoring each lead and sending personalised blue iMessage responses in under 45 seconds to keep leads warm until a CSR can call; a 5% conversion lift is projected to add $700K revenue.",
+    "url": "https://www.builtwithagents.ai/strategy/openclaw-lead-response-agent-blue-collar-businesses",
+    "freshness": "2026-08",
+    "source": "BuiltWithAgents.ai",
+    "tags": [
+      "lead-response",
+      "moving",
+      "blue-collar",
+      "imessage",
+      "zapier",
+      "sales"
+    ],
+    "added": "2026-08-09T15:30:00Z",
+    "addedAt": "2026-08-10T01:00:00+09:30"
+  },
+  {
+    "title": "How We Built an AI Operating System for a UK Accountancy Firm",
+    "summary": "Quantum Flow Automation built three OpenClaw agents for Hartley Accounts: an email triage agent, a monthly report drafting agent connected to Xero, and a client onboarding agent over WhatsApp, recovering 22+ hours per week and paying for itself in just over six weeks.",
+    "url": "https://quantumflowautomation.ai/blog/ai-operating-system-accountancy-firm",
+    "freshness": "2026-06-01",
+    "source": "Quantum Flow Automation blog",
+    "tags": [
+      "accounting",
+      "bookkeeping",
+      "xero",
+      "email-triage",
+      "onboarding",
+      "whatsapp",
+      "professional-services"
+    ],
+    "added": "2026-08-09T15:30:00Z",
+    "addedAt": "2026-08-10T01:00:00+09:30"
+  },
+  {
+    "title": "Run OpenClaw on Kubernetes with a Helm operator",
+    "summary": "Paperclip open-sourced the production Kubernetes operator it uses for its managed EU-sovereign OpenClaw service; a single OpenClawInstance custom resource deploys a StatefulSet, NetworkPolicy, RBAC, PVC, ConfigMap, per-instance gateway token, optional Chromium browser sidecar, and Prometheus metrics.",
+    "url": "https://paperclip.inc/blog/openclaw-kubernetes-helm-operator",
+    "freshness": "2026-06-18",
+    "source": "Paperclip blog",
+    "tags": [
+      "kubernetes",
+      "operator",
       "self-hosting",
-      "open-source-models",
-      "cost-optimization",
-      "vllm",
-      "jarvislabs"
-    ]
+      "helm",
+      "security",
+      "production",
+      "paperclip"
+    ],
+    "added": "2026-08-09T15:30:00Z",
+    "addedAt": "2026-08-10T01:00:00+09:30"
+  },
+  {
+    "title": "Build an autonomous ecommerce assistant with AWS End User Messaging, Amazon Bedrock AgentCore, and OpenClaw",
+    "summary": "AWS published Claw Boutique, an open-source reference architecture that connects a web storefront, WhatsApp, email, and Telegram into a single OpenClaw-driven ecommerce experience on EKS, Bedrock AgentCore Runtime, and AWS End User Messaging Social, deployed with one CDK command.",
+    "url": "https://aws.amazon.com/blogs/messaging-and-targeting/build-an-autonomous-ecommerce-assistant-with-aws-end-user-messaging-amazon-bedrock-agentcore-and-openclaw/",
+    "freshness": "2026-05-29",
+    "source": "AWS Messaging Blog",
+    "tags": [
+      "aws",
+      "ecommerce",
+      "bedrock",
+      "eks",
+      "whatsapp",
+      "telegram",
+      "reference-architecture"
+    ],
+    "added": "2026-08-09T15:30:00Z",
+    "addedAt": "2026-08-10T01:00:00+09:30"
+  },
+  {
+    "title": "Automating App Store Optimization with an AI Agent and asc CLI",
+    "summary": "Storyie extended its resident OpenClaw agent to automate ASO across 10 App Store locales by reading the app's locale files, using asc CLI to fetch and preview metadata changes, generating keyword-optimised copy, and gating every submission behind a --dry-run human review.",
+    "url": "https://storyie.com/blog/openclaw-aso-app-store-connect",
+    "freshness": "2026-06",
+    "source": "Storyie blog",
+    "tags": [
+      "aso",
+      "app-store",
+      "mobile",
+      "localization",
+      "indie-developer",
+      "content"
+    ],
+    "added": "2026-08-09T15:30:00Z",
+    "addedAt": "2026-08-10T01:00:00+09:30"
+  },
+  {
+    "title": "OpenClaw recipes for real estate teams: a better way to fix speed-to-lead",
+    "summary": "Kilo.ai published a set of OpenClaw recipes on KiloClaw for real estate teams that combine Speed-to-Lead SLA, Lead Intake to Appointment, and Lead Routing Balancer skills with ClawHub email and API gateway skills to turn inbound inquiries into owned, routed, and followed-up appointments.",
+    "url": "https://blog.kilo.ai/p/openclaw-recipes-for-real-estate",
+    "freshness": "2026-04-17",
+    "source": "Kilo.ai blog",
+    "tags": [
+      "real-estate",
+      "speed-to-lead",
+      "recipes",
+      "lead-routing",
+      "skills"
+    ],
+    "added": "2026-08-09T15:30:00Z",
+    "addedAt": "2026-08-10T01:00:00+09:30"
   }
 ]

@@ -1,10 +1,28 @@
 # OpenClaw Use-Case Watch — Latest Summary
 
-**Run:** Sunday, August 16, 2026, 01:00 ACDT (2026-08-15 15:30 UTC)
+**Run:** Friday, August 21, 2026, 01:00 ACDT (2026-08-20 15:30 UTC)
 
-**Verdict:** 7 genuinely new, high-signal OpenClaw use cases found since the August 15 run.
+**Verdict:** 4 genuinely new, high-signal OpenClaw use cases added since the August 19 run.
 
-## New brief-ready examples (freshest first)
+## New this run (freshest / strongest first)
+
+1. **Oracle + OpenClaw: Guardrailed Kubernetes Incident Assistant Drafts RCAs on OCI**  
+Oracle's cloud blog published a production pattern where OpenClaw receives OKE alerts, runs a namespace-scoped read-only evidence collector with redaction/size limits, calls OCI Generative AI, and writes a draft RCA to Object Storage while notifying the on-call team.  
+<https://blogs.oracle.com/cloud-infrastructure/oke-incident-postmortem-autopilot-openclaw-genai> · 2026-08-19
+
+2. **Bunny Honey Club Runs 33 OpenClaw Agents in Production for Six Months Across Four Businesses**  
+The operator built "OpenClaw Factory," a directed graph of 33 narrowly chartered Claude agents (foreman, finance clerk, code reviewer, support triage, etc.) with persistent Postgres memory, recovering ~11 founder-hours per week per business at roughly $2.4K/month in Claude spend.  
+<https://blog.bunnyhoneyclub.com/posts/openclaw-factory-what-we-learned-running-33-autonomous-agents> · 2026-08
+
+3. **Kelviq Automates Merchant Business Vetting With an OpenClaw Agent on DigitalOcean**  
+Kelviq's OpenClaw agent, triggered from Discord, scrapes a submitted business website, compares it against company policies, and returns an approval/rejection verdict with detailed reasoning and a confidence score, eliminating a major post-launch onboarding bottleneck.  
+<https://www.indiehackers.com/post/we-automated-our-business-vetting-with-openclaw-788b285744> · 2026-08
+
+4. **AWS Publishes Bounded Agent Payments Plugin for OpenClaw via Bedrock AgentCore**  
+AWS released the `aws-agents-pay` plugin on ClawHub plus a step-by-step guide showing how OpenClaw can settle HTTP 402/x402 payments within human-approved limits (recipient, asset, network, per-payment cap, session budget, expiry) using Amazon Bedrock AgentCore Identity and Observability.  
+<https://aws.amazon.com/blogs/machine-learning/build-openclaw-agents-that-transact-with-amazon-bedrock-agentcore-payments/> · 2026-08-17
+
+## Best still-useful queued examples (after the new ones)
 
 1. **Boll & Branch Deploys 'Tess,' an OpenClaw-Based AI Agent, Across Its $200M Retail Business**  
 The bedding brand's CEO built Tess with OpenClaw; it began as a scheduling assistant, expanded into Slack, Shopify, Iterable and Sprout Social, and now answers operational questions like "what do our Chestnut Hill customers buy?" across a $200M+ retail operation.  
@@ -18,39 +36,29 @@ AWS Messaging Blog released "Claw Boutique," an open-source CDK-deployed stack t
 A multi-agent setup for plumbers, HVAC companies and law firms dropped response time from 6+ hours to 4 minutes and lifted lead conversion 34%, with shared memory preventing duplicate follow-ups when the same lead calls and texts.  
 <https://www.builtwithagents.ai/strategy/19-openclaw-agents-local-service-businesses-8-dollars-month> · 2026-08
 
-4. **Moving-Company Lead Agent 'Hermes' Responds in Under 45 Seconds, Projected to Add $700K**  
-Todd Anderson's OpenClaw agent Hermes handles 15,000 leads per year for a moving company, scoring intent via iMessage and asking qualifying discovery questions so CSRs get warm, context-rich calls; a 5% conversion lift would add ~$700K.  
-<https://www.builtwithagents.ai/strategy/openclaw-lead-response-agent-blue-collar-businesses> · 2026-08
+## What was scanned
 
-5. **OpenClaw Agent 'Sam' Autonomously Managed a Tesla Powerwall Through a Planned Outage**  
-User "Sam" used OpenClaw with pypowerwall to pre-charge two Powerwalls, switch to island mode, monitor solar/load, alert a family member when A/C threatened runtime, and carry the house until grid power returned.  
-<https://x.com/AIRoboticsInt/status/2087984859511652670> · 2026-08-13
+- Web search (general OpenClaw use-case queries, site searches for BuiltWithAgents.ai, Indie Hackers, DEV.to, Glossy.co, Hacker News, Reddit, Oracle/AWS cloud blogs, company blogs).
+- X/Twitter search for OpenClaw deployment mentions August 19–20, 2026.
+- Direct page fetches of candidate pages surfaced by search, including the Oracle OCI blog, AWS payments blog, Bunny Honey Club field report, and Kelviq Indie Hackers post.
 
-6. **OpenClaw Agent Handles IT Access Ticket by Browser-Automating an Unfamiliar Admin System**  
-Given the goal "get her access," an OpenClaw agent on a Mac Mini used browser UI automation to restore a disabled account, fix a name spelling, re-enable membership, close the stale ticket and create the proper automation ticket.  
-<https://x.com/Zanzibased/status/2087903044239343687> · 2026-08-13
+## What was found but not added
 
-7. **ClawGTM — Autonomous Outbound Sales Agent Built on OpenClaw**  
-ClawGTM turns a SaaS website URL into a full outbound motion: it scrapes positioning, mines job posts for matching companies, researches decision-makers, writes personalized email and LinkedIn sequences, and books meetings.  
-<https://x.com/hasantoxr/status/2088608785690738700> · 2026-08-15
-
-## Next best queued examples
-
-- **OpenClaw Agent Handles QuickBooks Expenses, Amazon Purchases, and LinkedIn Background Checks** — Hannes Rudolph's agent automated employee expenses, Amazon purchasing and a LinkedIn hiring plugin in one day. · 2026-08-12
-- **OpenClaw Bot Finds New Business Registrations and Mails Personalized Brand Postcards** — Autonomous agency client-acquisition pipeline that scans public business registrations, builds a brand/website, and mails a postcard to the owner's door. · 2026-08-12
-- **AIDEN — AI Executive Assistant Running a High-Volume Kia Dealership** — New Car Manager built AIDEN on OpenClaw + Claude + n8n, cutting ~2 hours/day of manual data work. · 2026-08
+- **Openmart / Whatnot seller acquisition case study** (openmart.com, August 9, 2026): strong live-commerce use case, but the page includes a prominent disclaimer that examples are illustrative and do not reflect any specific customer's strategy; kept as lower-trust and not added to brief-picks.
+- **70% slashed legal drafting time on AMD Developer Cloud** (cloudguide.cloud, August 17, 2026): deployment numbers and headline metric, but the source is a thin affiliate/marketing-style site with a legal disclaimer; signal too low relative to this run's additions.
+- **ClawdBot 30-day $47 revenue / $411 overhead post** (Indie Hackers, August 2026): refreshingly honest operator reflection, but the project is still in the red and lacks a concrete use-case angle beyond generic AI-as-business-partner; not brief-ready.
+- **OpenClaw Chronicles release notes and OpenClaw security hardening posts** (August 18–19): tooling/ecosystem updates, not use cases.
+- **DEV.to defensive-patterns post after OpenClaw 2026.4.14** (August 19): operational lessons, not a new deployment example.
+- **Generic listicles, setup tutorials, release notes, security advisories, and ecosystem-tooling posts** were skipped.
 
 ## Notes
 
-- Sources scanned: web search, X search, Hacker News, BuiltWithAgents.ai, Indie Hackers, DEV.to, Hashnode, LinkedIn, company blogs, and the official OpenClaw showcase pages.
-- The strongest new signal is the Glossy interview with Boll & Branch: a named $200M retailer, named executive, named systems (Slack, Shopify, Iterable, Sprout Social), and an explicit OpenClaw origin story.
-- AWS's "Claw Boutique" reference architecture is notable because it is an official, deployable, open-source AWS pattern that combines OpenClaw for seller operations with Bedrock AgentCore for buyer chat.
-- BuiltWithAgents.ai surfaced two additional concrete local-service case studies with clear metrics and cost structures.
-- Mid-August X posts supplied two vivid operational anecdotes (Powerwall management, IT access automation). These are single-source, unverified first-person stories, so they are queued but flagged medium-high rather than high.
-- Hacker News Algolia returned zero new "openclaw" stories in the August 14–15 UTC window.
-- Generic listicles, consult-site landing pages, setup-only tutorials, release notes, and ecosystem tooling posts were skipped to keep the queue high-signal.
+- Hacker News Algolia returned no new "openclaw" stories in the August 18–20 UTC window.
+- BuiltWithAgents.ai and Indie Hackers indexes surfaced a few operational posts; only the Kelviq business-vetting post was dated/promoted strongly enough for the brief queue.
+- X produced mostly community chatter, hardware mentions, security exposure discussion, and the ClawCast demo event — no new concrete, verifiable deployments.
+- Brief-picks.json queue maintained at 90 items; 4 entries added and the 4 oldest/lowest-signal entries were removed to keep the cap.
 
 ## Stats
 
-- brief-picks.json: **90 entries** (7 new this run, 7 removed to maintain cap)
-- state.json updated: `lastGenuineNewEntryDate` set to 2026-08-16
+- brief-picks.json: **90 entries** (4 new this run)
+- state.json updated: `lastGenuineNewEntryDate` reset to 2026-08-20, `consecutiveNoNewDaysBeforeThisRun` reset to 0

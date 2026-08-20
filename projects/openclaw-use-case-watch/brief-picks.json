@@ -1,5 +1,86 @@
 [
   {
+    "title": "Oracle + OpenClaw: Guardrailed Kubernetes Incident Assistant Drafts RCAs on OCI",
+    "summary": "Oracle's cloud blog published a production pattern where OpenClaw receives OKE alerts, runs a namespace-scoped read-only evidence collector with redaction/size limits, calls OCI Generative AI, and writes a draft RCA to Object Storage while notifying the on-call team.",
+    "sourceUrl": "https://blogs.oracle.com/cloud-infrastructure/oke-incident-postmortem-autopilot-openclaw-genai",
+    "freshness": "2026-08-19",
+    "sourceType": "official cloud vendor blog / reference architecture",
+    "signal": "high",
+    "tags": [
+      "Kubernetes",
+      "OCI",
+      "OKE",
+      "incident-response",
+      "RCA",
+      "SRE",
+      "DevOps",
+      "Oracle Cloud"
+    ],
+    "addedAt": "2026-08-21T01:02:28.253277+09:30",
+    "added": "2026-08-20T15:32:28Z",
+    "url": "https://blogs.oracle.com/cloud-infrastructure/oke-incident-postmortem-autopilot-openclaw-genai"
+  },
+  {
+    "title": "Bunny Honey Club Runs 33 OpenClaw Agents in Production for Six Months Across Four Businesses",
+    "summary": "The operator built 'OpenClaw Factory,' a directed graph of 33 narrowly chartered Claude agents (foreman, finance clerk, code reviewer, support triage, etc.) with persistent Postgres memory, recovering ~11 founder-hours per week per business at roughly $2.4K/month in Claude spend.",
+    "sourceUrl": "https://blog.bunnyhoneyclub.com/posts/openclaw-factory-what-we-learned-running-33-autonomous-agents",
+    "freshness": "2026-08",
+    "sourceType": "production field report / first-person operator",
+    "signal": "high",
+    "tags": [
+      "multi-agent",
+      "production",
+      "operator",
+      "Claude",
+      "Postgres memory",
+      "founder productivity",
+      "scale"
+    ],
+    "addedAt": "2026-08-21T01:02:28.253277+09:30",
+    "added": "2026-08-20T15:32:28Z",
+    "url": "https://blog.bunnyhoneyclub.com/posts/openclaw-factory-what-we-learned-running-33-autonomous-agents"
+  },
+  {
+    "title": "Kelviq Automates Merchant Business Vetting With an OpenClaw Agent on DigitalOcean",
+    "summary": "Kelviq's OpenClaw agent, triggered from Discord, scrapes a submitted business website, compares it against company policies, and returns an approval/rejection verdict with detailed reasoning and a confidence score, eliminating a major post-launch onboarding bottleneck.",
+    "sourceUrl": "https://www.indiehackers.com/post/we-automated-our-business-vetting-with-openclaw-788b285744",
+    "freshness": "2026-08",
+    "sourceType": "Indie Hackers / first-person operator",
+    "signal": "medium-high",
+    "tags": [
+      "business-vetting",
+      "merchant-onboarding",
+      "MoR",
+      "Discord",
+      "DigitalOcean",
+      "fintech",
+      "automation"
+    ],
+    "addedAt": "2026-08-21T01:02:28.253277+09:30",
+    "added": "2026-08-20T15:32:28Z",
+    "url": "https://www.indiehackers.com/post/we-automated-our-business-vetting-with-openclaw-788b285744"
+  },
+  {
+    "title": "AWS Publishes Bounded Agent Payments Plugin for OpenClaw via Bedrock AgentCore",
+    "summary": "AWS released the aws-agents-pay plugin on ClawHub plus a step-by-step guide showing how OpenClaw can settle HTTP 402/x402 payments within human-approved limits (recipient, asset, network, per-payment cap, session budget, expiry) using Amazon Bedrock AgentCore Identity and Observability.",
+    "sourceUrl": "https://aws.amazon.com/blogs/machine-learning/build-openclaw-agents-that-transact-with-amazon-bedrock-agentcore-payments/",
+    "freshness": "2026-08-17",
+    "sourceType": "official AWS blog / integration guide",
+    "signal": "medium-high",
+    "tags": [
+      "AWS",
+      "payments",
+      "x402",
+      "Bedrock AgentCore",
+      "wallet",
+      "agent-economy",
+      "plugin"
+    ],
+    "addedAt": "2026-08-21T01:02:28.253277+09:30",
+    "added": "2026-08-20T15:32:28Z",
+    "url": "https://aws.amazon.com/blogs/machine-learning/build-openclaw-agents-that-transact-with-amazon-bedrock-agentcore-payments/"
+  },
+  {
     "title": "Boll & Branch Deploys 'Tess,' an OpenClaw-Based AI Agent, Across Its $200M Retail Business",
     "summary": "The bedding brand's CEO built Tess with OpenClaw; it began as a scheduling assistant, expanded into Slack, Shopify, Iterable and Sprout Social, and now answers operational questions like 'what do our Chestnut Hill customers buy?' across a $200M+ retail operation.",
     "sourceUrl": "https://www.glossy.co/fashion/how-boll-branch-is-integrating-an-openclaw-based-ai-agent-in-every-part-of-its-business/",
@@ -14,7 +95,9 @@
       "scheduling",
       "Slack",
       "Shopify"
-    ]
+    ],
+    "url": "https://www.glossy.co/fashion/how-boll-branch-is-integrating-an-openclaw-based-ai-agent-in-every-part-of-its-business/",
+    "added": "2026-08-16T01:00:00+09:30"
   },
   {
     "title": "AWS Publishes Reference Architecture for an Autonomous OpenClaw E-Commerce Assistant",
@@ -31,7 +114,9 @@
       "WhatsApp",
       "Telegram",
       "order management"
-    ]
+    ],
+    "url": "https://aws.amazon.com/blogs/messaging-and-targeting/build-an-autonomous-ecommerce-assistant-with-aws-end-user-messaging-amazon-bedrock-agentcore-and-openclaw/",
+    "added": "2026-08-16T01:00:00+09:30"
   },
   {
     "title": "19 OpenClaw Agents Run 24/7 for Local Service Businesses on an $8/Month VPS",
@@ -47,7 +132,9 @@
       "multi-agent",
       "lead response",
       "VPS"
-    ]
+    ],
+    "url": "https://www.builtwithagents.ai/strategy/19-openclaw-agents-local-service-businesses-8-dollars-month",
+    "added": "2026-08-16T01:00:00+09:30"
   },
   {
     "title": "Moving-Company Lead Agent 'Hermes' Responds in Under 45 Seconds, Projected to Add $700K",
@@ -63,7 +150,9 @@
       "lead response",
       "iMessage",
       "ROI"
-    ]
+    ],
+    "url": "https://www.builtwithagents.ai/strategy/openclaw-lead-response-agent-blue-collar-businesses",
+    "added": "2026-08-16T01:00:00+09:30"
   },
   {
     "title": "OpenClaw Agent 'Sam' Autonomously Managed a Tesla Powerwall Through a Planned Outage",
@@ -78,7 +167,9 @@
       "energy",
       "Tesla Powerwall",
       "proactive monitoring"
-    ]
+    ],
+    "url": "https://x.com/AIRoboticsInt/status/2087984859511652670",
+    "added": "2026-08-16T01:00:00+09:30"
   },
   {
     "title": "OpenClaw Agent Handles IT Access Ticket by Browser-Automating an Unfamiliar Admin System",
@@ -93,7 +184,9 @@
       "browser automation",
       "access management",
       "Mac Mini"
-    ]
+    ],
+    "url": "https://x.com/Zanzibased/status/2087903044239343687",
+    "added": "2026-08-16T01:00:00+09:30"
   },
   {
     "title": "ClawGTM \u2014 Autonomous Outbound Sales Agent Built on OpenClaw",
@@ -110,7 +203,9 @@
       "Apollo",
       "Clay",
       "LinkedIn"
-    ]
+    ],
+    "url": "https://x.com/hasantoxr/status/2088608785690738700",
+    "added": "2026-08-16T01:00:00+09:30"
   },
   {
     "title": "OpenClaw Agent Handles QuickBooks Expenses, Amazon Purchases, and LinkedIn Background Checks",
@@ -129,7 +224,10 @@
       "daily-ops"
     ],
     "added": "2026-08-12T15:30:00Z",
-    "addedAt": "2026-08-13T01:00:00+09:30"
+    "addedAt": "2026-08-13T01:00:00+09:30",
+    "sourceUrl": "https://x.com/hrudolph/status/2087401455238205941",
+    "sourceType": "X / Hannes Rudolph",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw Bot Finds New Business Registrations and Mails Personalized Brand Postcards",
@@ -147,7 +245,10 @@
       "local-service"
     ],
     "added": "2026-08-12T15:30:00Z",
-    "addedAt": "2026-08-13T01:00:00+09:30"
+    "addedAt": "2026-08-13T01:00:00+09:30",
+    "sourceUrl": "https://x.com/TechWith_Nova/status/2087413731563389249",
+    "sourceType": "X / TechWith_Nova",
+    "signal": "medium"
   },
   {
     "title": "AIDEN \u2014 AI Executive Assistant Running a High-Volume Kia Dealership",
@@ -167,7 +268,10 @@
       "automotive"
     ],
     "added": "2026-08-12T15:30:00Z",
-    "addedAt": "2026-08-13T01:00:00+09:30"
+    "addedAt": "2026-08-13T01:00:00+09:30",
+    "sourceUrl": "https://www.indiehackers.com/post/i-built-an-ai-executive-assistant-that-runs-my-car-dealership-no-code-team-no-vendors-just-me-and-claude-e49c9297a7",
+    "sourceType": "Indie Hackers",
+    "signal": "medium"
   },
   {
     "title": "Landscaping Company's Lead-to-Booked Rate Jumps 42% With Instant AI Lead Response",
@@ -185,7 +289,10 @@
       "conversion"
     ],
     "added": "2026-08-12T15:30:00Z",
-    "addedAt": "2026-08-13T01:00:00+09:30"
+    "addedAt": "2026-08-13T01:00:00+09:30",
+    "sourceUrl": "https://www.builtwithagents.ai/strategy/instant-ai-lead-response-local-service-businesses",
+    "sourceType": "BuiltWithAgents.ai",
+    "signal": "medium"
   },
   {
     "title": "52 AI-Generated YouTube Videos in 6 Weeks With 30,000 Views and Zero Manual Editing",
@@ -203,7 +310,10 @@
       "content-pipeline"
     ],
     "added": "2026-08-12T15:30:00Z",
-    "addedAt": "2026-08-13T01:00:00+09:30"
+    "addedAt": "2026-08-13T01:00:00+09:30",
+    "sourceUrl": "https://www.builtwithagents.ai/strategy/ai-agents-youtube-channel-52-videos-6-weeks-30k-views",
+    "sourceType": "BuiltWithAgents.ai",
+    "signal": "medium"
   },
   {
     "title": "How Max Replaced His Marketing Team With OpenClaw Agents",
@@ -222,7 +332,10 @@
       "inbound-leads"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://coldiq.com/blog/how-max-replaced-his-marketing-team-with-openclaw-agents",
+    "sourceType": "ColdIQ",
+    "signal": "medium"
   },
   {
     "title": "An Autonomous OpenClaw Agent Generated $14,700 in Revenue in 3 Weeks From a $1,000 Budget",
@@ -241,7 +354,10 @@
       "nat-eliason"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://www.builtwithagents.ai/strategy/openclaw-autonomous-agent-14700-revenue-3-weeks",
+    "sourceType": "BuiltWithAgents.ai",
+    "signal": "medium"
   },
   {
     "title": "Fully Autonomous Meta Ads Manager Built on OpenClaw",
@@ -259,7 +375,10 @@
       "dtc"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://www.builtwithagents.ai/strategy/autonomous-meta-ads-manager-openclaw",
+    "sourceType": "BuiltWithAgents.ai",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw in Practice: A Small Team's Field Notes",
@@ -277,7 +396,10 @@
       "vercel"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://news.ycombinator.com/item?id=46846592",
+    "sourceType": "Hacker News / SubEasy.ai",
+    "signal": "medium"
   },
   {
     "title": "100 Free HVAC Leads in 10 Minutes Using OpenClaw and Apify",
@@ -295,7 +417,10 @@
       "agency"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://www.builtwithagents.ai/strategy/openclaw-free-lead-generation-apify-google-maps",
+    "sourceType": "BuiltWithAgents.ai",
+    "signal": "medium"
   },
   {
     "title": "How Shadow Inbox Was Built With an OpenClaw Agent Factory",
@@ -314,7 +439,10 @@
       "security"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://blog.getshadowinbox.com/posts/built-with-openclaw",
+    "sourceType": "Shadow Inbox blog",
+    "signal": "medium"
   },
   {
     "title": "Three AI Agents, One Recruitment Agency, 73% More Placements",
@@ -332,7 +460,10 @@
       "professional-services"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://quantumflowautomation.ai/blog/ai-recruitment-agency-case-study",
+    "sourceType": "Quantum Flow Automation blog",
+    "signal": "medium"
   },
   {
     "title": "Mr Apple Cleared 6 Months of Jira Backlog in 3 Weeks With OpenClaw Agent 'Eve'",
@@ -351,7 +482,10 @@
       "agriculture"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://www.linkedin.com/posts/geoffmunn_how-we-used-openclaw-to-automate-delivery-activity-7485645887612997633-YPTi",
+    "sourceType": "LinkedIn / Mr Apple",
+    "signal": "medium"
   },
   {
     "title": "An AI Agent Turned a $50 Experiment Into a Profitable Service Business in 15 Days",
@@ -368,7 +502,10 @@
       "reddit"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://www.builtwithagents.ai/strategy/ai-agent-50-dollar-experiment-profitable-in-15-days",
+    "sourceType": "BuiltWithAgents.ai",
+    "signal": "medium"
   },
   {
     "title": "Equeco Built a 24/7 PPC Marketing Copilot on OpenClaw and Slack",
@@ -386,25 +523,10 @@
       "marketing"
     ],
     "added": "2026-08-10T15:30:00Z",
-    "addedAt": "2026-08-11T01:00:00+09:30"
-  },
-  {
-    "title": "19 OpenClaw Agents Running 24/7 for Local Service Businesses on $8/Month",
-    "summary": "A multi-agent setup of 19 specialised OpenClaw agents on a $6/month VPS handles Google Business reviews, missed-call SMS responses, ETA updates, and lead follow-up for plumbers, HVAC companies, and law firms via a shared memory layer, cutting response time from 6+ hours to 4 minutes and lifting one plumbing firm's lead response rate from 30% to 94%.",
-    "url": "https://www.builtwithagents.ai/strategy/19-openclaw-agents-local-service-businesses-8-dollars-month",
-    "freshness": "2026-08",
-    "source": "BuiltWithAgents.ai",
-    "tags": [
-      "local-service",
-      "multi-agent",
-      "lead-response",
-      "google-business",
-      "twilio",
-      "shared-memory",
-      "home-services"
-    ],
-    "added": "2026-08-09T15:30:00Z",
-    "addedAt": "2026-08-10T01:00:00+09:30"
+    "addedAt": "2026-08-11T01:00:00+09:30",
+    "sourceUrl": "https://www.equeco.com/news/openclaw-ai-ppc-copilot",
+    "sourceType": "Equeco blog",
+    "signal": "medium"
   },
   {
     "title": "One AI Agent Handled Every Phone Call at an HVAC Company for 30 Days Straight",
@@ -422,24 +544,10 @@
       "30-day-test"
     ],
     "added": "2026-08-09T15:30:00Z",
-    "addedAt": "2026-08-10T01:00:00+09:30"
-  },
-  {
-    "title": "OpenClaw Lead Response Agent for Blue Collar Businesses",
-    "summary": "Todd Anderson built an OpenClaw agent called Hermes for a moving company that handles ~15,000 leads per year, scoring each lead and sending personalised blue iMessage responses in under 45 seconds to keep leads warm until a CSR can call; a 5% conversion lift is projected to add $700K revenue.",
-    "url": "https://www.builtwithagents.ai/strategy/openclaw-lead-response-agent-blue-collar-businesses",
-    "freshness": "2026-08",
-    "source": "BuiltWithAgents.ai",
-    "tags": [
-      "lead-response",
-      "moving",
-      "blue-collar",
-      "imessage",
-      "zapier",
-      "sales"
-    ],
-    "added": "2026-08-09T15:30:00Z",
-    "addedAt": "2026-08-10T01:00:00+09:30"
+    "addedAt": "2026-08-10T01:00:00+09:30",
+    "sourceUrl": "https://www.builtwithagents.ai/strategy/openclaw-hvac-phone-system-30-day-test",
+    "sourceType": "BuiltWithAgents.ai",
+    "signal": "medium"
   },
   {
     "title": "How We Built an AI Operating System for a UK Accountancy Firm",
@@ -457,7 +565,10 @@
       "professional-services"
     ],
     "added": "2026-08-09T15:30:00Z",
-    "addedAt": "2026-08-10T01:00:00+09:30"
+    "addedAt": "2026-08-10T01:00:00+09:30",
+    "sourceUrl": "https://quantumflowautomation.ai/blog/ai-operating-system-accountancy-firm",
+    "sourceType": "Quantum Flow Automation blog",
+    "signal": "medium"
   },
   {
     "title": "Run OpenClaw on Kubernetes with a Helm operator",
@@ -475,25 +586,10 @@
       "paperclip"
     ],
     "added": "2026-08-09T15:30:00Z",
-    "addedAt": "2026-08-10T01:00:00+09:30"
-  },
-  {
-    "title": "Build an autonomous ecommerce assistant with AWS End User Messaging, Amazon Bedrock AgentCore, and OpenClaw",
-    "summary": "AWS published Claw Boutique, an open-source reference architecture that connects a web storefront, WhatsApp, email, and Telegram into a single OpenClaw-driven ecommerce experience on EKS, Bedrock AgentCore Runtime, and AWS End User Messaging Social, deployed with one CDK command.",
-    "url": "https://aws.amazon.com/blogs/messaging-and-targeting/build-an-autonomous-ecommerce-assistant-with-aws-end-user-messaging-amazon-bedrock-agentcore-and-openclaw/",
-    "freshness": "2026-05-29",
-    "source": "AWS Messaging Blog",
-    "tags": [
-      "aws",
-      "ecommerce",
-      "bedrock",
-      "eks",
-      "whatsapp",
-      "telegram",
-      "reference-architecture"
-    ],
-    "added": "2026-08-09T15:30:00Z",
-    "addedAt": "2026-08-10T01:00:00+09:30"
+    "addedAt": "2026-08-10T01:00:00+09:30",
+    "sourceUrl": "https://paperclip.inc/blog/openclaw-kubernetes-helm-operator",
+    "sourceType": "Paperclip blog",
+    "signal": "medium"
   },
   {
     "title": "Automating App Store Optimization with an AI Agent and asc CLI",
@@ -510,7 +606,10 @@
       "content"
     ],
     "added": "2026-08-09T15:30:00Z",
-    "addedAt": "2026-08-10T01:00:00+09:30"
+    "addedAt": "2026-08-10T01:00:00+09:30",
+    "sourceUrl": "https://storyie.com/blog/openclaw-aso-app-store-connect",
+    "sourceType": "Storyie blog",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw recipes for real estate teams: a better way to fix speed-to-lead",
@@ -526,7 +625,10 @@
       "skills"
     ],
     "added": "2026-08-09T15:30:00Z",
-    "addedAt": "2026-08-10T01:00:00+09:30"
+    "addedAt": "2026-08-10T01:00:00+09:30",
+    "sourceUrl": "https://blog.kilo.ai/p/openclaw-recipes-for-real-estate",
+    "sourceType": "Kilo.ai blog",
+    "signal": "medium"
   },
   {
     "title": "I Built a 10-Agent AI Company That Runs My Food Truck",
@@ -546,7 +648,10 @@
       "cron",
       "memory",
       "solo-founder"
-    ]
+    ],
+    "sourceUrl": "https://dev.to/bkashji/open-claw-that-runs-food-truck--1fa3",
+    "sourceType": "dev.to",
+    "signal": "medium"
   },
   {
     "title": "How Eximus Started Adopting OpenClaw",
@@ -564,7 +669,10 @@
       "security",
       "production",
       "adoption"
-    ]
+    ],
+    "sourceUrl": "https://www.eximus-software.com/en/resources/how-eximus-started-adopting-openclaw",
+    "sourceType": "eximus-software.com",
+    "signal": "medium"
   },
   {
     "title": "How do you give an AI agent a password without losing your mind (or your secrets)?",
@@ -582,7 +690,10 @@
       "biometric",
       "production",
       "enterprise"
-    ]
+    ],
+    "sourceUrl": "https://derivai.substack.com/p/how-do-you-give-an-ai-agent-a-password",
+    "sourceType": "derivai.substack.com",
+    "signal": "medium"
   },
   {
     "title": "We got local models to triage the OpenClaw repo for FREE",
@@ -601,7 +712,10 @@
       "qwen",
       "self-hosted",
       "open-source-maintenance"
-    ]
+    ],
+    "sourceUrl": "https://huggingface.co/blog/local-models-pr-triage",
+    "sourceType": "huggingface.co",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw in Production: When the Most Advanced Memory System Meets the Quietest Failure",
@@ -619,7 +733,10 @@
       "logging",
       "feishu",
       "debugging"
-    ]
+    ],
+    "sourceUrl": "https://zhuoqidev.com/en/posts/openclaw-pitfalls/",
+    "sourceType": "zhuoqidev.com",
+    "signal": "medium"
   },
   {
     "title": "YY Group launches OpenClaw agentic AI across hotel clients and internal operations",
@@ -638,7 +755,10 @@
       "telegram",
       "nasdaq",
       "production"
-    ]
+    ],
+    "sourceUrl": "https://digiconasia.net/pr-newswire/yy-group-nasdaq-yygh-launches-openclaw-agentic-ai-across-hotel-clients-and-internal-operations",
+    "sourceType": "digiconasia.net / PRNewswire",
+    "signal": "medium"
   },
   {
     "title": "How I Rebuilt My AI Agent Team After the Lobster Lobotomy",
@@ -662,7 +782,10 @@
       "tailscale",
       "1password",
       "memory"
-    ]
+    ],
+    "sourceUrl": "https://www.littlemight.com/openclaw-paperclip-setup/",
+    "sourceType": "littlemight.com",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw as a personal AI content manager (full breakdown)",
@@ -679,7 +802,10 @@
       "kimi",
       "social-media",
       "skills"
-    ]
+    ],
+    "sourceUrl": "https://www.indiehackers.com/post/setting-up-openclaw-as-a-personal-ai-content-manager-full-breakdown-19276e58d9",
+    "sourceType": "Indie Hackers",
+    "signal": "medium"
   },
   {
     "title": "I replaced an $800/month web scraping API with 200 lines of Python (OpenClaw crawler)",
@@ -695,7 +821,10 @@
       "python",
       "open-source",
       "fintech"
-    ]
+    ],
+    "sourceUrl": "https://blog.stackademic.com/i-replaced-an-800-month-web-scraping-api-with-200-lines-of-python-and-named-it-openclaw-8f34fa6b7fd6",
+    "sourceType": "Medium / Stackademic",
+    "signal": "medium"
   },
   {
     "title": "ClawList \u2014 AI butler built an OpenClaw tools directory autonomously",
@@ -711,7 +840,10 @@
       "ecosystem",
       "automation",
       "alfred"
-    ]
+    ],
+    "sourceUrl": "https://clawlist.dev",
+    "sourceType": "Indie Hackers / clawlist.dev",
+    "signal": "medium"
   },
   {
     "title": "Storyie runs seven cron jobs as a resident OpenClaw dev workflow",
@@ -728,7 +860,10 @@
       "github",
       "pr-reviews",
       "content"
-    ]
+    ],
+    "sourceUrl": "https://storyie.com/blog/openclaw-ai-agent-dev-workflow",
+    "sourceType": "Storyie blog",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw runs a solo founder\u2019s entire business admin from WhatsApp with 79 tools",
@@ -745,7 +880,10 @@
       "operations",
       "contracts",
       "invoices"
-    ]
+    ],
+    "sourceUrl": "https://www.indiehackers.com/post/i-gave-openclaw-79-business-tools-it-runs-my-admin-now-35eb420bb5",
+    "sourceType": "Indie Hackers",
+    "signal": "medium"
   },
   {
     "title": "Clawr.ing gives OpenClaw agents real outbound phone calls for morning briefings and alerts",
@@ -761,7 +899,10 @@
       "calls",
       "alerts",
       "skill"
-    ]
+    ],
+    "sourceUrl": "https://www.indiehackers.com/post/i-built-a-phone-calling-skill-for-openclaw-923a9e3ba0",
+    "sourceType": "Indie Hackers / clawr.ing",
+    "signal": "medium"
   },
   {
     "title": "Agent minimalism: what shipping OpenClaw in production taught us",
@@ -777,7 +918,10 @@
       "token-overhead",
       "architecture",
       "honest-critique"
-    ]
+    ],
+    "sourceUrl": "https://autoclaw.sh/blog/agent-minimalism/",
+    "sourceType": "Hacker News / autoclaw.sh",
+    "signal": "medium"
   },
   {
     "title": "AucoBot \u2014 no-code web UI wrapper for self-hosted OpenClaw agents",
@@ -793,7 +937,10 @@
       "onboarding",
       "docker",
       "open-source"
-    ]
+    ],
+    "sourceUrl": "https://github.com/aucobot/aucobot",
+    "sourceType": "DEV Community / GitHub",
+    "signal": "medium"
   },
   {
     "title": "Native Apple Mail plugin lets OpenClaw read local macOS Mail directly",
@@ -809,7 +956,10 @@
       "apple-mail",
       "plugin",
       "local-first"
-    ]
+    ],
+    "sourceUrl": "https://clawhub.ai/plugins/@jehadurre/openclaw-apple-mail",
+    "sourceType": "DEV Community / ClawHub",
+    "signal": "medium"
   },
   {
     "title": "credence-pi \u2014 Bayesian model routing, waste blocking, and injection detection for OpenClaw",
@@ -825,7 +975,10 @@
       "security",
       "plugin",
       "bayesian"
-    ]
+    ],
+    "sourceUrl": "https://gfrm.in/posts/openclaw-cheaper-measure-it-yourself/",
+    "sourceType": "Hacker News / gfrm.in",
+    "signal": "medium"
   },
   {
     "title": "OpenEmployee \u2014 deny-by-default governance, budgets, and audit trails for OpenClaw agents",
@@ -842,7 +995,10 @@
       "allowlists",
       "audit",
       "plugin"
-    ]
+    ],
+    "sourceUrl": "https://github.com/sammysltd/OpenEmployee",
+    "sourceType": "Hacker News / GitHub",
+    "signal": "medium"
   },
   {
     "title": "AgentLine \u2014 hosted phone number API for OpenClaw agents",
@@ -858,7 +1014,10 @@
       "phone",
       "api",
       "skill"
-    ]
+    ],
+    "sourceUrl": "https://agentline.cloud",
+    "sourceType": "Hacker News",
+    "signal": "medium"
   },
   {
     "title": "Outpost \u2014 capability-based credential proxy for AI agents",
@@ -874,7 +1033,10 @@
       "proxy",
       "cloudflare-workers",
       "infrastructure"
-    ]
+    ],
+    "sourceUrl": "https://github.com/sausin/outpost",
+    "sourceType": "Hacker News / GitHub",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw Dream Protocol nightly memory consolidation",
@@ -889,7 +1051,10 @@
       "learning",
       "cron",
       "agent-design"
-    ]
+    ],
+    "sourceUrl": "https://dev.to/mrclaw207/i-trained-my-openclaw-to-dream-heres-what-it-learned-overnight-2ed8",
+    "sourceType": "DEV Community",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw self-repairing cron health monitor",
@@ -904,7 +1069,10 @@
       "self-healing",
       "operations",
       "autonomous"
-    ]
+    ],
+    "sourceUrl": "https://dev.to/mrclaw207/my-openclaw-cron-broke-and-fixed-itself-before-i-noticed-3ibl",
+    "sourceType": "DEV Community",
+    "signal": "medium"
   },
   {
     "title": "Always-on OpenClaw with on-demand GPU inference via JarvisLabs wake proxy",
@@ -920,7 +1088,10 @@
       "cost-optimization",
       "vllm",
       "jarvislabs"
-    ]
+    ],
+    "sourceUrl": "https://huggingface.co/blog/chansung/openclaw-on-demand",
+    "sourceType": "Hugging Face Blog",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw agent turned a neighborhood traffic complaint into a real government fix",
@@ -935,7 +1106,10 @@
       "civic",
       "autonomous",
       "government"
-    ]
+    ],
+    "sourceUrl": "https://x.com/mprado/status/2067012842688025078",
+    "sourceType": "X / Twitter",
+    "signal": "medium"
   },
   {
     "title": "Rapid Claw hits $2K MRR as managed OpenClaw hosting for non-technical founders",
@@ -951,7 +1125,10 @@
       "revenue",
       "agency",
       "deployment"
-    ]
+    ],
+    "sourceUrl": "https://www.indiehackers.com/post/we-hit-2k-mrr-letting-people-deploy-ai-agents-without-touching-a-terminal-45cfa83e06",
+    "sourceType": "Indie Hackers",
+    "signal": "medium"
   },
   {
     "title": "Lobster Labs lets an OpenClaw agent validate SaaS ideas by building real landing pages",
@@ -967,7 +1144,10 @@
       "api",
       "agent-studio",
       "build-in-public"
-    ]
+    ],
+    "sourceUrl": "https://www.indiehackers.com/post/i-gave-my-openclaw-its-own-saas-studio-heres-what-it-s-validating-3d4e30ea67",
+    "sourceType": "Indie Hackers",
+    "signal": "medium"
   },
   {
     "title": "LVP uses OpenClaw in a hybrid-cloud, on-prem-first AI deployment for investment research",
@@ -983,7 +1163,10 @@
       "investment",
       "hybrid-cloud",
       "mcp"
-    ]
+    ],
+    "sourceUrl": "https://www.itnews.com.au/news/lvp-taps-openclaw-claude-in-hybrid-cloud-ai-play-626309",
+    "sourceType": "iTnews",
+    "signal": "medium"
   },
   {
     "title": "Aegis is an open-source monitor that watches OpenClaw agents for misbehavior",
@@ -999,7 +1182,10 @@
       "open-source",
       "agent-safety",
       "kaspersky"
-    ]
+    ],
+    "sourceUrl": "https://dev.to/id_1/kaspersky-found-512-bugs-in-openclaw-so-i-built-a-monitor-to-catch-ai-agents-misbehaving-30a9",
+    "sourceType": "DEV Community",
+    "signal": "medium"
   },
   {
     "title": "Clawcall adds inbound phone calls to self-hosted OpenClaw agents",
@@ -1015,7 +1201,10 @@
       "inbound-calls",
       "self-hosting",
       "bridge"
-    ]
+    ],
+    "sourceUrl": "https://github.com/CODEANDTRUST/clawcall",
+    "sourceType": "GitHub / Hacker News",
+    "signal": "medium"
   },
   {
     "title": "I Plugged OpenClaw Into My CI/CD Pipeline -- And I'll Never Merge a PR Without It Again",
@@ -1025,7 +1214,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/joas_elegbe_82a0a7dd3ba72/i-plugged-openclaw-into-my-cicd-pipeline-and-ill-never-merge-a-pr-without-it-again-edl",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I Replaced a $200/mo AI Stack with OpenClaw + Free Models. Here's the Exact Setup (and Why Security Almost Killed It)",
@@ -1035,7 +1227,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/dhaivat_jambudia/i-replaced-a-200mo-ai-stack-with-openclaw-free-models-heres-the-exact-setup-and-why-security-24d1",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "Skip the $600 Mac mini. Run OpenClaw securely on a remote box.",
@@ -1045,7 +1240,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://trilogyai.substack.com/p/skip-the-600-mac-mini-run-openclaw",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I gave my OpenClaw Agent an Org Chart and promoted her to COO. Here's what Happened.",
@@ -1055,7 +1253,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://nervegna.substack.com/p/i-gave-my-openclaw-agent-an-org-chart",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "How I replaced hours of manual work with a self-hosted AI agent",
@@ -1065,7 +1266,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://medium.com/@rayhanmahmood/how-i-replaced-hours-of-manual-work-with-a-self-hosted-ai-agent-9cb80ab17e23",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "Building an AI WhatsApp Agent with OpenClaw: A Practical Field Guide",
@@ -1075,7 +1279,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/nadinev/building-an-ai-whatsapp-agent-with-openclaw-a-practical-field-guide-51kc",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "ClawFlow -- The Deterministic Execution Backend OpenClaw Agents Need",
@@ -1085,7 +1292,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/kanyingidickson-dev/clawflow-the-deterministic-execution-backend-openclaw-agents-need-4ff5",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "Inside OpenClaw: How the World's Fastest-Growing AI Agent Actually Works Under the Hood",
@@ -1095,7 +1305,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/jiade/inside-openclaw-how-the-worlds-fastest-growing-ai-agent-actually-works-under-the-hood-4p5n",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I Spent Weeks Reverse-Engineering OpenClaw. Here's What Nobody Tells You.",
@@ -1105,7 +1318,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/nazarf/i-spent-weeks-reverse-engineering-openclaw-heres-what-nobody-tells-you-4bch",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I Built a Full Marketing Agency Assistant with OpenClaw -- 42 Tools, 6 Integrations",
@@ -1115,7 +1331,10 @@
     "addedAt": "2026-05-23T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/siphiwayinkhosi_mahlalela/i-built-a-full-marketing-agency-assistant-with-openclaw-42-tools-6-integrations-cdn",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "APEX -- Autonomous AI Business That Runs Itself on a $48 VPS for $2.12/Day",
@@ -1125,7 +1344,10 @@
     "addedAt": "2026-05-22T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/intoapex/how-i-run-an-ai-business-for-212day-on-a-single-vps-a-technical-deep-dive-into-building-apex-an-34d4",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "Two Landmines That Nearly Killed a 20-Agent Home Cluster -- And How They Fixed Them",
@@ -1135,7 +1357,10 @@
     "addedAt": "2026-05-22T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/linou518/two-landmines-that-nearly-killed-our-20-agent-cluster-and-how-we-fixed-them-1kco",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "Claude Code + OpenClaw Fixed My Bugs While I Slept -- 35% of Incidents Resolved in Staging",
@@ -1145,7 +1370,10 @@
     "addedAt": "2026-05-21T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/vasughanta09/claude-code-openclaw-fixed-my-bugs-while-i-slept-4fap",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I Spent 30 Days Testing OpenClaw -- 47% of On-Call Alerts Auto-Resolved",
@@ -1155,7 +1383,10 @@
     "addedAt": "2026-05-17T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/_cbd692d476c5faf3b61bcf/i-spent-30-days-testing-openclaw-heres-what-nobody-tells-you-about-ai-agents-in-2026-2jn9",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "How I Built an AI Personal Trainer with OpenClaw",
@@ -1165,7 +1396,10 @@
     "addedAt": "2026-05-17T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://medium.com/@miguelsalva/how-i-built-an-ai-personal-trainer-with-openclaw-49e7cbf5db1e",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "repoDoc -- Autonomous Bug-Fixing Agent for GitHub Repos",
@@ -1175,7 +1409,10 @@
     "addedAt": "2026-05-17T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/yashdodwani/repodoc-2498",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "Lessons From Running an OpenClaw Agent in Production for 30 Days",
@@ -1185,7 +1422,10 @@
     "addedAt": "2026-05-16T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://hackernoon.com/lessons-from-running-an-openclaw-agent-in-production-for-30-days",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "OpenClaw in Practice: Building Laptop-Less Engineering Workflows with an Agent Harness",
@@ -1195,7 +1435,10 @@
     "addedAt": "2026-05-16T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://hackernoon.com/openclaw-in-practice-building-laptop-less-engineering-workflows-with-an-agent-harness",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "We Gave Actual Claws to OpenClaw -- It Flies a Drone Now",
@@ -1205,7 +1448,10 @@
     "addedAt": "2026-05-15T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/dimensional/we-gave-actual-claws-to-openclaw-agent-and-it-flies-a-drone-now-bf1",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "How We Replaced a $1,500/Month SEO Agency With OpenClaw",
@@ -1215,7 +1461,10 @@
     "addedAt": "2026-05-14T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://troyaitken.medium.com/how-we-replaced-a-1-500-month-seo-agency-with-openclaw-32626ae02507",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I Let an AI Agent Auto-Trade Crypto for 2 Weeks. OpenClaw Is Brilliant -- and Terrifying.",
@@ -1225,7 +1474,10 @@
     "addedAt": "2026-05-03T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://medium.com/@merlynkraft1792004ekf/i-let-an-ai-agent-auto-trade-crypto-for-2-weeks-openclaw-is-brilliant-and-terrifying-49544b54d685",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "JustPaid (YC-Backed) Built a 7-Agent Autonomous Engineering Team with OpenClaw + Claude Code",
@@ -1235,7 +1487,10 @@
     "addedAt": "2026-05-02T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://ai2roi.substack.com/p/ai-to-roi-case-study-justpaid-plays",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "Nova: Autonomous GitHub PR Reviewer with OpenClaw -- 20 Analyzers & Risk Scores in 8 Seconds",
@@ -1245,7 +1500,10 @@
     "addedAt": "2026-05-02T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/uday_dolas_08/nova-autonomous-github-pr-reviewer-with-openclaw-20-analyzers-risk-scores-in-8-seconds-5daf",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I Built a 24/7 Freelance Operations Agent with OpenClaw -- It Runs My Business While I Sleep",
@@ -1255,7 +1513,10 @@
     "addedAt": "2026-05-01T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/farooqshabbir/i-built-a-247-freelance-operations-agent-with-openclaw-it-runs-my-business-while-i-sleep-4lde",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I Spent Thousands of Dollars in Tokens Building an AI-Driven End-to-End Bug Fix Pipeline",
@@ -1265,7 +1526,10 @@
     "addedAt": "2026-04-30T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/wonderlab/i-spent-thousands-of-dollars-in-tokens-building-an-ai-driven-end-to-end-bug-fix-pipeline-36p0",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "Built Myself an OpenClaw AI Staff. The Onboarding Was Intense, but I'm Keeping Them!",
@@ -1275,7 +1539,10 @@
     "addedAt": "2026-04-30T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://medium.com/@jp.sleiman/built-myself-an-openclaw-ai-staff-the-onboarding-was-intense-but-im-keeping-them-ab11198a6fc2",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "We Connected OpenClaw with Instacart ChatGPT App -- and Something Awesome Happened",
@@ -1285,7 +1552,10 @@
     "addedAt": "2026-04-30T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://nekuda.substack.com/p/we-connected-openclaw-with-instacart",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I Gave an AI Agent the Keys to My Business for 30 Days",
@@ -1295,7 +1565,10 @@
     "addedAt": "2026-04-30T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/snapon_equipment_4104e160/i-gave-an-ai-agent-the-keys-to-my-business-for-30-days-heres-what-actually-happened-2n1d",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "I Wasn't Going to Write for the OpenClaw Challenge. Then 2026.4.24 Dropped.",
@@ -1305,7 +1578,10 @@
     "addedAt": "2026-04-29T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/salimcodes/i-wasnt-going-to-write-for-the-openclaw-challenge-then-2026424-dropped-36oa",
+    "sourceType": "web",
+    "signal": "medium"
   },
   {
     "title": "How I Reclaimed 32 Hours/Week with DIY AI Agents (OpenClaw Case Study)",
@@ -1315,16 +1591,9 @@
     "addedAt": "2026-04-29T01:00:00+09:30",
     "added": "2026-06-14T15:43:00Z",
     "source": "web",
-    "tags": []
-  },
-  {
-    "title": "OpenClaw Production Setup Patterns with Plugins and Skills",
-    "summary": "Architecture guide mapping OpenClaw plugins + skills to five real user types (developer, automation, researcher, support, growth) with per-role plugin sets and ClawHub skill picks backed by download counts.",
-    "url": "https://dev.to/rosgluk/openclaw-production-setup-patterns-with-plugins-and-skills-1jfj",
-    "freshness": "2026-06-14",
-    "addedAt": "2026-04-29T01:00:00+09:30",
-    "added": "2026-06-14T15:43:00Z",
-    "source": "web",
-    "tags": []
+    "tags": [],
+    "sourceUrl": "https://dev.to/agencyboxx/how-i-reclaimed-32-hoursweek-with-diy-ai-agents-openclaw-case-study-1bp0",
+    "sourceType": "web",
+    "signal": "medium"
   }
 ]

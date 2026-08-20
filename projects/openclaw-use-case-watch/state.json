@@ -2,10 +2,10 @@
   "name": "OpenClaw Use Case Watch",
   "slug": "openclaw-use-case-watch",
   "status": "active",
-  "summary": "Nightly 1:00 AM Adelaide scan for strong real-world OpenClaw use cases; curated brief-picks maintained in project files.",
+  "summary": "Nightly 1:00 AM Adelaide scan for strong real-world OpenClaw use cases; 4 new brief-ready examples added in the August 21 run.",
   "path": "/Users/wineclaw/.openclaw/workspace/projects/openclaw-use-case-watch/README.md",
-  "updatedAt": "2026-08-16T01:00:00+09:30",
-  "nextStep": "Continue nightly scans; prioritize public showcase/case-study sources and update brief-picks.json when new examples surface.",
+  "updatedAt": "2026-08-21T01:00:00+09:30",
+  "nextStep": "Continue nightly scans; prioritise public showcase/case-study sources and update brief-picks.json when new examples surface.",
   "links": [],
   "autonomous": {
     "enabled": true,
@@ -13,12 +13,12 @@
     "notes": "Nightly 1:00 AM Australia/Adelaide scan via OpenClaw cron. Legacy flat state migrated to standard project state schema.",
     "jobIds": []
   },
-  "lastRun": "2026-08-16T01:00:00+09:30",
-  "lastRunUTC": "2026-08-15T15:30:00Z",
-  "newEntriesThisRun": 7,
+  "lastRun": "2026-08-21T01:00:00+09:30",
+  "lastRunUTC": "2026-08-20T15:30:00Z",
+  "newEntriesThisRun": 4,
   "totalQueueSize": 90,
-  "recentCount": 32,
-  "queuedCount": 58,
-  "lastGenuineNewEntryDate": "2026-08-16",
+  "recentCount": 36,
+  "queuedCount": 54,
+  "lastGenuineNewEntryDate": "2026-08-20",
   "consecutiveNoNewDaysBeforeThisRun": 0
 }

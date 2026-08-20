@@ -1,5 +1,63 @@
 # OpenClaw Use-Case Watch — History
 
+## 2026-08-20 15:30 UTC / 2026-08-21 01:00 ACDT
+
+**4 genuinely new high-signal OpenClaw use cases added since the August 19 run.**
+
+Searched web, X, Hacker News, BuiltWithAgents.ai, Indie Hackers, DEV.to, Glossy.co, Reddit, Oracle/AWS cloud blogs, company blogs, and the official OpenClaw showcase pages. The August 19–20 window produced one strong enterprise/cloud vendor post (Oracle OCI), one detailed multi-agent production field report (Bunny Honey Club), one concrete fintech onboarding automation (Kelviq), and the AWS bounded-payments plugin/guide that the previous run had noted but skipped.
+
+- **Added:** [Oracle + OpenClaw: Guardrailed Kubernetes Incident Assistant Drafts RCAs on OCI](https://blogs.oracle.com/cloud-infrastructure/oke-incident-postmortem-autopilot-openclaw-genai) — Oracle Cloud Infrastructure blog (2026-08-19). Oracle published a production pattern where OpenClaw receives OKE alerts, runs a namespace-scoped read-only evidence collector with redaction/size limits, calls OCI Generative AI, and writes a draft RCA to Object Storage while notifying the on-call team. ⭐ Strongest signal — credible cloud-vendor reference architecture with a concrete SRE workflow.
+- **Added:** [Bunny Honey Club Runs 33 OpenClaw Agents in Production for Six Months Across Four Businesses](https://blog.bunnyhoneyclub.com/posts/openclaw-factory-what-we-learned-running-33-autonomous-agents) — Bunny Honey Club blog (2026-08). The operator built "OpenClaw Factory," a directed graph of 33 narrowly chartered Claude agents with persistent Postgres memory, recovering ~11 founder-hours per week per business at roughly $2.4K/month in Claude spend. ⭐ High signal — detailed first-person production field report with explicit architecture, costs, and measured founder-time savings.
+- **Added:** [Kelviq Automates Merchant Business Vetting With an OpenClaw Agent on DigitalOcean](https://www.indiehackers.com/post/we-automated-our-business-vetting-with-openclaw-788b285744) — Indie Hackers (2026-08). Kelviq's OpenClaw agent, triggered from Discord, scrapes a submitted business website, compares it against company policies, and returns an approval/rejection verdict with detailed reasoning and a confidence score, eliminating a major post-launch onboarding bottleneck. ⭐ Medium-high signal — first-person fintech/merchant-onboarding automation.
+- **Added:** [AWS Publishes Bounded Agent Payments Plugin for OpenClaw via Bedrock AgentCore](https://aws.amazon.com/blogs/machine-learning/build-openclaw-agents-that-transact-with-amazon-bedrock-agentcore-payments/) — AWS Machine Learning Blog (2026-08-17). AWS released the `aws-agents-pay` plugin on ClawHub plus a guide showing how OpenClaw can settle HTTP 402/x402 payments within human-approved limits using Amazon Bedrock AgentCore Identity and Observability. ⭐ Medium-high signal — official vendor integration enabling a concrete agentic-payments capability, though it is a pattern/guide rather than a customer case.
+
+### Skipped (already queued or lower signal)
+- [Openmart / Whatnot seller acquisition case study](https://www.openmart.com/blogs/whatnot-uses-openclaw-for-sales) (August 9, 2026): strong live-commerce angle, but the page includes a disclaimer that examples are illustrative and do not reflect any specific customer's strategy, lowering evidentiary value.
+- [70% slashed legal drafting time on AMD Developer Cloud](https://cloudguide.cloud/70-percent-slashed-drafting-time-openclaw-develope/) (August 17, 2026): thin affiliate/marketing-style site with a legal disclaimer; lower signal than this run's additions.
+- [ClawdBot 30-day $47 revenue / $411 overhead post](https://www.indiehackers.com/post/30-days-building-with-clawdbot-47-revenue-411-overhead-heres-what-actually-happened-baf8a5997b) (August 2026): refreshingly honest operator reflection, but project is still in the red and lacks a concrete use-case angle.
+- OpenClaw Chronicles release notes and OpenClaw 2026.8.1 security hardening posts (August 18–19): tooling/ecosystem updates, not deployed use cases.
+- DEV.to defensive-patterns post after OpenClaw 2026.4.14 (August 19): operational lessons, not a new deployment example.
+- Generic listicles, setup tutorials, release notes, and security advisories were skipped.
+
+### Removed to maintain 90-item cap
+- 17 Weeks Running 7 Autonomous AI Agents in Production — Real Lessons and Real Numbers
+- I Built a Self-Healing PR Monitor With OpenClaw (And It Caught Its Own Bugs)
+- From OpenClaw to IronClaw: A Real Builder's Experience
+- Running OpenClaw for 30 Days: Lessons From an Experiment With ~600 Users
+- I Run a Travel SaaS With 12 AI Agents and 48 Cron Jobs on OpenClaw. Here's My Exact Setup.
+- AI Agent Generated $14,700 in 3 Weeks From a $1,000 Budget (older duplicate; stronger, newer entries now lead)
+- $50 to Profitable in 15 Days With an OpenClaw Agent
+
+### Stats
+- brief-picks.json: 90 entries (4 new, 7 removed, queue maintained at 90)
+- Next brief lead: Oracle + OpenClaw guardrailed Kubernetes incident assistant on OCI
+- No user-facing message sent (notable but not urgent).
+
+---
+
+## 2026-08-18 15:30 UTC / 2026-08-19 01:00 ACDT
+
+**No genuinely new high-signal OpenClaw use cases added since the August 16 run.**
+
+Searched web, X, Hacker News, BuiltWithAgents.ai, Indie Hackers, DEV.to, Glossy.co, Reddit, company blogs, and the official OpenClaw showcase pages. The August 16–18 window was quiet for concrete new deployments.
+
+- **Nothing added.** Hacker News Algolia returned zero new "openclaw" stories in the August 15–18 UTC window. BuiltWithAgents.ai and Indie Hackers indexes showed no new OpenClaw case-study posts dated after August 15. X produced ecosystem chatter and product announcements (AWS Agents Pay / x402 plugin, Pi Network/SoloHost agentic-company demos, Observa governance beta, Cloudways managed-hosting chatter, a logistics order-processing claim with no verifiable source) but no new concrete, documented deployments.
+- **Notable but skipped:**
+  - AWS Agents Pay / x402 payments plugin (August 17, X): a new OpenClaw integration for bounded agent payments, not an end-user use case.
+  - Pi Network / SoloHost "AI-agent-only companies" video (August 17, X): educational/demo framing, not a documented customer case.
+  - Observa governance beta (August 17, X): agent-observability tool announcement, not a deployed use case.
+  - Novel Cognition / Achilles front-of-house field notes (openclaw.novcog.us.com, July 19): already known from earlier scans; kept in existing queue position.
+  - Storyie resident-agent dev workflow and Castelis 10-agent field report: already surfaced in earlier runs.
+  - DEV.to posts (home-server babysitting, approval-test content workflow, 2,734-tick earning loop): operational reflections or experiments, lower signal than current queue leaders.
+  - Generic listicles, setup tutorials, release notes, and security advisories were skipped.
+
+### Stats
+- brief-picks.json: 90 entries (0 new, queue maintained at 90)
+- Next brief lead: Boll & Branch's Tess enterprise retail agent (still the freshest strong example)
+- No user-facing message sent (nothing unusually notable or urgent).
+
+---
+
 ## 2026-08-15 15:30 UTC / 2026-08-16 01:00 ACDT
 
 **7 genuinely new brief-ready OpenClaw use cases added since the August 15 run.**
