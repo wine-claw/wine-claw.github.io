@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-20",
-    "title": "Harmonograph Sketcher",
-    "slug": "harmonograph-sketcher",
-    "publishedSlug": "2026-08-20-harmonograph-sketcher",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-20-harmonograph-sketcher/"
+    "date": "2026-08-21",
+    "title": "Robot Arm Reach Sandbox",
+    "slug": "robot-arm-reach-sandbox",
+    "publishedSlug": "2026-08-21-robot-arm-reach-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-21-robot-arm-reach-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-08-21",
+      "title": "Robot Arm Reach Sandbox",
+      "slug": "robot-arm-reach-sandbox",
+      "publishedSlug": "2026-08-21-robot-arm-reach-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-21-robot-arm-reach-sandbox/",
+      "description": "Drag a target and watch a 2-link planar arm solve inverse kinematics in real time; switch to FK mode, adjust links/base, add obstacles, and trace the end-effector path."
+    },
     {
       "date": "2026-08-20",
       "title": "Harmonograph Sketcher",

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Robot Arm Reach Sandbox</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --panel: #141821;
+      --panel-2: #1d2330;
+      --text: #e6e9f0;
+      --muted: #9aa3b2;
+      --accent: #2dd4bf;
+      --accent-2: #f59e0b;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --ring: rgba(45, 212, 191, 0.25);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+    }
+    .warning {
+      background: #2a1b0a;
+      color: #fbbf24;
+      border-bottom: 1px solid #451a03;
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .warning strong { color: #fde68a; }
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      height: calc(100% - 56px);
+    }
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .sidebar { max-height: 42vh; overflow-y: auto; border-right: none; border-bottom: 1px solid #202737; }
+    }
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid #202737;
+      padding: 14px;
+      overflow-y: auto;
+    }
+    h1 {
+      font-size: 16px;
+      margin: 0 0 6px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    h1 .icon { font-size: 18px; }
+    .subtitle { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .section { margin-bottom: 16px; }
+    .section-title {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .control { margin-bottom: 10px; }
+    .control label {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--muted); margin-bottom: 4px;
+    }
+    .control input[type=range] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .control .val { color: var(--text); font-variant-numeric: tabular-nums; }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid #2a3441;
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    button:hover { background: #232b3a; border-color: #3b4a5e; }
+    button.active { background: rgba(45, 212, 191, 0.15); border-color: var(--accent); color: var(--accent); }
+    .readout {
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .readout .row { display: flex; justify-content: space-between; gap: 8px; }
+    .readout .num { font-variant-numeric: tabular-nums; color: var(--accent); }
+    .status-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-pill.ok { background: rgba(34,197,94,0.12); color: var(--ok); }
+    .status-pill.warn { background: rgba(245,158,11,0.12); color: var(--accent-2); }
+    .status-pill.bad { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .stage {
+      position: relative;
+      background: radial-gradient(circle at 50% 40%, #111621 0%, #0b0d12 70%);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    .overlay {
+      position: absolute;
+      top: 12px; left: 12px;
+      background: rgba(11,13,18,0.75);
+      border: 1px solid #202737;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+    .legend { display: flex; gap: 10px; flex-wrap: wrap; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .tip {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #202737;
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">
+    <strong>Experimental AI mini-app:</strong> This is an untested OpenClaw overnight build. It is a simplified robotics toy, not an engineering validated tool. Do not rely on it for real robot control or design decisions.
+  </div>
+  <div class="app">
+    <aside class="sidebar">
+      <h1><span class="icon">🦾</span> Robot Arm Reach Sandbox</h1>
+      <div class="subtitle">Drag the target. Watch a 2-link planar arm solve inverse kinematics in real time.</div>
+
+      <div class="section">
+        <div class="section-title">Mode</div>
+        <div class="btn-row">
+          <button id="mode-ik" class="active">Inverse Kinematics</button>
+          <button id="mode-fk">Forward Kinematics</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Arm geometry</div>
+        <div class="control">
+          <label>Link 1 length <span class="val" id="l1-val">90</span></label>
+          <input id="l1" type="range" min="40" max="160" value="90" />
+        </div>
+        <div class="control">
+          <label>Link 2 length <span class="val" id="l2-val">80</span></label>
+          <input id="l2" type="range" min="30" max="150" value="80" />
+        </div>
+        <div class="control">
+          <label>Base angle (°) <span class="val" id="base-val">0</span></label>
+          <input id="base" type="range" min="-180" max="180" value="0" />
+        </div>
+        <div id="fk-controls" class="fk-controls" style="display:none;">
+          <div class="control">
+            <label>Joint 1 angle (°) <span class="val" id="j1-val">45</span></label>
+            <input id="j1" type="range" min="-180" max="180" value="45" />
+          </div>
+          <div class="control">
+            <label>Joint 2 angle (°) <span class="val" id="j2-val">-90</span></label>
+            <input id="j2" type="range" min="-180" max="180" value="-90" />
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Behaviour</div>
+        <div class="control">
+          <label>IK gain <span class="val" id="gain-val">0.25</span></label>
+          <input id="gain" type="range" min="0.05" max="0.8" step="0.05" value="0.25" />
+        </div>
+        <div class="control">
+          <label>Damping <span class="val" id="damp-val">0.15</span></label>
+          <input id="damp" type="range" min="0" max="0.6" step="0.05" value="0.15" />
+        </div>
+        <div class="btn-row">
+          <button id="toggle-obstacle">Add obstacle: off</button>
+          <button id="toggle-trace">Trace: on</button>
+          <button id="reset-arm">Reset arm</button>
+          <button id="clear-trace">Clear trace</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Live state</div>
+        <div class="readout">
+          <div class="row">Target <span class="num" id="target-readout">—</span></div>
+          <div class="row">End-effector <span class="num" id="end-readout">—</span></div>
+          <div class="row">Error <span class="num" id="err-readout">—</span></div>
+          <div class="row">Joints <span class="num" id="joint-readout">—</span></div>
+          <div class="row" style="margin-top:6px;">Reachable? <span id="reach-pill" class="status-pill ok">yes</span></div>
+        </div>
+      </div>
+
+      <div class="tip">
+        Tip: in Forward Kinematics mode, drag the joint angle sliders that appear below. In IK mode, drag anywhere on the canvas to move the target. Tap the obstacle button, then click to place a circular obstacle.
+      </div>
+    </aside>
+
+    <div class="stage">
+      <canvas id="c"></canvas>
+      <div class="overlay">
+        <div class="legend">
+          <span><i class="dot" style="background:#2dd4bf"></i> target</span>
+          <span><i class="dot" style="background:#f59e0b"></i> joints</span>
+          <span><i class="dot" style="background:#ef4444"></i> obstacle</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const canvas = document.getElementById('c');
+      const ctx = canvas.getContext('2d');
+      const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+      let W = 0, H = 0, CX = 0, CY = 0;
+      function resize(){
+        const rect = canvas.getBoundingClientRect();
+        W = Math.max(1, Math.floor(rect.width));
+        H = Math.max(1, Math.floor(rect.height));
+        canvas.width = Math.floor(W * dpr);
+        canvas.height = Math.floor(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        CX = W/2;
+        CY = H*0.7;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // arm state
+      let mode = 'ik';
+      let L1 = 90, L2 = 80, base = 0; // base in degrees
+      let theta1 = Math.PI*0.25, theta2 = -Math.PI*0.5;
+      let target = { x: 120, y: -60 };
+      let gain = 0.25, damping = 0.15;
+      let trace = [];
+      let traceOn = true;
+      let obstacle = null; // {x,y,r}
+      let placeObstacle = false;
+      let draggingTarget = false;
+
+      function toRad(d){ return d * Math.PI/180; }
+      function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+      function len(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+      function wrap(a){ while(a>Math.PI) a-=Math.PI*2; while(a<-Math.PI) a+=Math.PI*2; return a; }
+
+      function fk(t1, t2){
+        const b = toRad(base);
+        const x0 = CX, y0 = CY;
+        const x1 = x0 + L1 * Math.cos(b + t1);
+        const y1 = y0 + L1 * Math.sin(b + t1);
+        const x2 = x1 + L2 * Math.cos(b + t1 + t2);
+        const y2 = y1 + L2 * Math.sin(b + t1 + t2);
+        return [{x:x0,y:y0},{x:x1,y:y1},{x:x2,y:y2}];
+      }
+
+      function jacobianTransposeIK(){
+        const b = toRad(base);
+        const pts = fk(theta1, theta2);
+        const end = pts[2];
+        let dx = target.x - (end.x - CX);
+        let dy = target.y - (end.y - CY);
+        const reach = L1 + L2;
+        const dTarget = Math.hypot(target.x, target.y);
+        if(dTarget > reach){ // clamp unreachable target for stability
+          const s = (reach - 1e-6) / dTarget;
+          dx = target.x * s - (end.x - CX);
+          dy = target.y * s - (end.y - CY);
+        }
+        // J columns in world frame
+        const c1 = b + theta1;
+        const c12 = b + theta1 + theta2;
+        const J1x = -L1*Math.sin(c1) - L2*Math.sin(c12);
+        const J1y =  L1*Math.cos(c1) + L2*Math.cos(c12);
+        const J2x = -L2*Math.sin(c12);
+        const J2y =  L2*Math.cos(c12);
+        const dot = dx*J1x + dy*J1y;
+        const n1 = J1x*J1x + J1y*J1y + 1e-6;
+        const n2 = J2x*J2x + J2y*J2y + 1e-6;
+        let dT1 = (dot) / n1 * gain;
+        let dT2 = (dx*J2x + dy*J2y) / n2 * gain;
+        // damping on velocities (simple)
+        dT1 *= (1 - damping*0.5);
+        dT2 *= (1 - damping*0.5);
+        // obstacle repulsion: push elbow/end away
+        if(obstacle){
+          const oWorld = { x: CX + obstacle.x, y: CY + obstacle.y };
+          for(const p of [pts[1], pts[2]]){
+            const d = len(p, oWorld);
+            const minD = obstacle.r + 14;
+            if(d < minD && d > 0.1){
+              const pen = minD - d;
+              const ux = (p.x - oWorld.x)/d, uy = (p.y - oWorld.y)/d;
+              // push end in world; map to joint space via J^T
+              const fx = ux*pen*0.08, fy = uy*pen*0.08;
+              dT1 += (fx*J1x + fy*J1y)/n1;
+              dT2 += (fx*J2x + fy*J2y)/n2;
+            }
+          }
+        }
+        theta1 = wrap(theta1 + dT1);
+        theta2 = wrap(theta2 + dT2);
+        // elbow-up preference via small bias if multiple solutions exist
+        if(theta2 > 0 && Math.abs(theta2) < 0.2) theta2 -= 0.002;
+      }
+
+      function solveAnalyticIK(){
+        // for reachable, stationary target use analytic for crisp response
+        const b = toRad(base);
+        const tx = target.x * Math.cos(-b) - target.y * Math.sin(-b);
+        const ty = target.x * Math.sin(-b) + target.y * Math.cos(-b);
+        const d2 = tx*tx + ty*ty;
+        const d = Math.sqrt(d2);
+        const reach = L1 + L2;
+        if(d > reach - 1e-3){
+          theta1 = Math.atan2(ty, tx);
+          theta2 = Math.PI - 0.001;
+          return;
+        }
+        const c2 = (d2 - L1*L1 - L2*L2) / (2*L1*L2);
+        const s2 = Math.sqrt(Math.max(0, 1 - c2*c2));
+        theta2 = Math.atan2(s2, c2); // elbow down (negative visual? we'll take positive)
+        const k1 = L1 + L2*Math.cos(theta2);
+        const k2 = L2*Math.sin(theta2);
+        theta1 = Math.atan2(ty, tx) - Math.atan2(k2, k1);
+      }
+
+      function update(){
+        if(mode === 'ik'){
+          // blend analytic + iterative for stability and obstacle handling
+          if(!obstacle) solveAnalyticIK();
+          else jacobianTransposeIK();
+        }
+        const pts = fk(theta1, theta2);
+        if(traceOn){
+          const end = pts[2];
+          if(trace.length === 0 || len(trace[trace.length-1], end) > 2){
+            trace.push({x:end.x, y:end.y});
+            if(trace.length > 800) trace.shift();
+          }
+        }
+      }
+
+      function drawGrid(){
+        ctx.save();
+        ctx.strokeStyle = '#1a2030';
+        ctx.lineWidth = 1;
+        const step = 60;
+        ctx.beginPath();
+        for(let x = (CX % step); x < W; x += step){ ctx.moveTo(x,0); ctx.lineTo(x,H); }
+        for(let y = (CY % step); y < H; y += step){ ctx.moveTo(0,y); ctx.lineTo(W,y); }
+        ctx.stroke();
+        // axes through base
+        ctx.strokeStyle = '#263045';
+        ctx.beginPath();
+        ctx.moveTo(0,CY); ctx.lineTo(W,CY);
+        ctx.moveTo(CX,0); ctx.lineTo(CX,H);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawTrace(){
+        if(trace.length < 2) return;
+        ctx.save();
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for(let i=1;i<trace.length;i++){
+          const t = i / trace.length;
+          ctx.strokeStyle = `rgba(45,212,191,${0.15 + 0.55*t})`;
+          ctx.beginPath();
+          ctx.moveTo(trace[i-1].x, trace[i-1].y);
+          ctx.lineTo(trace[i].x, trace[i].y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawArm(){
+        const pts = fk(theta1, theta2);
+        ctx.save();
+        // links
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        // shadow
+        ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x+3, pts[0].y+3);
+        ctx.lineTo(pts[1].x+3, pts[1].y+3);
+        ctx.lineTo(pts[2].x+3, pts[2].y+3);
+        ctx.stroke();
+        // link 1
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        ctx.lineTo(pts[1].x, pts[1].y);
+        ctx.stroke();
+        // link 2
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(pts[1].x, pts[1].y);
+        ctx.lineTo(pts[2].x, pts[2].y);
+        ctx.stroke();
+        // joints
+        for(let i=0;i<3;i++){
+          ctx.fillStyle = i===0 ? '#94a3b8' : (i===2 ? '#2dd4bf' : '#f59e0b');
+          ctx.beginPath();
+          ctx.arc(pts[i].x, pts[i].y, i===2 ? 7 : 5, 0, Math.PI*2);
+          ctx.fill();
+        }
+        // target
+        const tx = CX + target.x, ty = CY + target.y;
+        ctx.strokeStyle = '#2dd4bf';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(tx, ty, 10, 0, Math.PI*2);
+        ctx.moveTo(tx-16, ty); ctx.lineTo(tx+16, ty);
+        ctx.moveTo(tx, ty-16); ctx.lineTo(tx, ty+16);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawObstacle(){
+        if(!obstacle) return;
+        const ox = CX + obstacle.x, oy = CY + obstacle.y;
+        ctx.save();
+        ctx.fillStyle = 'rgba(239,68,68,0.18)';
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(ox, oy, obstacle.r, 0, Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function render(){
+        ctx.clearRect(0,0,W,H);
+        drawGrid();
+        drawTrace();
+        drawObstacle();
+        drawArm();
+        updateReadouts();
+      }
+
+      function updateReadouts(){
+        const pts = fk(theta1, theta2);
+        const end = pts[2];
+        const ex = end.x - CX, ey = end.y - CY;
+        const err = Math.hypot(target.x - ex, target.y - ey);
+        const reach = L1 + L2;
+        const dTarget = Math.hypot(target.x, target.y);
+        const reachable = dTarget <= reach + 1;
+        document.getElementById('target-readout').textContent = `${target.x.toFixed(0)}, ${(-target.y).toFixed(0)}`;
+        document.getElementById('end-readout').textContent = `${ex.toFixed(0)}, ${(-ey).toFixed(0)}`;
+        document.getElementById('err-readout').textContent = err.toFixed(1);
+        document.getElementById('joint-readout').textContent = `${(theta1*180/Math.PI).toFixed(0)}°, ${(theta2*180/Math.PI).toFixed(0)}°`;
+        const pill = document.getElementById('reach-pill');
+        pill.textContent = reachable ? 'yes' : 'no';
+        pill.className = 'status-pill ' + (reachable ? 'ok' : (dTarget > reach + 5 ? 'bad' : 'warn'));
+      }
+
+      function loop(){
+        update();
+        render();
+        requestAnimationFrame(loop);
+      }
+
+      // input
+      function canvasPoint(e){
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+      }
+      function worldFromCanvas(p){ return { x: p.x - CX, y: p.y - CY }; }
+
+      function onDown(e){
+        if(e.target !== canvas) return;
+        e.preventDefault();
+        const p = canvasPoint(e);
+        const w = worldFromCanvas(p);
+        if(placeObstacle){
+          obstacle = { x: w.x, y: w.y, r: 35 };
+          placeObstacle = false;
+          document.getElementById('toggle-obstacle').textContent = 'Add obstacle: off';
+          document.getElementById('toggle-obstacle').classList.remove('active');
+          return;
+        }
+        draggingTarget = true;
+        target = { x: clamp(w.x, -W, W), y: clamp(w.y, -H, H) };
+      }
+      function onMove(e){
+        if(!draggingTarget) return;
+        e.preventDefault();
+        const p = canvasPoint(e);
+        const w = worldFromCanvas(p);
+        target = { x: clamp(w.x, -W, W), y: clamp(w.y, -H, H) };
+      }
+      function onUp(){ draggingTarget = false; }
+
+      canvas.addEventListener('mousedown', onDown);
+      canvas.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      canvas.addEventListener('touchstart', onDown, {passive:false});
+      canvas.addEventListener('touchmove', onMove, {passive:false});
+      window.addEventListener('touchend', onUp);
+
+      // controls
+      const l1in = document.getElementById('l1');
+      const l2in = document.getElementById('l2');
+      const basein = document.getElementById('base');
+      const gainin = document.getElementById('gain');
+      const dampin = document.getElementById('damp');
+      function bindRange(id, key, fn){
+        const el = document.getElementById(id);
+        const val = document.getElementById(id+'-val');
+        el.addEventListener('input', () => {
+          const v = parseFloat(el.value);
+          if(key==='L1') L1 = v;
+          if(key==='L2') L2 = v;
+          if(key==='base') base = v;
+          if(key==='gain') gain = v;
+          if(key==='damp') damping = v;
+          val.textContent = v.toString();
+          if(fn) fn(v);
+        });
+      }
+      bindRange('l1','L1');
+      bindRange('l2','L2');
+      bindRange('base','base');
+      bindRange('gain','gain');
+      bindRange('damp','damp');
+
+      document.getElementById('mode-ik').addEventListener('click', () => {
+        mode = 'ik';
+        document.getElementById('mode-ik').classList.add('active');
+        document.getElementById('mode-fk').classList.remove('active');
+      });
+      document.getElementById('mode-fk').addEventListener('click', () => {
+        mode = 'fk';
+        document.getElementById('mode-ik').classList.remove('active');
+        document.getElementById('mode-fk').classList.add('active');
+        document.getElementById('fk-controls').style.display = 'block';
+        document.getElementById('j1-val').textContent = Math.round(theta1*180/Math.PI).toString();
+        document.getElementById('j1').value = Math.round(theta1*180/Math.PI);
+        document.getElementById('j2-val').textContent = Math.round(theta2*180/Math.PI).toString();
+        document.getElementById('j2').value = Math.round(theta2*180/Math.PI);
+      });
+      document.getElementById('mode-ik').addEventListener('click', () => {
+        document.getElementById('fk-controls').style.display = 'none';
+      });
+      document.getElementById('j1').addEventListener('input', (e) => {
+        theta1 = parseFloat(e.target.value) * Math.PI/180;
+        document.getElementById('j1-val').textContent = e.target.value;
+      });
+      document.getElementById('j2').addEventListener('input', (e) => {
+        theta2 = parseFloat(e.target.value) * Math.PI/180;
+        document.getElementById('j2-val').textContent = e.target.value;
+      });
+      document.getElementById('toggle-trace').addEventListener('click', function(){
+        traceOn = !traceOn;
+        this.textContent = 'Trace: ' + (traceOn ? 'on' : 'off');
+        this.classList.toggle('active', traceOn);
+      });
+      document.getElementById('reset-arm').addEventListener('click', () => {
+        theta1 = Math.PI*0.25; theta2 = -Math.PI*0.5;
+        target = { x: 120, y: -60 };
+        trace = [];
+      });
+      document.getElementById('clear-trace').addEventListener('click', () => trace = []);
+      document.getElementById('toggle-obstacle').addEventListener('click', function(){
+        placeObstacle = !placeObstacle;
+        this.textContent = 'Add obstacle: ' + (placeObstacle ? 'on' : 'off');
+        this.classList.toggle('active', placeObstacle);
+      });
+
+      // initial target within reach
+      target = { x: L1 + L2 - 20, y: -20 };
+      loop();
+    })();
+  </script>
+</body>
+</html>
