@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Chladni Cymatics Sandbox</title>
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --panel: #15161b;
+      --panel-2: #1c1e25;
+      --text: #e6e7eb;
+      --muted: #9aa0a8;
+      --accent: #5dd4c8;
+      --accent-2: #ff7b72;
+      --warning-bg: #2a1a16;
+      --warning-text: #f6b3a4;
+      --shadow: 0 6px 24px rgba(0,0,0,0.45);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      touch-action: none;
+    }
+    #app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+      width: 100vw;
+    }
+    header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--panel);
+      border-bottom: 1px solid #252830;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .tagline {
+      color: var(--muted);
+      font-size: 0.78rem;
+      display: none;
+    }
+    @media (min-width: 720px) {
+      .tagline { display: block; }
+    }
+    main {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto;
+      overflow: hidden;
+    }
+    @media (min-width: 960px) {
+      main { grid-template-columns: 1fr 320px; grid-template-rows: 1fr; }
+    }
+    #plateWrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #11131a 0%, #08090c 100%);
+      overflow: hidden;
+    }
+    canvas#plate {
+      background: #0d0e14;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow), inset 0 0 80px rgba(0,0,0,0.6);
+      max-width: 94vw;
+      max-height: 52vh;
+      width: auto;
+      height: auto;
+    }
+    @media (min-width: 960px) {
+      canvas#plate { max-width: 72vw; max-height: 86vh; }
+    }
+    #stats {
+      position: absolute;
+      top: 10px;
+      left: 14px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      pointer-events: none;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      line-height: 1.5;
+    }
+    #controls {
+      background: var(--panel);
+      border-top: 1px solid #252830;
+      padding: 14px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+      max-height: 42vh;
+    }
+    @media (min-width: 960px) {
+      #controls {
+        border-top: none;
+        border-left: 1px solid #252830;
+        max-height: 100vh;
+      }
+    }
+    .warning {
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      font-size: 0.75rem;
+      line-height: 1.45;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #3d2721;
+    }
+    .control-group {
+      background: var(--panel-2);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .control-group h2 {
+      margin: 0;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .row label {
+      font-size: 0.85rem;
+      color: var(--text);
+      min-width: 90px;
+    }
+    .row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+    }
+    .row .value {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.8rem;
+      color: var(--accent);
+      min-width: 34px;
+      text-align: right;
+    }
+    .mode-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    button {
+      background: #242730;
+      color: var(--text);
+      border: 1px solid #343944;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+      flex: 1 1 auto;
+      min-width: 64px;
+    }
+    button:hover { background: #2d313b; border-color: #444c5a; }
+    button:active { transform: translateY(1px); }
+    button.active {
+      background: rgba(93, 212, 200, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    button.primary {
+      background: rgba(93, 212, 200, 0.18);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    button.primary:hover { background: rgba(93, 212, 200, 0.28); }
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .preset-grid button {
+      padding: 7px 4px;
+      font-size: 0.75rem;
+    }
+    .hint {
+      color: var(--muted);
+      font-size: 0.73rem;
+      line-height: 1.4;
+    }
+    .footer {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Chladni Cymatics Sandbox</h1>
+      <div class="tagline">Sand grains settle on the nodal lines of a resonating square plate.</div>
+    </header>
+    <main>
+      <div id="plateWrap">
+        <canvas id="plate" width="800" height="800"></canvas>
+        <div id="stats">
+          mode <span id="modeLabel">4 × 3</span><br />
+          grains <span id="grainLabel">12000</span><br />
+          fps <span id="fpsLabel">—</span>
+        </div>
+      </div>
+      <div id="controls">
+        <div class="warning">
+          <strong>Experimental AI mini-app.</strong> Not professionally validated. For play only — do not rely on it for decisions.
+        </div>
+
+        <div class="control-group">
+          <h2>Vibration mode</h2>
+          <div class="row">
+            <label for="m">m</label>
+            <input id="m" type="range" min="1" max="12" step="1" value="4" />
+            <span class="value" id="mVal">4</span>
+          </div>
+          <div class="row">
+            <label for="n">n</label>
+            <input id="n" type="range" min="1" max="12" step="1" value="3" />
+            <span class="value" id="nVal">3</span>
+          </div>
+          <div class="preset-grid" id="presets"></div>
+        </div>
+
+        <div class="control-group">
+          <h2>Physics</h2>
+          <div class="row">
+            <label for="grains">Grains</label>
+            <input id="grains" type="range" min="2000" max="30000" step="1000" value="12000" />
+            <span class="value" id="grainsVal">12k</span>
+          </div>
+          <div class="row">
+            <label for="jitter">Shake</label>
+            <input id="jitter" type="range" min="0" max="100" value="45" />
+            <span class="value" id="jitterVal">45</span>
+          </div>
+          <div class="row">
+            <label for="drag">Friction</label>
+            <input id="drag" type="range" min="0" max="95" value="55" />
+            <span class="value" id="dragVal">55</span>
+          </div>
+          <div class="row">
+            <label for="brightness">Glow</label>
+            <input id="brightness" type="range" min="10" max="100" value="55" />
+            <span class="value" id="brightnessVal">55</span>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h2>Actions</h2>
+          <div class="mode-row">
+            <button id="btnReset">Scatter sand</button>
+            <button id="btnAuto" class="active">Auto-cycle</button>
+          </div>
+          <div class="mode-row">
+            <button id="btnColor1" class="active">Aqua</button>
+            <button id="btnColor2">Amber</button>
+            <button id="btnColor3">Plasma</button>
+          </div>
+          <button id="btnRandom" class="primary">Random mode</button>
+        </div>
+
+        <p class="hint">
+          Tap or drag on the plate to push grains. The nodal lines are where the plate barely moves — that’s where sand collects. Try m ≠ n for classic figures.
+        </p>
+        <div class="footer">OpenClaw 2am mini-app · 2026-08-22</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('plate');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const size = 800;
+    canvas.width = size;
+    canvas.height = size;
+    canvas.style.width = `${size / dpr}px`;
+    canvas.style.height = `${size / dpr}px`;
+
+    const state = {
+      m: 4, n: 3,
+      grainCount: 12000,
+      jitter: 0.45,
+      drag: 0.55,
+      brightness: 0.55,
+      auto: true,
+      palette: 0,
+      autoTimer: 0,
+      interaction: { active: false, x: 0, y: 0, radius: 60 }
+    };
+
+    const palettes = [
+      { bg: '#0d0e14', low: '#122024', mid: '#5dd4c8', high: '#ffffff' },
+      { bg: '#140d0a', low: '#241813', mid: '#ff9f68', high: '#fff4e6' },
+      { bg: '#0d0714', low: '#1a1028', mid: '#c084fc', high: '#ffe9ff' }
+    ];
+
+    let grains = [];
+    let field = new Float32Array(size * size);
+    let lastTime = performance.now();
+    let frames = 0;
+    let fps = 0;
+
+    function seedGrains(count) {
+      grains = new Float32Array(count * 2);
+      for (let i = 0; i < count; i++) {
+        grains[i * 2] = Math.random() * size;
+        grains[i * 2 + 1] = Math.random() * size;
+      }
+    }
+
+    function chladni(x, y, m, n) {
+      const sx = Math.sin(m * Math.PI * x / size);
+      const sy = Math.sin(n * Math.PI * y / size);
+      const cx = Math.sin(n * Math.PI * x / size);
+      const cy = Math.sin(m * Math.PI * y / size);
+      return Math.abs(sx * sy - cx * cy);
+    }
+
+    function regenerateField() {
+      const m = state.m, n = state.n;
+      let minV = Infinity, maxV = -Infinity;
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const v = chladni(x, y, m, n);
+          field[y * size + x] = v;
+          if (v < minV) minV = v;
+          if (v > maxV) maxV = v;
+        }
+      }
+      const range = maxV - minV || 1;
+      for (let i = 0; i < field.length; i++) {
+        field[i] = (field[i] - minV) / range;
+      }
+    }
+
+    function getField(x, y) {
+      const ix = Math.max(0, Math.min(size - 1, Math.floor(x)));
+      const iy = Math.max(0, Math.min(size - 1, Math.floor(y)));
+      return field[iy * size + ix];
+    }
+
+    function sampleGradient(x, y) {
+      const step = 2;
+      const cx = Math.max(step, Math.min(size - 1 - step, x));
+      const cy = Math.max(step, Math.min(size - 1 - step, y));
+      const fx = getField(cx + step, cy) - getField(cx - step, cy);
+      const fy = getField(cx, cy + step) - getField(cx, cy - step);
+      return { dx: fx, dy: fy };
+    }
+
+    function updateGrains() {
+      const count = state.grainCount;
+      const jitter = state.jitter;
+      const drag = state.drag;
+      const push = state.interaction;
+      for (let i = 0; i < count; i++) {
+        const idx = i * 2;
+        let x = grains[idx];
+        let y = grains[idx + 1];
+        const g = sampleGradient(x, y);
+        const amp = getField(x, y);
+        const move = (amp * amp) * jitter * 2.5 + 0.15;
+        x += g.dx * move + (Math.random() - 0.5) * jitter * 1.5;
+        y += g.dy * move + (Math.random() - 0.5) * jitter * 1.5;
+        if (push.active) {
+          const dx = x - push.x;
+          const dy = y - push.y;
+          const d2 = dx * dx + dy * dy;
+          const r2 = push.radius * push.radius;
+          if (d2 < r2) {
+            const f = (1 - d2 / r2) * 18;
+            const inv = Math.sqrt(d2 + 0.001);
+            x += (dx / inv) * f;
+            y += (dy / inv) * f;
+          }
+        }
+        x += (Math.random() - 0.5) * (1 - drag) * 0.4;
+        y += (Math.random() - 0.5) * (1 - drag) * 0.4;
+        if (x < 0) x = size + x % size;
+        if (x >= size) x = x % size;
+        if (y < 0) y = size + y % size;
+        if (y >= size) y = y % size;
+        grains[idx] = x;
+        grains[idx + 1] = y;
+      }
+    }
+
+    function draw() {
+      const pal = palettes[state.palette];
+      ctx.fillStyle = pal.bg;
+      ctx.fillRect(0, 0, size, size);
+      const image = ctx.getImageData(0, 0, size, size);
+      const data = image.data;
+      const bg = hexToRgb(pal.bg);
+      const low = hexToRgb(pal.low);
+      const mid = hexToRgb(pal.mid);
+      const high = hexToRgb(pal.high);
+      const brightness = state.brightness;
+      const count = state.grainCount;
+      for (let i = 0; i < count; i++) {
+        const x = Math.floor(grains[i * 2]);
+        const y = Math.floor(grains[i * 2 + 1]);
+        if (x < 0 || x >= size || y < 0 || y >= size) continue;
+        const p = (y * size + x) * 4;
+        const age = (data[p] + data[p + 1] + data[p + 2]) / 3;
+        if (age < 40) {
+          data[p] = low.r; data[p + 1] = low.g; data[p + 2] = low.b; data[p + 3] = 255;
+        } else if (age < 110) {
+          data[p] = mid.r; data[p + 1] = mid.g; data[p + 2] = mid.b; data[p + 3] = 255;
+        } else {
+          const t = Math.min(1, (age - 110) / 90);
+          data[p] = lerp(mid.r, high.r, t);
+          data[p + 1] = lerp(mid.g, high.g, t);
+          data[p + 2] = lerp(mid.b, high.b, t);
+          data[p + 3] = 255;
+        }
+      }
+      ctx.putImageData(image, 0, 0);
+    }
+
+    function hexToRgb(hex) {
+      const v = parseInt(hex.slice(1), 16);
+      return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 };
+    }
+    function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
+
+    function step(time) {
+      if (state.auto) {
+        state.autoTimer += 1;
+        if (state.autoTimer > 360) {
+          state.autoTimer = 0;
+          randomMode();
+        }
+      }
+      updateGrains();
+      draw();
+      frames++;
+      if (time - lastTime >= 1000) {
+        fps = Math.round((frames * 1000) / (time - lastTime));
+        frames = 0;
+        lastTime = time;
+        document.getElementById('fpsLabel').textContent = fps;
+      }
+      requestAnimationFrame(step);
+    }
+
+    function setMode(m, n) {
+      state.m = m;
+      state.n = n;
+      document.getElementById('m').value = m;
+      document.getElementById('n').value = n;
+      document.getElementById('mVal').textContent = m;
+      document.getElementById('nVal').textContent = n;
+      document.getElementById('modeLabel').textContent = `${m} × ${n}`;
+      regenerateField();
+    }
+
+    function randomMode() {
+      let m = 1 + Math.floor(Math.random() * 10);
+      let n = 1 + Math.floor(Math.random() * 10);
+      if (m === n) n = (n % 10) + 1;
+      setMode(m, n);
+    }
+
+    const presets = [
+      [2, 3], [3, 4], [4, 3], [5, 4], [6, 5], [7, 5], [8, 6], [9, 7], [10, 8], [4, 7], [6, 9], [11, 8]
+    ];
+    const presetContainer = document.getElementById('presets');
+    presets.forEach(([m, n], i) => {
+      const b = document.createElement('button');
+      b.textContent = `${m}×${n}`;
+      b.addEventListener('click', () => {
+        state.auto = false;
+        document.getElementById('btnAuto').classList.remove('active');
+        setMode(m, n);
+      });
+      presetContainer.appendChild(b);
+    });
+
+    function bind(id, key, displayId, scale = 1, fmt = v => v) {
+      const el = document.getElementById(id);
+      const disp = document.getElementById(displayId);
+      el.addEventListener('input', () => {
+        state[key] = Number(el.value) * scale;
+        disp.textContent = fmt(state[key]);
+        if (key === 'grainCount') {
+          seedGrains(state.grainCount);
+          document.getElementById('grainLabel').textContent = state.grainCount;
+        }
+      });
+    }
+    bind('m', 'm', 'mVal', 1, v => v);
+    bind('n', 'n', 'nVal', 1, v => v);
+    bind('grains', 'grainCount', 'grainsVal', 1, v => (v / 1000).toFixed(0) + 'k');
+    bind('jitter', 'jitter', 'jitterVal', 0.01);
+    bind('drag', 'drag', 'dragVal', 0.01);
+    bind('brightness', 'brightness', 'brightnessVal', 0.01);
+
+    document.getElementById('btnReset').addEventListener('click', () => seedGrains(state.grainCount));
+    document.getElementById('btnAuto').addEventListener('click', () => {
+      state.auto = !state.auto;
+      document.getElementById('btnAuto').classList.toggle('active', state.auto);
+    });
+    document.getElementById('btnRandom').addEventListener('click', () => {
+      state.auto = false;
+      document.getElementById('btnAuto').classList.remove('active');
+      randomMode();
+    });
+    document.getElementById('m').addEventListener('input', () => {
+      state.auto = false;
+      document.getElementById('btnAuto').classList.remove('active');
+      setMode(Number(document.getElementById('m').value), Number(document.getElementById('n').value));
+    });
+    document.getElementById('n').addEventListener('input', () => {
+      state.auto = false;
+      document.getElementById('btnAuto').classList.remove('active');
+      setMode(Number(document.getElementById('m').value), Number(document.getElementById('n').value));
+    });
+
+    const colorButtons = [
+      document.getElementById('btnColor1'),
+      document.getElementById('btnColor2'),
+      document.getElementById('btnColor3')
+    ];
+    colorButtons.forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        state.palette = i;
+        colorButtons.forEach((b, j) => b.classList.toggle('active', j === i));
+      });
+    });
+
+    function updatePointer(e) {
+      const rect = canvas.getBoundingClientRect();
+      const sx = size / rect.width;
+      const sy = size / rect.height;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      state.interaction.x = (clientX - rect.left) * sx;
+      state.interaction.y = (clientY - rect.top) * sy;
+    }
+    canvas.addEventListener('pointerdown', e => { state.interaction.active = true; updatePointer(e); });
+    window.addEventListener('pointermove', e => { if (state.interaction.active) updatePointer(e); });
+    window.addEventListener('pointerup', () => { state.interaction.active = false; });
+    canvas.addEventListener('touchstart', e => { state.interaction.active = true; updatePointer(e); e.preventDefault(); }, { passive: false });
+    canvas.addEventListener('touchmove', e => { if (state.interaction.active) updatePointer(e); e.preventDefault(); }, { passive: false });
+    canvas.addEventListener('touchend', () => { state.interaction.active = false; });
+
+    seedGrains(state.grainCount);
+    regenerateField();
+    requestAnimationFrame(step);
+  </script>
+</body>
+</html>
