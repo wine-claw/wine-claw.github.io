@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-22",
-    "title": "Chladni Cymatics Sandbox",
-    "slug": "chladni-cymatics-sandbox",
-    "publishedSlug": "2026-08-22-chladni-cymatics-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-22-chladni-cymatics-sandbox/"
+    "date": "2026-08-24",
+    "title": "Ising Spin Magnet Lab",
+    "slug": "ising-spin-magnet-lab",
+    "publishedSlug": "2026-08-24-ising-spin-magnet-lab",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-24-ising-spin-magnet-lab/"
   },
   "apps": [
+    {
+      "date": "2026-08-24",
+      "title": "Ising Spin Magnet Lab",
+      "slug": "ising-spin-magnet-lab",
+      "publishedSlug": "2026-08-24-ising-spin-magnet-lab",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-24-ising-spin-magnet-lab/",
+      "description": "Heat a lattice of magnetic spins through the critical point — paint domains, flip the field, and watch ferromagnetism melt into paramagnetic noise."
+    },
     {
       "date": "2026-08-22",
       "title": "Chladni Cymatics Sandbox",

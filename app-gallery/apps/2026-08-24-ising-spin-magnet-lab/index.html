@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Ising Spin Magnet Lab</title>
+  <style>
+    :root {
+      --bg: #0a0c12;
+      --panel: #12151d;
+      --panel-2: #1a1f2b;
+      --text: #e8ecf4;
+      --muted: #8b93a7;
+      --accent: #7dd3fc;
+      --accent-2: #f472b6;
+      --up: #38bdf8;
+      --down: #fb7185;
+      --line: #2a3142;
+      --ok: #4ade80;
+      --warn-bg: #2a1a14;
+      --warn-text: #f6c7a8;
+      --radius: 12px;
+      --shadow: 0 10px 40px rgba(0,0,0,0.45);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      background: var(--bg); color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+    #app {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      height: 100vh; width: 100vw;
+    }
+    .banner {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      padding: 0.5rem 0.9rem;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      border-bottom: 1px solid #5a3a28;
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 14px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+    }
+    h1 {
+      margin: 0; font-size: 1.05rem; font-weight: 650; letter-spacing: -0.02em;
+    }
+    .tagline { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+    main {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto;
+      min-height: 0; overflow: hidden;
+    }
+    @media (min-width: 920px) {
+      main {
+        grid-template-columns: 1fr 330px;
+        grid-template-rows: 1fr;
+      }
+    }
+    #stage {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      background:
+        radial-gradient(ellipse at 50% 40%, #141a28 0%, var(--bg) 70%);
+      overflow: hidden;
+      min-height: 280px;
+      touch-action: none;
+    }
+    #lattice {
+      border-radius: 10px;
+      box-shadow: var(--shadow), 0 0 0 1px rgba(125,211,252,0.12);
+      max-width: min(96vw, 100%);
+      max-height: min(70vh, 100%);
+      background: #0b0e16;
+      cursor: crosshair;
+    }
+    .hud {
+      position: absolute; top: 10px; left: 10px; right: 10px;
+      display: flex; flex-wrap: wrap; gap: 8px;
+      pointer-events: none;
+    }
+    .chip {
+      background: rgba(18,21,29,0.82);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+      border-radius: 999px;
+      padding: 0.28rem 0.7rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .chip strong { color: var(--text); font-weight: 600; }
+    .chip .hot { color: var(--accent-2); }
+    .chip .cool { color: var(--accent); }
+    .chip .crit { color: #fbbf24; }
+    #side {
+      background: var(--panel);
+      border-top: 1px solid var(--line);
+      overflow-y: auto;
+      padding: 12px 14px 18px;
+      -webkit-overflow-scrolling: touch;
+    }
+    @media (min-width: 920px) {
+      #side { border-top: none; border-left: 1px solid var(--line); }
+    }
+    .group { margin-bottom: 14px; }
+    .group h2 {
+      margin: 0 0 8px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 0.8rem; color: var(--muted); margin-bottom: 4px;
+    }
+    label span.val { color: var(--accent); font-variant-numeric: tabular-nums; }
+    input[type="range"] {
+      width: 100%; accent-color: var(--accent); margin: 0 0 8px;
+    }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    button, .btn {
+      appearance: none; border: 1px solid var(--line);
+      background: var(--panel-2); color: var(--text);
+      border-radius: 9px; padding: 0.48rem 0.7rem;
+      font: inherit; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; flex: 1 1 auto; min-width: 0;
+    }
+    button:hover { border-color: #3d4660; }
+    button.primary {
+      background: linear-gradient(180deg, #38bdf8, #0ea5e9);
+      color: #041018; border: none;
+    }
+    button.primary:hover { filter: brightness(1.06); }
+    button.danger {
+      background: #2a1520; color: #fda4af; border-color: #5b2438;
+    }
+    button.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: #13202c;
+    }
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pill {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 0.28rem 0.65rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .pill.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: #13202c;
+    }
+    .stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .stat {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+    .stat .k { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat .v { font-size: 1rem; font-weight: 650; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .stat .v.up { color: var(--up); }
+    .stat .v.down { color: var(--down); }
+    .chart-wrap {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px;
+      height: 96px;
+    }
+    canvas#chart { width: 100%; height: 100%; display: block; }
+    .hint {
+      font-size: 0.74rem; color: var(--muted); line-height: 1.4;
+      margin-top: 4px;
+    }
+    .phase {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.82rem;
+    }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto;
+    }
+    .legend {
+      display: flex; gap: 12px; font-size: 0.74rem; color: var(--muted);
+      margin-top: 6px;
+    }
+    .swatch {
+      display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+      vertical-align: -1px; margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="banner">
+      ⚠ Experimental OpenClaw AI mini-app — untested, not professionally validated, and should not be relied on for any decisions. For exploration and education only.
+    </div>
+    <header>
+      <div>
+        <h1>Ising Spin Magnet Lab</h1>
+        <div class="tagline">Watch magnetism emerge — heat a lattice of spins past the critical point and domains melt.</div>
+      </div>
+    </header>
+    <main>
+      <section id="stage">
+        <div class="hud">
+          <div class="chip">T / Tc = <strong id="tRatio">1.00</strong></div>
+          <div class="chip">M = <strong id="mHud">0.00</strong></div>
+          <div class="chip">phase <strong id="phaseHud" class="crit">critical</strong></div>
+        </div>
+        <canvas id="lattice" width="560" height="560" aria-label="Ising spin lattice"></canvas>
+      </section>
+      <aside id="side">
+        <div class="group">
+          <h2>Temperature</h2>
+          <label>kT / J <span class="val" id="tVal">2.27</span></label>
+          <input id="temp" type="range" min="0.1" max="5" step="0.01" value="2.27" />
+          <div class="hint">Onsager critical point Tc ≈ 2.269 J/kB (zero field). Below: ordered domains. Above: paramagnetic noise.</div>
+        </div>
+
+        <div class="group">
+          <h2>Field & coupling</h2>
+          <label>External field h <span class="val" id="hVal">0.00</span></label>
+          <input id="field" type="range" min="-1.5" max="1.5" step="0.01" value="0" />
+          <label>Coupling J <span class="val" id="jVal">1.00</span></label>
+          <input id="coup" type="range" min="0.2" max="2" step="0.01" value="1" />
+        </div>
+
+        <div class="group">
+          <h2>Dynamics</h2>
+          <label>Sweeps / frame <span class="val" id="speedVal">8</span></label>
+          <input id="speed" type="range" min="1" max="40" step="1" value="8" />
+          <label>Lattice size <span class="val" id="sizeVal">64×64</span></label>
+          <input id="size" type="range" min="16" max="96" step="8" value="64" />
+          <div class="row" style="margin-top:6px">
+            <button id="btnPlay" class="primary">Pause</button>
+            <button id="btnStep">Step</button>
+            <button id="btnReset" class="danger">Reseed</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Presets</h2>
+          <div class="pills" id="presets">
+            <button class="pill" data-p="frozen">Frozen ferromagnet</button>
+            <button class="pill active" data-p="critical">Critical point</button>
+            <button class="pill" data-p="hot">Hot paramagnet</button>
+            <button class="pill" data-p="field">Field quench</button>
+            <button class="pill" data-p="antiferro">Anti-ferro (J<0)</button>
+            <button class="pill" data-p="anneal">Slow anneal</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Paint</h2>
+          <div class="row">
+            <button id="paintUp" class="active">Paint ↑</button>
+            <button id="paintDown">Paint ↓</button>
+            <button id="paintFlip">Flip brush</button>
+          </div>
+          <div class="hint">Drag on the lattice to force local spins. Useful for seeding domains or nucleating flips.</div>
+        </div>
+
+        <div class="group">
+          <h2>Live stats</h2>
+          <div class="stats">
+            <div class="stat"><div class="k">Magnetisation</div><div class="v up" id="mStat">0.00</div></div>
+            <div class="stat"><div class="k">|M|</div><div class="v" id="absMStat">0.00</div></div>
+            <div class="stat"><div class="k">Energy / spin</div><div class="v" id="eStat">0.00</div></div>
+            <div class="stat"><div class="k">Acceptance</div><div class="v" id="accStat">0%</div></div>
+          </div>
+          <div class="phase" style="margin-top:8px">
+            <span class="dot" id="phaseDot"></span>
+            <div>
+              <div id="phaseLabel" style="font-weight:650">Near critical</div>
+              <div class="hint" id="phaseHint" style="margin:0">Domains flicker at all scales.</div>
+            </div>
+          </div>
+          <div class="legend">
+            <span><span class="swatch" style="background:var(--up)"></span>spin ↑</span>
+            <span><span class="swatch" style="background:var(--down)"></span>spin ↓</span>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Magnetisation history</h2>
+          <div class="chart-wrap"><canvas id="chart" width="600" height="160"></canvas></div>
+        </div>
+
+        <div class="group">
+          <h2>About</h2>
+          <div class="hint">
+            2D square-lattice Ising model with Metropolis Monte Carlo updates and periodic boundaries.
+            Energy E = −J Σ⟨ij⟩ si sj − h Σ si. Spontaneous magnetisation appears below Onsager’s
+            Tc = 2 / ln(1+√2) ≈ 2.269 when h = 0. Tap/drag to paint spins.
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // Onsager critical temperature for J=1, kB=1, h=0
+    const TC0 = 2 / Math.log(1 + Math.SQRT2); // ≈ 2.269185
+
+    const latticeCanvas = document.getElementById('lattice');
+    const lctx = latticeCanvas.getContext('2d', { alpha: false });
+    const chartCanvas = document.getElementById('chart');
+    const cctx = chartCanvas.getContext('2d');
+
+    const el = {
+      temp: document.getElementById('temp'),
+      field: document.getElementById('field'),
+      coup: document.getElementById('coup'),
+      speed: document.getElementById('speed'),
+      size: document.getElementById('size'),
+      tVal: document.getElementById('tVal'),
+      hVal: document.getElementById('hVal'),
+      jVal: document.getElementById('jVal'),
+      speedVal: document.getElementById('speedVal'),
+      sizeVal: document.getElementById('sizeVal'),
+      tRatio: document.getElementById('tRatio'),
+      mHud: document.getElementById('mHud'),
+      phaseHud: document.getElementById('phaseHud'),
+      mStat: document.getElementById('mStat'),
+      absMStat: document.getElementById('absMStat'),
+      eStat: document.getElementById('eStat'),
+      accStat: document.getElementById('accStat'),
+      phaseDot: document.getElementById('phaseDot'),
+      phaseLabel: document.getElementById('phaseLabel'),
+      phaseHint: document.getElementById('phaseHint'),
+      btnPlay: document.getElementById('btnPlay'),
+      btnStep: document.getElementById('btnStep'),
+      btnReset: document.getElementById('btnReset'),
+      paintUp: document.getElementById('paintUp'),
+      paintDown: document.getElementById('paintDown'),
+      paintFlip: document.getElementById('paintFlip'),
+      presets: document.getElementById('presets'),
+    };
+
+    const state = {
+      N: 64,
+      spins: null, // Int8Array +1 / -1
+      T: 2.27,
+      h: 0,
+      J: 1,
+      sweepsPerFrame: 8,
+      running: true,
+      paintMode: 1, // 1 up, -1 down, 0 flip
+      painting: false,
+      M: 0,
+      E: 0,
+      tried: 0,
+      accepted: 0,
+      histM: [],
+      histE: [],
+      histMax: 240,
+      anneal: false,
+      annealTarget: 0.5,
+      frame: 0,
+    };
+
+    function idx(x, y) {
+      const N = state.N;
+      x = (x + N) % N;
+      y = (y + N) % N;
+      return y * N + x;
+    }
+
+    function initSpins(mode) {
+      const N = state.N;
+      const n = N * N;
+      const s = new Int8Array(n);
+      if (mode === 'up') {
+        s.fill(1);
+      } else if (mode === 'down') {
+        s.fill(-1);
+      } else if (mode === 'checker') {
+        for (let y = 0; y < N; y++) {
+          for (let x = 0; x < N; x++) {
+            s[y * N + x] = ((x + y) & 1) ? 1 : -1;
+          }
+        }
+      } else {
+        for (let i = 0; i < n; i++) s[i] = Math.random() < 0.5 ? 1 : -1;
+      }
+      state.spins = s;
+      recomputeGlobals();
+      state.histM.length = 0;
+      state.histE.length = 0;
+    }
+
+    function neighbourSum(i) {
+      const N = state.N;
+      const s = state.spins;
+      const x = i % N;
+      const y = (i - x) / N | 0;
+      return s[idx(x + 1, y)] + s[idx(x - 1, y)] + s[idx(x, y + 1)] + s[idx(x, y - 1)];
+    }
+
+    function recomputeGlobals() {
+      const s = state.spins;
+      const n = s.length;
+      let M = 0;
+      let E = 0;
+      const N = state.N;
+      const J = state.J;
+      const h = state.h;
+      for (let y = 0; y < N; y++) {
+        for (let x = 0; x < N; x++) {
+          const i = y * N + x;
+          const si = s[i];
+          M += si;
+          // count right and down bonds once
+          E -= J * si * s[idx(x + 1, y)];
+          E -= J * si * s[idx(x, y + 1)];
+          E -= h * si;
+        }
+      }
+      state.M = M / n;
+      state.E = E / n;
+    }
+
+    function metropolisSweep() {
+      const s = state.spins;
+      const n = s.length;
+      const N = state.N;
+      const T = Math.max(state.T, 1e-6);
+      const J = state.J;
+      const h = state.h;
+      const beta = 1 / T;
+      let accepted = 0;
+      let tried = 0;
+      // random-site Metropolis
+      for (let k = 0; k < n; k++) {
+        const i = (Math.random() * n) | 0;
+        const si = s[i];
+        const nn = neighbourSum(i);
+        // ΔE for flipping si -> -si
+        const dE = 2 * si * (J * nn + h);
+        tried++;
+        if (dE <= 0 || Math.random() < Math.exp(-beta * dE)) {
+          s[i] = -si;
+          accepted++;
+          // incremental M and E
+          state.M += (-2 * si) / n;
+          // energy change is dE/n for per-spin energy
+          state.E += dE / n;
+        }
+      }
+      state.tried += tried;
+      state.accepted += accepted;
+    }
+
+    function resizeCanvas() {
+      const stage = document.getElementById('stage');
+      const rect = stage.getBoundingClientRect();
+      const pad = 24;
+      const side = Math.max(180, Math.floor(Math.min(rect.width - pad, rect.height - pad, 640)));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      latticeCanvas.style.width = side + 'px';
+      latticeCanvas.style.height = side + 'px';
+      latticeCanvas.width = Math.floor(side * dpr);
+      latticeCanvas.height = Math.floor(side * dpr);
+      lctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawLattice();
+    }
+
+    function spinColor(v, anti) {
+      // v = +1 or -1
+      if (anti) {
+        // show checker more gently
+        if (v > 0) return [56, 189, 248];
+        return [251, 113, 133];
+      }
+      if (v > 0) return [56, 189, 248];
+      return [251, 113, 133];
+    }
+
+    function drawLattice() {
+      const N = state.N;
+      const s = state.spins;
+      if (!s) return;
+      const cssW = latticeCanvas.clientWidth || 400;
+      const cssH = latticeCanvas.clientHeight || 400;
+      const cell = cssW / N;
+      // draw via ImageData at device pixels for speed
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const pw = latticeCanvas.width;
+      const ph = latticeCanvas.height;
+      const img = lctx.createImageData(pw, ph);
+      const data = img.data;
+      const anti = state.J < 0;
+      for (let y = 0; y < ph; y++) {
+        const gy = Math.min(N - 1, (y / (ph / N)) | 0);
+        for (let x = 0; x < pw; x++) {
+          const gx = Math.min(N - 1, (x / (pw / N)) | 0);
+          const v = s[gy * N + gx];
+          const c = spinColor(v, anti);
+          // subtle vignette / grid feeling
+          const edge = (gx === 0 || gy === 0) ? 0.92 : 1;
+          const p = (y * pw + x) * 4;
+          data[p] = (c[0] * edge) | 0;
+          data[p + 1] = (c[1] * edge) | 0;
+          data[p + 2] = (c[2] * edge) | 0;
+          data[p + 3] = 255;
+        }
+      }
+      // draw without dpr transform for ImageData
+      lctx.setTransform(1, 0, 0, 1, 0, 0);
+      lctx.putImageData(img, 0, 0);
+      // thin grid only for small N
+      if (N <= 32) {
+        lctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        lctx.strokeStyle = 'rgba(10,12,18,0.35)';
+        lctx.lineWidth = 1;
+        for (let i = 0; i <= N; i++) {
+          const p = i * cell;
+          lctx.beginPath(); lctx.moveTo(p, 0); lctx.lineTo(p, cssH); lctx.stroke();
+          lctx.beginPath(); lctx.moveTo(0, p); lctx.lineTo(cssW, p); lctx.stroke();
+        }
+      } else {
+        lctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+    }
+
+    function drawChart() {
+      const w = chartCanvas.width;
+      const h = chartCanvas.height;
+      cctx.clearRect(0, 0, w, h);
+      cctx.fillStyle = '#121722';
+      cctx.fillRect(0, 0, w, h);
+
+      // zero line
+      cctx.strokeStyle = 'rgba(139,147,167,0.35)';
+      cctx.lineWidth = 1;
+      cctx.beginPath();
+      cctx.moveTo(0, h / 2);
+      cctx.lineTo(w, h / 2);
+      cctx.stroke();
+
+      const hist = state.histM;
+      if (hist.length < 2) return;
+      cctx.strokeStyle = '#7dd3fc';
+      cctx.lineWidth = 2;
+      cctx.beginPath();
+      for (let i = 0; i < hist.length; i++) {
+        const x = (i / (state.histMax - 1)) * (w - 4) + 2;
+        const y = (0.5 - hist[i] * 0.45) * h;
+        if (i === 0) cctx.moveTo(x, y); else cctx.lineTo(x, y);
+      }
+      cctx.stroke();
+
+      // |M| envelope faint
+      cctx.strokeStyle = 'rgba(244,114,182,0.55)';
+      cctx.lineWidth = 1.5;
+      cctx.beginPath();
+      for (let i = 0; i < hist.length; i++) {
+        const x = (i / (state.histMax - 1)) * (w - 4) + 2;
+        const y = (0.5 - Math.abs(hist[i]) * 0.45) * h;
+        if (i === 0) cctx.moveTo(x, y); else cctx.lineTo(x, y);
+      }
+      cctx.stroke();
+    }
+
+    function phaseInfo() {
+      const Tc = TC0 * Math.abs(state.J); // scale with |J|
+      const tr = state.T / Math.max(Tc, 1e-9);
+      const absM = Math.abs(state.M);
+      let label, hint, color, cls;
+      if (state.J < 0) {
+        label = 'Antiferromagnet';
+        hint = 'Negative J favours opposing neighbours — checkerboard order at low T.';
+        color = '#c084fc';
+        cls = 'cool';
+      } else if (Math.abs(state.h) > 0.35 && absM > 0.5) {
+        label = 'Field-aligned';
+        hint = 'External field biases spins; magnetisation follows the field.';
+        color = '#38bdf8';
+        cls = 'cool';
+      } else if (tr < 0.75 && absM > 0.55) {
+        label = 'Ferromagnetic';
+        hint = 'Spins lock into large domains. Spontaneous magnetisation is stable.';
+        color = '#38bdf8';
+        cls = 'cool';
+      } else if (tr > 1.35 && absM < 0.25) {
+        label = 'Paramagnetic';
+        hint = 'Thermal noise wins. Correlations are short-ranged; M ≈ 0.';
+        color = '#fb7185';
+        cls = 'hot';
+      } else {
+        label = 'Near critical';
+        hint = 'Domains flicker across scales. Susceptibility and fluctuations peak.';
+        color = '#fbbf24';
+        cls = 'crit';
+      }
+      return { label, hint, color, cls, tr, Tc };
+    }
+
+    function updateUI() {
+      const ph = phaseInfo();
+      el.tVal.textContent = state.T.toFixed(2);
+      el.hVal.textContent = state.h.toFixed(2);
+      el.jVal.textContent = state.J.toFixed(2);
+      el.speedVal.textContent = String(state.sweepsPerFrame);
+      el.sizeVal.textContent = state.N + '×' + state.N;
+      el.tRatio.textContent = ph.tr.toFixed(2);
+      el.mHud.textContent = state.M.toFixed(3);
+      el.phaseHud.textContent = ph.label.toLowerCase();
+      el.phaseHud.className = ph.cls;
+      el.mStat.textContent = state.M.toFixed(3);
+      el.mStat.className = 'v ' + (state.M >= 0 ? 'up' : 'down');
+      el.absMStat.textContent = Math.abs(state.M).toFixed(3);
+      el.eStat.textContent = state.E.toFixed(3);
+      const acc = state.tried ? Math.round(100 * state.accepted / state.tried) : 0;
+      el.accStat.textContent = acc + '%';
+      el.phaseDot.style.background = ph.color;
+      el.phaseLabel.textContent = ph.label;
+      el.phaseHint.textContent = ph.hint;
+    }
+
+    function canvasToSpin(clientX, clientY) {
+      const rect = latticeCanvas.getBoundingClientRect();
+      const x = (clientX - rect.left) / rect.width;
+      const y = (clientY - rect.top) / rect.height;
+      if (x < 0 || y < 0 || x > 1 || y > 1) return null;
+      const gx = Math.min(state.N - 1, Math.max(0, (x * state.N) | 0));
+      const gy = Math.min(state.N - 1, Math.max(0, (y * state.N) | 0));
+      return gy * state.N + gx;
+    }
+
+    function paintAt(clientX, clientY) {
+      const i = canvasToSpin(clientX, clientY);
+      if (i == null) return;
+      const s = state.spins;
+      let target;
+      if (state.paintMode === 0) target = -s[i];
+      else target = state.paintMode;
+      if (s[i] === target) return;
+      // paint a small brush
+      const N = state.N;
+      const cx = i % N;
+      const cy = (i - cx) / N | 0;
+      const r = state.N >= 64 ? 1 : 0;
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (dx * dx + dy * dy > r * r + 0.1) continue;
+          const j = idx(cx + dx, cy + dy);
+          s[j] = target;
+        }
+      }
+      recomputeGlobals();
+      drawLattice();
+      updateUI();
+    }
+
+    function setPaintMode(mode) {
+      state.paintMode = mode;
+      el.paintUp.classList.toggle('active', mode === 1);
+      el.paintDown.classList.toggle('active', mode === -1);
+      el.paintFlip.classList.toggle('active', mode === 0);
+    }
+
+    function applyPreset(name) {
+      state.anneal = false;
+      el.presets.querySelectorAll('.pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.p === name);
+      });
+      if (name === 'frozen') {
+        state.T = 0.8; state.h = 0; state.J = 1;
+        el.temp.value = state.T; el.field.value = state.h; el.coup.value = state.J;
+        initSpins('up');
+      } else if (name === 'critical') {
+        state.T = TC0; state.h = 0; state.J = 1;
+        el.temp.value = state.T; el.field.value = state.h; el.coup.value = state.J;
+        initSpins('random');
+      } else if (name === 'hot') {
+        state.T = 4.2; state.h = 0; state.J = 1;
+        el.temp.value = state.T; el.field.value = state.h; el.coup.value = state.J;
+        initSpins('random');
+      } else if (name === 'field') {
+        state.T = 1.5; state.h = 0.8; state.J = 1;
+        el.temp.value = state.T; el.field.value = state.h; el.coup.value = state.J;
+        initSpins('random');
+      } else if (name === 'antiferro') {
+        state.T = 1.2; state.h = 0; state.J = -1;
+        el.temp.value = state.T; el.field.value = state.h; el.coup.value = state.J;
+        initSpins('random');
+      } else if (name === 'anneal') {
+        state.T = 4.5; state.h = 0; state.J = 1;
+        state.anneal = true;
+        state.annealTarget = 0.6;
+        el.temp.value = state.T; el.field.value = state.h; el.coup.value = state.J;
+        initSpins('random');
+      }
+      state.tried = 0; state.accepted = 0;
+      drawLattice();
+      updateUI();
+    }
+
+    function tick() {
+      if (state.running) {
+        if (state.anneal && state.T > state.annealTarget) {
+          state.T = Math.max(state.annealTarget, state.T - 0.004);
+          el.temp.value = state.T;
+        }
+        for (let i = 0; i < state.sweepsPerFrame; i++) metropolisSweep();
+        // occasional full recompute to kill drift
+        state.frame++;
+        if ((state.frame % 40) === 0) recomputeGlobals();
+        state.histM.push(state.M);
+        state.histE.push(state.E);
+        if (state.histM.length > state.histMax) {
+          state.histM.shift();
+          state.histE.shift();
+        }
+        // decay acceptance counters slowly
+        if (state.tried > 200000) {
+          state.tried = (state.tried * 0.5) | 0;
+          state.accepted = (state.accepted * 0.5) | 0;
+        }
+        drawLattice();
+        drawChart();
+        updateUI();
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // Events
+    el.temp.addEventListener('input', () => {
+      state.T = parseFloat(el.temp.value);
+      state.anneal = false;
+      updateUI();
+    });
+    el.field.addEventListener('input', () => {
+      state.h = parseFloat(el.field.value);
+      recomputeGlobals();
+      updateUI();
+    });
+    el.coup.addEventListener('input', () => {
+      state.J = parseFloat(el.coup.value);
+      recomputeGlobals();
+      updateUI();
+    });
+    el.speed.addEventListener('input', () => {
+      state.sweepsPerFrame = parseInt(el.speed.value, 10);
+      updateUI();
+    });
+    el.size.addEventListener('change', () => {
+      state.N = parseInt(el.size.value, 10);
+      initSpins('random');
+      drawLattice();
+      updateUI();
+    });
+    el.size.addEventListener('input', () => {
+      el.sizeVal.textContent = el.size.value + '×' + el.size.value;
+    });
+
+    el.btnPlay.addEventListener('click', () => {
+      state.running = !state.running;
+      el.btnPlay.textContent = state.running ? 'Pause' : 'Play';
+      el.btnPlay.classList.toggle('primary', state.running);
+    });
+    el.btnStep.addEventListener('click', () => {
+      metropolisSweep();
+      recomputeGlobals();
+      state.histM.push(state.M);
+      if (state.histM.length > state.histMax) state.histM.shift();
+      drawLattice();
+      drawChart();
+      updateUI();
+    });
+    el.btnReset.addEventListener('click', () => {
+      initSpins('random');
+      state.tried = 0; state.accepted = 0;
+      drawLattice();
+      drawChart();
+      updateUI();
+    });
+
+    el.paintUp.addEventListener('click', () => setPaintMode(1));
+    el.paintDown.addEventListener('click', () => setPaintMode(-1));
+    el.paintFlip.addEventListener('click', () => setPaintMode(0));
+
+    el.presets.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-p]');
+      if (!t) return;
+      applyPreset(t.dataset.p);
+    });
+
+    function onPointerDown(e) {
+      state.painting = true;
+      latticeCanvas.setPointerCapture?.(e.pointerId);
+      paintAt(e.clientX, e.clientY);
+      e.preventDefault();
+    }
+    function onPointerMove(e) {
+      if (!state.painting) return;
+      paintAt(e.clientX, e.clientY);
+      e.preventDefault();
+    }
+    function onPointerUp(e) {
+      state.painting = false;
+      try { latticeCanvas.releasePointerCapture?.(e.pointerId); } catch (_) {}
+    }
+    latticeCanvas.addEventListener('pointerdown', onPointerDown);
+    latticeCanvas.addEventListener('pointermove', onPointerMove);
+    latticeCanvas.addEventListener('pointerup', onPointerUp);
+    latticeCanvas.addEventListener('pointercancel', onPointerUp);
+    latticeCanvas.addEventListener('pointerleave', onPointerUp);
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // boot
+    initSpins('random');
+    resizeCanvas();
+    applyPreset('critical');
+    updateUI();
+    drawChart();
+    requestAnimationFrame(tick);
+  })();
+  </script>
+</body>
+</html>
