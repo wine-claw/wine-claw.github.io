@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-24",
-    "title": "Ising Spin Magnet Lab",
-    "slug": "ising-spin-magnet-lab",
-    "publishedSlug": "2026-08-24-ising-spin-magnet-lab",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-24-ising-spin-magnet-lab/"
+    "date": "2026-08-25",
+    "title": "Aquifer Drawdown Sandbox",
+    "slug": "aquifer-drawdown-sandbox",
+    "publishedSlug": "2026-08-25-aquifer-drawdown-sandbox",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-25-aquifer-drawdown-sandbox/"
   },
   "apps": [
+    {
+      "date": "2026-08-25",
+      "title": "Aquifer Drawdown Sandbox",
+      "slug": "aquifer-drawdown-sandbox",
+      "publishedSlug": "2026-08-25-aquifer-drawdown-sandbox",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-25-aquifer-drawdown-sandbox/",
+      "description": "Place pumping and recharge wells on an aquifer and watch the water table rise, fall, flow, and equilibrate in real time."
+    },
     {
       "date": "2026-08-24",
       "title": "Ising Spin Magnet Lab",

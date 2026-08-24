@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Aquifer Drawdown Sandbox</title>
+  <style>
+    :root {
+      --bg: #0f1724;
+      --panel: #152033;
+      --panel-2: #1b2942;
+      --text: #e6f1ff;
+      --muted: #9fb4d3;
+      --accent: #4fc3f7;
+      --accent-2: #7ee787;
+      --pump: #ff8a65;
+      --recharge: #4db6ac;
+      --warn: #ffd54f;
+      --danger: #ef5350;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: var(--panel);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .brand-icon {
+      width: 2.2rem;
+      height: 2.2rem;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #81d4fa, #0288d1 60%, #01579b 100%);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.15), 0 4px 12px rgba(2,136,209,0.35);
+      position: relative;
+    }
+    .brand-icon::after {
+      content: '';
+      position: absolute;
+      inset: 28%;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+    }
+    h1 { margin: 0; font-size: 1.1rem; font-weight: 600; letter-spacing: -0.01em; }
+    .subtitle { color: var(--muted); font-size: 0.8rem; margin-top: 0.15rem; }
+
+    .warning-banner {
+      background: rgba(239,83,80,0.12);
+      color: #ffcdd2;
+      border: 1px solid rgba(239,83,80,0.35);
+      border-radius: 0.6rem;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.72rem;
+      line-height: 1.35;
+      max-width: 42rem;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(260px, 320px) 1fr;
+      min-height: 0;
+    }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid rgba(255,255,255,0.06);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: var(--panel-2);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 0.75rem;
+      padding: 0.9rem 1rem;
+    }
+    .card h3 { margin: 0 0 0.75rem 0; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); }
+
+    .tool-row {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+    }
+    .tool-btn {
+      flex: 1;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 0.5rem;
+      padding: 0.55rem 0.3rem;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .tool-btn:hover { background: rgba(255,255,255,0.08); }
+    .tool-btn.active { background: rgba(79,195,247,0.18); border-color: var(--accent); color: #fff; }
+    .tool-btn.recharge.active { background: rgba(77,182,172,0.18); border-color: var(--recharge); }
+    .tool-btn.pump.active { background: rgba(255,138,101,0.18); border-color: var(--pump); }
+    .tool-btn.eraser.active { background: rgba(255,213,79,0.18); border-color: var(--warn); }
+
+    .tool-icon { font-size: 1.1rem; }
+
+    .control { margin-bottom: 0.85rem; }
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      font-size: 0.74rem;
+    }
+    .stat { background: rgba(0,0,0,0.2); border-radius: 0.45rem; padding: 0.45rem 0.55rem; }
+    .stat strong { display: block; font-size: 0.95rem; color: #fff; margin-top: 0.15rem; }
+
+    .action-row { display: flex; gap: 0.5rem; }
+    .action-row button {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text);
+      border-radius: 0.5rem;
+      padding: 0.55rem 0.4rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .action-row button:hover { background: rgba(255,255,255,0.1); }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.9rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; }
+
+    .canvas-wrap {
+      position: relative;
+      background: #0b111d;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas { touch-action: none; max-width: 100%; max-height: 100%; }
+
+    .hint {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      background: rgba(0,0,0,0.35);
+      color: var(--muted);
+      font-size: 0.72rem;
+      padding: 0.35rem 0.6rem;
+      border-radius: 0.4rem;
+      pointer-events: none;
+    }
+
+    footer {
+      padding: 0.6rem 1rem;
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-align: center;
+      background: var(--panel);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-icon"></div>
+      <div>
+        <h1>Aquifer Drawdown Sandbox</h1>
+        <div class="subtitle">Place wells, pump or recharge, and watch the water table respond.</div>
+      </div>
+    </div>
+    <div class="warning-banner">
+      <strong>Experimental OpenClaw AI mini-app.</strong> Untested, not professionally validated, and should not be relied on for real groundwater or engineering decisions.
+    </div>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <div class="card">
+        <h3>Tool</h3>
+        <div class="tool-row">
+          <button class="tool-btn active" data-tool="inspect" title="Pan / inspect">
+            <span class="tool-icon">👆</span>
+            <span>Inspect</span>
+          </button>
+          <button class="tool-btn pump" data-tool="pump" title="Add pumping well">
+            <span class="tool-icon">🔻</span>
+            <span>Pump</span>
+          </button>
+          <button class="tool-btn recharge" data-tool="recharge" title="Add recharge well">
+            <span class="tool-icon">🔺</span>
+            <span>Recharge</span>
+          </button>
+          <button class="tool-btn eraser" data-tool="erase" title="Remove well">
+            <span class="tool-icon">🗑</span>
+            <span>Erase</span>
+          </button>
+        </div>
+        <div class="control">
+          <label>Well strength <span id="strengthVal">1.0</span></label>
+          <input id="strength" type="range" min="0.2" max="3.0" step="0.1" value="1.0" />
+        </div>
+        <div class="action-row">
+          <button id="clearWells">Clear wells</button>
+          <button id="resetHead">Reset water table</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Aquifer properties</h3>
+        <div class="control">
+          <label>Hydraulic conductivity <span id="kVal">15</span> m/day</label>
+          <input id="conductivity" type="range" min="1" max="100" step="1" value="15" />
+        </div>
+        <div class="control">
+          <label>Storativity <span id="sVal">0.15</span></label>
+          <input id="storativity" type="range" min="0.01" max="0.5" step="0.01" value="0.15" />
+        </div>
+        <div class="control">
+          <label>Simulation speed <span id="speedVal">1×</span></label>
+          <input id="speed" type="range" min="0" max="3" step="1" value="1" />
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Stats</h3>
+        <div class="stat-grid">
+          <div class="stat">Wells <strong id="wellCount">0</strong></div>
+          <div class="stat">Net rate <strong id="netRate">0</strong></div>
+          <div class="stat">Max drawdown <strong id="maxDraw">0.0 m</strong></div>
+          <div class="stat">Max rise <strong id="maxRise">0.0 m</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Legend</h3>
+        <div class="legend">
+          <span><span class="dot" style="background:#1a3c5a"></span> Deep drawdown</span>
+          <span><span class="dot" style="background:#4fc3f7"></span> Equilibrium</span>
+          <span><span class="dot" style="background:#7ee787"></span> Recharge mound</span>
+          <span><span class="dot" style="background:#ff8a65"></span> Pumping well</span>
+          <span><span class="dot" style="background:#4db6ac"></span> Recharge well</span>
+        </div>
+      </div>
+    </aside>
+
+    <section class="canvas-wrap">
+      <canvas id="aquifer"></canvas>
+      <div class="hint">Click or tap the aquifer to place a well. Drag to pan/inspect.</div>
+    </section>
+  </main>
+
+  <footer>Built overnight by OpenClaw · 2026-08-25 · A toy finite-difference groundwater sketch</footer>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('aquifer');
+      const ctx = canvas.getContext('2d', { alpha: false });
+
+      // Simulation grid
+      const NX = 96;
+      const NY = 72;
+      let head = new Float32Array(NX * NY);
+      let headPrev = new Float32Array(NX * NY);
+      let sources = []; // {x,y,rate}
+      let initialHead = 10; // metres
+
+      let K = 15; // m/day
+      let S = 0.15;
+      let speed = 1;
+      let wellStrength = 1.0;
+      let activeTool = 'inspect';
+
+      // Derived geometry
+      let cellW, cellH, offX, offY, scaleW, scaleH;
+      const padding = 12;
+
+      function resize() {
+        const wrap = canvas.parentElement;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const cssW = wrap.clientWidth;
+        const cssH = wrap.clientHeight;
+        canvas.width = Math.floor(cssW * dpr);
+        canvas.height = Math.floor(cssH * dpr);
+        canvas.style.width = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+
+        const availW = canvas.width - padding * 2 * dpr;
+        const availH = canvas.height - padding * 2 * dpr;
+        cellW = availW / NX;
+        cellH = availH / NY;
+        offX = padding * dpr + (availW - NX * cellW) / 2;
+        offY = padding * dpr + (availH - NY * cellH) / 2;
+        scaleW = canvas.width / cssW;
+        scaleH = canvas.height / cssH;
+      }
+
+      function resetHead() {
+        for (let i = 0; i < NX * NY; i++) head[i] = initialHead;
+        headPrev.set(head);
+      }
+
+      function clearWells() {
+        sources = [];
+      }
+
+      resetHead();
+
+      // Convert grid index <-> world coords
+      function gridToWorld(i, j) {
+        return {
+          x: offX + (i + 0.5) * cellW,
+          y: offY + (j + 0.5) * cellH
+        };
+      }
+
+      function worldToGrid(x, y) {
+        const i = Math.floor((x - offX) / cellW);
+        const j = Math.floor((y - offY) / cellH);
+        if (i < 0 || i >= NX || j < 0 || j >= NY) return null;
+        return { i, j };
+      }
+
+      function addSourceAtScreen(sx, sy, rate) {
+        const g = worldToGrid(sx * scaleW, sy * scaleH);
+        if (!g) return;
+        const { i, j } = g;
+        // avoid duplicate at exact same cell; replace
+        sources = sources.filter(s => s.i !== i || s.j !== j);
+        sources.push({ i, j, rate: rate * wellStrength });
+      }
+
+      function removeWellAtScreen(sx, sy) {
+        const g = worldToGrid(sx * scaleW, sy * scaleH);
+        if (!g) return;
+        sources = sources.filter(s => s.i !== g.i || s.j !== g.j);
+      }
+
+      // Finite-difference diffusion step with source terms
+      const dtBase = 0.04;
+      const dx = 50; // metres per cell, abstract
+      const dy = 50;
+
+      function step() {
+        const mult = speed === 0 ? 0 : (speed === 1 ? 1 : (speed === 2 ? 2.5 : 5));
+        if (mult === 0) return;
+
+        const dt = dtBase * mult;
+        const D = K / S;
+        const alphaX = D * dt / (dx * dx);
+        const alphaY = D * dt / (dy * dy);
+        // Clamp for numerical stability
+        const ax = Math.min(alphaX, 0.22);
+        const ay = Math.min(alphaY, 0.22);
+
+        headPrev.set(head);
+
+        for (let j = 1; j < NY - 1; j++) {
+          for (let i = 1; i < NX - 1; i++) {
+            const idx = i + j * NX;
+            const c = headPrev[idx];
+            const lap = headPrev[idx - 1] + headPrev[idx + 1] + headPrev[idx - NX] + headPrev[idx + NX] - 4 * c;
+            head[idx] = c + ax * (headPrev[idx - 1] + headPrev[idx + 1] - 2 * c) + ay * (headPrev[idx - NX] + headPrev[idx + NX] - 2 * c);
+          }
+        }
+
+        // Boundary: fixed head at edges (far-field reservoir)
+        for (let i = 0; i < NX; i++) {
+          head[i] = initialHead;
+          head[i + (NY - 1) * NX] = initialHead;
+        }
+        for (let j = 0; j < NY; j++) {
+          head[j * NX] = initialHead;
+          head[(NX - 1) + j * NX] = initialHead;
+        }
+
+        // Apply source terms (wells)
+        for (const s of sources) {
+          const idx = s.i + s.j * NX;
+          // Source adds/removes volume at a rate proportional to well strength
+          // Sign convention: negative rate = pumping, positive = recharge
+          const delta = -s.rate * dt * 0.6; // metres per time-step abstract units
+          head[idx] += delta;
+        }
+      }
+
+      function colorForHead(h) {
+        const dh = h - initialHead;
+        if (dh < -2.5) return { r: 20, g: 40, b: 80 };
+        if (dh > 2.5) return { r: 20, g: 120, b: 90 };
+        const t = (dh + 2.5) / 5; // 0..1
+        // map deep blue -> cyan -> green
+        const r = Math.round(lerp(20, 79, smooth(t)));
+        const g = Math.round(lerp(40, 195, smooth(t * 0.9 + 0.1)));
+        const b = Math.round(lerp(120, 247, smooth(1 - t)));
+        return { r, g, b };
+      }
+
+      function lerp(a, b, t) { return a + (b - a) * t; }
+      function smooth(t) {
+        t = Math.max(0, Math.min(1, t));
+        return t * t * (3 - 2 * t);
+      }
+
+      function draw() {
+        // Background
+        ctx.fillStyle = '#0b111d';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Aquifer frame
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(offX, offY, NX * cellW, NY * cellH);
+
+        // Grid colored by head
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+
+        for (let j = 0; j < NY; j++) {
+          for (let i = 0; i < NX; i++) {
+            const c = colorForHead(head[i + j * NX]);
+            const x0 = Math.floor(offX + i * cellW);
+            const y0 = Math.floor(offY + j * cellH);
+            const x1 = Math.ceil(x0 + cellW);
+            const y1 = Math.ceil(y0 + cellH);
+            for (let y = Math.max(0, y0); y < Math.min(canvas.height, y1); y++) {
+              for (let x = Math.max(0, x0); x < Math.min(canvas.width, x1); x++) {
+                const p = (x + y * canvas.width) * 4;
+                data[p] = c.r;
+                data[p + 1] = c.g;
+                data[p + 2] = c.b;
+                data[p + 3] = 255;
+              }
+            }
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+
+        // Contour lines (every 0.5 m)
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.beginPath();
+        const levels = [7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13];
+        for (const level of levels) {
+          for (let j = 0; j < NY - 1; j++) {
+            for (let i = 0; i < NX - 1; i++) {
+              const a = head[i + j * NX] - level;
+              const b = head[i + 1 + j * NX] - level;
+              const c = head[i + (j + 1) * NX] - level;
+              const d = head[i + 1 + (j + 1) * NX] - level;
+              const x = offX + i * cellW;
+              const y = offY + j * cellH;
+              marchingSquare(ctx, a, b, c, d, x, y, cellW, cellH);
+            }
+          }
+        }
+        ctx.stroke();
+
+        // Wells
+        for (const s of sources) {
+          const w = gridToWorld(s.i, s.j);
+          const isPump = s.rate > 0;
+          const color = isPump ? '#ff8a65' : '#4db6ac';
+          const radius = 6 + Math.min(8, Math.abs(s.rate) * 3);
+          ctx.beginPath();
+          ctx.arc(w.x, w.y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Ring animation
+          const ring = (performance.now() / 1000) % 1.5;
+          ctx.beginPath();
+          ctx.arc(w.x, w.y, radius + ring * 25, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(${isPump ? '255,138,101' : '77,182,172'},${1 - ring / 1.5})`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Icon
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(isPump ? '−' : '+', w.x, w.y + 1);
+        }
+
+        // Flow velocity vectors (subsampled)
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 1;
+        for (let j = 2; j < NY - 2; j += 4) {
+          for (let i = 2; i < NX - 2; i += 4) {
+            const idx = i + j * NX;
+            const dhdx = (head[idx + 1] - head[idx - 1]) / (2 * dx);
+            const dhdy = (head[idx + NX] - head[idx - NX]) / (2 * dy);
+            const qx = -K * dhdx;
+            const qy = -K * dhdy;
+            const mag = Math.hypot(qx, qy);
+            if (mag < 0.05) continue;
+            const w = gridToWorld(i, j);
+            const len = Math.min(22, mag * 4);
+            const ang = Math.atan2(qy, qx);
+            const x1 = w.x + Math.cos(ang) * len;
+            const y1 = w.y + Math.sin(ang) * len;
+            ctx.beginPath();
+            ctx.moveTo(w.x, w.y);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+            // arrowhead
+            const ah = 0.4;
+            const al = 4;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x1 - Math.cos(ang - ah) * al, y1 - Math.sin(ang - ah) * al);
+            ctx.lineTo(x1 - Math.cos(ang + ah) * al, y1 - Math.sin(ang + ah) * al);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(255,255,255,0.22)';
+            ctx.fill();
+          }
+        }
+      }
+
+      function marchingSquare(ctx, a, b, c, d, x, y, w, h) {
+        // Very lightweight marching squares: just draw line between midpoints when sign changes along edges
+        let segments = [];
+        function interp(v1, v2, p1x, p1y, p2x, p2y) {
+          if (Math.abs(v1 - v2) < 1e-9) return null;
+          const t = -v1 / (v2 - v1);
+          if (t < 0 || t > 1) return null;
+          return { x: p1x + t * (p2x - p1x), y: p1y + t * (p2y - p1y) };
+        }
+        const p = interp(a, b, x, y, x + w, y);
+        const q = interp(b, d, x + w, y, x + w, y + h);
+        const r = interp(d, c, x + w, y + h, x, y + h);
+        const s2 = interp(c, a, x, y + h, x, y);
+
+        if (p && r) { ctx.moveTo(p.x, p.y); ctx.lineTo(r.x, r.y); }
+        else if (q && s2) { ctx.moveTo(q.x, q.y); ctx.lineTo(s2.x, s2.y); }
+        else if (p && q) { ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); }
+        else if (q && r) { ctx.moveTo(q.x, q.y); ctx.lineTo(r.x, r.y); }
+        else if (r && s2) { ctx.moveTo(r.x, r.y); ctx.lineTo(s2.x, s2.y); }
+        else if (s2 && p) { ctx.moveTo(s2.x, s2.y); ctx.lineTo(p.x, p.y); }
+      }
+
+      function updateStats() {
+        let net = 0;
+        let maxD = 0;
+        let maxR = 0;
+        for (const s of sources) net += s.rate;
+        for (let i = 0; i < NX * NY; i++) {
+          const dh = head[i] - initialHead;
+          if (dh < 0) maxD = Math.max(maxD, -dh);
+          else maxR = Math.max(maxR, dh);
+        }
+        document.getElementById('wellCount').textContent = sources.length;
+        document.getElementById('netRate').textContent = (net >= 0 ? '+' : '') + net.toFixed(1);
+        document.getElementById('maxDraw').textContent = maxD.toFixed(1) + ' m';
+        document.getElementById('maxRise').textContent = maxR.toFixed(1) + ' m';
+      }
+
+      // Inputs
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeTool = btn.dataset.tool;
+        });
+      });
+
+      const kInput = document.getElementById('conductivity');
+      const sInput = document.getElementById('storativity');
+      const speedInput = document.getElementById('speed');
+      const strengthInput = document.getElementById('strength');
+
+      kInput.addEventListener('input', () => {
+        K = parseInt(kInput.value, 10);
+        document.getElementById('kVal').textContent = K;
+      });
+      sInput.addEventListener('input', () => {
+        S = parseFloat(sInput.value);
+        document.getElementById('sVal').textContent = S.toFixed(2);
+      });
+      speedInput.addEventListener('input', () => {
+        speed = parseInt(speedInput.value, 10);
+        document.getElementById('speedVal').textContent = speed + '×';
+      });
+      strengthInput.addEventListener('input', () => {
+        wellStrength = parseFloat(strengthInput.value);
+        document.getElementById('strengthVal').textContent = wellStrength.toFixed(1);
+        for (const s of sources) {
+          const base = s.rate > 0 ? 1 : -1;
+          s.rate = base * wellStrength;
+        }
+      });
+
+      document.getElementById('clearWells').addEventListener('click', clearWells);
+      document.getElementById('resetHead').addEventListener('click', resetHead);
+
+      // Pointer interactions
+      let dragging = false;
+      let lastPointer = { x: 0, y: 0 };
+
+      function getPointerPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }
+
+      canvas.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        dragging = true;
+        const p = getPointerPos(e);
+        lastPointer = p;
+        if (activeTool === 'pump') {
+          addSourceAtScreen(p.x, p.y, 1);
+        } else if (activeTool === 'recharge') {
+          addSourceAtScreen(p.x, p.y, -1);
+        } else if (activeTool === 'erase') {
+          removeWellAtScreen(p.x, p.y);
+        }
+      });
+
+      window.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        const p = getPointerPos(e);
+        if (activeTool === 'pump' || activeTool === 'recharge') {
+          if (Math.hypot(p.x - lastPointer.x, p.y - lastPointer.y) > 14) {
+            addSourceAtScreen(p.x, p.y, activeTool === 'pump' ? 1 : -1);
+            lastPointer = p;
+          }
+        } else if (activeTool === 'erase') {
+          removeWellAtScreen(p.x, p.y);
+        }
+      });
+
+      window.addEventListener('pointerup', () => { dragging = false; });
+      window.addEventListener('pointercancel', () => { dragging = false; });
+
+      // Seed with a small demo
+      addSourceAtScreen(120, 120, 1);
+      addSourceAtScreen(260, 200, -1);
+
+      window.addEventListener('resize', () => { resize(); draw(); });
+
+      // Main loop
+      let lastTime = performance.now();
+      function loop() {
+        const now = performance.now();
+        const dt = now - lastTime;
+        lastTime = now;
+        step();
+        draw();
+        updateStats();
+        requestAnimationFrame(loop);
+      }
+
+      resize();
+      loop();
+    })();
+  </script>
+</body>
+</html>
