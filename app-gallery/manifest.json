@@ -2,13 +2,21 @@
   "publicBase": "https://wine-claw.github.io/app-gallery",
   "latestUrl": "https://wine-claw.github.io/app-gallery/latest/",
   "latest": {
-    "date": "2026-08-25",
-    "title": "Aquifer Drawdown Sandbox",
-    "slug": "aquifer-drawdown-sandbox",
-    "publishedSlug": "2026-08-25-aquifer-drawdown-sandbox",
-    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-25-aquifer-drawdown-sandbox/"
+    "date": "2026-08-26",
+    "title": "Map Projection Distortion Playground",
+    "slug": "map-projection-distortion-playground",
+    "publishedSlug": "2026-08-26-map-projection-distortion-playground",
+    "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-26-map-projection-distortion-playground/"
   },
   "apps": [
+    {
+      "date": "2026-08-26",
+      "title": "Map Projection Distortion Playground",
+      "slug": "map-projection-distortion-playground",
+      "publishedSlug": "2026-08-26-map-projection-distortion-playground",
+      "url": "https://wine-claw.github.io/app-gallery/apps/2026-08-26-map-projection-distortion-playground/",
+      "description": "Drag a globe, pick a projection, and watch Tissot indicatrices stretch area, shape, and distance in real time."
+    },
     {
       "date": "2026-08-25",
       "title": "Aquifer Drawdown Sandbox",

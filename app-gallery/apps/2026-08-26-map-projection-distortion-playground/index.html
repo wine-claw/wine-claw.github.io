@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Map Projection Distortion Playground</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-2: #1c2128;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-2: #f0883e;
+      --warning: #f7b500;
+      --danger: #cf222e;
+      --success: #3fb950;
+      --border: #30363d;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .ai-banner {
+      background: linear-gradient(90deg, #593d00 0%, #7a5200 100%);
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 14px;
+      text-align: center;
+      border-bottom: 1px solid #8a6a00;
+      flex: none;
+    }
+    header {
+      flex: none;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: space-between;
+    }
+    h1 { font-size: 18px; margin: 0; font-weight: 600; letter-spacing: -0.2px; }
+    .subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    main { flex: 1 1 auto; display: flex; min-height: 0; }
+    .stage { flex: 1 1 auto; position: relative; min-width: 0; }
+    canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+    canvas:active { cursor: grabbing; }
+    .overlay {
+      position: absolute;
+      pointer-events: none;
+      top: 12px; left: 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .pill {
+      background: rgba(13,17,23,0.82);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: var(--muted);
+      backdrop-filter: blur(4px);
+    }
+    .pill b { color: var(--text); }
+    .controls {
+      width: 300px;
+      flex: none;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      padding: 14px;
+      display: flex; flex-direction: column; gap: 14px;
+      overflow-y: auto;
+    }
+    .section { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .section h2 { font-size: 13px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; margin-bottom: 12px; }
+    label:last-child { margin-bottom: 0; }
+    .row { display: flex; align-items: center; gap: 10px; }
+    .row span { min-width: 80px; color: var(--muted); }
+    select, input[type="range"], button {
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 9px;
+      font-size: 13px;
+    }
+    input[type="range"] { padding: 0; height: 6px; accent-color: var(--accent); }
+    input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      font-weight: 600;
+    }
+    button.secondary { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+    button:hover { filter: brightness(1.15); }
+    .proj-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .proj-grid button { font-size: 12px; padding: 8px 4px; }
+    .legend {
+      display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted);
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .hint { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    @media (max-width: 760px) {
+      main { flex-direction: column; }
+      .controls { width: 100%; border-left: none; border-top: 1px solid var(--border); max-height: 42vh; }
+      .proj-grid { grid-template-columns: repeat(3, 1fr); }
+      header { flex-wrap: wrap; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ai-banner">⚠️ Experimental OpenClaw AI mini-app • Untested • Not professionally validated • Do not rely on it for navigation, surveying, or decisions.</div>
+  <header>
+    <div>
+      <h1>Map Projection Distortion Playground</h1>
+      <div class="subtitle">Drag the globe. Watch projections stretch area, shape, and distance.</div>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:#58a6ff"></i> Land</span>
+      <span><i class="dot" style="background:#f0883e"></i> Tissot circles</span>
+      <span><i class="dot" style="background:#cf222e"></i> Heavy stretch</span>
+    </div>
+  </header>
+  <main>
+    <div class="stage">
+      <canvas id="map"></canvas>
+      <div class="overlay">
+        <div class="pill">Projection: <b id="pname">Orthographic</b></div>
+        <div class="pill">Max scale factor: <b id="sfactor">—</b></div>
+        <div class="pill">Drag to rotate • Scroll to zoom</div>
+      </div>
+    </div>
+    <aside class="controls">
+      <div class="section">
+        <h2>Projection</h2>
+        <div class="proj-grid">
+          <button data-proj="orthographic">Globe</button>
+          <button data-proj="mercator">Mercator</button>
+          <button data-proj="equalEarth">Equal Earth</button>
+          <button data-proj="mollweide">Mollweide</button>
+          <button data-proj="eckert4">Eckert IV</button>
+          <button data-proj="winkelTripel">Winkel Tripel</button>
+          <button data-proj="naturalEarth1">Natural Earth</button>
+          <button data-proj="airy">Airy</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Layers</h2>
+        <label class="row"><span>Tissot grid</span><input type="checkbox" id="showTissot" checked></label>
+        <label class="row"><span>Stretch ellipses</span><input type="checkbox" id="showEllipses" checked></label>
+        <label class="row"><span>Graticule</span><input type="checkbox" id="showGraticule" checked></label>
+        <label class="row"><span>Land fill</span><input type="checkbox" id="showLand" checked></label>
+      </div>
+
+      <div class="section">
+        <h2>View</h2>
+        <label><span class="row"><span>Zoom</span><span id="zoomVal">1.0</span></span><input type="range" id="zoom" min="0.3" max="3" step="0.05" value="1"></label>
+        <label><span class="row"><span>Rotate λ</span><span id="lamVal">0°</span></span><input type="range" id="lambda" min="-180" max="180" step="1" value="0"></label>
+        <label><span class="row"><span>Rotate φ</span><span id="phiVal">0°</span></span><input type="range" id="phi" min="-90" max="90" step="1" value="20"></label>
+        <div class="proj-grid">
+          <button id="reset" class="secondary">Reset view</button>
+          <button id="animate" class="secondary">Auto rotate</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>What is this?</h2>
+        <p class="hint">Every flat map lies. The orange circles are Tissot indicatrices: same-sized circles on the sphere, drawn where the projection lands them. If they look like ellipses, the projection is stretching or squashing. If they look bigger near the poles or edges, the projection is inflating area.</p>
+      </div>
+    </aside>
+  </main>
+
+<script>
+/* Minimal TopoJSON / spherical projection playground. Self-contained. */
+(function(){
+  'use strict';
+
+  const canvas = document.getElementById('map');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  let width = 0, height = 0, cx = 0, cy = 0, scale = 180;
+  let landArcs = null;
+  let worldTopology = null;
+  let projectionName = 'orthographic';
+  let lambda = 0, phi = 20, gamma = 0, zoom = 1;
+  let autoRotate = false;
+  let lastFrame = 0;
+  let pointerDown = false, lastX = 0, lastY = 0;
+
+  const state = {
+    showTissot: true,
+    showEllipses: true,
+    showGraticule: true,
+    showLand: true
+  };
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    width = Math.floor(rect.width * dpr);
+    height = Math.floor(rect.height * dpr);
+    canvas.width = width; canvas.height = height;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    cx = width / 2; cy = height / 2;
+    scale = Math.min(width, height) * 0.22 * zoom;
+    draw();
+  }
+
+  // ---- Tiny TopoJSON decoder for land-110m.json ----
+  function decodeP2(arcs) {
+    const out = [];
+    for (const arc of arcs) {
+      const pts = [];
+      let x = 0, y = 0;
+      for (let i = 0; i < arc.length; i++) {
+        x += arc[i][0]; y += arc[i][1];
+        pts.push([x * 1e-5, y * 1e-5]);
+      }
+      out.push(pts);
+    }
+    return out;
+  }
+
+  function loadLand() {
+    fetch('land-110m.json')
+      .then(r => r.json())
+      .then(topo => {
+        worldTopology = topo;
+        landArcs = decodeP2(topo.arcs);
+        draw();
+      })
+      .catch(err => {
+        console.error('Land data load failed', err);
+      });
+  }
+
+  // ---- Spherical helpers ----
+  const DEG = Math.PI / 180;
+  const RAD = 180 / Math.PI;
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function rotate(lon, lat, lambda, phi, gamma) {
+    // Rotate a point (lon,lat) by Euler angles in degrees.
+    let lam = lon * DEG, ph = lat * DEG;
+    const lm = lambda * DEG, pm = phi * DEG, gm = gamma * DEG;
+    // Intrinsic z-x-z or y-convention is overkill; use sequential rotations z-y-z (lon, lat, roll)
+    // z(lambda) then y(phi) then z(gamma)
+    // Convert to cartesian
+    let x = Math.cos(ph) * Math.cos(lam);
+    let y = Math.cos(ph) * Math.sin(lam);
+    let z = Math.sin(ph);
+    // z(lambda)
+    let c = Math.cos(lm), s = Math.sin(lm);
+    let x1 = x * c + y * s, y1 = -x * s + y * c, z1 = z;
+    // y(phi)
+    c = Math.cos(pm); s = Math.sin(pm);
+    let x2 = x1 * c + z1 * s, z2 = -x1 * s + z1 * c, y2 = y1;
+    // z(gamma)
+    c = Math.cos(gm); s = Math.sin(gm);
+    let x3 = x2 * c + y2 * s, y3 = -x2 * s + y2 * c, z3 = z2;
+    const lon2 = Math.atan2(y3, x3) * RAD;
+    const lat2 = Math.asin(clamp(z3, -1, 1)) * RAD;
+    return [lon2, lat2];
+  }
+
+  function tissotScale(lon, lat, projFn, h = 0.5) {
+    // Numeric Tissot scale factors from nearby point projections.
+    const p0 = projFn(lon, lat);
+    const px = projFn(lon + h, lat);
+    const py = projFn(lon, lat + h);
+    const dxdl = (px[0] - p0[0]) / (h * DEG);
+    const dydl = (px[1] - p0[1]) / (h * DEG);
+    const dxdp = (py[0] - p0[0]) / (h * DEG);
+    const dydp = (py[1] - p0[1]) / (h * DEG);
+    const E = dxdl * dxdl + dydl * dydl;
+    const G = dxdp * dxdp + dydp * dydp;
+    const F = dxdl * dxdp + dydl * dydp;
+    const det = Math.sqrt(Math.max(E * G - F * F, 0));
+    const hScale = Math.sqrt((E + G + 2 * det) / 2);
+    const kScale = Math.sqrt(Math.max((E + G - 2 * det) / 2, 0));
+    const theta = (E !== G || F !== 0) ? Math.atan2(2 * F, E - G) / 2 : 0;
+    return { h: hScale, k: kScale, area: det, theta };
+  }
+
+  // ---- Projections ----
+  function orthographic(lon, lat) {
+    const lam = lon * DEG, ph = lat * DEG;
+    const x = Math.cos(ph) * Math.sin(lam);
+    const y = Math.sin(ph);
+    const z = Math.cos(ph) * Math.cos(lam);
+    return [x, y, z]; // z used for clipping
+  }
+
+  function mercator(lon, lat) {
+    const lam = lon * DEG, ph = lat * DEG;
+    const x = lam;
+    const y = Math.log(Math.tan(Math.PI / 4 + ph / 2));
+    return [x, y, 1];
+  }
+
+  function equalEarthRaw(lon, lat) {
+    const lam = lon * DEG, phi = lat * DEG;
+    const t = 1.340264, t1 = -0.081106, t2 = 0.000893, t3 = 0.003796;
+    const theta = Math.asin(Math.sqrt(3) / 2 * Math.sin(phi));
+    const costheta = Math.cos(theta), sintheta = Math.sin(theta);
+    const x = 2 * Math.sqrt(3) * lam * costheta / (3 * (t + t1 * sintheta + t2 * Math.pow(sintheta, 2) + t3 * Math.pow(sintheta, 3)));
+    const y = (t + t1 * sintheta + t2 * Math.pow(sintheta, 2) + t3 * Math.pow(sintheta, 3)) * sintheta;
+    return [x, y, 1];
+  }
+
+  function mollweideRaw(lon, lat) {
+    const lam = lon * DEG, phi = lat * DEG;
+    const theta0 = phi;
+    let theta = theta0;
+    for (let i = 0; i < 10; i++) {
+      const d = theta + Math.sin(theta) - (2 * phi + Math.sin(2 * theta0)) / 2;
+      const dd = 1 + Math.cos(theta);
+      theta = theta0 = theta - d / dd;
+    }
+    const x = 2 * Math.sqrt(2) / Math.PI * lam * Math.cos(theta);
+    const y = Math.sqrt(2) * Math.sin(theta);
+    return [x, y, 1];
+  }
+
+  function eckert4Raw(lon, lat) {
+    const lam = lon * DEG, phi = lat * DEG;
+    const theta = phi / 2;
+    const x = lam * (1 + Math.cos(theta)) / Math.sqrt(2);
+    const y = 2 * Math.sqrt(2) * Math.sin(theta);
+    return [x, y, 1];
+  }
+
+  function winkelTripelRaw(lon, lat) {
+    const aitoff = aitoffRaw(lon, lat);
+    const eq = equirectangularRaw(lon, lat);
+    return [(aitoff[0] + eq[0]) / 2, (aitoff[1] + eq[1]) / 2, 1];
+  }
+
+  function naturalEarth1Raw(lon, lat) {
+    const lam = lon * DEG, phi = lat * DEG;
+    const phi2 = phi * phi, phi4 = phi2 * phi2, phi6 = phi4 * phi2, phi8 = phi4 * phi4;
+    const x = lam * (0.8707 - 0.131979 * phi2 + phi4 * (-0.013791 + phi2 * (0.003971 * phi2 - 0.001529 * phi4)));
+    const y = phi * (1.007226 + phi2 * (0.015085 + phi4 * (-0.044475 + 0.028874 * phi2 - 0.005916 * phi6)));
+    return [x, y, 1];
+  }
+
+  function airyRaw(lon, lat, radius = 90) {
+    const lam = lon * DEG, phi = lat * DEG;
+    const rad = radius * DEG;
+    const cosz = Math.sin(phi0()) * Math.sin(phi) + Math.cos(phi0()) * Math.cos(phi) * Math.cos(lam);
+    const z = Math.acos(clamp(cosz, -1, 1));
+    if (z > rad) return [NaN, NaN, -1];
+    const k = Math.sqrt(2 / (1 + cosz));
+    const x = k * Math.cos(phi) * Math.sin(lam);
+    const y = k * (Math.cos(phi0()) * Math.sin(phi) - Math.sin(phi0()) * Math.cos(phi) * Math.cos(lam));
+    return [x, y, 1];
+  }
+  let _phi0 = 0;
+  function phi0() { return _phi0 * DEG; }
+
+  function aitoffRaw(lon, lat) {
+    const lam = lon * DEG, phi = lat * DEG;
+    const cosphi = Math.cos(phi);
+    const sinc = Math.acos(clamp(cosphi * Math.cos(lam / 2), -1, 1));
+    const alpha = sinc / Math.sin(sinc || 1);
+    const x = 2 * cosphi * Math.sin(lam / 2) * alpha;
+    const y = Math.sin(phi) * alpha;
+    return [x, y, 1];
+  }
+
+  function equirectangularRaw(lon, lat) {
+    return [lon * DEG, lat * DEG, 1];
+  }
+
+  const projections = {
+    orthographic: orthographic,
+    mercator: mercator,
+    equalEarth: equalEarthRaw,
+    mollweide: mollweideRaw,
+    eckert4: eckert4Raw,
+    winkelTripel: winkelTripelRaw,
+    naturalEarth1: naturalEarth1Raw,
+    airy: (lon, lat) => airyRaw(lon, lat, 90)
+  };
+
+  const projectionScales = {
+    orthographic: 1, mercator: 0.18, equalEarth: 0.28, mollweide: 0.29,
+    eckert4: 0.25, winkelTripel: 0.28, naturalEarth1: 0.28, airy: 0.9
+  };
+
+  function projectPoint(lon, lat) {
+    const rotated = rotate(lon, lat, -lambda, phi, -gamma);
+    const p = projections[projectionName](rotated[0], rotated[1]);
+    if (!p || isNaN(p[0])) return null;
+    const s = scale * projectionScales[projectionName];
+    return [cx + s * p[0], cy - s * p[1], p[2]];
+  }
+
+  // ---- Drawing helpers ----
+  function pathFromArc(arc, isClosed) {
+    let first = true, started = false;
+    const projected = [];
+    for (let i = 0; i < arc.length; i++) {
+      const pt = projectPoint(arc[i][0], arc[i][1]);
+      if (!pt) { started = false; continue; }
+      if (projectionName === 'orthographic' && pt[2] < 0) { started = false; continue; }
+      if (first) { projected.push(pt); first = false; continue; }
+      const prev = projected[projected.length - 1];
+      const dx = pt[0] - prev[0], dy = pt[1] - prev[1];
+      if (dx * dx + dy * dy > (scale * 0.4) ** 2) { started = false; continue; }
+      if (!started) { ctx.moveTo(pt[0], pt[1]); started = true; }
+      else { ctx.lineTo(pt[0], pt[1]); }
+      projected.push(pt);
+    }
+  }
+
+  function drawLand() {
+    if (!landArcs || !state.showLand) return;
+    ctx.fillStyle = '#212c3b';
+    ctx.strokeStyle = '#58a6ff';
+    ctx.lineWidth = Math.max(0.5, dpr * 0.7);
+    ctx.beginPath();
+    for (const arc of landArcs) {
+      let started = false;
+      for (let i = 0; i < arc.length; i++) {
+        const pt = projectPoint(arc[i][0], arc[i][1]);
+        if (!pt) { started = false; continue; }
+        if (projectionName === 'orthographic' && pt[2] < 0) { started = false; continue; }
+        if (!started) { ctx.moveTo(pt[0], pt[1]); started = true; }
+        else { ctx.lineTo(pt[0], pt[1]); }
+      }
+    }
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function drawGraticule() {
+    if (!state.showGraticule) return;
+    ctx.strokeStyle = 'rgba(139,148,158,0.25)';
+    ctx.lineWidth = Math.max(0.5, dpr * 0.5);
+    ctx.beginPath();
+    for (let lat = -75; lat <= 75; lat += 15) {
+      let started = false;
+      for (let lon = -180; lon <= 180; lon += 3) {
+        const pt = projectPoint(lon, lat);
+        if (!pt) { started = false; continue; }
+        if (projectionName === 'orthographic' && pt[2] < 0) { started = false; continue; }
+        if (!started) { ctx.moveTo(pt[0], pt[1]); started = true; }
+        else { ctx.lineTo(pt[0], pt[1]); }
+      }
+    }
+    for (let lon = -180; lon <= 180; lon += 30) {
+      let started = false;
+      for (let lat = -85; lat <= 85; lat += 3) {
+        const pt = projectPoint(lon, lat);
+        if (!pt) { started = false; continue; }
+        if (projectionName === 'orthographic' && pt[2] < 0) { started = false; continue; }
+        if (!started) { ctx.moveTo(pt[0], pt[1]); started = true; }
+        else { ctx.lineTo(pt[0], pt[1]); }
+      }
+    }
+    ctx.stroke();
+  }
+
+  function drawTissot() {
+    if (!state.showTissot) return;
+    const step = 30;
+    let maxScale = 1;
+    const circles = [];
+    for (let lat = -75; lat <= 75; lat += step) {
+      for (let lon = -180; lon < 180; lon += step) {
+        const rotated = rotate(lon, lat, -lambda, phi, -gamma);
+        const p = projections[projectionName](rotated[0], rotated[1]);
+        if (!p || isNaN(p[0])) continue;
+        if (projectionName === 'orthographic' && p[2] < 0) continue;
+        const s = scale * projectionScales[projectionName];
+        const cx0 = cx + s * p[0];
+        const cy0 = cy - s * p[1];
+        const ts = tissotScale(lon, lat, (lo, la) => {
+          const r = rotate(lo, la, -lambda, phi, -gamma);
+          const pp = projections[projectionName](r[0], r[1]);
+          return [cx + s * pp[0], cy - s * pp[1]];
+        }, 0.4);
+        maxScale = Math.max(maxScale, ts.h, ts.k);
+        circles.push({ x: cx0, y: cy0, ts });
+      }
+    }
+    ctx.save();
+    for (const c of circles) {
+      const { x, y, ts } = c;
+      const baseR = Math.max(2, scale * 0.012);
+      const color = ts.area > 4 ? 'rgba(207,34,46,0.55)' : ts.area > 2 ? 'rgba(240,136,62,0.5)' : 'rgba(88,166,255,0.35)';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(1, dpr * 0.8);
+      ctx.beginPath();
+      if (state.showEllipses) {
+        ctx.ellipse(x, y, baseR * ts.h, baseR * ts.k, ts.theta, 0, Math.PI * 2);
+      } else {
+        ctx.arc(x, y, baseR, 0, Math.PI * 2);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+    document.getElementById('sfactor').textContent = maxScale.toFixed(2) + '×';
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, width, height);
+    drawGraticule();
+    drawLand();
+    drawTissot();
+    document.getElementById('pname').textContent = projectionName.charAt(0).toUpperCase() + projectionName.slice(1).replace(/([A-Z])/g, ' $1');
+  }
+
+  // ---- Animation / events ----
+  function loop(t) {
+    if (autoRotate && !pointerDown) {
+      lambda += 0.15;
+      if (lambda > 180) lambda -= 360;
+      document.getElementById('lambda').value = Math.round(lambda);
+      updateLabels();
+      draw();
+    }
+    lastFrame = t;
+    requestAnimationFrame(loop);
+  }
+
+  function updateLabels() {
+    document.getElementById('zoomVal').textContent = zoom.toFixed(2);
+    document.getElementById('lamVal').textContent = Math.round(lambda) + '°';
+    document.getElementById('phiVal').textContent = Math.round(phi) + '°';
+  }
+
+  function setProjection(name) {
+    projectionName = name;
+    if (name === 'airy') _phi0 = phi;
+    draw();
+  }
+
+  // Pointer interaction
+  canvas.addEventListener('pointerdown', e => {
+    pointerDown = true;
+    lastX = e.clientX; lastY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!pointerDown) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lambda -= dx * 0.25;
+    phi = clamp(phi + dy * 0.2, -90, 90);
+    lastX = e.clientX; lastY = e.clientY;
+    document.getElementById('lambda').value = Math.round(lambda);
+    document.getElementById('phi').value = Math.round(phi);
+    updateLabels();
+    draw();
+  });
+  canvas.addEventListener('pointerup', () => { pointerDown = false; });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoom = clamp(zoom - Math.sign(e.deltaY) * 0.1, 0.3, 3);
+    document.getElementById('zoom').value = zoom;
+    scale = Math.min(width, height) * 0.22 * zoom;
+    updateLabels();
+    draw();
+  }, { passive: false });
+
+  // Controls
+  document.querySelectorAll('button[data-proj]').forEach(btn => {
+    btn.addEventListener('click', () => setProjection(btn.dataset.proj));
+  });
+  ['showTissot','showEllipses','showGraticule','showLand'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('change', () => { state[id] = el.checked; draw(); });
+  });
+  document.getElementById('zoom').addEventListener('input', e => {
+    zoom = parseFloat(e.target.value);
+    scale = Math.min(width, height) * 0.22 * zoom;
+    updateLabels(); draw();
+  });
+  document.getElementById('lambda').addEventListener('input', e => {
+    lambda = parseFloat(e.target.value); updateLabels(); draw();
+  });
+  document.getElementById('phi').addEventListener('input', e => {
+    phi = parseFloat(e.target.value);
+    if (projectionName === 'airy') _phi0 = phi;
+    updateLabels(); draw();
+  });
+  document.getElementById('reset').addEventListener('click', () => {
+    lambda = 0; phi = 20; gamma = 0; zoom = 1;
+    document.getElementById('lambda').value = 0;
+    document.getElementById('phi').value = 20;
+    document.getElementById('zoom').value = 1;
+    updateLabels(); resize();
+  });
+  document.getElementById('animate').addEventListener('click', () => {
+    autoRotate = !autoRotate;
+    document.getElementById('animate').textContent = autoRotate ? 'Stop rotate' : 'Auto rotate';
+  });
+  window.addEventListener('resize', resize);
+
+  resize();
+  loadLand();
+  updateLabels();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
